@@ -98,7 +98,7 @@ The application provides local, reliable event notifications without relying on 
   - `Cambodia (UTC+7)`: Fixed to Phnom Penh time regardless of device location.
 - **Built-in Events**: Reminders trigger at the configured daily push time in Cambodia Time (UTC+7).
 - **Custom Events**: Reminders trigger at the exact instant intended in the time zone where the event was created, converting cleanly if the user switches display time zones.
-- **Repeats**: Configurable periodic repeats (**Off**, 2, 4, 6, or 8 hours) terminate cleanly at midnight in the event's local day.
+- **Repeats**: Configurable periodic repeats (**Off**, 2, 4, 6, 8, or 12 hours) terminate cleanly at midnight in the event's local day.
 
 ---
 

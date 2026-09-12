@@ -44,7 +44,7 @@ A fast, privacy-first, ad-free Android calendar application engineered with nati
   - **Local Time**: Follows device time zone changes during travel and daylight saving time.
   - **Cambodia Time (UTC+7)**: Option to fix calculations to Cambodia time regardless of location.
 - **Local Alarms**: Powered by Android's `AlarmManager.setExactAndAllowWhileIdle`—delivers notifications reliably without background battery drain or remote push servers.
-- **Flexible Repeat Intervals**: Configure daily push times with repeat reminders set to **Off**, 2, 4, 6, or 8 hours.
+- **Flexible Repeat Intervals**: Configure daily push times with repeat reminders set to **Off**, 2, 4, 6, 8, or 12 hours.
 
 ### 📱 Adaptive Multi-Form-Factor UI
 - **Phone Landscape Experience**: Navigation rail tabs dynamically expand across the entire vertical height (`weight(1f)`), delivering ergonomic tap targets without empty dead space.
