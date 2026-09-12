@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Khmer Calendar · Translations</title><link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="masthead"><div class="brand"><span class="brand-mark" aria-hidden="true">ក</span><span>Khmer Calendar <span class="brand-divider">/</span> <strong>Translation studio</strong></span></div><span class="local-badge"><i></i> Local workspace</span></header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">ENGLISH ↔ ខ្មែរ</p><h1>Make every word feel right.</h1><p class="intro-copy">Compare, correct, and review both languages. Your saved changes go into the next app build.</p></div><div class="progress-card"><div><strong id="review-count">—</strong><span> reviewed</span></div><progress id="progress" max="100" value="0" aria-label="Translation review progress"></progress><p id="progress-note">Loading your catalog…</p></div></section>
+    <div id="notice" class="notice hidden" role="status"></div>
+    <section class="workspace" aria-label="Translation editor">
+      <div class="toolbar"><nav id="tabs" role="tablist" aria-label="Translation categories"></nav><div class="tools"><label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search English, Khmer, or a key…" aria-label="Search translations"></label><select id="filter" aria-label="Review status"><option value="all">All entries</option><option value="pending">Needs review</option><option value="reviewed">Reviewed</option><option value="dirty">Unsaved changes</option><option value="edited">Changed from original</option></select></div></div>
+      <div class="list-summary"><p id="result-count">Loading translations…</p><span id="section-hint">English and Khmer, side by side</span></div>
+      <div class="column-headings" aria-hidden="true"><span>ENGLISH <small>en</small></span><span>ខ្មែរ <small>km</small></span><span>REVIEW</span></div>
+      <div id="entries" aria-live="polite"><div class="empty">Loading your translations…</div></div>
+      <div class="pagination"><span id="page-label"></span><div><button id="previous" class="button quiet">← Previous</button><button id="next" class="button quiet">Next →</button></div></div>
+    </section>
+    <p class="footnote">Event templates share wording across dates. Values such as <code>{anniversary}</code> and <code>{time}</code> are filled in by the calendar.</p>
+  </main>
+  <footer class="save-bar"><div class="save-status"><span id="status-dot" class="status-dot"></span><div><strong id="save-status">Loading…</strong><span id="save-detail">Changes stay on your computer.</span></div></div><div class="save-actions"><a class="button quiet" href="/api/export" download>Export JSON</a><button id="reload" class="button quiet">Reload</button><button id="save" class="button primary" disabled>Save changes <kbd>Ctrl S</kbd></button></div></footer>
+</body>
+</html>

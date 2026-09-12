@@ -1,0 +1,4 @@
+<!-- Keep the supplied artwork inside the adaptive icon's safe area. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/launcher_artwork"
+    android:inset="20%" />
