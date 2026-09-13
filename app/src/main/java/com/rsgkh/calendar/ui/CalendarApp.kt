@@ -492,12 +492,13 @@ private fun CalendarScreen(
             }
             LazyColumn(Modifier.weight(1f).fillMaxHeight().testTag("calendar-scroll"), contentPadding = PaddingValues(top = 4.dp, bottom = 24.dp)) {
                 if (!EventRepository.hasBundledYear(month.year)) item { Box(Modifier.padding(bottom = 8.dp)) { CoverageNote(k) } }
-                item {
-                    Text(L.text("ui.all_events_in_month.ab923a", k, "month" to monthName(month, k)), Modifier.padding(start = 10.dp, top = 4.dp, bottom = 4.dp),
-                        fontSize = 12.readableSp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (listEvents.isNotEmpty()) {
+                    item {
+                        Text(L.text("ui.all_events_in_month.ab923a", k, "month" to monthName(month, k)), Modifier.padding(start = 10.dp, top = 4.dp, bottom = 4.dp),
+                            fontSize = 12.readableSp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    items(listEvents, key = { it.key }) { EventRow(it, k, Modifier.padding(bottom = 6.dp)) { onEvent(it) } }
                 }
-                items(listEvents, key = { it.key }) { EventRow(it, k, Modifier.padding(bottom = 6.dp)) { onEvent(it) } }
-                if (listEvents.isEmpty()) item { EmptyEvents(k) }
             }
         }
     } else {
@@ -509,7 +510,6 @@ private fun CalendarScreen(
                 }
                 if (!EventRepository.hasBundledYear(month.year)) item { Box(Modifier.padding(bottom = 10.dp)) { CoverageNote(k) } }
                 items(listEvents, key = { it.key }) { EventRow(it, k, Modifier.padding(bottom = 8.dp)) { onEvent(it) } }
-                if (listEvents.isEmpty()) item { EmptyEvents(k) }
             }
         }
     }

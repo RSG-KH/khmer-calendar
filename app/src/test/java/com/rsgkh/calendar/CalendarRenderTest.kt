@@ -281,5 +281,27 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onAllNodes(hasText("This is a custom event that I manually added to test if everything is ok.") and hasClickAction()).onFirst().performClick()
         screenshot("custom-event-dialog-popup")
     }
+
+    @Test
+    fun noMatchingEventsTextNotDisplayedOnCalendarTabWhenNoEvents() {
+        start()
+        // Jump to March 1994 on Calendar tab
+        compose.onNodeWithContentDescription("Choose month and year").performClick()
+        compose.onNode(hasSetTextAction()).performTextReplacement("1994")
+        compose.onNodeWithText("Mar").performClick()
+        compose.onNodeWithText("Go").performClick()
+        compose.onNodeWithText("1994").assertIsDisplayed()
+        compose.onNodeWithText("March").assertIsDisplayed()
+
+        // Verify "No matching events. Try another filter or search." does NOT exist on Calendar tab
+        compose.onNodeWithText(L.text("ui.no_matching_events_try_another_filter_or_search.57812b", false)).assertDoesNotExist()
+
+        // Switch to Events tab and filter by Custom (no custom events exist)
+        compose.onNodeWithText("Events").performClick()
+        compose.onNode(hasText("Custom") and hasClickAction()).performClick()
+
+        // Verify "No matching events. Try another filter or search." DOES exist on Events tab
+        compose.onNodeWithText(L.text("ui.no_matching_events_try_another_filter_or_search.57812b", false)).assertIsDisplayed()
+    }
 }
 
