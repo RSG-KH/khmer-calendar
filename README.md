@@ -9,13 +9,13 @@
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Offline](https://img.shields.io/badge/Network-100%25%20Offline-success)](docs/architecture.md)
 [![Privacy](https://img.shields.io/badge/Privacy-0%20Ads%20%7C%200%20Trackers-blue)](docs/architecture.md)
-[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
+<!-- [![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE) -->
 
 A fast, privacy-first, ad-free Android calendar application engineered with native Kotlin and Jetpack Compose. Seamlessly converts between Gregorian dates and traditional Khmer lunar dates (*Chhankitek*), computes Buddhist Era chronology and astronomical transitions, provides verified Cambodian public holidays and cultural observances, and offers customizable local notifications.
 
 </div>
 
----
+<img src="docs/images/cover.jpg" alt="Khmer Calendar Cover" />
 
 ## Key Features
 
