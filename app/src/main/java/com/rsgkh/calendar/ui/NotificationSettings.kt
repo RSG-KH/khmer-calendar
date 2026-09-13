@@ -194,9 +194,9 @@ private fun WheelBox(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
         modifier = Modifier
-            .fillMaxWidth()
-            .widthIn(max = 312.dp)
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 24.dp)
+            .widthIn(max = 320.dp)
+            .fillMaxWidth(),
         containerColor = MaterialTheme.colorScheme.surface,
         title = {
             Text(

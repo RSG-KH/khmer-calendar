@@ -35501,10 +35501,10 @@
       "section": "interface",
       "context": "CalendarApp.kt",
       "en": "Highlight and indicator color",
-      "km": "ពណ៌ចម្បងសម្រាប់ចំណាំ",
+      "km": "ពណ៌សម្រាប់រំលេចនិងសញ្ញាសម្គាល់",
       "original": {
         "en": "Highlight and indicator color",
-        "km": "ពណ៌ចម្បងសម្រាប់ចំណាំ"
+        "km": "ពណ៌សម្រាប់រំលេចនិងសញ្ញាសម្គាល់"
       },
       "reviewed": true,
       "required": {
@@ -35515,3 +35515,5 @@
   ],
   "savedAt": "2026-09-12T01:32:20+00:00"
 }
+
+

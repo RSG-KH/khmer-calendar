@@ -303,5 +303,34 @@ class CalendarRenderTest : CalendarUiScenarios() {
         // Verify "No matching events. Try another filter or search." DOES exist on Events tab
         compose.onNodeWithText(L.text("ui.no_matching_events_try_another_filter_or_search.57812b", false)).assertIsDisplayed()
     }
+
+    @Test
+    fun addEventFromDateDetailsPopupOpensEditorWithSelectedDate() {
+        start()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNodeWithText("Date details").assertIsDisplayed()
+
+        // "Add event" button should be displayed inside Date details popup
+        val addEventText = L.text("ui.add_event.bf2f10", false)
+        compose.onNodeWithText(addEventText).assertIsDisplayed().performClick()
+
+        // "Date details" popup should close and Custom Event Editor should open with 2026-09-10 pre-filled
+        compose.onNodeWithText("Date details").assertDoesNotExist()
+        compose.onNodeWithTag("custom-title").assertIsDisplayed()
+        compose.onNodeWithTag("custom-date").assertTextContains("2026-09-10")
+    }
+
+    @Test
+    fun secondClickOnSameDateOpensDateDetailsPopup() {
+        start()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNodeWithText("Date details").assertIsDisplayed()
+        compose.onNodeWithText("Close").performClick()
+        compose.onNodeWithText("Date details").assertDoesNotExist()
+
+        // Clicking the same selected date again re-opens Date details popup
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNodeWithText("Date details").assertIsDisplayed()
+    }
 }
 

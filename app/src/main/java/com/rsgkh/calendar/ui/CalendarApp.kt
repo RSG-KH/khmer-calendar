@@ -232,7 +232,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                         }
                         listOf(L.text("ui.calendar.ee8bd9", k), L.text("ui.events.11d867", k), L.text("ui.settings.0e0a4f", k)).forEachIndexed { index, title ->
                             NavigationRailItem(
-                                modifier = if (!isTablet) Modifier.weight(1f) else Modifier,
+                                modifier = if (!isTablet) Modifier.weight(1f) else Modifier.padding(vertical = 12.dp),
                                 selected = page == index,
                                 onClick = { jump = false; creating = false; editingId = null; page = index },
                                 icon = { AppIcon(index) },
@@ -256,9 +256,14 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                 else if (jump) MonthPicker(month, k, { jump = false }) { navigate(it); jump = false }
                 else when (page) {
                     0 -> CalendarScreen(settings, today, month, selected, allCustom,
-                        onSelect = {
-                            selectedText = it.toString()
-                            if (!isLandscape || !isTablet) dateDetailText = it.toString()
+                        onSelect = { date ->
+                            val dateStr = date.toString()
+                            if (selectedText == dateStr) {
+                                dateDetailText = dateStr
+                            } else {
+                                selectedText = dateStr
+                                if (!isLandscape || !isTablet) dateDetailText = dateStr
+                            }
                         }, onPrevious = { navigate(month.minusMonths(1)) },
                         onNext = { navigate(month.plusMonths(1)) }, onJump = { jump = true },
                         onToday = {
@@ -272,8 +277,22 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
             }
         }
     }
-        if (detail == null) dateDetailText?.let { date ->
-            DateDetailsDialog(LocalDate.parse(date), today, k, allCustom, settings.showHolyDaysInEvents, onEvent = { detail = it }) { dateDetailText = null }
+        if (detail == null) dateDetailText?.let { dateString ->
+            val date = LocalDate.parse(dateString)
+            DateDetailsDialog(
+                date = date,
+                today = today,
+                k = k,
+                custom = allCustom,
+                showHolyDays = settings.showHolyDaysInEvents,
+                onEvent = { detail = it },
+                onAddEvent = {
+                    selectedText = date.toString()
+                    dateDetailText = null
+                    creating = true
+                },
+                onDismiss = { dateDetailText = null }
+            )
         }
         detail?.let { original ->
             val event = if (original.kind == EventKind.CUSTOM) allCustom.firstOrNull { it.id == original.id } ?: original else original
@@ -457,25 +476,25 @@ private fun CalendarScreen(
                                 if (k) selectedInfo.fullKhmerDate() else selectedInfo.fullEnglishDate(),
                                 modifier = Modifier.weight(1f),
                                 fontSize = 13.readableSp,
-                                lineHeight = 18.readableSp,
+                                lineHeight = 20.readableSp,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(Modifier.width(12.dp))
                             Column(
                                 horizontalAlignment = Alignment.End,
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                                verticalArrangement = Arrangement.spacedBy(0.dp)
                             ) {
                                 Text(
                                     selectedInfo.gregorianLabel,
-                                    fontSize = 12.readableSp,
-                                    lineHeight = 15.readableSp,
+                                    fontSize = 13.readableSp,
+                                    lineHeight = 20.readableSp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     textAlign = TextAlign.End
                                 )
                                 Text(
                                     selectedInfo.zodiac.label,
                                     fontSize = 12.readableSp,
-                                    lineHeight = 15.readableSp,
+                                    lineHeight = 20.readableSp,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Medium,
                                     textAlign = TextAlign.End
@@ -490,7 +509,7 @@ private fun CalendarScreen(
                     }
                 }
             }
-            LazyColumn(Modifier.weight(1f).fillMaxHeight().testTag("calendar-scroll"), contentPadding = PaddingValues(top = 4.dp, bottom = 24.dp)) {
+            LazyColumn(Modifier.weight(1f).fillMaxHeight().testTag("calendar-scroll"), contentPadding = PaddingValues(top = 4.dp, end = 12.dp, bottom = 24.dp)) {
                 if (!EventRepository.hasBundledYear(month.year)) item { Box(Modifier.padding(bottom = 8.dp)) { CoverageNote(k) } }
                 if (listEvents.isNotEmpty()) {
                     item {
@@ -648,6 +667,11 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
                         OutlinedTextField(value = query, onValueChange = { query = it }, modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), singleLine = true,
                             textStyle = LocalTextStyle.current.copy(fontSize = 14.readableSp, lineHeight = 16.readableSp),
                             label = { Text(L.text("ui.search_events.08c608", k)) }, shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                disabledContainerColor = MaterialTheme.colorScheme.surface,
+                            ),
                             trailingIcon = { if (query.isNotEmpty()) TextButton(onClick = { query = "" }) { Text(L.text("ui.clear.7d76fd", k)) } })
                     }
                 }
@@ -869,7 +893,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
 
 @Composable private fun DateDetailsDialog(
     date: LocalDate, today: LocalDate, k: Boolean, custom: List<CalendarEvent>,
-    showHolyDays: Boolean, onEvent: (CalendarEvent) -> Unit, onDismiss: () -> Unit
+    showHolyDays: Boolean, onEvent: (CalendarEvent) -> Unit, onAddEvent: () -> Unit, onDismiss: () -> Unit
 ) {
     val info = remember(date) { KhmerDateDetails.fromGregorian(date) }
     val events = remember(date, custom, showHolyDays) {
@@ -930,7 +954,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                             fontSize = 12.readableSp
                         )
                     }
-                    Spacer(Modifier.height(2.dp))
+                    Spacer(Modifier.height(12.dp))
                     val scrollState = rememberScrollState()
                     Column(
                         modifier = Modifier
@@ -944,9 +968,24 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                         if (!k) Text(CalendarWords.weekday(date.dayOfWeek.value, k), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(if (k) info.fullKhmerDate() else info.fullEnglishDate(), fontSize = 18.readableSp, lineHeight = 32.readableSp, color = MaterialTheme.colorScheme.onSurface)
                         if (info.lunar.isHolyDay || info.lunar.isShavingDay) {
-                            Text(if (info.lunar.isHolyDay) L.text("ui.thngai_sil_buddhist_holy_day.89de73", k)
-                                else L.text("ui.thngai_kaor_before_a_holy_day.d02977", k),
-                                color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Medium, fontSize = 16.readableSp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(R.drawable.holy_day_lotus),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp),
+                                    contentScale = ContentScale.Fit
+                                )
+                                Text(
+                                    if (info.lunar.isHolyDay) L.text("ui.thngai_sil_buddhist_holy_day.89de73", k)
+                                    else L.text("ui.thngai_kaor_before_a_holy_day.d02977", k),
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 16.readableSp
+                                )
+                            }
                         }
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(info.gregorianLabel, fontSize = 16.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -954,16 +993,26 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                         }
                         if (events.isNotEmpty()) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            Column(Modifier.testTag("date-details-events"), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Column(Modifier.testTag("date-details-events"), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 events.forEach { event ->
-                                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onEvent(event) }.padding(horizontal = 6.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        EventMark(event.kind, eventColor(event.kind), small = false)
-                                        Spacer(Modifier.width(12.dp))
-                                        Column(Modifier.weight(1f)) {
-                                            Text(event.title(k), fontSize = 15.readableSp, lineHeight = 21.readableSp)
-                                            Text(kindLabel(event.kind, k) + (event.time?.let { " · $it" } ?: ""), fontSize = 12.readableSp, lineHeight = 16.readableSp, color = eventColor(event.kind))
+                                    Surface(
+                                        onClick = { onEvent(event) },
+                                        shape = RoundedCornerShape(14.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            EventMark(event.kind, eventColor(event.kind), small = false)
+                                            Spacer(Modifier.width(12.dp))
+                                            Column(Modifier.weight(1f)) {
+                                                Text(event.title(k), fontSize = 14.readableSp, lineHeight = 20.readableSp, fontWeight = FontWeight.Medium)
+                                                Text(kindLabel(event.kind, k) + (event.time?.let { " · $it" } ?: ""), fontSize = 12.readableSp, lineHeight = 16.readableSp, color = eventColor(event.kind))
+                                            }
+                                            Text("›", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
-                                        Text("›", fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
                             }
@@ -972,8 +1021,12 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                     Spacer(Modifier.height(24.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        TextButton(onClick = onAddEvent) {
+                            Text(L.text("ui.add_event.bf2f10", k))
+                        }
                         TextButton(onClick = onDismiss) {
                             Text(L.text("ui.close.7df7dc", k))
                         }
@@ -1159,7 +1212,24 @@ private data class SourceUrlsDialogData(val title: String, val urls: List<String
             Text(L.text("rules.source_summary", k), fontSize = 14.readableSp)
             Text(L.text("ui.lunar_calendar_1900_2100_based_on_work_by_phylypo_tum_t.d8396b", k), fontSize = 14.readableSp)
             TextButton(onClick = { license = !license }) { Text(L.text("ui.open_source_license.ab00af", k)) }
-            if (license) Text(notice, fontSize = 11.readableSp)
+            if (license) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    SelectionContainer {
+                        Text(
+                            text = notice,
+                            fontSize = 11.readableSp,
+                            lineHeight = 16.readableSp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(14.dp)
+                        )
+                    }
+                }
+            }
         }
     }, confirmButton = { TextButton(onClick = onDismiss) { Text(L.text("ui.close.7df7dc", k)) } })
 
