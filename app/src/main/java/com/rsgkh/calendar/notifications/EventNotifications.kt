@@ -42,6 +42,9 @@ object EventNotifications {
         Intent(context, EventReminderReceiver::class.java).setAction(ACTION_FIRE).putExtra("at", at),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
+    fun rescheduleAsync(context: Context) = ReminderWork.submit(context) { reschedule(it) }
+    fun clearDisplayedAsync(context: Context) = ReminderWork.submit(context) { clearDisplayed(it) }
+
     @Synchronized fun reschedule(context: Context, now: Instant = Instant.now()) {
         createChannel(context)
         val alarm = context.getSystemService(AlarmManager::class.java)
@@ -104,14 +107,23 @@ object EventNotifications {
 
 class EventReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == EventNotifications.ACTION_FIRE) EventNotifications.deliver(context, intent.getLongExtra("at", -1))
+        if (intent.action == EventNotifications.ACTION_FIRE) {
+            val scheduled = intent.getLongExtra("at", -1)
+            val result = goAsync()
+            ReminderWork.submit(context, onFinished = { result?.finish() }) {
+                EventNotifications.deliver(it, scheduled)
+            }
+        }
     }
 }
 class ReminderRestoreReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action in listOf(Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED,
                 Intent.ACTION_TIME_CHANGED, Intent.ACTION_TIMEZONE_CHANGED, AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED)) {
-            EventNotifications.reschedule(context)
+            val result = goAsync()
+            ReminderWork.submit(context, onFinished = { result?.finish() }) {
+                EventNotifications.reschedule(it)
+            }
         }
     }
 }

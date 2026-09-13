@@ -26,13 +26,14 @@ class MainActivity : ComponentActivity() {
     private val preferences by lazy { AppPreferences(this) }
     private val customRepository by lazy { CustomEventRepository(this) }
     private var revision by mutableIntStateOf(0)
+    private var customRevision by mutableIntStateOf(0)
     private var openDateRequest by mutableStateOf<Pair<LocalDate, Long>?>(null)
     private var awaitingNotificationPermission = false
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         awaitingNotificationPermission = false
         preferences.write(preferences.read().copy(notificationsEnabled = granted))
         revision++
-        EventNotifications.reschedule(this)
+        EventNotifications.rescheduleAsync(this)
     }
     private fun requestNotificationAccess() {
         awaitingNotificationPermission = true
@@ -67,14 +68,14 @@ class MainActivity : ComponentActivity() {
         readDateIntent(intent)
         setContent {
             val settings = remember(revision) { preferences.read() }
-            val custom = remember(revision) { customRepository.all() }
+            val custom = remember(customRevision) { customRepository.all() }
             val access = remember(revision) { NotificationAccess(EventNotifications.canPost(this), EventNotifications.canBeExact(this)) }
             val today by produceState(settings.todayTimeZone.today(), settings.todayTimeZone, revision) {
                 while (true) { value = settings.todayTimeZone.today(); delay(30_000) }
             }
             CalendarApp(settings, today, customEvents = custom,
-                onSaveCustom = { customRepository.save(it); EventNotifications.clearDisplayed(this); changed() },
-                onDeleteCustom = { customRepository.delete(it); EventNotifications.clearDisplayed(this); changed() },
+                onSaveCustom = { customRepository.save(it); customRevision++; EventNotifications.clearDisplayedAsync(this); changed() },
+                onDeleteCustom = { customRepository.delete(it); customRevision++; EventNotifications.clearDisplayedAsync(this); changed() },
                 notificationAccess = access,
                 onOpenNotificationSettings = { requestNotificationAccess() },
                 onAllowExact = { startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName"))) },
@@ -88,7 +89,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    private fun changed() { revision++; EventNotifications.reschedule(this) }
+    private fun changed() { revision++; EventNotifications.rescheduleAsync(this) }
     override fun onResume() {
         super.onResume()
         if (awaitingNotificationPermission) {
@@ -97,6 +98,7 @@ class MainActivity : ComponentActivity() {
                 preferences.write(preferences.read().copy(notificationsEnabled = true))
             }
         }
+        customRevision++
         changed()
     }
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); setIntent(intent); readDateIntent(intent) }

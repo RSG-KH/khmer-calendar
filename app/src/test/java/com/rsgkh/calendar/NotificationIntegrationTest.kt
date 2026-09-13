@@ -7,7 +7,9 @@ import android.app.Application
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.database.sqlite.SQLiteDatabase
+import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.notifications.*
@@ -19,6 +21,7 @@ import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowAlarmManager
 import java.time.*
+import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [32])
@@ -125,8 +128,17 @@ class NotificationIntegrationTest {
         AppPreferences(context).write(AppPreferences(context).read().copy(pushMinutes = 6 * 60, repeatHours = 8))
         EventNotifications.reschedule(context, now)
         assertEquals(Instant.parse("2026-09-23T23:00:00Z").toEpochMilli(), alarm.scheduledAlarms.single().triggerAtTime)
-        ReminderRestoreReceiver().onReceive(context, Intent(Intent.ACTION_BOOT_COMPLETED))
-        assertEquals(1, alarm.scheduledAlarms.size)
+        val receiver = ReminderRestoreReceiver()
+        context.registerReceiver(receiver, IntentFilter(Intent.ACTION_BOOT_COMPLETED))
+        try {
+            context.sendBroadcast(Intent(Intent.ACTION_BOOT_COMPLETED))
+            Shadows.shadowOf(Looper.getMainLooper()).idle()
+            val shadow = Shadows.shadowOf(receiver)
+            assertTrue(shadow.wentAsync())
+            Shadows.shadowOf(shadow.originalPendingResult).future.get(5, TimeUnit.SECONDS)
+            assertEquals(1, alarm.scheduledAlarms.size)
+            assertTrue(alarm.scheduledAlarms.single().triggerAtTime > Instant.now().toEpochMilli())
+        } finally { context.unregisterReceiver(receiver) }
     }
     @Test fun repeatOffDeliversTheFirstNotificationEvenWhenAndroidIsLate() {
         AppPreferences(context).write(AppSettings(notificationsEnabled = true, repeatHours = 0, khmer = false))
