@@ -1099,11 +1099,13 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                             .padding(end = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        Text("${dateLabel(event.date, k)} ${number(event.date.year, k)}", fontWeight = FontWeight.Medium)
-                        event.time?.let { Text("$it · $zoneLabel", fontWeight = FontWeight.Medium) }
-                        if (event.notes.isNotBlank()) Text(event.notes)
-                        Text(lunar.fullLabel(k))
-                        Text("${L.text("ui.buddhist_era.ea617c", k)} ${number(lunar.buddhistYear, k)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Column(verticalArrangement = Arrangement.spacedBy(if (event.kind == EventKind.CUSTOM) 14.dp else 4.dp)) {
+                            Text("${dateLabel(event.date, k)} ${number(event.date.year, k)}", fontWeight = FontWeight.Medium)
+                            event.time?.let { Text("$it · $zoneLabel", fontWeight = FontWeight.Medium) }
+                            if (event.notes.isNotBlank()) Text(event.notes)
+                            Text(lunar.fullLabel(k))
+                            Text("${L.text("ui.buddhist_era.ea617c", k)} ${number(lunar.buddhistYear, k)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                         HorizontalDivider()
                         Text(if (event.basis == DateBasis.CALCULATED) L.text("rules.calculated_label", k) else kindLabel(event.kind, k),
                             color = eventColor(event.kind), fontWeight = FontWeight.SemiBold)
@@ -1238,7 +1240,7 @@ private data class SourceUrlsDialogData(val title: String, val urls: List<String
         val allUrlsText = dialogData.urls.joinToString("\n")
         CalendarAlertDialog(
             onDismissRequest = { activeUrlDialog = null },
-            title = { Text(dialogData.title) },
+            title = { Text(dialogData.title, fontSize = 16.sp, lineHeight = 22.sp) },
             text = {
                 Column(
                     modifier = Modifier
