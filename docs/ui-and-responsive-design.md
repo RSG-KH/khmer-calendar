@@ -45,6 +45,8 @@ NavigationRail(
 - **Phone Screens (`!isTablet`)**: Each `NavigationRailItem` receives `Modifier.weight(1f)`. The 3 tabs distribute evenly across the full vertical height, providing large, ergonomic thumb targets.
 - **Tablet Screens (`isTablet`)**: Items remain unweighted with standard compact height and a top spacer, preserving the conventional tablet desktop rail aesthetic.
 
+At tablet font settings of 130%, 140%, and 150%, navigation grows by 10%, 15%, and 20%, respectively. Landscape increases only the rail width (80 dp to 88/92/96 dp); portrait increases only the bottom bar height (64 dp to 70.4/73.6/76.8 dp). Phone navigation and tablet font settings of 120% or lower retain their existing dimensions. System insets are not scaled.
+
 ---
 
 ### Tablet Landscape: 2-Column Date Card
@@ -67,9 +69,23 @@ On tablets in landscape mode, the left column displays the month grid followed i
 
 ### Landscape Month Picker: 6x2 Grid
 
+The Calendar month picker and Events year picker open as centered modal dialogs above the current tab. Cancel, Back, or tapping outside dismisses the dialog; the tab retains its current state. Both year fields include the supported range in the label, `Year (1800–2200)`, with the existing year validation. Picker content scrolls when available height is limited.
+
 When jumping to a specific month in landscape mode:
 - Arranged into a clean **6-column by 2-row grid** (January–June in row 1, July–December in row 2).
 - Top padding is minimized, ensuring that the entire year selector and all 12 month buttons fit on screen without vertical clipping or awkward dialog scrolling.
+
+### Headers and landscape spacing
+
+The Events header retains its original Android layout: the title is on the left and the previous-year, year-picker, and next-year controls are on the right. The add action is a floating button at the bottom-right, inset 32 dp from the content edges, and stays visible while the list scrolls. The Events list keeps enough bottom padding for the final row to scroll above the button. Narrow calendar headers use abbreviated English month names (Jan–Dec), including when larger fonts reduce the available space.
+
+Phone landscape calendar rows use a 44 dp base height. Tablet rows remain 52 dp in landscape and 64 dp in portrait; phone portrait rows remain 56 dp. Existing font scaling, cell gaps, and the 12 dp gap between landscape columns are retained. The landscape event list ends with 6 dp of content padding, inside the existing system insets.
+
+### Detail backgrounds and credits
+
+All event details share the date-details zodiac background: the animal illustration occupies 60% of the width at bottom-right; the Western zodiac occupies approximately 20% at bottom-left with a 20 dp inset. Both use the accent tint at 5% opacity in light mode and 3% in dark mode.
+
+Settings shows the version on a separate line and groups clickable Android and PWA repository labels below it. The Sources dialog retains its original layout, inline links that open URL dialogs with a Copy action, and expandable MIT notice. Its source description omits the technical Buddhist Era rollover wording, which is documented in `calendar-source-review.md`.
 
 ---
 
@@ -143,12 +159,14 @@ The app features deep, calibrated surface backgrounds for maximum battery effici
   - **Lime** (*បៃតងចាស់*)
 
 ### Dynamic Font Size Scaling
-Users can adjust the application's base text scaling in **Settings → Appearance → Font size** across five presets:
+Users can adjust the application's base text scaling in **Settings → Appearance → Font size** across five phone presets:
 - **80%** (Very Compact)
 - **90%** (Compact)
 - **100%** (Standard Default)
 - **110%** (Comfortable)
 - **120%** (Large)
+
+Tablets (`smallestScreenWidthDp >= 600`) also offer **130%**, **140%**, and **150%**. The phone picker remains 80%–120%; rotating a device does not change its available range. Font choices are saved by enum name in the existing preferences.
 
 The custom `.readableSp` extension automatically recalculates typographic tokens:
 ```kotlin

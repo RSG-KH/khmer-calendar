@@ -47,27 +47,29 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.LinkAnnotation
 import android.widget.Toast
+import android.content.Context
+import android.content.ClipboardManager
+import android.content.ClipData
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.*
-import androidx.compose.ui.text.LinkAnnotation
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLinkStyles
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -150,6 +152,27 @@ private fun westernZodiacDrawable(sign: ZodiacSign): Int = when (sign) {
 private fun zodiacAlpha(): Float = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) 0.03f else 0.05f
 
 @Composable
+private fun BoxScope.DetailsZodiacBackground(info: KhmerDateDetails) {
+    Image(
+        painter = painterResource(zodiacDrawable(info.animalYear, compact = true)),
+        contentDescription = null,
+        modifier = Modifier.align(Alignment.BottomEnd).fillMaxWidth(0.60f).aspectRatio(1f),
+        contentScale = ContentScale.Fit,
+        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+        alpha = zodiacAlpha(),
+    )
+    Image(
+        painter = painterResource(westernZodiacDrawable(info.zodiac)),
+        contentDescription = null,
+        modifier = Modifier.align(Alignment.BottomStart).padding(start = 20.dp, bottom = 20.dp)
+            .fillMaxWidth(0.20f).aspectRatio(1f),
+        contentScale = ContentScale.Fit,
+        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+        alpha = zodiacAlpha(),
+    )
+}
+
+@Composable
 fun CalendarApp(settings: AppSettings, today: LocalDate,
     customEvents: List<CustomEvent> = emptyList(), onSaveCustom: (CustomEvent) -> Unit = {}, onDeleteCustom: (String) -> Unit = {},
     notificationAccess: NotificationAccess = NotificationAccess(), onOpenNotificationSettings: () -> Unit = {}, onAllowExact: () -> Unit = {},
@@ -188,6 +211,12 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
         val configuration = LocalConfiguration.current
         val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         val isTablet = configuration.smallestScreenWidthDp >= 600
+        val navigationScale = if (isTablet) when (settings.fontScale) {
+            FontScale.PERCENT_130 -> 1.10f
+            FontScale.PERCENT_140 -> 1.15f
+            FontScale.PERCENT_150 -> 1.20f
+            else -> 1f
+        } else 1f
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
@@ -197,7 +226,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                         NavigationBar(modifier = Modifier
                             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
                             .padding(bottom = navBottom)
-                            .height(64.dp)
+                            .height(64.dp * navigationScale)
                             .testTag("bottom-navigation"),
                             windowInsets = WindowInsets(0, 0, 0, 0), containerColor = MaterialTheme.colorScheme.background, tonalElevation = 0.dp) {
                             listOf(L.text("ui.calendar.ee8bd9", k), L.text("ui.events.11d867", k), L.text("ui.settings.0e0a4f", k)).forEachIndexed { index, title ->
@@ -223,7 +252,9 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
             Row(Modifier.fillMaxSize().padding(contentPadding)) {
                 if (isLandscape) {
                     NavigationRail(
-                        modifier = Modifier.fillMaxHeight().testTag("navigation-rail"),
+                        modifier = Modifier.fillMaxHeight()
+                            .then(if (navigationScale > 1f) Modifier.width(80.dp * navigationScale) else Modifier)
+                            .testTag("navigation-rail"),
                         containerColor = MaterialTheme.colorScheme.background,
                         windowInsets = WindowInsets(0, 0, 0, 0)
                     ) {
@@ -253,7 +284,6 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                         onSaveCustom(event); creating = false; editingId = null; detail = null; dateDetailText = null
                         eventYear = event.asCalendarEvent(displayZone).date.year.coerceIn(1800, 2200); page = 1; customFocus++
                     })
-                else if (jump) MonthPicker(month, k, { jump = false }) { navigate(it); jump = false }
                 else when (page) {
                     0 -> CalendarScreen(settings, today, month, selected, allCustom,
                         onSelect = { date ->
@@ -277,6 +307,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
             }
         }
     }
+        if (jump) MonthPicker(month, k, { jump = false }) { navigate(it); jump = false }
         if (detail == null) dateDetailText?.let { dateString ->
             val date = LocalDate.parse(dateString)
             DateDetailsDialog(
@@ -311,38 +342,47 @@ private fun CalendarHeader(
 ) {
     val config = LocalConfiguration.current
     val isPhonePortrait = config.orientation == Configuration.ORIENTATION_PORTRAIT && config.smallestScreenWidthDp < 600
-    Box(
+    val yearLabel = number(month.year, k)
+    val buddhistYearLabel = "${L.text("ui.be.623a78", k)} ${number(KhmerCalendar.fromGregorian(selected).buddhistYear, k)}"
+    val measurer = rememberTextMeasurer()
+    val yearWidth = measurer.measure(yearLabel, LocalTextStyle.current.copy(fontSize = 23.sp, fontWeight = FontWeight.SemiBold), maxLines = 1).size.width
+    val buddhistYearWidth = measurer.measure(buddhistYearLabel, LocalTextStyle.current.copy(fontSize = 12.readableSp), maxLines = 1).size.width
+    val sideWidth = (with(LocalDensity.current) { maxOf(yearWidth, buddhistYearWidth).toDp() } + 15.dp).coerceAtLeast(74.dp)
+    BoxWithConstraints(
         Modifier
             .fillMaxWidth()
             .testTag("calendar-header")
             .then(if (isPhonePortrait) Modifier.padding(horizontal = 4.dp) else Modifier)
             .padding(bottom = 2.dp)
     ) {
+        val fontScale = LocalDensity.current.fontScale.coerceAtLeast(1f)
+        val narrowHeader = maxWidth < 400.dp * fontScale
         Column(
             Modifier
                 .align(Alignment.CenterStart)
-                .width(110.dp)
+                .width(sideWidth)
                 .clip(RoundedCornerShape(8.dp))
                 .clickable(onClick = onJump)
                 .padding(start = 10.dp, top = 4.dp, end = 5.dp, bottom = 4.dp)
                 .semantics { contentDescription = L.text("ui.choose_month_and_year.252299", k) }
         ) {
-            Text(number(month.year, k), fontSize = 23.sp, lineHeight = if (k) 20.sp else 22.sp, fontWeight = FontWeight.SemiBold)
+            Text(yearLabel, fontSize = 23.sp, lineHeight = if (k) 20.sp else 22.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
             Text(
-                "${L.text("ui.be.623a78", k)} ${number(KhmerCalendar.fromGregorian(selected).buddhistYear, k)}",
+                buddhistYearLabel,
                 modifier = Modifier.offset(y = if (k) (-5).dp else (-3).dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.readableSp, lineHeight = 13.sp
+                color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.readableSp, lineHeight = 13.sp, maxLines = 1
             )
         }
         Row(
-            Modifier.align(Alignment.Center),
+            Modifier.align(Alignment.Center).widthIn(max = (maxWidth - sideWidth * 2).coerceAtLeast(0.dp)),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             ArrowButton(false, month > YearMonth.of(1800, 1), L.text("ui.previous_month.c03e1f", k)) { onPrevious() }
             Text(
-                monthName(month, k),
+                monthName(month, k, short = k || narrowHeader),
                 Modifier
+                    .weight(1f, fill = false)
                     .clip(RoundedCornerShape(8.dp))
                     .clickable(role = Role.Button, onClick = onJump)
                     .padding(vertical = 6.dp, horizontal = 2.dp),
@@ -509,7 +549,7 @@ private fun CalendarScreen(
                     }
                 }
             }
-            LazyColumn(Modifier.weight(1f).fillMaxHeight().testTag("calendar-scroll"), contentPadding = PaddingValues(top = 4.dp, end = 12.dp, bottom = 24.dp)) {
+            LazyColumn(Modifier.weight(1f).fillMaxHeight().testTag("calendar-scroll"), contentPadding = PaddingValues(top = 4.dp, end = 12.dp, bottom = 6.dp)) {
                 if (!EventRepository.hasBundledYear(month.year)) item { Box(Modifier.padding(bottom = 8.dp)) { CoverageNote(k) } }
                 if (listEvents.isNotEmpty()) {
                     item {
@@ -545,7 +585,7 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
     val baseHeight = when {
         isTablet && isLandscape -> 52.dp
         isTablet -> 64.dp
-        isLandscape -> 41.dp
+        isPhoneLandscape -> 44.dp
         else -> 56.dp
     }
     val cellHeight = (baseHeight * fontScale)
@@ -649,8 +689,8 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
             onYear(it)
             showYearPicker = false
         }
-    } else {
-        Box(Modifier.widthIn(max = 640.dp).fillMaxSize().testTag("events-content")) {
+    }
+    Box(Modifier.widthIn(max = 640.dp).fillMaxSize().testTag("events-content")) {
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxWidth().testTag("events-header").padding(10.dp, 2.dp, 10.dp, 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(L.text("ui.events.11d867", k), Modifier.padding(start = 10.dp).weight(1f), fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
@@ -708,7 +748,6 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
         }
     }
 }
-}
 
 @Composable
 private fun EventRow(event: CalendarEvent, k: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
@@ -750,6 +789,8 @@ private fun EventRow(event: CalendarEvent, k: Boolean, modifier: Modifier = Modi
 @Composable
 private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Unit, access: NotificationAccess, onSystemSettings: () -> Unit, onAllowExact: () -> Unit) {
     val k = settings.khmer
+    val isTablet = LocalConfiguration.current.smallestScreenWidthDp >= 600
+    val fontScales = FontScale.entries.filter { isTablet || it.multiplier <= 1.2f }
     var showSources by remember { mutableStateOf(false) }
     LazyColumn(Modifier.widthIn(max = 640.dp).fillMaxSize().testTag("settings-scroll"), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 20.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
         item {
@@ -762,7 +803,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                 }
                 val fontSizeTitle = if (k) "ទំហំអក្សរ" else "Font size"
                 SettingsRow(fontSizeTitle, L.text("ui.font_size_subtitle", k)) {
-                    SettingDropdown(settings.fontScale, FontScale.entries,
+                    SettingDropdown(settings.fontScale, fontScales,
                         { it.label },
                         "font-scale", fontSizeTitle) { onChange(settings.copy(fontScale = it)) }
                 }
@@ -810,8 +851,12 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                 Text(L.text("ui.no_account_no_internet_no_tracking_just_your_calendar_a.9bc7bf", k), fontSize = 14.readableSp, lineHeight = 23.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 TextButton(onClick = { showSources = true }, contentPadding = PaddingValues(0.dp)) { Text(L.text("ui.calendar_sources_licenses.c2bdb3", k)) }
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(L.text("about.version", k, "version" to BuildConfig.VERSION_NAME), fontSize = 11.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("https://github.com/RSG-KH/khmer-calendar", fontSize = 11.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("RSG-KH · ${L.text("app.name", k)}", fontSize = 11.readableSp, lineHeight = 16.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(L.text("about.version", k, "version" to BuildConfig.VERSION_NAME), fontSize = 11.readableSp, lineHeight = 16.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        SourceLink("https://github.com/RSG-KH/khmer-calendar", "Android · RSG-KH/khmer-calendar", compact = true)
+                        SourceLink("https://github.com/RSG-KH/khmer-calendar-pwa", "PWA · RSG-KH/khmer-calendar-pwa", compact = true)
+                    }
                 }
             }
         }
@@ -834,15 +879,22 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
     var yearText by rememberSaveable { mutableStateOf(year.toString()) }
     val valid = yearText.toIntOrNull()?.let { it in 1800..2200 } == true
     val scrollState = rememberScrollState()
-    Column(Modifier.widthIn(max = if (isLandscape) 680.dp else 640.dp).fillMaxWidth().verticalScrollbar(scrollState).verticalScroll(scrollState).padding(horizontal = 10.dp, vertical = if (isLandscape) 8.dp else 20.dp).testTag("event-year-options")) {
+    CalendarBasicAlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+            .widthIn(max = if (isLandscape) 680.dp else 640.dp).fillMaxWidth(),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
         Surface(shape = CardShape, color = MaterialTheme.colorScheme.surface) {
-            Column(Modifier.fillMaxWidth().padding(if (isLandscape) 18.dp else 24.dp), verticalArrangement = Arrangement.spacedBy(if (isLandscape) 12.dp else 16.dp)) {
+            Column(Modifier.fillMaxWidth().verticalScrollbar(scrollState).verticalScroll(scrollState)
+                .padding(if (isLandscape) 18.dp else 24.dp).testTag("event-year-options"),
+                verticalArrangement = Arrangement.spacedBy(if (isLandscape) 12.dp else 16.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text(L.text("ui.choose_year.0853a0", k), fontSize = if (isLandscape) 20.sp else 22.sp, fontWeight = FontWeight.SemiBold)
                     TextButton(onClick = { onChoose(thisYear) }) { Text(L.text("ui.this_year.02e981", k)) }
                 }
-                OutlinedTextField(value = yearText, onValueChange = { yearText = it.filter(Char::isDigit).take(4) }, modifier = Modifier.fillMaxWidth().testTag("event-year-input"), singleLine = true, label = { Text(L.text("ui.year.61d597", k)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = !valid, supportingText = { Text("1800–2200") })
+                OutlinedTextField(value = yearText, onValueChange = { yearText = it.filter(Char::isDigit).take(4) }, modifier = Modifier.fillMaxWidth().testTag("event-year-input"), singleLine = true, label = { Text("${L.text("ui.year.61d597", k)} (1800–2200)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = !valid)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = onDismiss) { Text(L.text("ui.cancel.5bf834", k)) }
                     TextButton(enabled = valid, onClick = { onChoose(yearText.toInt()) }) { Text(L.text("ui.go.ba4f19", k)) }
@@ -860,12 +912,19 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
     val valid = year.toIntOrNull()?.let { it in 1800..2200 } == true
     val scrollState = rememberScrollState()
     val columns = if (isLandscape) 6 else 3
-    Column(Modifier.widthIn(max = if (isLandscape) 680.dp else 640.dp).fillMaxWidth().verticalScrollbar(scrollState).verticalScroll(scrollState).padding(horizontal = 10.dp, vertical = if (isLandscape) 8.dp else 20.dp)) {
+    CalendarBasicAlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+            .widthIn(max = if (isLandscape) 680.dp else 640.dp).fillMaxWidth(),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
         Surface(shape = CardShape, color = MaterialTheme.colorScheme.surface) {
-            Column(Modifier.fillMaxWidth().padding(if (isLandscape) 18.dp else 24.dp), verticalArrangement = Arrangement.spacedBy(if (isLandscape) 12.dp else 16.dp)) {
+            Column(Modifier.fillMaxWidth().verticalScrollbar(scrollState).verticalScroll(scrollState)
+                .padding(if (isLandscape) 18.dp else 24.dp).testTag("month-picker"),
+                verticalArrangement = Arrangement.spacedBy(if (isLandscape) 12.dp else 16.dp)) {
                 Text(L.text("ui.jump_to_month.b37571", k), fontSize = if (isLandscape) 20.sp else 22.sp, fontWeight = FontWeight.SemiBold)
-                OutlinedTextField(value = year, onValueChange = { year = it.filter(Char::isDigit).take(4) }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text(L.text("ui.year.61d597", k)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = !valid, supportingText = { Text("1800–2200") })
+                OutlinedTextField(value = year, onValueChange = { year = it.filter(Char::isDigit).take(4) }, modifier = Modifier.fillMaxWidth().testTag("month-year-input"), singleLine = true, label = { Text("${L.text("ui.year.61d597", k)} (1800–2200)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = !valid)
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     (1..12).chunked(columns).forEach { row ->
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -912,29 +971,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
             tonalElevation = 0.dp,
         ) {
             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp))) {
-                Image(
-                    painter = painterResource(zodiacDrawable(info.animalYear, compact = true)),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .fillMaxWidth(0.60f)
-                        .aspectRatio(1f),
-                    contentScale = ContentScale.Fit,
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
-                    alpha = zodiacAlpha(),
-                )
-                Image(
-                    painter = painterResource(westernZodiacDrawable(info.zodiac)),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(start = 20.dp, bottom = 20.dp)
-                        .fillMaxWidth(0.20f)
-                        .aspectRatio(1f),
-                    contentScale = ContentScale.Fit,
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
-                    alpha = zodiacAlpha(),
-                )
+                DetailsZodiacBackground(info)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1038,7 +1075,8 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
 }
 
 @Composable private fun EventDialog(event: CalendarEvent, k: Boolean, zoneLabel: String, onEdit: () -> Unit, onDelete: () -> Unit, onDismiss: () -> Unit) {
-    val lunar = remember(event.date) { KhmerCalendar.fromGregorian(event.date) }
+    val info = remember(event.date) { KhmerDateDetails.fromGregorian(event.date) }
+    val lunar = info.lunar
     val officialUrl = event.officialSourceUrl
     var deletePrompt by rememberSaveable(event.id) { mutableStateOf(false) }
     var deleteError by remember(event.id) { mutableStateOf(false) }
@@ -1070,19 +1108,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
             tonalElevation = 0.dp,
         ) {
             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp))) {
-                if (event.kind == EventKind.CUSTOM) {
-                    Image(
-                        painter = painterResource(R.drawable.custom_event_star),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .fillMaxWidth(0.55f)
-                            .aspectRatio(1f),
-                        contentScale = ContentScale.Fit,
-                        colorFilter = ColorFilter.tint(eventColor(event.kind), BlendMode.Modulate),
-                        alpha = 0.05f,
-                    )
-                }
+                DetailsZodiacBackground(info)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1136,6 +1162,18 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
             }
         }
     }
+}
+
+@Composable private fun SourceLink(url: String, label: String = url, compact: Boolean = false) {
+    val uriHandler = LocalUriHandler.current
+    Text(
+        label,
+        modifier = Modifier.clickable(role = Role.Button) { uriHandler.openUri(url) },
+        color = MaterialTheme.colorScheme.primary,
+        textDecoration = TextDecoration.Underline,
+        fontSize = (if (compact) 11 else 14).readableSp,
+        lineHeight = (if (compact) 17 else 22).readableSp,
+    )
 }
 
 private data class SourceUrlsDialogData(val title: String, val urls: List<String>)

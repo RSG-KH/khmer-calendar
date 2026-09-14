@@ -63,7 +63,7 @@ The repository maintains strict verification combining unit tests on the JVM via
    - Phone landscape (`w800dp-h400dp-land`): Navigation rail items expanding vertically across full screen (`weight(1f)`).
    - Tablet landscape (`sw800dp-w1280dp-h800dp-land`): Compact navigation rail, 2-column date card.
 4. **Interactive Dialogs & Features**:
-   - Dynamic font size scaling (80% to 120%) verifying text heights adjust proportionately.
+   - Dynamic font size scaling (80% to 120% on phones, up to 150% on tablets) verifying text heights adjust proportionately.
    - Buddhist Holy Day toggle synchronization in Date Details popup and tablet landscape event list.
    - Precise reminder prompt behavior based on notification and exact alarm permissions.
 

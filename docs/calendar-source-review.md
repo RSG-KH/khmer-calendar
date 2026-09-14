@@ -10,6 +10,10 @@ The supplied `D:/DEV/android/tmp/research.md` was a preliminary review. This fol
 | [date-chinese](https://github.com/commenthol/date-chinese) | Calculates Chinese calendar dates, Chinese New Year and Qingming. It is an optional source for Chinese festivals, not a Khmer lunar engine. No Chinese-festival subsystem or npm runtime was added in this change. |
 | Kizitonwose Calendar suggestion | A UI component would not improve the calendar arithmetic. The existing custom Compose month grid already meets the current scope, so it was retained. |
 
+## Buddhist Era rollover convention
+
+The Buddhist year changes on 1 Roach of Pisakh (the first waning day following Visak Bochea). This is the existing civil calendar calculation, separate from the animal-year and Sak transitions around Khmer New Year. Keep this implementation detail in developer documentation rather than the user-facing source description. The calendar arithmetic and pinned reference tests are unchanged.
+
 ## Confirmed hybrid-package issues
 
 At commit `88cfdb6dbfa7978203a8d337685f50d254a5e7de`:

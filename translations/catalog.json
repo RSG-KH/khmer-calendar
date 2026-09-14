@@ -1329,11 +1329,11 @@
       "id": "ui.lunar_calendar_1900_2100_based_on_work_by_phylypo_tum_t.d8396b",
       "section": "about",
       "context": "CalendarApp.kt",
-      "en": "Lunar calendar: 1800–2200. Based on work by Phylypo Tum, Thyrith Sor and MetheaX (MIT). The Buddhist year changes on 1 Roach of Pisakh.",
-      "km": "ប្រតិទិនចន្ទគតិ៖ ឆ្នាំ១៨០០–២២០០។ គណនាតាមការងាររបស់ Phylypo Tum, Thyrith Sor និង MetheaX (MIT)។ ពុទ្ធសករាជប្ដូរនៅថ្ងៃ១រោច ខែពិសាខ។",
+      "en": "Lunar calendar: 1800–2200. Based on work by Phylypo Tum, Thyrith Sor and MetheaX (MIT).",
+      "km": "ប្រតិទិនចន្ទគតិ៖ ឆ្នាំ១៨០០–២២០០។ គណនាតាមការងាររបស់ Phylypo Tum, Thyrith Sor និង MetheaX (MIT)។",
       "original": {
-        "en": "Lunar calendar: 1800–2200. Based on work by Phylypo Tum, Thyrith Sor and MetheaX (MIT). The Buddhist year changes on 1 Roach of Pisakh.",
-        "km": "ប្រតិទិនចន្ទគតិ៖ ឆ្នាំ១៨០០–២២០០។ គណនាតាមការងាររបស់ Phylypo Tum, Thyrith Sor និង MetheaX (MIT)។ ពុទ្ធសករាជប្ដូរនៅថ្ងៃ១រោច ខែពិសាខ។"
+        "en": "Lunar calendar: 1800–2200. Based on work by Phylypo Tum, Thyrith Sor and MetheaX (MIT).",
+        "km": "ប្រតិទិនចន្ទគតិ៖ ឆ្នាំ១៨០០–២២០០។ គណនាតាមការងាររបស់ Phylypo Tum, Thyrith Sor និង MetheaX (MIT)។"
       },
       "reviewed": true,
       "required": {
@@ -35268,11 +35268,11 @@
       "id": "about.version",
       "section": "about",
       "context": "Version label",
-      "en": "RSG-KH · Khmer Calendar · {version} (Apache-2.0)",
-      "km": "RSG-KH · ប្រតិទិនខ្មែរ · {version} (Apache-2.0)",
+      "en": "Version {version} (Apache-2.0)",
+      "km": "កំណែ {version} (Apache-2.0)",
       "original": {
-        "en": "RSG-KH · Khmer Calendar · {version} (Apache-2.0)",
-        "km": "RSG-KH · ប្រតិទិនខ្មែរ · {version} (Apache-2.0)"
+        "en": "Version {version} (Apache-2.0)",
+        "km": "កំណែ {version} (Apache-2.0)"
       },
       "reviewed": true,
       "required": {

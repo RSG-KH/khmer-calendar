@@ -13,6 +13,8 @@
 
 A fast, privacy-first, ad-free Android calendar application engineered with native Kotlin and Jetpack Compose. Seamlessly converts between Gregorian dates and traditional Khmer lunar dates (*Chhankitek*), computes Buddhist Era chronology and astronomical transitions, provides verified Cambodian public holidays and cultural observances, and offers customizable local notifications.
 
+**[Live Web (PWA) Calendar](https://rsg-kh.github.io/khmer-calendar-pwa/)** — Open the web version in your browser on phones, tablets, and desktops.
+
 </div>
 
 <img src="docs/images/cover.jpg" alt="Khmer Calendar Cover" />
@@ -56,7 +58,7 @@ A fast, privacy-first, ad-free Android calendar application engineered with nati
 ### 🎨 Personalization & Accessibility
 - **Curated Theme Accents**: Choose from **Blue** (Default), **Lavender**, **Rose**, **Amber**, and **Lime** (*បៃតងចាស់*).
 - **Theme Modes**: Full support for System, Light (`#F3F4F8`), and OLED Dark (`#0C0E12`) modes.
-- **Dynamic Font Scaling**: Adjust typography dynamically between 80%, 90%, 100%, 110%, and 120% scale via `readableSp`.
+- **Dynamic Font Scaling**: Choose 80%, 90%, 100%, 110%, or 120% on phones, with additional 130%, 140%, and 150% options on tablets.
 - **Bilingual Experience**: Instant switching between Khmer and English with full localization.
 
 ---

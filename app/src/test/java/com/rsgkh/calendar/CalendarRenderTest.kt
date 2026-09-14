@@ -46,8 +46,11 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("font-scale").assertTextContains("100%")
 
         compose.onNodeWithTag("font-scale").performClick()
+        listOf("130%", "140%", "150%").forEach { compose.onNodeWithText(it).assertDoesNotExist() }
         compose.onNode(hasText("120%") and hasAnyAncestor(isPopup())).performClick()
         compose.onNodeWithTag("font-scale").assertTextContains("120%")
+        val phoneNavigation = compose.onNodeWithTag("bottom-navigation").getUnclippedBoundsInRoot()
+        assertEquals(64f, (phoneNavigation.bottom - phoneNavigation.top).value, .5f)
         compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
         val height120 = compose.onNodeWithText("International Literacy Day").fetchSemanticsNode().size.height
 
@@ -269,7 +272,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
     }
 
     @Test
-    fun customEventPopupDialogDisplaysStar() {
+    fun customEventPopupDialogDisplaysZodiacBackground() {
         val customEvent = CustomEvent(
             title = "This is a custom event that I manually added to test if everything is ok.",
             date = LocalDate.of(2026, 9, 14),
@@ -331,6 +334,87 @@ class CalendarRenderTest : CalendarUiScenarios() {
         // Clicking the same selected date again re-opens Date details popup
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
         compose.onNodeWithText("Date details").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "sw800dp-w800dp-h1280dp-port-xhdpi")
+    fun tabletPortraitSupportsLargerFontSizes() = checkTabletFontSizes("portrait")
+
+    @Test
+    @Config(qualifiers = "sw800dp-w1280dp-h800dp-land-xhdpi")
+    fun tabletLandscapeSupportsLargerFontSizes() = checkTabletFontSizes("landscape")
+
+    private fun checkTabletFontSizes(orientation: String) {
+        start()
+        compose.onNodeWithText("Settings").performClick()
+        val landscape = orientation == "landscape"
+        val navigationTag = if (landscape) "navigation-rail" else "bottom-navigation"
+        val baselineNavigation = compose.onNodeWithTag(navigationTag).getUnclippedBoundsInRoot()
+        for ((scale, expectedSize) in listOf(
+            FontScale.PERCENT_120 to if (landscape) 80f else 64f,
+            FontScale.PERCENT_130 to if (landscape) 88f else 70.4f,
+            FontScale.PERCENT_140 to if (landscape) 92f else 73.6f,
+            FontScale.PERCENT_150 to if (landscape) 96f else 76.8f,
+        )) {
+            compose.onNodeWithTag("font-scale").performClick()
+            compose.onNode(hasText(scale.label) and hasAnyAncestor(isPopup())).performClick()
+            compose.onNodeWithTag("font-scale").assertTextContains(scale.label)
+            val navigation = compose.onNodeWithTag(navigationTag).getUnclippedBoundsInRoot()
+            if (landscape) {
+                assertEquals(expectedSize, (navigation.right - navigation.left).value, .5f)
+                assertEquals((baselineNavigation.bottom - baselineNavigation.top).value, (navigation.bottom - navigation.top).value, .5f)
+            } else {
+                assertEquals(expectedSize, (navigation.bottom - navigation.top).value, .5f)
+                assertEquals((baselineNavigation.right - baselineNavigation.left).value, (navigation.right - navigation.left).value, .5f)
+            }
+            val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+            AppPreferences(context).write(AppSettings(fontScale = scale))
+            assertEquals(scale, AppPreferences(context).read().fontScale)
+        }
+        screenshot("tablet-$orientation-settings-150")
+        compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
+        screenshot("tablet-$orientation-calendar-150")
+        compose.onNodeWithContentDescription("Choose month and year").performClick()
+        compose.onNodeWithTag("month-picker").assert(hasAnyAncestor(isDialog()))
+        compose.onNodeWithTag("month-grid").assertExists()
+        compose.onNodeWithText("Year (1800–2200)").assertIsDisplayed()
+        compose.onNodeWithText("Dec").performScrollTo().assertIsDisplayed()
+        screenshot("tablet-$orientation-month-picker-150")
+        compose.onNodeWithText("Cancel").performScrollTo().performClick()
+        compose.onNode(hasText("Events") and hasClickAction()).performClick()
+        val header = compose.onNodeWithTag("events-header").getUnclippedBoundsInRoot()
+        val nextYear = compose.onNodeWithContentDescription("Next year").getUnclippedBoundsInRoot()
+        val add = compose.onNodeWithTag("add-event").getUnclippedBoundsInRoot()
+        val content = compose.onNodeWithTag("events-content").getUnclippedBoundsInRoot()
+        assertEquals(10f, (header.right - nextYear.right).value, .5f)
+        assertEquals(32f, (content.right - add.right).value, .5f)
+        assertEquals(32f, (content.bottom - add.bottom).value, .5f)
+        org.junit.Assert.assertTrue(add.top > header.bottom)
+        screenshot("tablet-$orientation-events-150")
+        compose.onNodeWithTag("event-year").performClick()
+        compose.onNodeWithTag("event-year-options").assert(hasAnyAncestor(isDialog()))
+        compose.onNodeWithText("Year (1800–2200)").assertIsDisplayed()
+        screenshot("tablet-$orientation-year-picker-150")
+        compose.onNodeWithText("Cancel").performScrollTo().performClick()
+    }
+
+    @Test fun aboutLinksAndCorrectedSourceTextWorkInBothLanguages() {
+        start()
+        compose.onNodeWithText("Settings").performClick()
+        for (k in listOf(false, true)) {
+            val version = L.text("about.version", k, "version" to BuildConfig.VERSION_NAME)
+            compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText(version))
+            compose.onNodeWithText(version).assertIsDisplayed()
+            compose.onNodeWithText("PWA · RSG-KH/khmer-calendar-pwa").assertIsDisplayed().assertHasClickAction()
+            compose.onNodeWithText("Android · RSG-KH/khmer-calendar").assertIsDisplayed().assertHasClickAction()
+            screenshot("about-$k")
+            val sourceText = L.text("ui.lunar_calendar_1900_2100_based_on_work_by_phylypo_tum_t.d8396b", k)
+            org.junit.Assert.assertFalse(sourceText.contains("1 Roach") || sourceText.contains("ពុទ្ធសករាជប្ដូរ"))
+            if (!k) {
+                compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("ខ្មែរ"))
+                compose.onNodeWithText("ខ្មែរ").performClick()
+            }
+        }
     }
 }
 

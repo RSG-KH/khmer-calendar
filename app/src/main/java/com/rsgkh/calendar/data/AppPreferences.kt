@@ -15,7 +15,10 @@ enum class FontScale(val multiplier: Float, val label: String) {
     PERCENT_90(0.90f, "90%"),
     PERCENT_100(1.00f, "100%"),
     PERCENT_110(1.10f, "110%"),
-    PERCENT_120(1.20f, "120%")
+    PERCENT_120(1.20f, "120%"),
+    PERCENT_130(1.30f, "130%"),
+    PERCENT_140(1.40f, "140%"),
+    PERCENT_150(1.50f, "150%")
 }
 enum class TodayTimeZone {
     LOCAL, CAMBODIA;
