@@ -9,6 +9,7 @@ import org.robolectric.annotation.LooperMode
 import androidx.test.core.app.ApplicationProvider
 import androidx.compose.ui.test.*
 import com.rsgkh.calendar.data.*
+import com.rsgkh.calendar.domain.KhmerDateDetails
 import com.rsgkh.calendar.i18n.L
 import com.rsgkh.calendar.ui.NotificationAccess
 import java.time.LocalDate
@@ -23,18 +24,89 @@ import org.junit.Test
 class CalendarRenderTest : CalendarUiScenarios() {
     @Test fun preferencesSurviveRepositoryRecreation() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        val defaults = AppSettings(ThemeMode.SYSTEM, Accent.BLUE, khmer = true, mondayFirst = false, showLunar = true,
+        val defaults = AppSettings(ThemeMode.SYSTEM, Accent.BLUE, khmer = true, mondayFirst = false, showCopyButtons = false, showLunar = true,
             showHolyDaysInCalendar = true, showHolyDaysInEvents = false,
             highlightSunday = true, notificationsEnabled = false, pushMinutes = 300, repeatHours = 0, todayTimeZone = TodayTimeZone.LOCAL,
             fontScale = FontScale.PERCENT_100)
         assertEquals(defaults, AppSettings())
         assertEquals(defaults, AppPreferences(context).read())
-        val expected = AppSettings(ThemeMode.DARK, Accent.LIME, khmer = false, mondayFirst = true, showLunar = false,
+        val expected = AppSettings(ThemeMode.DARK, Accent.LIME, khmer = false, mondayFirst = true, showCopyButtons = true, showLunar = false,
             showHolyDaysInCalendar = false, showHolyDaysInEvents = true,
             highlightSunday = false, repeatHours = 6, todayTimeZone = TodayTimeZone.CAMBODIA,
             fontScale = FontScale.PERCENT_110)
         AppPreferences(context).write(expected)
         assertEquals(expected, AppPreferences(context).read())
+        AppPreferences(context).write(expected.copy(showCopyButtons = false))
+        assertEquals(expected.copy(showCopyButtons = false), AppPreferences(context).read())
+    }
+
+    @Test fun copyButtonsToggleControlsDateAndEventDetails() {
+        start()
+        fun openDate() {
+            compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
+            compose.onNodeWithText("Date details").assertIsDisplayed()
+        }
+        fun openEvent() {
+            compose.onNode(hasText("Constitution Day") and hasAnyAncestor(isDialog())).performClick()
+        }
+        fun toggleCopyButtons(enabled: Boolean) {
+            compose.onNodeWithText("Settings").performClick()
+            compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("Show copy buttons"))
+            val toggle = compose.onNodeWithContentDescription("Show copy buttons")
+            if (enabled) toggle.assertIsOff() else toggle.assertIsOn()
+            toggle.performClick()
+            if (enabled) toggle.assertIsOn() else toggle.assertIsOff()
+            if (enabled) screenshot("settings-copy-buttons")
+            compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
+        }
+        fun assertHiddenInBothDialogs() {
+            openDate()
+            compose.onNodeWithContentDescription("Copy full date description").assertDoesNotExist()
+            openEvent()
+            compose.onNodeWithContentDescription("Copy event title").assertDoesNotExist()
+            compose.onNodeWithText("Close").performClick()
+            compose.onNodeWithText("Close").performClick()
+        }
+
+        assertHiddenInBothDialogs()
+        toggleCopyButtons(true)
+        openDate()
+        compose.onNodeWithContentDescription("Copy full date description").assertIsDisplayed().performClick()
+        assertClipboardText(KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 24)).fullEnglishDate())
+        screenshot("date-copy-buttons-english")
+        openEvent()
+        compose.onNodeWithContentDescription("Copy event title").assertIsDisplayed().performClick()
+        assertClipboardText("Constitution Day")
+        screenshot("event-copy-buttons-english")
+        compose.onNodeWithText("Close").performClick()
+        compose.onNodeWithText("Close").performClick()
+        toggleCopyButtons(false)
+        assertHiddenInBothDialogs()
+    }
+
+    @Test fun copyButtonsPreserveKhmerDateAndCustomEventTitle() {
+        val event = CustomEvent(title = "ជួបគ្រួសារ · Family meeting", date = LocalDate.of(2026, 9, 10),
+            time = LocalTime.NOON, notes = "Notes must not be copied with the title")
+        start(AppSettings(khmer = true, theme = ThemeMode.DARK, showCopyButtons = true, todayTimeZone = TodayTimeZone.CAMBODIA),
+            customEvents = listOf(event))
+        compose.onNode(hasContentDescription("១៣រោច", substring = true)).performClick()
+        compose.onNodeWithContentDescription(L.text("ui.copy_full_date", true)).assertIsDisplayed().performClick()
+        assertClipboardText("ថ្ងៃព្រហស្បតិ៍ ១៣រោច ខែស្រាពណ៍ ឆ្នាំមមី អដ្ឋស័ក ពុទ្ធសករាជ ២៥៧០ ត្រូវនឹងថ្ងៃទី១០ ខែកញ្ញា ឆ្នាំ២០២៦")
+        screenshot("date-copy-buttons-khmer")
+        compose.onNode(hasText(event.title) and hasAnyAncestor(isDialog())).performScrollTo().performClick()
+        compose.onNodeWithContentDescription(L.text("ui.copy_event_title", true)).assertIsDisplayed().performClick()
+        assertClipboardText(event.title)
+        screenshot("event-copy-buttons-khmer")
+        compose.onNodeWithText(L.text("ui.edit.bbdcac", true)).assertIsDisplayed()
+        compose.onNodeWithText(L.text("ui.delete.4708f4", true)).assertIsDisplayed()
+    }
+
+    private fun assertClipboardText(expected: String) {
+        compose.runOnIdle {
+            val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+            val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
+            assertEquals(expected, clipboard.primaryClip?.getItemAt(0)?.text?.toString())
+        }
     }
 
     @Test fun fontSizeSettingCanBeChanged() {

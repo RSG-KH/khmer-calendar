@@ -316,6 +316,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                 k = k,
                 custom = allCustom,
                 showHolyDays = settings.showHolyDaysInEvents,
+                showCopyButtons = settings.showCopyButtons,
                 onEvent = { detail = it },
                 onAddEvent = {
                     selectedText = date.toString()
@@ -327,7 +328,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
         }
         detail?.let { original ->
             val event = if (original.kind == EventKind.CUSTOM) allCustom.firstOrNull { it.id == original.id } ?: original else original
-            EventDialog(event, k, timeZoneLabel(settings.todayTimeZone, k), onEdit = {
+            EventDialog(event, k, timeZoneLabel(settings.todayTimeZone, k), settings.showCopyButtons, onEdit = {
             editingId = event.id.removePrefix("custom:"); detail = null; dateDetailText = null
         }, onDelete = {
             onDeleteCustom(event.id.removePrefix("custom:")); detail = null
@@ -838,6 +839,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
         item {
             SettingsCard(L.text("ui.calendar.beb873", k)) {
                 SettingSwitch(L.text("ui.start_week_on_monday.5578c3", k), L.text("ui.sunday_when_turned_off.e40816", k), settings.mondayFirst) { onChange(settings.copy(mondayFirst = it)) }
+                SettingSwitch(L.text("ui.show_copy_buttons", k), L.text("ui.show_copy_buttons_subtitle", k), settings.showCopyButtons) { onChange(settings.copy(showCopyButtons = it)) }
                 SettingSwitch(L.text("ui.highlight_sunday_column.549462", k), L.text("ui.show_sundays_in_red_like_holidays.245681", k), settings.highlightSunday) { onChange(settings.copy(highlightSunday = it)) }
                 SettingSwitch(L.text("ui.lunar_dates_in_calendar.4dffed", k), L.text("ui.koeut_and_roach_under_each_date.f23bd7", k), settings.showLunar) { onChange(settings.copy(showLunar = it)) }
                 SettingSwitch(L.text("ui.buddhist_holy_days_in_calendar.d1e9b6", k), L.text("ui.show_lotus_markers_and_holy_days.c9d0bc", k), settings.showHolyDaysInCalendar) { onChange(settings.copy(showHolyDaysInCalendar = it)) }
@@ -952,7 +954,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
 
 @Composable private fun DateDetailsDialog(
     date: LocalDate, today: LocalDate, k: Boolean, custom: List<CalendarEvent>,
-    showHolyDays: Boolean, onEvent: (CalendarEvent) -> Unit, onAddEvent: () -> Unit, onDismiss: () -> Unit
+    showHolyDays: Boolean, showCopyButtons: Boolean, onEvent: (CalendarEvent) -> Unit, onAddEvent: () -> Unit, onDismiss: () -> Unit
 ) {
     val info = remember(date) { KhmerDateDetails.fromGregorian(date) }
     val events = remember(date, custom, showHolyDays) {
@@ -1003,7 +1005,11 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                     ) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         if (!k) Text(CalendarWords.weekday(date.dayOfWeek.value, k), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(if (k) info.fullKhmerDate() else info.fullEnglishDate(), fontSize = 18.readableSp, lineHeight = 32.readableSp, color = MaterialTheme.colorScheme.onSurface)
+                        val fullDate = if (k) info.fullKhmerDate() else info.fullEnglishDate()
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(fullDate, modifier = Modifier.weight(1f), fontSize = 18.readableSp, lineHeight = 32.readableSp, color = MaterialTheme.colorScheme.onSurface)
+                            if (showCopyButtons) CopyTextButton(fullDate, L.text("ui.copy_full_date", k), L.text("ui.full_date_copied", k))
+                        }
                         if (info.lunar.isHolyDay || info.lunar.isShavingDay) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -1074,7 +1080,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
     }
 }
 
-@Composable private fun EventDialog(event: CalendarEvent, k: Boolean, zoneLabel: String, onEdit: () -> Unit, onDelete: () -> Unit, onDismiss: () -> Unit) {
+@Composable private fun EventDialog(event: CalendarEvent, k: Boolean, zoneLabel: String, showCopyButtons: Boolean, onEdit: () -> Unit, onDelete: () -> Unit, onDismiss: () -> Unit) {
     val info = remember(event.date) { KhmerDateDetails.fromGregorian(event.date) }
     val lunar = info.lunar
     val officialUrl = event.officialSourceUrl
@@ -1114,7 +1120,10 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                         .fillMaxWidth()
                         .padding(24.dp)
                 ) {
-                    Text(event.title(k), fontSize = 18.readableSp, lineHeight = 26.readableSp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(event.title(k), modifier = Modifier.weight(1f), fontSize = 18.readableSp, lineHeight = 26.readableSp)
+                        if (showCopyButtons) CopyTextButton(event.title(k), L.text("ui.copy_event_title", k), L.text("ui.event_title_copied", k))
+                    }
                     Spacer(Modifier.height(16.dp))
                     val scrollState = rememberScrollState()
                     Column(

@@ -43,6 +43,7 @@ data class AppSettings(
     val accent: Accent = Accent.BLUE,
     val khmer: Boolean = true,
     val mondayFirst: Boolean = false,
+    val showCopyButtons: Boolean = false,
     val showLunar: Boolean = true,
     val showHolyDaysInCalendar: Boolean = true,
     val showHolyDaysInEvents: Boolean = false,
@@ -63,6 +64,7 @@ class AppPreferences(context: Context) {
             accent = Accent.entries.firstOrNull { it.name == prefs.getString("accent", "BLUE") } ?: Accent.BLUE,
             khmer = prefs.getBoolean("khmer", true),
             mondayFirst = prefs.getBoolean("mondayFirst", false),
+            showCopyButtons = prefs.getBoolean("showCopyButtons", false),
             showLunar = prefs.getBoolean("showLunar", true),
             showHolyDaysInCalendar = prefs.getBoolean("showHolyDaysInCalendar", legacyHolyDays),
             showHolyDaysInEvents = prefs.getBoolean("showHolyDaysInEvents", false),
@@ -80,6 +82,7 @@ class AppPreferences(context: Context) {
             putString("accent", settings.accent.name)
             putBoolean("khmer", settings.khmer)
             putBoolean("mondayFirst", settings.mondayFirst)
+            putBoolean("showCopyButtons", settings.showCopyButtons)
             putBoolean("showLunar", settings.showLunar)
             putBoolean("showHolyDaysInCalendar", settings.showHolyDaysInCalendar)
             putBoolean("showHolyDaysInEvents", settings.showHolyDaysInEvents)

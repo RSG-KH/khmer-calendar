@@ -87,6 +87,8 @@ All event details share the date-details zodiac background: the animal illustrat
 
 Settings shows the version on a separate line and groups clickable Android and PWA repository labels below it. The Sources dialog retains its original layout, inline links that open URL dialogs with a Copy action, and expandable MIT notice. Its source description omits the technical Buddhist Era rollover wording, which is documented in `calendar-source-review.md`.
 
+**Settings → Calendar → Show copy buttons** is off by default and saved on the device. When enabled, Date details can copy the displayed full date description and Event details can copy the displayed event title, including custom events. Both actions use the current language and Android's clipboard. Android 13+ shows the system clipboard confirmation; Android 12 shows a translated toast.
+
 ---
 
 ## 2. Custom Components
