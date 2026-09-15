@@ -8,7 +8,7 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Offline](https://img.shields.io/badge/Network-100%25%20Offline-success)](docs/architecture.md)
-[![Privacy](https://img.shields.io/badge/Privacy-0%20Ads%20%7C%200%20Trackers-blue)](docs/architecture.md)
+[![Privacy](https://img.shields.io/badge/Privacy-0%20Ads%20%7C%200%20Trackers-blue)](PRIVACY_POLICY.md)
 <!-- [![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE) -->
 
 A fast, privacy-first, ad-free Android calendar application engineered with native Kotlin and Jetpack Compose. Seamlessly converts between Gregorian dates and traditional Khmer lunar dates (*Chhankitek*), computes Buddhist Era chronology and astronomical transitions, provides verified Cambodian public holidays and cultural observances, and offers customizable local notifications.
@@ -186,6 +186,8 @@ For detailed workflow instructions, consult the [Translation Tool Guide](tools/t
 - **Zero Network Permissions**: The application does not request the Android `INTERNET` permission.
 - **Zero Advertising or Telemetry**: No third-party SDKs, analytics, or tracking services are bundled.
 - **Local Data Ownership**: User events and preferences are stored exclusively on-device in SQLite.
+
+For complete details on our data practices and user controls, read our [Privacy Policy](PRIVACY_POLICY.md).
 
 ### Credits & Attribution
 - Lunar calendar arithmetic adapted from [MetheaX/khmer-chhankitek-calendar](https://github.com/MetheaX/khmer-chhankitek-calendar) and aligned with [MomentKH](https://github.com/ThyrithSor/momentkh), honoring the pioneering research of Phylypo Tum and Thyrith Sor.
