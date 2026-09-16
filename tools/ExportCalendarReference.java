@@ -1,6 +1,6 @@
 // Copyright (c) 2026 RSG-KH | Apache-2.0 License
 // Development audit only. Run against the app's compiled debug Kotlin classes
-// and Kotlin stdlib; no copy of the calendar algorithm is maintained here.
+// plus the released shared-engine JAR and Kotlin stdlib; no algorithm copy is maintained here.
 import com.rsgkh.calendar.domain.KhmerCalendar;
 import java.nio.file.Files;
 import java.nio.file.Path;

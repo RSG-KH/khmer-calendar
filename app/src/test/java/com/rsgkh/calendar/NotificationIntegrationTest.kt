@@ -69,7 +69,7 @@ class NotificationIntegrationTest {
             CustomEventRepository(context).use { it.save(local, local.instant.minusSeconds(60)) }
             EventNotifications.reschedule(context, local.instant.minusSeconds(1))
             val alarm = Shadows.shadowOf(context.getSystemService(AlarmManager::class.java))
-            val scheduled = alarm.scheduledAlarms.single().triggerAtTime
+            val scheduled = alarm.scheduledAlarms.single().triggerAtMs
             assertEquals(local.instant.toEpochMilli(), scheduled)
             EventNotifications.deliver(context, scheduled, local.instant.plusSeconds(60))
             val posted = context.getSystemService(NotificationManager::class.java).activeNotifications.single().notification
@@ -98,19 +98,20 @@ class NotificationIntegrationTest {
         }
     }
     @Test fun settingsSurviveRecreationAndAlarmDeliverySchedulesTheNextRepeat() {
-        val settings = AppSettings(notificationsEnabled = true, pushMinutes = 300, repeatHours = 4, khmer = false)
+        val settings = AppSettings(notificationsEnabled = true, pushMinutes = 300, repeatHours = 4, khmer = false,
+            todayTimeZone = TodayTimeZone.CAMBODIA)
         AppPreferences(context).write(settings)
         assertEquals(settings, AppPreferences(context).read())
         ShadowAlarmManager.setCanScheduleExactAlarms(true)
         EventNotifications.reschedule(context, now)
         val alarm = Shadows.shadowOf(context.getSystemService(AlarmManager::class.java))
-        val scheduled = alarm.scheduledAlarms.single().triggerAtTime
+        val scheduled = alarm.scheduledAlarms.single().triggerAtMs
         assertEquals(Instant.parse("2026-09-23T22:00:00Z").toEpochMilli(), scheduled)
         EventNotifications.deliver(context, scheduled, Instant.ofEpochMilli(scheduled))
         val posted = context.getSystemService(NotificationManager::class.java).activeNotifications.single().notification
         assertTrue(posted.extras.getCharSequence("android.bigText").toString().contains("Constitution Day"))
         assertEquals("2026-09-24", Shadows.shadowOf(posted.contentIntent).savedIntent.getStringExtra(EventNotifications.EXTRA_DATE))
-        assertEquals(scheduled + 4 * 3600000, alarm.scheduledAlarms.single().triggerAtTime)
+        assertEquals(scheduled + 4 * 3600000, alarm.scheduledAlarms.single().triggerAtMs)
         EventNotifications.deliver(context, scheduled, Instant.ofEpochMilli(scheduled))
         assertEquals(1, context.getSystemService(NotificationManager::class.java).activeNotifications.size)
         AppPreferences(context).write(settings.copy(notificationsEnabled = false))
@@ -119,7 +120,7 @@ class NotificationIntegrationTest {
         assertTrue(context.getSystemService(NotificationManager::class.java).activeNotifications.isEmpty())
     }
     @Test fun restoreAndInexactFallbackKeepOneAlarmAndHonorChangedSettings() {
-        AppPreferences(context).write(AppSettings(notificationsEnabled = true))
+        AppPreferences(context).write(AppSettings(notificationsEnabled = true, todayTimeZone = TodayTimeZone.CAMBODIA))
         ShadowAlarmManager.setCanScheduleExactAlarms(false)
         EventNotifications.reschedule(context, now)
         val alarm = Shadows.shadowOf(context.getSystemService(AlarmManager::class.java))
@@ -127,7 +128,7 @@ class NotificationIntegrationTest {
         assertFalse(EventNotifications.canBeExact(context))
         AppPreferences(context).write(AppPreferences(context).read().copy(pushMinutes = 6 * 60, repeatHours = 8))
         EventNotifications.reschedule(context, now)
-        assertEquals(Instant.parse("2026-09-23T23:00:00Z").toEpochMilli(), alarm.scheduledAlarms.single().triggerAtTime)
+        assertEquals(Instant.parse("2026-09-23T23:00:00Z").toEpochMilli(), alarm.scheduledAlarms.single().triggerAtMs)
         val receiver = ReminderRestoreReceiver()
         context.registerReceiver(receiver, IntentFilter(Intent.ACTION_BOOT_COMPLETED))
         try {
@@ -137,19 +138,112 @@ class NotificationIntegrationTest {
             assertTrue(shadow.wentAsync())
             Shadows.shadowOf(shadow.originalPendingResult).future.get(5, TimeUnit.SECONDS)
             assertEquals(1, alarm.scheduledAlarms.size)
-            assertTrue(alarm.scheduledAlarms.single().triggerAtTime > Instant.now().toEpochMilli())
+            assertTrue(alarm.scheduledAlarms.single().triggerAtMs > Instant.now().toEpochMilli())
         } finally { context.unregisterReceiver(receiver) }
     }
-    @Test fun repeatOffDeliversTheFirstNotificationEvenWhenAndroidIsLate() {
-        AppPreferences(context).write(AppSettings(notificationsEnabled = true, repeatHours = 0, khmer = false))
+    @Test fun categoryChangesFilterAnAlreadyScheduledAlarmAndCancelWhenAllAreOff() {
+        val settings = AppSettings(notificationsEnabled = true, repeatHours = 4, khmer = false,
+            todayTimeZone = TodayTimeZone.CAMBODIA)
+        val custom = CustomEvent(title = "Personal reminder", date = LocalDate.of(2026, 9, 24), time = LocalTime.of(5, 0))
+        CustomEventRepository(context).use { it.save(custom, now) }
+        AppPreferences(context).write(settings)
         EventNotifications.reschedule(context, now)
         val alarm = Shadows.shadowOf(context.getSystemService(AlarmManager::class.java))
-        val scheduled = alarm.scheduledAlarms.single().triggerAtTime
+        val scheduled = alarm.scheduledAlarms.single().triggerAtMs
+        val due = Instant.ofEpochMilli(scheduled)
+
+        // Recheck current choices even if the alarm fires before rescheduling finishes.
+        val customOnly = settings.copy(pushHolidays = false, pushObservances = false, pushHolyDays = false)
+        AppPreferences(context).write(customOnly)
+        assertEquals(customOnly, AppPreferences(context).read())
+        EventNotifications.deliver(context, scheduled, due)
+        val manager = context.getSystemService(NotificationManager::class.java)
+        val posted = manager.activeNotifications.single().notification
+        val text = posted.extras.getCharSequence("android.bigText").toString()
+        assertTrue(text.contains("Personal reminder"))
+        assertFalse(text.contains("Constitution Day"))
+        val nextRepeat = alarm.scheduledAlarms.single().triggerAtMs
+        assertEquals(scheduled + 4 * 3600000, nextRepeat)
+
+        val allOff = customOnly.copy(pushCustomEvents = false)
+        AppPreferences(context).write(allOff)
+        assertEquals(allOff, AppPreferences(context).read())
+        EventNotifications.reschedule(context, due)
+        assertTrue(alarm.scheduledAlarms.isEmpty())
+        EventNotifications.clearDisplayed(context)
+        EventNotifications.deliver(context, nextRepeat, Instant.ofEpochMilli(nextRepeat))
+        assertTrue(manager.activeNotifications.isEmpty())
+
+        AppPreferences(context).write(customOnly)
+        EventNotifications.reschedule(context, due)
+        assertEquals(nextRepeat, alarm.scheduledAlarms.single().triggerAtMs)
+    }
+    @Test fun builtInAlarmsFollowChosenAndDeviceZonesAndIgnoreObsoleteAlarms() {
+        val originalZone = java.util.TimeZone.getDefault()
+        try {
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Europe/Brussels"))
+            val preferences = AppPreferences(context)
+            val local = AppSettings(notificationsEnabled = true, khmer = false, repeatHours = 4,
+                pushCustomEvents = false, pushObservances = false)
+            val alarm = Shadows.shadowOf(context.getSystemService(AlarmManager::class.java))
+            val manager = context.getSystemService(NotificationManager::class.java)
+            fun scheduled() = alarm.scheduledAlarms.single().triggerAtMs
+
+            preferences.write(local)
+            EventNotifications.reschedule(context, now)
+            val brusselsAlarm = Instant.parse("2026-09-24T03:00:00Z").toEpochMilli()
+            assertEquals(brusselsAlarm, scheduled())
+            preferences.write(local.copy(todayTimeZone = TodayTimeZone.CAMBODIA))
+            EventNotifications.reschedule(context, now)
+            val cambodiaAlarm = Instant.parse("2026-09-23T22:00:00Z").toEpochMilli()
+            assertEquals(cambodiaAlarm, scheduled())
+
+            preferences.write(local)
+            EventNotifications.reschedule(context, now)
+            assertEquals(brusselsAlarm, scheduled())
+            EventNotifications.deliver(context, cambodiaAlarm, Instant.ofEpochMilli(cambodiaAlarm))
+            assertTrue(manager.activeNotifications.isEmpty())
+
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("America/Los_Angeles"))
+            EventNotifications.reschedule(context, now)
+            val losAngelesAlarm = Instant.parse("2026-09-24T12:00:00Z").toEpochMilli()
+            assertEquals(losAngelesAlarm, scheduled())
+            EventNotifications.deliver(context, brusselsAlarm, Instant.ofEpochMilli(brusselsAlarm))
+            assertTrue(manager.activeNotifications.isEmpty())
+            EventNotifications.deliver(context, losAngelesAlarm, Instant.ofEpochMilli(losAngelesAlarm))
+            val posted = manager.activeNotifications.single().notification
+            assertTrue(posted.extras.getCharSequence("android.bigText").toString().contains("Constitution Day"))
+            assertEquals("2026-09-24", Shadows.shadowOf(posted.contentIntent).savedIntent.getStringExtra(EventNotifications.EXTRA_DATE))
+            assertEquals(losAngelesAlarm + 4 * 3600000, scheduled())
+        } finally { java.util.TimeZone.setDefault(originalZone) }
+    }
+
+    @Test fun holyDayPushChoiceSurvivesHidingRecreationAndShowingAgain() {
+        val stored = context.getSharedPreferences("appearance", Context.MODE_PRIVATE)
+        for (choice in listOf(true, false)) {
+            val preferences = AppPreferences(context)
+            val shown = AppSettings(showHolyDaysInEvents = true, pushHolyDays = choice)
+            preferences.write(shown)
+            preferences.write(shown.copy(showHolyDaysInEvents = false))
+            assertEquals(choice, stored.getBoolean("pushHolyDays", !choice))
+            val hidden = AppPreferences(context).read()
+            assertFalse(hidden.showHolyDaysInEvents)
+            assertEquals(choice, hidden.pushHolyDays)
+            preferences.write(hidden.copy(showHolyDaysInEvents = true))
+            assertEquals(choice, AppPreferences(context).read().pushHolyDays)
+        }
+    }
+    @Test fun repeatOffDeliversTheFirstNotificationEvenWhenAndroidIsLate() {
+        AppPreferences(context).write(AppSettings(notificationsEnabled = true, repeatHours = 0, khmer = false,
+            todayTimeZone = TodayTimeZone.CAMBODIA))
+        EventNotifications.reschedule(context, now)
+        val alarm = Shadows.shadowOf(context.getSystemService(AlarmManager::class.java))
+        val scheduled = alarm.scheduledAlarms.single().triggerAtMs
         val due = Instant.ofEpochMilli(scheduled)
         EventNotifications.deliver(context, scheduled, due.plusSeconds(30))
         val posted = context.getSystemService(NotificationManager::class.java).activeNotifications.single().notification
         assertTrue(posted.extras.getCharSequence("android.bigText").toString().contains("Constitution Day"))
-        val nextDay = Instant.ofEpochMilli(alarm.scheduledAlarms.single().triggerAtTime).atZone(CAMBODIA_ZONE).toLocalDate()
+        val nextDay = Instant.ofEpochMilli(alarm.scheduledAlarms.single().triggerAtMs).atZone(CAMBODIA_ZONE).toLocalDate()
         assertTrue(nextDay > due.atZone(CAMBODIA_ZONE).toLocalDate())
     }
     @Test @Config(sdk = [33]) fun deniedNotificationPermissionDoesNotLeaveAnAlarmRunning() {

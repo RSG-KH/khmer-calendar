@@ -829,7 +829,7 @@
       "id": "ui.buddhist_holy_days_in_events.53e502",
       "section": "interface",
       "context": "CalendarApp.kt",
-      "en": "Buddhist holy days in Events",
+      "en": "Buddhist holy days in events",
       "km": "ថ្ងៃសីលក្នុងព្រឹត្តិការណ៍",
       "original": {
         "en": "Buddhist holy days in Events",
@@ -1310,32 +1310,16 @@
       }
     },
     {
-      "id": "ui.events_include_festivals_and_observances_public_holiday.06e0ee",
+      "id": "about.calendar_engine",
       "section": "about",
       "context": "CalendarApp.kt",
-      "en": "Events include festivals and observances. Public-holiday labels identify dates checked against the 2025 and 2026 government lists.",
-      "km": "ព្រឹត្តិការណ៍រួមបញ្ចូលពិធីបុណ្យ និងទិវាផ្សេងៗ។ កាលបរិច្ឆេទថ្ងៃឈប់សម្រាកបានផ្ទៀងផ្ទាត់ជាមួយបញ្ជីរដ្ឋាភិបាល ឆ្នាំ២០២៥ និង២០២៦។",
+      "en": "Lunar dates, holy days and New Year dates for 1800–2200 are calculated by Khmer Calendar Engine.",
+      "km": "កាលបរិច្ឆេទចន្ទគតិ ថ្ងៃសីល និងថ្ងៃចូលឆ្នាំ សម្រាប់ឆ្នាំ១៨០០–២២០០ គណនាដោយ Khmer Calendar Engine។",
       "original": {
-        "en": "Events include festivals and observances. Public-holiday labels identify dates checked against the 2025 and 2026 government lists.",
-        "km": "ព្រឹត្តិការណ៍រួមបញ្ចូលពិធីបុណ្យ និងទិវាផ្សេងៗ។ កាលបរិច្ឆេទថ្ងៃឈប់សម្រាកបានផ្ទៀងផ្ទាត់ជាមួយបញ្ជីរដ្ឋាភិបាល ឆ្នាំ២០២៥ និង២០២៦។"
+        "en": "Lunar dates, holy days and New Year dates for 1800–2200 are calculated by Khmer Calendar Engine.",
+        "km": "កាលបរិច្ឆេទចន្ទគតិ ថ្ងៃសីល និងថ្ងៃចូលឆ្នាំ សម្រាប់ឆ្នាំ១៨០០–២២០០ គណនាដោយ Khmer Calendar Engine។"
       },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
-      "id": "ui.lunar_calendar_1900_2100_based_on_work_by_phylypo_tum_t.d8396b",
-      "section": "about",
-      "context": "CalendarApp.kt",
-      "en": "Lunar calendar: 1800–2200. Based on work by Phylypo Tum, Thyrith Sor and MetheaX (MIT).",
-      "km": "ប្រតិទិនចន្ទគតិ៖ ឆ្នាំ១៨០០–២២០០។ គណនាតាមការងាររបស់ Phylypo Tum, Thyrith Sor និង MetheaX (MIT)។",
-      "original": {
-        "en": "Lunar calendar: 1800–2200. Based on work by Phylypo Tum, Thyrith Sor and MetheaX (MIT).",
-        "km": "ប្រតិទិនចន្ទគតិ៖ ឆ្នាំ១៨០០–២២០០។ គណនាតាមការងាររបស់ Phylypo Tum, Thyrith Sor និង MetheaX (MIT)។"
-      },
-      "reviewed": true,
+      "reviewed": false,
       "required": {
         "en": [],
         "km": []
@@ -1345,13 +1329,13 @@
       "id": "ui.open_source_license.ab00af",
       "section": "about",
       "context": "CalendarApp.kt",
-      "en": "Open-source license",
+      "en": "Open-source licenses",
       "km": "អាជ្ញាបណ្ណប្រភពបើកចំហ",
       "original": {
         "en": "Open-source license",
         "km": "អាជ្ញាបណ្ណប្រភពបើកចំហ"
       },
-      "reviewed": true,
+      "reviewed": false,
       "required": {
         "en": [],
         "km": []
@@ -1366,22 +1350,6 @@
       "original": {
         "en": "New future events and corrections are delivered through app updates.",
         "km": "ព្រឹត្តិការណ៍ថ្មីៗ និងការកែសម្រួល នឹងត្រូវបានផ្ដល់ជូនតាមរយៈការធ្វើបច្ចុប្បន្នភាពកម្មវិធី។"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
-      "id": "ui.event_data_covers_2000_2030_lunar_dates_holy_days_and_y.27c235",
-      "section": "about",
-      "context": "CalendarApp.kt",
-      "en": "Event data covers 2000–2030. Lunar dates, holy days and your custom events remain available for this year.",
-      "km": "ទិន្នន័យព្រឹត្តិការណ៍មានសម្រាប់ឆ្នាំ២០០០–២០៣០។ ប្រតិទិនចន្ទគតិ ថ្ងៃសីល និងព្រឹត្តិការណ៍ផ្ទាល់ខ្លួននៅតែអាចប្រើបានសម្រាប់ឆ្នាំនេះ។",
-      "original": {
-        "en": "Event data covers 2000–2030. Lunar dates, holy days and your custom events remain available for this year.",
-        "km": "ទិន្នន័យព្រឹត្តិការណ៍មានសម្រាប់ឆ្នាំ២០០០–២០៣០។ ប្រតិទិនចន្ទគតិ ថ្ងៃសីល និងព្រឹត្តិការណ៍ផ្ទាល់ខ្លួននៅតែអាចប្រើបានសម្រាប់ឆ្នាំនេះ។"
       },
       "reviewed": true,
       "required": {
@@ -1634,6 +1602,134 @@
       }
     },
     {
+      "id": "notifications.push_custom",
+      "section": "notifications",
+      "context": "NotificationSettings.kt",
+      "en": "Push custom",
+      "km": "ជូនដំណឹងព្រឹត្តិការណ៍ផ្ទាល់ខ្លួន",
+      "original": {
+        "en": "Push custom",
+        "km": "ជូនដំណឹងព្រឹត្តិការណ៍ផ្ទាល់ខ្លួន"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "notifications.push_custom_subtitle",
+      "section": "notifications",
+      "context": "NotificationSettings.kt",
+      "en": "At each event's scheduled time",
+      "km": "តាមម៉ោងព្រឹត្តិការណ៍នីមួយៗ",
+      "original": {
+        "en": "At each event's scheduled time",
+        "km": "តាមម៉ោងព្រឹត្តិការណ៍នីមួយៗ"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "notifications.push_holidays",
+      "section": "notifications",
+      "context": "NotificationSettings.kt",
+      "en": "Push holidays",
+      "km": "ជូនដំណឹងថ្ងៃឈប់សម្រាក",
+      "original": {
+        "en": "Push holidays",
+        "km": "ជូនដំណឹងថ្ងៃឈប់សម្រាក"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "notifications.push_holidays_subtitle",
+      "section": "notifications",
+      "context": "NotificationSettings.kt",
+      "en": "Official public holidays",
+      "km": "ថ្ងៃឈប់សម្រាកផ្លូវការ",
+      "original": {
+        "en": "Reminders for official public holidays",
+        "km": "រំលឹកថ្ងៃឈប់សម្រាកផ្លូវការ"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "notifications.push_observances",
+      "section": "notifications",
+      "context": "NotificationSettings.kt",
+      "en": "Push observances",
+      "km": "ជូនដំណឹងពិធី និងទិវា",
+      "original": {
+        "en": "Push observances",
+        "km": "ជូនដំណឹងពិធី និងទិវា"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "notifications.push_observances_subtitle",
+      "section": "notifications",
+      "context": "NotificationSettings.kt",
+      "en": "Festivals and others",
+      "km": "ពិធីបុណ្យ និងផ្សេងៗ",
+      "original": {
+        "en": "Festivals, anniversaries and special days",
+        "km": "ពិធីបុណ្យ ខួប និងទិវាពិសេស"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "notifications.push_holy_days",
+      "section": "notifications",
+      "context": "NotificationSettings.kt",
+      "en": "Push Buddhist holy days",
+      "km": "ជូនដំណឹងថ្ងៃសីល",
+      "original": {
+        "en": "Push Buddhist holy days",
+        "km": "ជូនដំណឹងថ្ងៃសីល"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "notifications.push_holy_days_subtitle",
+      "section": "notifications",
+      "context": "NotificationSettings.kt",
+      "en": "Only when holy days are shown",
+      "km": "តែពេលបង្ហាញថ្ងៃសីល",
+      "original": {
+        "en": "Only while holy days are shown in events",
+        "km": "ពេលបង្ហាញថ្ងៃសីលក្នុងព្រឹត្តិការណ៍"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
       "id": "ui.push_time.8421c3",
       "section": "notifications",
       "context": "NotificationSettings.kt",
@@ -1669,8 +1765,8 @@
       "id": "ui.reminders_for_holidays_and_events.fe018c",
       "section": "notifications",
       "context": "NotificationSettings.kt",
-      "en": "Reminders for holidays and events",
-      "km": "ការរំលឹកសម្រាប់ថ្ងៃឈប់សម្រាក និងព្រឹត្តិការណ៍",
+      "en": "Reminders for events",
+      "km": "ការរំលឹកសម្រាប់ព្រឹត្តិការណ៍",
       "original": {
         "en": "Reminders for holidays and events",
         "km": "ការរំលឹកសម្រាប់ថ្ងៃឈប់សម្រាក និងព្រឹត្តិការណ៍"
@@ -35381,22 +35477,6 @@
       }
     },
     {
-      "id": "rules.coverage",
-      "section": "about",
-      "context": "Outside the captured event years",
-      "en": "Recorded events cover 2000–2030. Other years display only calculated observances, holy days, and your custom events.",
-      "km": "កំណត់ត្រាព្រឹត្តិការណ៍មានសម្រាប់តែឆ្នាំ ២០០០–២០៣០ ប៉ុណ្ណោះ។ ចំពោះឆ្នាំផ្សេងទៀត នឹងបង្ហាញត្រឹមពិធីបុណ្យដែលបានគណនា ថ្ងៃសីល និងព្រឹត្តិការណ៍ផ្ទាល់ខ្លួនរបស់អ្នក។",
-      "original": {
-        "en": "Recorded events cover 2000–2030. Other years display only calculated observances, holy days, and your custom events.",
-        "km": "កំណត់ត្រាព្រឹត្តិការណ៍មានសម្រាប់តែឆ្នាំ ២០០០–២០៣០ ប៉ុណ្ណោះ។ ចំពោះឆ្នាំផ្សេងទៀត នឹងបង្ហាញត្រឹមពិធីបុណ្យដែលបានគណនា ថ្ងៃសីល និងព្រឹត្តិការណ៍ផ្ទាល់ខ្លួនរបស់អ្នក។"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
       "id": "rules.source_summary",
       "section": "about",
       "context": "Sources dialog: calculated recurrence coverage",
@@ -35603,6 +35683,182 @@
         "km": "បានចម្លងចំណងជើងព្រឹត្តិការណ៍"
       },
       "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "calendar.weekday.grid_long.0",
+      "section": "calendar",
+      "context": "Longer calendar column heading: English abbreviation; Khmer name without the day prefix",
+      "en": "Sun",
+      "km": "អាទិត្យ",
+      "original": {
+        "en": "Sun",
+        "km": "អាទិត្យ"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "calendar.weekday.grid_long.1",
+      "section": "calendar",
+      "context": "Longer calendar column heading: English abbreviation; Khmer name without the day prefix",
+      "en": "Mon",
+      "km": "ចន្ទ",
+      "original": {
+        "en": "Mon",
+        "km": "ចន្ទ"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "calendar.weekday.grid_long.2",
+      "section": "calendar",
+      "context": "Longer calendar column heading: English abbreviation; Khmer name without the day prefix",
+      "en": "Tue",
+      "km": "អង្គារ",
+      "original": {
+        "en": "Tue",
+        "km": "អង្គារ"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "calendar.weekday.grid_long.3",
+      "section": "calendar",
+      "context": "Longer calendar column heading: English abbreviation; Khmer name without the day prefix",
+      "en": "Wed",
+      "km": "ពុធ",
+      "original": {
+        "en": "Wed",
+        "km": "ពុធ"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "calendar.weekday.grid_long.4",
+      "section": "calendar",
+      "context": "Longer calendar column heading: English abbreviation; Khmer name without the day prefix",
+      "en": "Thu",
+      "km": "ព្រហស្បតិ៍",
+      "original": {
+        "en": "Thu",
+        "km": "ព្រហស្បតិ៍"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "calendar.weekday.grid_long.5",
+      "section": "calendar",
+      "context": "Longer calendar column heading: English abbreviation; Khmer name without the day prefix",
+      "en": "Fri",
+      "km": "សុក្រ",
+      "original": {
+        "en": "Fri",
+        "km": "សុក្រ"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "calendar.weekday.grid_long.6",
+      "section": "calendar",
+      "context": "Longer calendar column heading: English abbreviation; Khmer name without the day prefix",
+      "en": "Sat",
+      "km": "សៅរ៍",
+      "original": {
+        "en": "Sat",
+        "km": "សៅរ៍"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.show_longer_weekday_names",
+      "section": "interface",
+      "context": "Calendar settings toggle; off by default",
+      "en": "Show longer weekday names",
+      "km": "បង្ហាញឈ្មោះថ្ងៃពេញ",
+      "original": {
+        "en": "Show longer weekday names",
+        "km": "បង្ហាញឈ្មោះថ្ងៃពេញ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.show_longer_weekday_names_subtitle",
+      "section": "interface",
+      "context": "Calendar settings subtitle",
+      "en": "3 characters, such as Sun, Mon",
+      "km": "ឈ្មោះថ្ងៃពេញក្នុងប្រតិទិន",
+      "original": {
+        "en": "3 characters, such as Sun, Mon",
+        "km": "ឈ្មោះថ្ងៃពេញក្នុងប្រតិទិន"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.highlight_weekday_names",
+      "section": "interface",
+      "context": "Calendar settings: traditional weekday heading colors; off by default",
+      "en": "Highlight weekday names",
+      "km": "រំលេចឈ្មោះថ្ងៃ",
+      "original": {
+        "en": "Highlight weekday names",
+        "km": "រំលេចឈ្មោះថ្ងៃ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.highlight_weekday_names_subtitle",
+      "section": "interface",
+      "context": "Calendar settings: traditional weekday heading colors; off by default",
+      "en": "Show names in different colors",
+      "km": "បង្ហាញពណ៌ខុសៗគ្នា",
+      "original": {
+        "en": "Show names in different colors",
+        "km": "បង្ហាញពណ៌ខុសៗគ្នា"
+      },
+      "reviewed": true,
       "required": {
         "en": [],
         "km": []

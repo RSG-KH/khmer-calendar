@@ -17,11 +17,20 @@ object ReminderPlanner {
              yearEvents: (Int) -> List<CalendarEvent> = EventRepository::forYear): ReminderBatch? {
         if (!settings.notificationsEnabled) return null
         require(settings.pushMinutes in 0..1439 && settings.repeatHours in listOf(0, 2, 4, 6, 8, 12))
-        val today = now.atZone(CAMBODIA_ZONE).toLocalDate()
+        val reminderZone = settings.todayTimeZone.zone(localZone)
+        val today = now.atZone(reminderZone).toLocalDate()
         var earliest: Instant? = null
         val due = mutableListOf<CalendarEvent>()
         val expirations = mutableMapOf<String, Instant>()
         fun consider(event: CalendarEvent, start: ZonedDateTime) {
+            val enabled = when (event.kind) {
+                EventKind.CUSTOM -> settings.pushCustomEvents
+                EventKind.HOLIDAY -> settings.pushHolidays
+                EventKind.OBSERVANCE -> settings.pushObservances
+                // The saved push choice is preserved while holy days are hidden.
+                EventKind.HOLY_DAY -> settings.showHolyDaysInEvents && settings.pushHolyDays
+            }
+            if (!enabled) return
             val end = start.toLocalDate().plusDays(1).atStartOfDay(start.zone).toInstant()
             if (end <= now) return
             var at = start.toInstant()
@@ -39,13 +48,11 @@ object ReminderPlanner {
         val startYear = today.year.coerceAtLeast(1800)
         if (startYear <= 2200) {
             for (year in startYear..minOf(startYear + 1, 2200)) {
-                yearEvents(year).filter { settings.showHolyDaysInEvents || it.kind != EventKind.HOLY_DAY }
-                    .forEach { consider(it, it.date.atTime(push).atZone(CAMBODIA_ZONE)) }
+                yearEvents(year).forEach { consider(it, it.date.atTime(push).atZone(reminderZone)) }
                 if (earliest != null) break
             }
         }
-        val displayZone = settings.todayTimeZone.zone(localZone)
-        custom.filter { it.remindersEligible }.forEach { consider(it.asCalendarEvent(displayZone), it.zonedDateTime) }
+        custom.filter { it.remindersEligible }.forEach { consider(it.asCalendarEvent(reminderZone), it.zonedDateTime) }
         return earliest?.let { ReminderBatch(it, due.first().date, due.distinctBy { event -> event.key }, expirations.toMap()) }
     }
 }

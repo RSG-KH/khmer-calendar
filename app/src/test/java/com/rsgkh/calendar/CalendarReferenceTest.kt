@@ -28,11 +28,15 @@ class CalendarReferenceTest {
         assertEquals("Gregorian years with at least one reference discrepancy", emptyList<Int>(), mismatches)
     }
 
-    @Test fun allNewYearStartsMatchPinnedMomentKh() {
+    @Test fun newYearStartsMatchPinnedMomentKhExceptReviewed2012Correction() {
         val mismatches = mutableListOf<String>()
         for ((year, _, expected) in references) {
             val actual = KhmerNewYear.forYear(year.toInt())
-            if (actual.start.toString() != expected) mismatches.add("$year: $expected != ${actual.start}")
+            if (year == "2012") {
+                // Preserve the upstream fixture's error as a visible comparison, not expected behavior.
+                assertEquals("2012-04-14", expected)
+                assertEquals(LocalDate.of(2012, 4, 13), actual.start)
+            } else if (actual.start.toString() != expected) mismatches.add("$year: $expected != ${actual.start}")
             assertTrue(actual.days in 3..4)
             assertEquals(4, actual.start.monthValue)
         }
@@ -40,6 +44,8 @@ class CalendarReferenceTest {
     }
 
     @Test fun newYearMatchesGovernmentFestivalDatesIncludingFourDayYear() {
+        // 2012 festival dates: https://www.dfdl.com/insights/legal-and-tax-updates/legal-a-regulatory-updates-in-cambodia-2/
+        assertEquals(listOf(13, 14, 15), KhmerNewYear.forYear(2012).dates.map { it.dayOfMonth })
         // National Radio 2024: https://rnk.gov.kh/index.php/interior-minister-calls-on-authorities-at-all-levels-to-be-well-prepared-to-ensure-safety-security-and-social-order-during-the-coming-traditional-khmer-new-year-celebration
         // MEF 2025 and Legal Reform Committee 2026 annual calendars (tools/reference-government-holidays.json).
         assertEquals(listOf(13, 14, 15, 16), KhmerNewYear.forYear(2024).dates.map { it.dayOfMonth })

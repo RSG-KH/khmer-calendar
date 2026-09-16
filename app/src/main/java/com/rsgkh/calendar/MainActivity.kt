@@ -5,16 +5,18 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
+import androidx.core.net.toUri
+import androidx.core.view.WindowCompat
 import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.notifications.EventNotifications
 import com.rsgkh.calendar.ui.CalendarApp
@@ -42,7 +44,7 @@ class MainActivity : ComponentActivity() {
             val prefs = getSharedPreferences("permission_state", Context.MODE_PRIVATE)
             val alreadyRequested = prefs.getBoolean("post_notifications_requested", false)
             if (!alreadyRequested) {
-                prefs.edit().putBoolean("post_notifications_requested", true).apply()
+                prefs.edit { putBoolean("post_notifications_requested", true) }
                 permission.launch(Manifest.permission.POST_NOTIFICATIONS)
             } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
                 permission.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -58,12 +60,17 @@ class MainActivity : ComponentActivity() {
         try {
             startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, packageName))
         } catch (_: Exception) {
-            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
+            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri()))
         }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // minSdk 31: no older cutout compatibility is needed. Pre-35 transparent
+        // system bars are configured in the theme; Android 15+ provides them.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.attributes = window.attributes.apply {
+            layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+        }
         EventNotifications.createChannel(this)
         readDateIntent(intent)
         setContent {
@@ -78,7 +85,7 @@ class MainActivity : ComponentActivity() {
                 onDeleteCustom = { customRepository.delete(it); customRevision++; EventNotifications.clearDisplayedAsync(this); changed() },
                 notificationAccess = access,
                 onOpenNotificationSettings = { requestNotificationAccess() },
-                onAllowExact = { startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName"))) },
+                onAllowExact = { startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, "package:$packageName".toUri())) },
                 openDateRequest = openDateRequest,
             ) { next ->
                 preferences.write(next)

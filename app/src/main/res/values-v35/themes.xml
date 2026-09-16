@@ -1,0 +1,5 @@
+<resources>
+    <!-- Android 15+ supplies edge-to-edge bar backgrounds. Inherit the common
+         theme directly so legacy bar-color/contrast overrides do not apply. -->
+    <style name="Theme.KhmerCalendar" parent="Base.Theme.KhmerCalendar" />
+</resources>

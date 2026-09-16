@@ -8,7 +8,7 @@ import org.junit.Test
 import java.time.LocalDate
 
 class RecurringEventsTest {
-    @Test fun reviewedRulesMatchCapturedDatesExceptTheDocumented2012NewYearDisagreement() {
+    @Test fun reviewedRulesMatchCapturedDatesExceptHistoricalOfficialBirthdayLeave() {
         val reference = javaClass.getResourceAsStream("/recurrence-reference.tsv")!!.bufferedReader().useLines { lines ->
             lines.filter { it.isNotBlank() && !it.startsWith('#') }.map {
                 val fields = it.split('\t')
@@ -27,11 +27,6 @@ class RecurringEventsTest {
         }
         val expectedDifferences = mutableListOf<String>()
         for (year in 2005..2019) {
-            if (year == 2012) {
-                expectedDifferences.add("2012 khmer_new_year_1: source=[2012-04-13], calculated=[2012-04-14]")
-                expectedDifferences.add("2012 khmer_new_year_2: source=[2012-04-14], calculated=[2012-04-15]")
-                expectedDifferences.add("2012 khmer_new_year_3: source=[2012-04-15], calculated=[2012-04-16]")
-            }
             // Document pre-2020 3-day official holiday block for King Sihamoni's Birthday (reduced to 1 day on May 14 from 2020 onward)
             expectedDifferences.add("$year king_sihamoni_birthday: source=[$year-05-13, $year-05-14, $year-05-15], calculated=[$year-05-14]")
         }

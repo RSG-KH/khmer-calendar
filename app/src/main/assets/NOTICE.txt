@@ -1,8 +1,15 @@
+Khmer Calendar Engine 0.1.0
+https://github.com/RSG-KH/khmer-calendar-engine/releases/tag/v0.1.0
+Copyright (c) 2026 RSG-KH
+Licensed under Apache-2.0; see engine-LICENSE.txt in this directory.
+
+Upstream notices reproduced from the released engine JAR:
+
 Khmer Calendar lunar arithmetic is adapted from:
 https://github.com/MetheaX/khmer-chhankitek-calendar
 Commit: 4d1df001de73fac715d6e4c54f06f69618ff49dd
 Based on the work of Phylypo Tum and Thyrith Sor (momentkh).
-The Kotlin adaptation uses immutable month indexing, Gregorian calendar years,
+The shared Kotlin implementation uses immutable month indexing, Gregorian calendar years,
 and Buddhist Era rollover at the start of 1 Roach of Pisakh.
 MIT License
 

@@ -2,6 +2,25 @@
 
 Khmer Calendar uses a custom responsive layout system built on Jetpack Compose and Material 3 design tokens. The interface adapts intelligently across compact phones, foldables, and large-screen tablets in both portrait and landscape orientations.
 
+### Weekday headings
+
+Settings → Calendar offers two independent options, both off by default:
+
+- **Show longer weekday names** uses three-letter English headings and full Khmer names without repeating the word “day.” All seven headings share a font size that fits the longest name in the available column width.
+- **Highlight weekday names** colors the calendar headings using the [Cambodian Development Foundation's traditional weekday color mapping](https://cambodiandevelopmentfoundation.org/7-colors-of-the-week/): Monday yellow, Tuesday violet/purple, Wednesday light green, Thursday green, Friday baby blue, Saturday dark purple and Sunday bright red.
+
+`WeekdayColors.kt` defines readable shades for light and dark calendar surfaces. These are app color choices within the cited families; the source does not specify hex values. Colors follow the weekday when the start of the week changes and apply to both short and longer headings. The Sunday-column setting independently controls date-number highlighting. When weekday colors are off, that setting also controls the Sunday heading as before.
+
+### Today and the selected date
+
+Today always keeps its solid accent background and contrasting text and markers, even when another date is selected. A selected non-Today date has an accent-colored border with its usual background, text and event-marker colors. This distinction applies in every month and year and in both themes; selecting a date still updates the detail view and accessibility selection state.
+
+Swiping, using the month arrows, or choosing a month and year selects day 1 of the destination month. Tapping Today selects the actual current date.
+
+### Copy feedback
+
+When Show copy buttons is enabled, date and event details display a copy icon aligned with the first text line near the right edge. The button retains a 48 dp tap area. After copying, an accent-colored checkmark appears for two seconds, then returns to the copy icon. Copying again restarts the timer. The confirmation is also exposed to accessibility services using the translated copied message.
+
 ---
 
 ## 1. Adaptive Multi-Form-Factor Layouts
@@ -14,6 +33,40 @@ The application continuously evaluates configuration metrics (`smallestScreenWid
 | **Phone Landscape** | Navigation Rail (full vertical distribution) | 2 Columns: Calendar (left, weight 0.9) + Monthly Events list (right, weight 1.1) |
 | **Tablet Portrait** | Bottom Navigation Bar (64 dp) | Centered spacious grid with extended event preview cards |
 | **Tablet Landscape** | Compact Navigation Rail (top-aligned) | 2 Columns: Calendar & Date Info Card (left, weight 1.0) + Month Events list (right, weight 1.0) |
+
+---
+
+### Edge-to-edge and system insets
+
+`MainActivity` calls `WindowCompat.setDecorFitsSystemWindows(window, false)` and sets the display cutout mode to `ALWAYS`, supported throughout the app's API 31+ range. The existing compact layout uses Scaffold's default content insets, 68% of its top padding in landscape, and half the bottom navigation-bar inset in portrait. The custom-event editor uses `imePadding()` for the keyboard.
+
+The Compose theme updates system icon brightness with `WindowInsetsControllerCompat`. For Android 12–14, the XML theme sets transparent status/navigation bars and disables status-bar contrast enforcement. The `values-v35` theme inherits the shared light/dark base directly, without those legacy overrides; Android 15+ supplies the edge-to-edge bar backgrounds. Navigation-bar contrast enforcement remains enabled for three-button navigation. This follows [Android's manual setup guidance](https://developer.android.com/develop/ui/views/layout/edge-to-edge-manually) for older versions. See also [Android's Compose inset guidance](https://developer.android.com/develop/ui/compose/system/insets-ui) and [Android 15's edge-to-edge requirements](https://developer.android.com/about/versions/15/behavior-changes-15#edge-to-edge).
+
+#### Play Console deprecation warning
+
+The detailed Play report for release **9 (0.1.8)** names `x00.a` and `w00.b`. The archived release mapping, its matching APK and the mapping embedded in the release bundle identify both callers:
+
+| Play caller | Original AndroidX method | Flagged reference |
+| --- | --- | --- |
+| `x00.a` | `androidx.activity.EdgeToEdgeApi29.setUp` | `Window.setStatusBarColor`, `Window.setNavigationBarColor` |
+| `w00.b` | `androidx.activity.EdgeToEdgeApi28.adjustLayoutInDisplayCutoutMode` | `LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES` |
+
+The release mapping ID is `13a3eb1d7f4a097f11ad9423f0a4ad077c330751c3d1dccb35667cd12d03f3f3`. Obfuscated names are specific to that build; do not decode this report using a newer build's mapping.
+
+These methods belong to AndroidX Activity 1.10.1, used by `enableEdgeToEdge()`. Its API 30+ implementation overrides the cutout setting with `ALWAYS`; the older `SHORT_EDGES` method remains packaged even though the app's minimum API is 31. The report identifies packaged compatibility code and does not, by itself, demonstrate incorrect Android 15 layout.
+
+The official [Activity 1.13.0 sources](https://dl.google.com/dl/android/maven2/androidx/activity/activity/1.13.0/activity-1.13.0-sources.jar) also contain all three references, including window-color calls in the API 35 implementation. An initial trial with Activity 1.13.0 and Core 1.18.0 retained them while `enableEdgeToEdge()` was still called. Updating dependencies alone does not eliminate the reported references.
+
+On **2026-09-16**, the app replaced Activity's `enableEdgeToEdge()` helper with the API 31+ setup described above. Removing that call allows release optimization to remove its obsolete compatibility implementations. The subsequent lint cleanup updates Activity to 1.13.0 and Core to 1.19.0 while retaining this manual setup.
+
+Local verification after the change:
+
+- Both the optimized release APK and AAB have no DEX method references to `Window.setStatusBarColor` or `Window.setNavigationBarColor`.
+- The release mapping contains no `androidx.activity.EdgeToEdge` implementations. The only DEX write to `layoutInDisplayCutoutMode` sets `3` (`ALWAYS`), not `1` (`SHORT_EDGES`); the APK and AAB contain identical DEX bytes.
+- `EdgeToEdgeTest` passes six window/theme checks across API 31, 34 and 35 in light and dark mode, covering legacy transparency, navigation contrast, cutout mode and the Android 15 theme's independence from legacy overrides.
+- `assembleRelease`, `bundleRelease` and `lintDebug` complete successfully. The subsequent lint cleanup addresses outdated dependencies, Kotlin extension usage and missing monochrome launcher layers.
+
+This verifies removal of the reported bytecode references locally. Clearing the warning in Play Console still requires uploading and scanning a new release; the archived release 9 report is unchanged. Legacy bar-color attributes remain packaged for Android 12–14 and are not applied by the app's Android 15+ theme.
 
 ---
 
@@ -85,7 +138,7 @@ Phone landscape calendar rows use a 44 dp base height. Tablet rows remain 52 dp 
 
 All event details share the date-details zodiac background: the animal illustration occupies 60% of the width at bottom-right; the Western zodiac occupies approximately 20% at bottom-left with a 20 dp inset. Both use the accent tint at 5% opacity in light mode and 3% in dark mode.
 
-Settings shows the version on a separate line and groups clickable Android and PWA repository labels below it. The Sources dialog retains its original layout, inline links that open URL dialogs with a Copy action, and expandable MIT notice. Its source description omits the technical Buddhist Era rollover wording, which is documented in `calendar-source-review.md`.
+Settings shows the version on a separate line and groups clickable Android and PWA repository labels below it. The Sources dialog links to the dedicated Khmer Calendar Engine and describes its supported range in both languages. Event-source links open URL dialogs with a Copy action. The expandable license panel displays the bundled Apache 2.0 license and upstream MIT notices offline. Calculation details belong in the engine documentation linked from [shared engine integration](shared-engine.md).
 
 **Settings → Calendar → Show copy buttons** is off by default and saved on the device. When enabled, Date details can copy the displayed full date description and Event details can copy the displayed event title, including custom events. Both actions use the current language and Android's clipboard. Android 13+ shows the system clipboard confirmation; Android 12 shows a translated toast.
 
@@ -148,6 +201,10 @@ All shapes are drawn with balanced optical center and volume, guaranteeing consi
 ---
 
 ## 3. Theming, Typography & Accessibility
+
+### Themed launcher icons
+
+Both adaptive launcher icons use `ic_launcher_monochrome.xml` for wallpaper-tinted icons. It wraps `drawable-nodpi/launcher_monochrome.png`, the supplied `khmer_calendar_app_transparent_mono_light_full.png` artwork copied without modification at 1254×1254, matching the full-color artwork's resolution. Its transparent lettering and temple cutouts preserve the app's Khmer calendar design. The wrapper uses the same 20% inset as the full-color foreground, keeping the artwork inside the adaptive-icon safe area.
 
 ### Color Palette & Accents
 The app features deep, calibrated surface backgrounds for maximum battery efficiency and readability:

@@ -9,7 +9,8 @@ import java.time.*
 
 class ReminderPlannerTest {
     private val day = LocalDate.of(2026, 9, 24)
-    private val settings = AppSettings(notificationsEnabled = true, showHolyDaysInEvents = false, repeatHours = 4)
+    private val settings = AppSettings(notificationsEnabled = true, showHolyDaysInEvents = false, repeatHours = 4,
+        todayTimeZone = TodayTimeZone.CAMBODIA)
     private val event = CalendarEvent("test", day, "ថ្ងៃពិសេស", "Special day", EventKind.OBSERVANCE, DateBasis.WEBSITE)
     private fun at(date: LocalDate = day, hour: Int, minute: Int = 0) = date.atTime(hour, minute).atZone(CAMBODIA_ZONE).toInstant()
     private fun next(now: Instant, config: AppSettings = settings, custom: List<CustomEvent> = emptyList()) =
@@ -65,6 +66,30 @@ class ReminderPlannerTest {
         assertNull(next(at(hour = 6, minute = 30), once, listOf(custom)))
         val tomorrow = custom.copy(date = day.plusDays(1))
         assertEquals(tomorrow.instant, next(at(hour = 23), once, listOf(custom, tomorrow))!!.at)
+    }
+    @Test fun categoryChoicesFilterInitialAndRepeatRemindersIndependently() {
+        val kinds = listOf(EventKind.CUSTOM, EventKind.HOLIDAY, EventKind.OBSERVANCE, EventKind.HOLY_DAY)
+        val builtIn = kinds.drop(1).map { event.copy(id = it.name, kind = it) }
+        val custom = CustomEvent(title = "Personal reminder", date = day, time = LocalTime.of(5, 0))
+        for (mask in 0..15) for (showHolyDays in listOf(false, true)) {
+            val enabled = kinds.filterIndexed { index, _ -> mask and (1 shl index) != 0 }.toSet()
+            val config = settings.copy(
+                showHolyDaysInEvents = showHolyDays,
+                pushCustomEvents = EventKind.CUSTOM in enabled,
+                pushHolidays = EventKind.HOLIDAY in enabled,
+                pushObservances = EventKind.OBSERVANCE in enabled,
+                pushHolyDays = EventKind.HOLY_DAY in enabled,
+            )
+            val expected = enabled.filter { it != EventKind.HOLY_DAY || showHolyDays }.toSet()
+            for ((hour, expectedHour) in listOf(4 to 5, 5 to 9)) {
+                val batch = ReminderPlanner.next(at(hour = hour), config, listOf(custom)) { year ->
+                    if (year == day.year) builtIn else emptyList()
+                }
+                assertEquals("Categories $enabled, holy days visible $showHolyDays, after $hour:00",
+                    expected, batch?.events?.map { it.kind }?.toSet().orEmpty())
+                if (expected.isEmpty()) assertNull(batch) else assertEquals(at(hour = expectedHour), batch!!.at)
+            }
+        }
     }
     @Test fun futureCustomEventsAndYearBoundariesStayScheduled() {
         val future = CustomEvent(title = "Future", date = LocalDate.of(2099, 12, 31), time = LocalTime.of(23, 45))

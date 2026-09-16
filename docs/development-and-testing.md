@@ -1,126 +1,75 @@
-# Development & Testing Guide
+# Development and testing
 
-This guide covers setting up the development environment, building APKs, running automated test suites, managing translations, and maintaining event datasets.
+## Setup
 
----
+- JDK 25, auto-provisioned by Gradle toolchain resolution if absent.
+- Android SDK Platform 37; the app targets API 37 and supports API 31+.
+- Gradle 9.6.0 through the wrapper, Android Gradle Plugin 9.4.0 and Kotlin 2.4.20.
 
-## 1. Prerequisites & Environment Setup
+AGP provides built-in Kotlin support. The root `build.gradle.kts` selects the Kotlin Gradle plugin version from `gradle/libs.versions.toml`, which also sets the Compose compiler version. Update that shared version to keep both compilers aligned. See Android's [built-in Kotlin configuration](https://developer.android.com/build/releases/agp-9-0-0-release-notes#runtime-dependency-on-kotlin-gradle-plugin).
 
-- **Java Development Kit (JDK)**: JDK 25 (auto-provisioned by Gradle toolchain resolution if absent).
-- **Android SDK**:
-  - `compileSdk`: **37**
-  - `targetSdk`: **37**
-  - `minSdk`: **31** (Android 12+)
-- **Android Gradle Plugin (AGP)**: **9.4.0**
-- **Gradle**: **9.6.0** (managed via `./gradlew`)
-- **Kotlin**: **2.2.10** with Compose Compiler plugin enabled.
+Gradle downloads and verifies the pinned engine release. A sibling engine checkout is not required. See [shared engine integration](shared-engine.md) for checksums, offline builds and dependency upgrades.
 
----
+Runtime and test library versions, including Robolectric, are pinned in `gradle/libs.versions.toml`. Core 1.19 includes the Kotlin extensions in the main `androidx.core:core` artifact, so a separate `core-ktx` dependency is unnecessary.
 
-## 2. Build Commands
+## Builds
 
-Run the following commands using the Gradle wrapper from the project root:
+Run from the project root in PowerShell:
 
-### Debug Build
 ```powershell
 .\gradlew.bat assembleDebug
-```
-- Outputs debug APK: `app/build/outputs/apk/debug/app-debug.apk`
-- Automatically signed with Android's standard debug keystore.
-
-### Release Build
-```powershell
-.\gradlew.bat assembleRelease
-```
-- Outputs unsigned release APK: `app/build/outputs/apk/release/app-release-unsigned.apk`
-- To distribute, sign using `apksigner` or configure your release keystore in `app/build.gradle.kts`.
-
-### Code Quality & Linting
-```powershell
+.\gradlew.bat assembleRelease bundleRelease
 .\gradlew.bat lintDebug
 ```
 
----
+The debug APK is `app/build/outputs/apk/debug/app-debug.apk` and uses the Android debug keystore. The unsigned release APK is `app/build/outputs/apk/release/app-release-unsigned.apk`; the release bundle is `app/build/outputs/bundle/release/app-release.aab`. Release distribution requires your signing configuration.
 
-## 3. Testing Strategy
+## Testing
 
-The repository maintains strict verification combining unit tests on the JVM via Robolectric with on-device UI instrumentation via Espresso.
-
-### Running Unit Tests (Robolectric JVM)
 ```powershell
 .\gradlew.bat testDebugUnitTest
-```
-
-#### What the Unit Tests Cover:
-1. **Mathematical Accuracy (146,462 Dates across 1800–2200)**:
-   - Evaluates every Gregorian date from January 1, 1800 to December 31, 2200.
-   - Compares lunar month starts, day numbers, leap months (*Adhikamasa*), and leap days (*Adhikavara*) against pinned reference implementations and recurrence invariants.
-   - Asserts all 201 pinned Khmer New Year start dates (1900–2100) and government festival anchors, including the four-day year in 2024.
-2. **Buddhist Era (BE) Transition Rules**:
-   - Asserts that BE increments strictly on **1 Roach Pisakh** each year, not at the Gregorian or Solar New Year.
-3. **Responsive UI Configurations**:
-   - Phone portrait (`w411dp-h891dp`): Bottom navigation bar, vertical scrolling.
-   - Phone landscape (`w800dp-h400dp-land`): Navigation rail items expanding vertically across full screen (`weight(1f)`).
-   - Tablet landscape (`sw800dp-w1280dp-h800dp-land`): Compact navigation rail, 2-column date card.
-4. **Interactive Dialogs & Features**:
-   - Dynamic font size scaling (80% to 120% on phones, up to 150% on tablets) verifying text heights adjust proportionately.
-   - Buddhist Holy Day toggle synchronization in Date Details popup and tablet landscape event list.
-   - Precise reminder prompt behavior based on notification and exact alarm permissions.
-
-### Running Instrumented UI Tests (Device / Emulator)
-Ensure an active Android emulator or physical device is connected via ADB (`adb devices`):
-```powershell
 .\gradlew.bat connectedDebugAndroidTest
+python -m unittest discover -s tools/translation -p "test_*.py"
 ```
 
----
+Connected tests require a running emulator or device listed by `adb devices`.
 
-## 4. Translation & Localization Workflow
+| Checks | Android responsibility |
+| --- | --- |
+| Calendar adapters | Supported range, date conversion, localized year labels and festival results |
+| Pinned reference fixtures | Compatibility through the app adapters, including the reviewed 2012 correction |
+| Event repository and recurrence | Snapshot precedence, rule translation, captured-date comparisons and event classification |
+| Reminder planner and delivery | Category controls, permissions, saved event instants, time-zone changes, daylight saving and repeats |
+| Compose UI | Phone/tablet layouts, both languages, dialogs, font scaling and settings |
+| System window behavior | Light/dark edge-to-edge configuration on API 31, 34 and 35 |
+| Translation tools | Catalog validation, export, backups and conflicting saves |
 
-Khmer Calendar uses a centralized source of truth: [`translations/catalog.json`](../translations/catalog.json).
+The app retains its pinned MomentKH fixture and generator to catch consumer regressions. Agreement with that fixture is a compatibility check; it is not independent historical validation. Calendar algorithms and their evidence are maintained and tested in the engine project, linked from the [integration guide](shared-engine.md).
 
-### Translation Editor Web Tool
-A standalone web-based translation editor is available under `tools/translation/`:
-1. Start the tool:
-   ```cmd
-   cd tools\translation
-   Start.cmd
-   ```
-2. Open your browser to the local server URL displayed in the terminal.
-3. Edit English–Khmer string pairs grouped by:
-   - **Events** (event names, recurring festivals)
-   - **In-app text** (buttons, headers, dialogs)
-   - **Calendar & dates** (months, days, lunar attributes)
-   - **Notifications** (reminders, alarm messages)
-   - **About & sources** (credits, license text)
-4. Saving automatically writes backup copies and regenerates:
-   - `app/src/main/resources/translations.tsv`
-   - `app/src/main/resources/event-translations.tsv`
-5. Rebuild the app with `.\gradlew.bat assembleDebug` to test the new translations.
+Shared UI scenarios in `app/src/sharedTest` run under Robolectric and on a device. Device screenshots capture the full display so open dialogs are included. Inspect changed screens when updating layout or source-dialog content.
 
----
+The bilingual About/Sources interaction check runs in `CalendarUiTest` on Android, covering real inline-link rendering, event-source URL dialogs, the engine link and bundled licenses. Compose tests use the v2 test rules; alarm assertions use Robolectric's current accessors.
 
-## 5. Event Data Management & Auditing
+## Translations
 
-The app bundles 3,246 historical event occurrences (2000–2030) alongside 100 normalized recurrence rules (1800–2200).
+Edit [`translations/catalog.json`](../translations/catalog.json) through the local [translation editor](../tools/translation/README.md), or make an intentional catalog edit and export:
 
-### Generating Calendar Event Resources
-To regenerate `app/src/main/resources/calendar-events.tsv`:
 ```powershell
-python tools/build-reference-events.py
+python tools/translation/server.py --export
 ```
-- Validates captured dates against official Cambodian holiday gazettes (MEF & LRC).
-- Enriches matching entries with official holiday metadata.
-- Exports a compact UTF-8 TSV resource with database checksums.
 
-### Generating Recurring Event Rules
-To regenerate `tools/recurring-event-rules.json`:
+The catalog generates `translations.tsv`, `event-translations.tsv` and launcher strings. Rebuild and reinstall to see changes. Do not hand-edit generated resources. License and notice texts remain verbatim assets outside the translation catalog.
+
+## Event resources
+
+The app owns its event snapshot and recurrence definitions separately from the engine. Normal builds use their committed resources and do not run Python generators.
+
+To update recurrence definitions, edit `tools/recurring-event-rules.json`, then run:
+
 ```powershell
 python tools/build-recurring-events.py
 ```
 
-### Auditing Discrepancies
-To audit raw event databases against captured references:
-```powershell
-python tools/audit-supplied-events.py <path_to_event_database>
-```
+This reads the JSON manifest and writes the runtime `recurrence-rules.tsv` and captured-occurrence test fixture `recurrence-reference.tsv`. See [recurring event rules](recurring-event-rules.md) for mappings and review requirements.
+
+Rebuilding `calendar-events.tsv` requires the saved external capture and a current daily export from the app adapter. Follow [bundled event data](reference-event-database.md#capture-artifacts-and-maintenance) before running `python tools/build-reference-events.py`; its required inputs are not included in a fresh clone. The legacy audit tool produces review artifacts and does not update runtime events.

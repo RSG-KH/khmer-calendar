@@ -5,12 +5,12 @@ import android.Manifest
 import android.app.*
 import android.content.*
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import com.rsgkh.calendar.MainActivity
 import com.rsgkh.calendar.R
 import com.rsgkh.calendar.data.*
@@ -85,7 +85,7 @@ object EventNotifications {
                 val k = settings.khmer
                 val multipleDates = events.any { it.date != date }
                 val lines = events.map { (if (multipleDates) "${it.date} · " else "") + (it.time?.let { time -> "$time · " } ?: "") + it.title(k) }
-                val open = Intent(context, MainActivity::class.java).setData(Uri.parse("khmercalendar://date/$date"))
+                val open = Intent(context, MainActivity::class.java).setData("khmercalendar://date/$date".toUri())
                     .putExtra(EXTRA_DATE, date.toString()).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 val content = PendingIntent.getActivity(context, 0, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
                 val notification = NotificationCompat.Builder(context, CHANNEL)

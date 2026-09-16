@@ -4,9 +4,8 @@ package com.rsgkh.calendar
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
@@ -36,7 +35,6 @@ abstract class CalendarUiScenarios {
             onSaveCustom = { event -> custom.value = custom.value.filterNot { it.id == event.id } + event },
             onDeleteCustom = { id -> custom.value = custom.value.filterNot { it.id == id } }) { state.value = it } }
     }
-    @OptIn(ExperimentalTestApi::class)
     protected fun screenshot(name: String) {
         compose.waitForIdle()
         val jvmDirectory = System.getProperty("calendar.screenshots")
@@ -49,7 +47,13 @@ abstract class CalendarUiScenarios {
                 view.draw(Canvas(result))
             }
             result
-        } else compose.onRoot().captureToImage().asAndroidBitmap()
+        } else {
+            // Dialogs and popups add Compose roots; capture the complete device
+            // display so they and the system bars are included in the screenshot.
+            checkNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()) {
+                "Could not capture the device display"
+            }
+        }
         val directory = jvmDirectory?.let { File(it) } ?: InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir("screenshots")!!
         directory.mkdirs()
         File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
@@ -64,15 +68,53 @@ abstract class CalendarUiScenarios {
         screenshot("calendar-light")
         compose.onNodeWithTag("month-grid").performTouchInput { swipeLeft() }
         compose.onNodeWithText("October").assertIsDisplayed()
+        compose.onNode(hasContentDescription("Thursday, 1 October", substring = true)).assertIsSelected()
         compose.onNode(hasText("Today") and hasClickAction()).performClick()
         compose.onNodeWithText("September").assertIsDisplayed()
         compose.onNodeWithText("BE 2570").assertIsDisplayed()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).assertIsSelected()
         compose.onNodeWithTag("month-grid").performTouchInput { swipeRight() }
         compose.onNodeWithText("August").assertIsDisplayed()
+        compose.onNode(hasContentDescription("Saturday, 1 August", substring = true)).assertIsSelected()
         compose.onNodeWithContentDescription("Next month").performClick()
         compose.onNodeWithText("September").assertIsDisplayed()
+        compose.onNode(hasContentDescription("Tuesday, 1 September", substring = true)).assertIsSelected()
         compose.onNodeWithContentDescription("Previous month").performClick()
         compose.onNodeWithText("August").assertIsDisplayed()
+        compose.onNode(hasContentDescription("Saturday, 1 August", substring = true)).assertIsSelected()
+    }
+    @Test fun monthSwipesFromDay31SelectFirstDayAcrossShortMonthsAndYears() {
+        start(now = Instant.parse("2024-03-31T12:00:00Z"))
+        fun selected(description: String) = compose.onNode(hasContentDescription(description, substring = true)).assertIsSelected()
+        fun jumpToDay31(year: String, month: String, description: String) {
+            compose.onNodeWithContentDescription("Choose month and year").performClick()
+            compose.onNodeWithTag("month-year-input").performTextReplacement(year)
+            compose.onNodeWithText(month).performClick()
+            compose.onNodeWithText("Go").performClick()
+            compose.onNode(hasContentDescription(description, substring = true)).performClick()
+            compose.onNodeWithText("Close").performClick()
+            selected(description)
+        }
+
+        selected("Sunday, 31 March")
+        compose.onNodeWithTag("month-grid").performTouchInput { swipeLeft() }
+        selected("Monday, 1 April") // 30-day month.
+        compose.onNode(hasText("Today") and hasClickAction()).performClick()
+        selected("Sunday, 31 March")
+        compose.onNodeWithTag("month-grid").performTouchInput { swipeRight() }
+        selected("Thursday, 1 February") // Leap-year February.
+
+        jumpToDay31("2025", "Jan", "Friday, 31 January")
+        compose.onNodeWithTag("month-grid").performTouchInput { swipeLeft() }
+        selected("Saturday, 1 February") // Non-leap-year February.
+
+        jumpToDay31("2025", "Dec", "Wednesday, 31 December")
+        compose.onNodeWithTag("month-grid").performTouchInput { swipeLeft() }
+        compose.onNodeWithText("2026").assertIsDisplayed()
+        selected("Thursday, 1 January")
+        compose.onNodeWithTag("month-grid").performTouchInput { swipeRight() }
+        compose.onNodeWithText("2025").assertIsDisplayed()
+        selected("Monday, 1 December")
     }
     @Test fun searchFiltersAndEventDetails() {
         start()
@@ -126,6 +168,7 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithText("Date details").assertIsDisplayed()
         compose.onNodeWithText("September 24, 2026").assertIsDisplayed()
         compose.onNodeWithText("Close").performClick()
+        screenshot("calendar-today-and-selected-holiday")
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).assertIsSelected().performClick()
         compose.onNodeWithText("Date details").assertIsDisplayed()
     }
@@ -163,7 +206,7 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithText("Close").performClick()
         screenshot("future-festival")
     }
-    @Test fun databaseCoverageAppearsOnlyOutside2000Through2030() {
+    @Test fun calendarAndEventYearNavigationWorksAcrossSupportedRange() {
         start()
         for (year in listOf(2024, 2027, 2000, 2030, 1999, 2031)) {
             compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
@@ -172,9 +215,8 @@ abstract class CalendarUiScenarios {
             compose.onNodeWithText("Jan").performClick()
             compose.onNodeWithText("Go").performClick()
             if (year in 2000..2030) {
-                compose.onNodeWithTag("event-coverage-note").assertDoesNotExist()
                 compose.onNodeWithText("New Year's Day").performScrollTo().assertIsDisplayed()
-            } else compose.onNodeWithTag("event-coverage-note").performScrollTo().assertIsDisplayed()
+            }
         }
         compose.onNodeWithText("Events").performClick()
         for (year in listOf(2024, 2027, 2000, 2030, 2031, 1800, 2200)) {
@@ -186,9 +228,8 @@ abstract class CalendarUiScenarios {
             if (year == 1800) compose.onNodeWithContentDescription("Previous year").assertIsNotEnabled()
             if (year == 2200) compose.onNodeWithContentDescription("Next year").assertIsNotEnabled()
             if (year in 2000..2030) {
-                compose.onNodeWithTag("event-coverage-note").assertDoesNotExist()
                 compose.onNodeWithText("New Year's Day").performScrollTo().assertIsDisplayed()
-            } else compose.onNodeWithTag("event-coverage-note").performScrollTo().assertIsDisplayed()
+            }
         }
     }
 
@@ -387,9 +428,11 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithTag("theme-mode").assertTextContains("Dark")
         compose.onNodeWithText("ខ្មែរ").performScrollTo().performClick()
         compose.onNodeWithTag("accent-color").performScrollTo().assertTextContains(L.text("ui.lime.46ea65", true))
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText(L.text("ui.sunday_when_turned_off.e40816", true)))
         compose.onNodeWithText(L.text("ui.start_week_on_monday.5578c3", true)).assertIsDisplayed()
         compose.onNodeWithText("បិទដើម្បីផ្តើមសប្តាហ៍ពីថ្ងៃអាទិត្យ").assertIsDisplayed()
-        compose.onNodeWithTag("today-time-zone").performScrollTo().assertTextContains("កម្ពុជា (UTC+7)")
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasTestTag("today-time-zone"))
+        compose.onNodeWithTag("today-time-zone").assertTextContains("កម្ពុជា (UTC+7)")
         compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText(L.text("ui.enable_event_notifications.b4d4f8", true)))
         compose.onNodeWithText(L.text("ui.enable_event_notifications.b4d4f8", true)).assertIsDisplayed()
         compose.onNodeWithTag("reminder-interval").assertDoesNotExist()

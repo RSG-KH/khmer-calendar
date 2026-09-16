@@ -31,7 +31,7 @@ To recover a saved version, stop editing, copy a backup over the project's `tran
 
 ## Development
 
-The versioned tool lives at `tools/translation` inside the Android repository. The user's copy in `D:/DEV/android/translation` uses a `config.json` containing `{"project":"D:/DEV/android/AndroidStudioProjects/KhmerCalendar"}`. When changing the tool, copy `server.py`, `static`, the launchers and this README into that folder; preserve its config, logs and backups.
+The versioned tool lives at `tools/translation` inside the Android repository. For a separate installation, set `project` in its `config.json` to the Android repository's location. To update that installation, copy `server.py`, `static`, the launchers and this README into its directory; preserve its config, logs and backups.
 
 Run `python -m unittest discover -s tools/translation -p "test_*.py"` from the repository to check saving, export, backups, placeholder validation and conflicts. `python tools/translation/server.py --export` regenerates resources after an intentional direct catalog edit. The one-time `bootstrap.py` script documents the initial extraction; it refuses to overwrite an existing catalog.
 

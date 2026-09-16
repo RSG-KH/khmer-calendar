@@ -8,6 +8,7 @@ import org.robolectric.annotation.GraphicsMode
 import org.robolectric.annotation.LooperMode
 import androidx.test.core.app.ApplicationProvider
 import androidx.compose.ui.test.*
+import androidx.compose.ui.unit.dp
 import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.domain.KhmerDateDetails
 import com.rsgkh.calendar.i18n.L
@@ -24,20 +25,112 @@ import org.junit.Test
 class CalendarRenderTest : CalendarUiScenarios() {
     @Test fun preferencesSurviveRepositoryRecreation() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        val defaults = AppSettings(ThemeMode.SYSTEM, Accent.BLUE, khmer = true, mondayFirst = false, showCopyButtons = false, showLunar = true,
-            showHolyDaysInCalendar = true, showHolyDaysInEvents = false,
-            highlightSunday = true, notificationsEnabled = false, pushMinutes = 300, repeatHours = 0, todayTimeZone = TodayTimeZone.LOCAL,
+        val defaults = AppSettings(ThemeMode.SYSTEM, Accent.BLUE, khmer = true, mondayFirst = false, showLongerWeekdayNames = false, showCopyButtons = false, showLunar = true,
+            highlightWeekdayNames = false, showHolyDaysInCalendar = true, showHolyDaysInEvents = false,
+            highlightSunday = true, notificationsEnabled = false, pushCustomEvents = true, pushHolidays = true,
+            pushObservances = true, pushHolyDays = false, pushMinutes = 300, repeatHours = 0, todayTimeZone = TodayTimeZone.LOCAL,
             fontScale = FontScale.PERCENT_100)
         assertEquals(defaults, AppSettings())
         assertEquals(defaults, AppPreferences(context).read())
-        val expected = AppSettings(ThemeMode.DARK, Accent.LIME, khmer = false, mondayFirst = true, showCopyButtons = true, showLunar = false,
-            showHolyDaysInCalendar = false, showHolyDaysInEvents = true,
-            highlightSunday = false, repeatHours = 6, todayTimeZone = TodayTimeZone.CAMBODIA,
+        val expected = AppSettings(ThemeMode.DARK, Accent.LIME, khmer = false, mondayFirst = true, showLongerWeekdayNames = true, showCopyButtons = true, showLunar = false,
+            highlightWeekdayNames = true, showHolyDaysInCalendar = false, showHolyDaysInEvents = true,
+            highlightSunday = false, pushCustomEvents = false, pushHolidays = false, pushObservances = false, pushHolyDays = false,
+            repeatHours = 6, todayTimeZone = TodayTimeZone.CAMBODIA,
             fontScale = FontScale.PERCENT_110)
         AppPreferences(context).write(expected)
         assertEquals(expected, AppPreferences(context).read())
-        AppPreferences(context).write(expected.copy(showCopyButtons = false))
-        assertEquals(expected.copy(showCopyButtons = false), AppPreferences(context).read())
+        AppPreferences(context).write(expected.copy(showCopyButtons = false, showLongerWeekdayNames = false, highlightWeekdayNames = false))
+        assertEquals(expected.copy(showCopyButtons = false, showLongerWeekdayNames = false, highlightWeekdayNames = false), AppPreferences(context).read())
+    }
+
+    @Test fun weekdayColorsFollowTheDayAcrossWeekStartLanguageAndThemeChanges() {
+        start(AppSettings(khmer = false, theme = ThemeMode.LIGHT, highlightSunday = false))
+        fun colors() = (1..7).map { day ->
+            val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+            compose.onNodeWithTag("weekday-header-$day").performSemanticsAction(
+                androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(layouts) }
+            layouts.single().layoutInput.style.color
+        }
+        fun toggle(key: String, khmer: Boolean = false) {
+            val title = L.text(key, khmer)
+            compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText(title))
+            compose.onNodeWithContentDescription(title).performClick()
+        }
+        assertEquals(1, colors().distinct().size)
+        compose.onNodeWithText("Settings").performClick()
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("Highlight weekday names"))
+        compose.onNodeWithContentDescription("Highlight weekday names").assertIsOff().performClick().assertIsOn()
+        screenshot("settings-weekday-colors")
+        compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
+        val lightColors = colors()
+        assertEquals(7, lightColors.distinct().size)
+        screenshot("weekday-colors-compact-light")
+
+        compose.onNodeWithText("Settings").performClick()
+        toggle("ui.start_week_on_monday.5578c3")
+        toggle("ui.show_longer_weekday_names")
+        compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
+        assertEquals(lightColors, colors())
+        compose.onNodeWithTag("weekday-header-1").assertTextEquals("Mon")
+        screenshot("weekday-colors-long-light")
+
+        compose.onNodeWithText("Settings").performClick()
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasTestTag("theme-mode"))
+        compose.onNodeWithTag("theme-mode").performClick()
+        compose.onNode(hasText("Dark") and hasAnyAncestor(isPopup())).performClick()
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("ខ្មែរ"))
+        compose.onNodeWithText("ខ្មែរ").performClick()
+        compose.onNode(hasText("ប្រតិទិន") and hasClickAction()).performClick()
+        val darkColors = colors()
+        assertEquals(7, darkColors.distinct().size)
+        org.junit.Assert.assertTrue(lightColors.zip(darkColors).all { (light, dark) -> light != dark })
+        compose.onNodeWithTag("weekday-header-4").assertTextEquals("ព្រហស្បតិ៍")
+        screenshot("weekday-colors-khmer-dark")
+        compose.onNode(hasText(L.text("ui.settings.0e0a4f", true)) and hasClickAction()).performClick()
+        toggle("ui.highlight_weekday_names", true)
+        compose.onNode(hasText("ប្រតិទិន") and hasClickAction()).performClick()
+        assertEquals(1, colors().distinct().size)
+        compose.onNode(hasText(L.text("ui.settings.0e0a4f", true)) and hasClickAction()).performClick()
+        toggle("ui.highlight_sunday_column.549462", true)
+        compose.onNode(hasText("ប្រតិទិន") and hasClickAction()).performClick()
+        assertEquals(2, colors().distinct().size)
+        assertEquals(1, colors().take(6).distinct().size)
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xhdpi")
+    fun longerWeekdaysFollowSettingsLanguageAndWeekStartOnSmallPhones() {
+        start(AppSettings(khmer = false, fontScale = FontScale.PERCENT_120))
+        fun header(text: String) = compose.onNode(hasText(text) and hasAnyAncestor(hasTestTag("month-grid")))
+        header("M").assertIsDisplayed()
+        header("Mon").assertDoesNotExist()
+        compose.onNodeWithText("Settings").performClick()
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("Show longer weekday names"))
+        compose.onNodeWithContentDescription("Show longer weekday names").assertIsOff().performClick().assertIsOn()
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("Start week on Monday"))
+        compose.onNodeWithContentDescription("Start week on Monday").performClick()
+        compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
+        listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { header(it).assertIsDisplayed() }
+        org.junit.Assert.assertTrue(header("Mon").getUnclippedBoundsInRoot().left < header("Sun").getUnclippedBoundsInRoot().left)
+        screenshot("longer-weekdays-english")
+        compose.onNodeWithText("Settings").performClick()
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("ខ្មែរ"))
+        compose.onNodeWithText("ខ្មែរ").performClick()
+        compose.onNode(hasText("ប្រតិទិន") and hasClickAction()).performClick()
+        listOf("ចន្ទ", "អង្គារ", "ពុធ", "ព្រហស្បតិ៍", "សុក្រ", "សៅរ៍", "អាទិត្យ").forEach { name ->
+            header(name).assertIsDisplayed()
+            val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+            header(name).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(layouts) }
+            org.junit.Assert.assertFalse("Weekday must fit: $name", layouts.single().hasVisualOverflow)
+        }
+        screenshot("longer-weekdays-khmer")
+        compose.onNode(hasText(L.text("ui.settings.0e0a4f", true)) and hasClickAction()).performClick()
+        val title = L.text("ui.show_longer_weekday_names", true)
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText(title))
+        compose.onNodeWithContentDescription(title).assertIsOn().performClick().assertIsOff()
+        compose.onNode(hasText("ប្រតិទិន") and hasClickAction()).performClick()
+        header("ច").assertIsDisplayed()
+        header("ចន្ទ").assertDoesNotExist()
     }
 
     @Test fun copyButtonsToggleControlsDateAndEventDetails() {
@@ -71,13 +164,13 @@ class CalendarRenderTest : CalendarUiScenarios() {
         assertHiddenInBothDialogs()
         toggleCopyButtons(true)
         openDate()
-        compose.onNodeWithContentDescription("Copy full date description").assertIsDisplayed().performClick()
+        pressCopyButton("Copy full date description", "date-copy-buttons-english")
         assertClipboardText(KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 24)).fullEnglishDate())
-        screenshot("date-copy-buttons-english")
+        assertCopyConfirmation("Copy full date description", "Date description copied", "date-copy-buttons-english", retry = true)
         openEvent()
-        compose.onNodeWithContentDescription("Copy event title").assertIsDisplayed().performClick()
+        pressCopyButton("Copy event title", "event-copy-buttons-english")
         assertClipboardText("Constitution Day")
-        screenshot("event-copy-buttons-english")
+        assertCopyConfirmation("Copy event title", "Event title copied", "event-copy-buttons-english")
         compose.onNodeWithText("Close").performClick()
         compose.onNodeWithText("Close").performClick()
         toggleCopyButtons(false)
@@ -90,15 +183,57 @@ class CalendarRenderTest : CalendarUiScenarios() {
         start(AppSettings(khmer = true, theme = ThemeMode.DARK, showCopyButtons = true, todayTimeZone = TodayTimeZone.CAMBODIA),
             customEvents = listOf(event))
         compose.onNode(hasContentDescription("១៣រោច", substring = true)).performClick()
-        compose.onNodeWithContentDescription(L.text("ui.copy_full_date", true)).assertIsDisplayed().performClick()
+        pressCopyButton(L.text("ui.copy_full_date", true), "date-copy-buttons-khmer")
         assertClipboardText("ថ្ងៃព្រហស្បតិ៍ ១៣រោច ខែស្រាពណ៍ ឆ្នាំមមី អដ្ឋស័ក ពុទ្ធសករាជ ២៥៧០ ត្រូវនឹងថ្ងៃទី១០ ខែកញ្ញា ឆ្នាំ២០២៦")
-        screenshot("date-copy-buttons-khmer")
+        assertCopyConfirmation(L.text("ui.copy_full_date", true), L.text("ui.full_date_copied", true), "date-copy-buttons-khmer")
         compose.onNode(hasText(event.title) and hasAnyAncestor(isDialog())).performScrollTo().performClick()
-        compose.onNodeWithContentDescription(L.text("ui.copy_event_title", true)).assertIsDisplayed().performClick()
+        pressCopyButton(L.text("ui.copy_event_title", true), "event-copy-buttons-khmer")
         assertClipboardText(event.title)
-        screenshot("event-copy-buttons-khmer")
+        assertCopyConfirmation(L.text("ui.copy_event_title", true), L.text("ui.event_title_copied", true), "event-copy-buttons-khmer")
         compose.onNodeWithText(L.text("ui.edit.bbdcac", true)).assertIsDisplayed()
         compose.onNodeWithText(L.text("ui.delete.4708f4", true)).assertIsDisplayed()
+    }
+
+    private fun assertCopyButtonCentered(label: String) {
+        val button = compose.onNodeWithContentDescription(label).assertIsDisplayed()
+        val buttonBounds = button.fetchSemanticsNode().boundsInRoot
+        val iconBounds = compose.onNodeWithContentDescription(label, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals("Copy icon and touch feedback must share their horizontal center", buttonBounds.center.x, iconBounds.center.x, 0.5f)
+        assertEquals("Copy icon and touch feedback must share their vertical center", buttonBounds.center.y, iconBounds.center.y, 0.5f)
+        button.assertWidthIsEqualTo(48.dp).assertHeightIsEqualTo(48.dp)
+    }
+
+    private fun pressCopyButton(label: String, screenshotName: String) {
+        assertCopyButtonCentered(label)
+        val button = compose.onNodeWithContentDescription(label)
+        compose.mainClock.autoAdvance = false
+        try {
+            button.performTouchInput { down(center) }
+            compose.mainClock.advanceTimeBy(300)
+            screenshot("$screenshotName-pressed")
+            button.performTouchInput { up() }
+        } finally {
+            compose.mainClock.autoAdvance = true
+        }
+        compose.waitForIdle()
+    }
+
+    private fun assertCopyConfirmation(label: String, message: String, screenshotName: String, retry: Boolean = false) {
+        val button = compose.onNodeWithContentDescription(label)
+        val copied = SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.StateDescription, message)
+        button.assert(copied)
+        assertCopyButtonCentered(label)
+        screenshot("$screenshotName-check")
+        if (retry) {
+            compose.mainClock.advanceTimeBy(1_000)
+            button.performClick()
+            compose.waitForIdle()
+            compose.mainClock.advanceTimeBy(1_500)
+            button.assert(copied)
+            compose.mainClock.advanceTimeBy(600)
+        } else compose.mainClock.advanceTimeBy(2_100)
+        button.assert(SemanticsMatcher.keyNotDefined(androidx.compose.ui.semantics.SemanticsProperties.StateDescription))
+        screenshot(screenshotName)
     }
 
     private fun assertClipboardText(expected: String) {
@@ -150,6 +285,46 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithText("Date details").assertIsDisplayed()
         compose.onNodeWithText("Buddhist Holy Day", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Close").performClick()
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xhdpi")
+    fun notificationCategoriesPreserveHolyDayChoiceWhenHiddenInBothLanguages() {
+        start(AppSettings(khmer = false, notificationsEnabled = true, fontScale = FontScale.PERCENT_120))
+        compose.onNodeWithText("Settings").performClick()
+        val categories = listOf("notifications.push_custom", "notifications.push_holidays", "notifications.push_observances")
+        val holyVisibility = "ui.buddhist_holy_days_in_events.53e502"
+        val holyPush = "notifications.push_holy_days"
+        for (k in listOf(false, true)) {
+            if (k) {
+                compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("ខ្មែរ"))
+                compose.onNodeWithText("ខ្មែរ").performClick()
+            }
+            fun toggle(key: String): SemanticsNodeInteraction {
+                val title = L.text(key, k)
+                compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText(title))
+                return compose.onNodeWithContentDescription(title)
+            }
+            categories.forEach { key ->
+                val option = toggle(key)
+                if (!k) option.assertIsOn().performClick().assertIsOff() else option.assertIsOff()
+            }
+            compose.onNodeWithContentDescription(L.text(holyPush, k)).assertDoesNotExist()
+            toggle(holyVisibility).assertIsOff().performClick().assertIsOn()
+            toggle(holyPush).assertIsOff().performClick().assertIsOn()
+            compose.onNodeWithTag("choose-push-time").performScrollTo()
+            screenshot("notification-categories-$k")
+
+            toggle(holyVisibility).performClick().assertIsOff()
+            toggle(categories.last()).assertIsOff()
+            compose.onNodeWithContentDescription(L.text(holyPush, k)).assertDoesNotExist()
+            toggle(holyVisibility).performClick().assertIsOn()
+            toggle(holyPush).assertIsOn().performClick().assertIsOff()
+            toggle(holyVisibility).performClick().assertIsOff()
+            toggle(holyVisibility).performClick().assertIsOn()
+            toggle(holyPush).assertIsOff() // Both on and off choices survive hiding the option.
+            toggle(holyVisibility).performClick().assertIsOff()
+        }
     }
 
     @Test fun preciseRemindersPromptShowsWhenNotificationsEnabledAndExactPermissionNotGranted() {
@@ -216,8 +391,8 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithText("Events on the day").assertDoesNotExist()
 
         compose.onNodeWithText("Settings").performClick()
-        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("Buddhist holy days in Events"))
-        compose.onNode(hasContentDescription("Buddhist holy days in Events") and isToggleable()).performClick()
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("Buddhist holy days in events"))
+        compose.onNode(hasContentDescription("Buddhist holy days in events") and isToggleable()).performClick()
         compose.onNodeWithText("Calendar").performClick()
         compose.onNode(hasContentDescription("Friday, 11 September", substring = true)).performClick()
         compose.onNodeWithText("Events on the day").assertIsDisplayed()
@@ -237,8 +412,8 @@ class CalendarRenderTest : CalendarUiScenarios() {
 
         // Turn toggle ON in Settings
         compose.onNodeWithText("Settings").performClick()
-        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("Buddhist holy days in Events"))
-        compose.onNode(hasContentDescription("Buddhist holy days in Events") and isToggleable()).performClick()
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("Buddhist holy days in events"))
+        compose.onNode(hasContentDescription("Buddhist holy days in events") and isToggleable()).performClick()
         compose.onNodeWithText("Calendar").performClick()
 
         // Reopen Date details dialog for 11 September
@@ -341,6 +516,9 @@ class CalendarRenderTest : CalendarUiScenarios() {
         start(AppSettings(khmer = false, theme = ThemeMode.DARK), customEvents = listOf(customEvent))
         compose.onNodeWithText("Custom").assertIsDisplayed()
         screenshot("custom-event-calendar-dark")
+        compose.onNode(hasContentDescription("Tuesday, 15 September", substring = true)).performClick()
+        compose.onNodeWithText("Close").performClick()
+        screenshot("calendar-today-and-selected-custom-dark")
     }
 
     @Test
@@ -367,6 +545,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithText("Go").performClick()
         compose.onNodeWithText("1994").assertIsDisplayed()
         compose.onNodeWithText("March").assertIsDisplayed()
+        screenshot("calendar-selected-other-year")
 
         // Verify "No matching events. Try another filter or search." does NOT exist on Calendar tab
         compose.onNodeWithText(L.text("ui.no_matching_events_try_another_filter_or_search.57812b", false)).assertDoesNotExist()
@@ -469,24 +648,4 @@ class CalendarRenderTest : CalendarUiScenarios() {
         screenshot("tablet-$orientation-year-picker-150")
         compose.onNodeWithText("Cancel").performScrollTo().performClick()
     }
-
-    @Test fun aboutLinksAndCorrectedSourceTextWorkInBothLanguages() {
-        start()
-        compose.onNodeWithText("Settings").performClick()
-        for (k in listOf(false, true)) {
-            val version = L.text("about.version", k, "version" to BuildConfig.VERSION_NAME)
-            compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText(version))
-            compose.onNodeWithText(version).assertIsDisplayed()
-            compose.onNodeWithText("PWA · RSG-KH/khmer-calendar-pwa").assertIsDisplayed().assertHasClickAction()
-            compose.onNodeWithText("Android · RSG-KH/khmer-calendar").assertIsDisplayed().assertHasClickAction()
-            screenshot("about-$k")
-            val sourceText = L.text("ui.lunar_calendar_1900_2100_based_on_work_by_phylypo_tum_t.d8396b", k)
-            org.junit.Assert.assertFalse(sourceText.contains("1 Roach") || sourceText.contains("ពុទ្ធសករាជប្ដូរ"))
-            if (!k) {
-                compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("ខ្មែរ"))
-                compose.onNodeWithText("ខ្មែរ").performClick()
-            }
-        }
-    }
 }
-

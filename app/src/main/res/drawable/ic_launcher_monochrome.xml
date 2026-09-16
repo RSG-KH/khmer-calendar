@@ -1,0 +1,4 @@
+<!-- Match the full-color foreground's padding using the supplied monochrome artwork. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/launcher_monochrome"
+    android:inset="20%" />

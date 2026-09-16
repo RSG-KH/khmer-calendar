@@ -205,7 +205,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
         fun navigate(target: YearMonth) {
             if (target.year in 1800..2200) {
                 monthText = target.toString()
-                selectedText = target.atDay(minOf(selected.dayOfMonth, target.lengthOfMonth())).toString()
+                selectedText = target.atDay(1).toString()
             }
         }
         val configuration = LocalConfiguration.current
@@ -551,7 +551,6 @@ private fun CalendarScreen(
                 }
             }
             LazyColumn(Modifier.weight(1f).fillMaxHeight().testTag("calendar-scroll"), contentPadding = PaddingValues(top = 4.dp, end = 12.dp, bottom = 6.dp)) {
-                if (!EventRepository.hasBundledYear(month.year)) item { Box(Modifier.padding(bottom = 8.dp)) { CoverageNote(k) } }
                 if (listEvents.isNotEmpty()) {
                     item {
                         Text(L.text("ui.all_events_in_month.ab923a", k, "month" to monthName(month, k)), Modifier.padding(start = 10.dp, top = 4.dp, bottom = 4.dp),
@@ -568,7 +567,6 @@ private fun CalendarScreen(
                 item {
                     CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext)
                 }
-                if (!EventRepository.hasBundledYear(month.year)) item { Box(Modifier.padding(bottom = 10.dp)) { CoverageNote(k) } }
                 items(listEvents, key = { it.key }) { EventRow(it, k, Modifier.padding(bottom = 8.dp)) { onEvent(it) } }
             }
         }
@@ -591,7 +589,7 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
     }
     val cellHeight = (baseHeight * fontScale)
     val firstOffset = if (settings.mondayFirst) month.atDay(1).dayOfWeek.value - 1 else month.atDay(1).dayOfWeek.value % 7
-    val weekdays = (0..6).map { CalendarWords.weekday(it, k, "grid") }
+    val weekdays = (0..6).map { CalendarWords.weekday(it, k, if (settings.showLongerWeekdayNames) "grid_long" else "grid") }
     val ordered = if (settings.mondayFirst) weekdays.drop(1) + weekdays.first() else weekdays
     val byDate = remember(events) { events.groupBy { it.date } }
     Column(Modifier.testTag("month-grid").pointerInput(month) {
@@ -600,11 +598,28 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
             if (abs(drag) > 80.dp.toPx()) { if (drag < 0) onNext() else onPrevious() }
         })
     }) {
-        Row(Modifier.fillMaxWidth().padding(bottom = if (isPhoneLandscape) 3.dp else 8.dp)) {
-            ordered.forEachIndexed { index, it ->
-                val isSundayHeader = if (settings.mondayFirst) index == 6 else index == 0
-                val headerColor = if (settings.highlightSunday && isSundayHeader) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
-                Text(it, Modifier.weight(1f), textAlign = TextAlign.Center, fontSize = 11.readableSp, fontWeight = FontWeight.Medium, color = headerColor)
+        BoxWithConstraints(Modifier.fillMaxWidth().padding(bottom = if (isPhoneLandscape) 3.dp else 8.dp)) {
+            val preferredSize = 11.readableSp
+            val headerSize = if (settings.showLongerWeekdayNames) {
+                // Keep all seven names at one size, fitting the longest without truncating Khmer.
+                val measurer = rememberTextMeasurer()
+                val style = LocalTextStyle.current.copy(fontSize = preferredSize, fontWeight = FontWeight.Medium)
+                val widest = ordered.maxOf { measurer.measure(it, style, softWrap = false, maxLines = 1).size.width }.coerceAtLeast(1)
+                val available = with(LocalDensity.current) { (maxWidth / 7 - 2.dp).toPx() }.coerceAtLeast(1f)
+                preferredSize * (available / widest).coerceAtMost(1f)
+            } else preferredSize
+            val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+            Row(Modifier.fillMaxWidth()) {
+                ordered.forEachIndexed { index, it ->
+                    val weekday = DayOfWeek.of(if (settings.mondayFirst) index + 1 else if (index == 0) 7 else index)
+                    val headerColor = when {
+                        settings.highlightWeekdayNames -> weekdayNameColor(weekday, dark)
+                        settings.highlightSunday && weekday == DayOfWeek.SUNDAY -> MaterialTheme.colorScheme.tertiary
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                    Text(it, Modifier.weight(1f).testTag("weekday-header-${weekday.value}"), textAlign = TextAlign.Center, fontSize = headerSize,
+                        fontWeight = FontWeight.Medium, color = headerColor, maxLines = 1, softWrap = false)
+                }
             }
         }
         repeat((firstOffset + month.lengthOfMonth() + 6) / 7) { week ->
@@ -623,8 +638,8 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
                         val colors = MaterialTheme.colorScheme
                         Box(
                             Modifier.weight(1f).padding(1.dp).clip(RoundedCornerShape(if (isPhoneLandscape) 8.dp else 11.dp))
-                                .background(if (active) colors.primary else Color.Transparent)
-                                .then(if (isToday && !active) Modifier.border(1.dp, colors.primary, RoundedCornerShape(if (isPhoneLandscape) 8.dp else 11.dp)) else Modifier)
+                                .background(if (isToday) colors.primary else Color.Transparent)
+                                .then(if (active && !isToday) Modifier.border(1.dp, colors.primary, RoundedCornerShape(if (isPhoneLandscape) 8.dp else 11.dp)) else Modifier)
                                 .clickable { onSelect(date) }
                                 .semantics(mergeDescendants = true) {
                                     contentDescription = "${dateLabel(date, k)}, ${lunar.fullLabel(k)}. ${entries.joinToString { it.title(k) }}"
@@ -639,9 +654,9 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
                             }
                             Column(Modifier.fillMaxWidth().offset(y = if (isPhoneLandscape) (-0.5).dp else (-1.0).dp).padding(vertical = if (isPhoneLandscape) 0.5.dp else 1.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                                Text(number(day, k), color = if (active) colors.onPrimary else if (isHoliday) colors.tertiary else colors.onSurface,
-                                    fontSize = (if (isPhoneLandscape) 13 else 16).readableSp, lineHeight = (if (isPhoneLandscape) 15 else 17).sp, maxLines = 1, fontWeight = if (active || isToday) FontWeight.Bold else FontWeight.Medium)
-                                if (settings.showLunar) Text(lunar.shortLabel(k), modifier = Modifier.offset(y = if (isPhoneLandscape) (-1.5).dp else (-1).dp), color = if (active) colors.onPrimary.copy(alpha = .85f) else colors.onSurfaceVariant,
+                                Text(number(day, k), color = if (isToday) colors.onPrimary else if (isHoliday) colors.tertiary else colors.onSurface,
+                                    fontSize = (if (isPhoneLandscape) 13 else 16).readableSp, lineHeight = (if (isPhoneLandscape) 15 else 17).sp, maxLines = 1, fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium)
+                                if (settings.showLunar) Text(lunar.shortLabel(k), modifier = Modifier.offset(y = if (isPhoneLandscape) (-1.5).dp else (-1).dp), color = if (isToday) colors.onPrimary.copy(alpha = .85f) else colors.onSurfaceVariant,
                                     fontSize = (if (isPhoneLandscape) 8 else 10).readableSp, lineHeight = (if (isPhoneLandscape) 10 else 12).readableSp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 val markSize = when {
                                     isTablet && isLandscape -> 7.0.dp
@@ -657,7 +672,7 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
                                 }
                                 val markSpacing = if (isTablet) 2.5.dp else 2.dp
                                 Row(Modifier.height(markRowHeight), horizontalArrangement = Arrangement.spacedBy(markSpacing), verticalAlignment = Alignment.CenterVertically) {
-                                    entries.map { it.kind }.distinct().take(4).forEach { EventMark(it, if (active) colors.onPrimary else eventColor(it), sizeDp = markSize) }
+                                    entries.map { it.kind }.distinct().take(4).forEach { EventMark(it, if (isToday) colors.onPrimary else eventColor(it), sizeDp = markSize) }
                                 }
                             }
                         }
@@ -721,9 +736,6 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
                         val filters = listOf(0 to L.text("ui.all.c10205", k), 4 to L.text("ui.custom.917053", k), 1 to L.text("ui.holidays.8a894c", k), 2 to L.text("ui.observances.e4454c", k), 3 to L.text("ui.holy_days.9569a6", k))
                         filters.forEach { (id, text) -> if (settings.showHolyDaysInEvents || id != 3) FilterChip(selected = filter == id, onClick = { filter = id }, colors = selectionChipColors(), label = { Text(text) }) }
                     }
-                }
-                if (filter != 4 && !EventRepository.hasBundledYear(year)) {
-                    item { Box(Modifier.padding(bottom = 16.dp)) { CoverageNote(k) } }
                 }
                 if (events.isEmpty()) item { EmptyEvents(k) }
                 events.groupBy { it.date.month }.values.forEachIndexed { index, monthEvents ->
@@ -838,12 +850,16 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
         }
         item {
             SettingsCard(L.text("ui.calendar.beb873", k)) {
-                SettingSwitch(L.text("ui.start_week_on_monday.5578c3", k), L.text("ui.sunday_when_turned_off.e40816", k), settings.mondayFirst) { onChange(settings.copy(mondayFirst = it)) }
                 SettingSwitch(L.text("ui.show_copy_buttons", k), L.text("ui.show_copy_buttons_subtitle", k), settings.showCopyButtons) { onChange(settings.copy(showCopyButtons = it)) }
+                SettingSwitch(L.text("ui.show_longer_weekday_names", k), L.text("ui.show_longer_weekday_names_subtitle", k), settings.showLongerWeekdayNames) { onChange(settings.copy(showLongerWeekdayNames = it)) }
+                SettingSwitch(L.text("ui.highlight_weekday_names", k), L.text("ui.highlight_weekday_names_subtitle", k), settings.highlightWeekdayNames) { onChange(settings.copy(highlightWeekdayNames = it)) }
                 SettingSwitch(L.text("ui.highlight_sunday_column.549462", k), L.text("ui.show_sundays_in_red_like_holidays.245681", k), settings.highlightSunday) { onChange(settings.copy(highlightSunday = it)) }
                 SettingSwitch(L.text("ui.lunar_dates_in_calendar.4dffed", k), L.text("ui.koeut_and_roach_under_each_date.f23bd7", k), settings.showLunar) { onChange(settings.copy(showLunar = it)) }
                 SettingSwitch(L.text("ui.buddhist_holy_days_in_calendar.d1e9b6", k), L.text("ui.show_lotus_markers_and_holy_days.c9d0bc", k), settings.showHolyDaysInCalendar) { onChange(settings.copy(showHolyDaysInCalendar = it)) }
-                SettingSwitch(L.text("ui.buddhist_holy_days_in_events.53e502", k), L.text("ui.show_in_the_events_list_and_filters.425758", k), settings.showHolyDaysInEvents) { onChange(settings.copy(showHolyDaysInEvents = it)) }
+                SettingSwitch(L.text("ui.buddhist_holy_days_in_events.53e502", k), L.text("ui.show_in_the_events_list_and_filters.425758", k), settings.showHolyDaysInEvents) {
+                    onChange(settings.copy(showHolyDaysInEvents = it))
+                }
+                SettingSwitch(L.text("ui.start_week_on_monday.5578c3", k), L.text("ui.sunday_when_turned_off.e40816", k), settings.mondayFirst) { onChange(settings.copy(mondayFirst = it)) }
             }
         }
         item { NotificationSettingsCard(settings, onChange, access, onSystemSettings, onAllowExact) }
@@ -977,9 +993,9 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp)
+                        .padding(start = 24.dp, top = 24.dp, end = 12.dp, bottom = 24.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.padding(end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             L.text("ui.date_details.e26d78", k),
                             Modifier.weight(1f),
@@ -1000,7 +1016,8 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                             .weight(1f, fill = false)
                             .verticalScrollbar(scrollState)
                             .verticalScroll(scrollState)
-                            .padding(end = 4.dp),
+                            // Leave room inside the viewport for the copy button's full tap area.
+                            .padding(end = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -1008,7 +1025,8 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                         val fullDate = if (k) info.fullKhmerDate() else info.fullEnglishDate()
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(fullDate, modifier = Modifier.weight(1f), fontSize = 18.readableSp, lineHeight = 32.readableSp, color = MaterialTheme.colorScheme.onSurface)
-                            if (showCopyButtons) CopyTextButton(fullDate, L.text("ui.copy_full_date", k), L.text("ui.full_date_copied", k))
+                            if (showCopyButtons) CopyTextButton(fullDate, L.text("ui.copy_full_date", k), L.text("ui.full_date_copied", k),
+                                firstLineHeight = 32.readableSp)
                         }
                         if (info.lunar.isHolyDay || info.lunar.isShavingDay) {
                             Row(
@@ -1063,7 +1081,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                     }
                     Spacer(Modifier.height(24.dp))
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().padding(end = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -1122,7 +1140,8 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                 ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(event.title(k), modifier = Modifier.weight(1f), fontSize = 18.readableSp, lineHeight = 26.readableSp)
-                        if (showCopyButtons) CopyTextButton(event.title(k), L.text("ui.copy_event_title", k), L.text("ui.event_title_copied", k))
+                        if (showCopyButtons) CopyTextButton(event.title(k), L.text("ui.copy_event_title", k), L.text("ui.event_title_copied", k),
+                            firstLineHeight = 26.readableSp)
                     }
                     Spacer(Modifier.height(16.dp))
                     val scrollState = rememberScrollState()
@@ -1191,7 +1210,11 @@ private data class SourceUrlsDialogData(val title: String, val urls: List<String
     val context = LocalContext.current
     var license by remember { mutableStateOf(false) }
     var activeUrlDialog by remember { mutableStateOf<SourceUrlsDialogData?>(null) }
-    val notice = remember { context.assets.open("NOTICE.txt").bufferedReader().use { it.readText() } }
+    val notice = remember {
+        listOf("engine-LICENSE.txt", "NOTICE.txt").joinToString("\n\n") { name ->
+            context.assets.open(name).bufferedReader().use { it.readText() }
+        }
+    }
     val orangeColor = if (MaterialTheme.colorScheme.surface.luminance() > .5f) Color(0xFFC45E00) else Color(0xFFFFB36B)
     val fullEventSourceText = L.text("ui.events_2000_2030_from_khmer_lunar_calendar_available_of.93ee10", k)
     val govLink = if (k) "គេហទំព័រផ្លូវការមួយចំនួនរបស់រដ្ឋាភិបាល" else "some official government websites"
@@ -1259,7 +1282,8 @@ private data class SourceUrlsDialogData(val title: String, val urls: List<String
             Text(L.text("ui.new_event_years_and_corrections_are_delivered_through_a.a6af2d", k), fontSize = 12.readableSp, color = orangeColor)
             Text(eventSourceAnnotated, fontSize = 14.readableSp, lineHeight = 22.readableSp)
             Text(L.text("rules.source_summary", k), fontSize = 14.readableSp)
-            Text(L.text("ui.lunar_calendar_1900_2100_based_on_work_by_phylypo_tum_t.d8396b", k), fontSize = 14.readableSp)
+            Text(L.text("about.calendar_engine", k), fontSize = 14.readableSp)
+            SourceLink("https://github.com/RSG-KH/khmer-calendar-engine", "Khmer Calendar Engine")
             TextButton(onClick = { license = !license }) { Text(L.text("ui.open_source_license.ab00af", k)) }
             if (license) {
                 Surface(
@@ -1334,17 +1358,6 @@ private data class SourceUrlsDialogData(val title: String, val urls: List<String
     }
 }
 
-@Composable private fun CoverageNote(k: Boolean) {
-    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    Surface(
-        modifier = Modifier.testTag("event-coverage-note"),
-        shape = RoundedCornerShape(16.dp),
-        color = if (isDark) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, if (isDark) MaterialTheme.colorScheme.outlineVariant else Color(0xFFE0E3EC))
-    ) {
-        Text(L.text("rules.coverage", k), Modifier.padding(16.dp), fontSize = 12.readableSp, lineHeight = 20.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
 @Composable private fun EmptyEvents(k: Boolean) {
     Text(L.text("ui.no_matching_events_try_another_filter_or_search.57812b", k), Modifier.fillMaxWidth().padding(24.dp), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }

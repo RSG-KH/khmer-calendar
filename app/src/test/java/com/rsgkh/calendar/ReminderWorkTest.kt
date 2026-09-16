@@ -106,7 +106,7 @@ class ReminderWorkTest {
                 val posted = context.getSystemService(NotificationManager::class.java).activeNotifications.single().notification
                 assertTrue(posted.extras.getCharSequence("android.bigText").toString().contains(event.title))
                 val next = Shadows.shadowOf(context.getSystemService(AlarmManager::class.java)).scheduledAlarms.single()
-                assertTrue(next.triggerAtTime > due.toEpochMilli())
+                assertTrue(next.triggerAtMs > due.toEpochMilli())
             }
             EventNotifications.clearDisplayedAsync(context).get(5, TimeUnit.SECONDS)
             assertTrue(context.getSystemService(NotificationManager::class.java).activeNotifications.isEmpty())

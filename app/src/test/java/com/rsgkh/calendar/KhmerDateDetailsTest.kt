@@ -9,6 +9,19 @@ import org.junit.Test
 import java.time.LocalDate
 
 class KhmerDateDetailsTest {
+    @Test fun sharedEngineCorrectsThe2012DateLabels() {
+        val before = KhmerDateDetails.fromGregorian(LocalDate.of(2012, 4, 12))
+        val first = KhmerDateDetails.fromGregorian(LocalDate.of(2012, 4, 13))
+        val middle = KhmerDateDetails.fromGregorian(LocalDate.of(2012, 4, 14))
+        val last = KhmerDateDetails.fromGregorian(LocalDate.of(2012, 4, 15))
+        assertEquals("Rabbit", before.animalLabel(false))
+        assertEquals("Rabbit → Dragon", first.animalLabel(false))
+        assertEquals("Dragon", middle.animalLabel(false))
+        assertEquals(before.sak, first.sak)
+        assertEquals((before.sak + 1) % 10, last.sak)
+        assertEquals(before.lunar.buddhistYear, last.lunar.buddhistYear)
+    }
+
     @Test fun suppliedScreenshotDateMatchesTraditionalLabels() {
         val details = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 10))
         assertEquals(6, details.animalYear)

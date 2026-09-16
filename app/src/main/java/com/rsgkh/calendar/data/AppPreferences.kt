@@ -43,12 +43,18 @@ data class AppSettings(
     val accent: Accent = Accent.BLUE,
     val khmer: Boolean = true,
     val mondayFirst: Boolean = false,
+    val showLongerWeekdayNames: Boolean = false,
     val showCopyButtons: Boolean = false,
+    val highlightWeekdayNames: Boolean = false,
     val showLunar: Boolean = true,
     val showHolyDaysInCalendar: Boolean = true,
     val showHolyDaysInEvents: Boolean = false,
     val highlightSunday: Boolean = true,
     val notificationsEnabled: Boolean = false,
+    val pushCustomEvents: Boolean = true,
+    val pushHolidays: Boolean = true,
+    val pushObservances: Boolean = true,
+    val pushHolyDays: Boolean = showHolyDaysInEvents,
     val pushMinutes: Int = 5 * 60,
     val repeatHours: Int = 0,
     val todayTimeZone: TodayTimeZone = TodayTimeZone.LOCAL,
@@ -59,17 +65,24 @@ class AppPreferences(context: Context) {
     private val prefs = context.getSharedPreferences("appearance", Context.MODE_PRIVATE)
     fun read(): AppSettings {
         val legacyHolyDays = prefs.getBoolean("showHolyDays", true)
+        val showHolyDaysInEvents = prefs.getBoolean("showHolyDaysInEvents", false)
         return AppSettings(
             theme = ThemeMode.entries.firstOrNull { it.name == prefs.getString("theme", "SYSTEM") } ?: ThemeMode.SYSTEM,
             accent = Accent.entries.firstOrNull { it.name == prefs.getString("accent", "BLUE") } ?: Accent.BLUE,
             khmer = prefs.getBoolean("khmer", true),
             mondayFirst = prefs.getBoolean("mondayFirst", false),
+            showLongerWeekdayNames = prefs.getBoolean("showLongerWeekdayNames", false),
             showCopyButtons = prefs.getBoolean("showCopyButtons", false),
+            highlightWeekdayNames = prefs.getBoolean("highlightWeekdayNames", false),
             showLunar = prefs.getBoolean("showLunar", true),
             showHolyDaysInCalendar = prefs.getBoolean("showHolyDaysInCalendar", legacyHolyDays),
-            showHolyDaysInEvents = prefs.getBoolean("showHolyDaysInEvents", false),
+            showHolyDaysInEvents = showHolyDaysInEvents,
             highlightSunday = prefs.getBoolean("highlightSunday", true),
             notificationsEnabled = prefs.getBoolean("notificationsEnabled", false),
+            pushCustomEvents = prefs.getBoolean("pushCustomEvents", true),
+            pushHolidays = prefs.getBoolean("pushHolidays", true),
+            pushObservances = prefs.getBoolean("pushObservances", true),
+            pushHolyDays = prefs.getBoolean("pushHolyDays", showHolyDaysInEvents),
             pushMinutes = prefs.getInt("pushMinutes", 300).coerceIn(0, 1439),
             repeatHours = prefs.getInt("repeatHours", 0).takeIf { it in listOf(0, 2, 4, 6, 8, 12) } ?: 0,
             todayTimeZone = TodayTimeZone.entries.firstOrNull { it.name == prefs.getString("todayTimeZone", "LOCAL") } ?: TodayTimeZone.LOCAL,
@@ -82,13 +95,19 @@ class AppPreferences(context: Context) {
             putString("accent", settings.accent.name)
             putBoolean("khmer", settings.khmer)
             putBoolean("mondayFirst", settings.mondayFirst)
+            putBoolean("showLongerWeekdayNames", settings.showLongerWeekdayNames)
             putBoolean("showCopyButtons", settings.showCopyButtons)
+            putBoolean("highlightWeekdayNames", settings.highlightWeekdayNames)
             putBoolean("showLunar", settings.showLunar)
             putBoolean("showHolyDaysInCalendar", settings.showHolyDaysInCalendar)
             putBoolean("showHolyDaysInEvents", settings.showHolyDaysInEvents)
             putBoolean("showHolyDays", settings.showHolyDaysInCalendar && settings.showHolyDaysInEvents)
             putBoolean("highlightSunday", settings.highlightSunday)
             putBoolean("notificationsEnabled", settings.notificationsEnabled)
+            putBoolean("pushCustomEvents", settings.pushCustomEvents)
+            putBoolean("pushHolidays", settings.pushHolidays)
+            putBoolean("pushObservances", settings.pushObservances)
+            putBoolean("pushHolyDays", settings.pushHolyDays)
             putInt("pushMinutes", settings.pushMinutes)
             putInt("repeatHours", settings.repeatHours)
             putString("todayTimeZone", settings.todayTimeZone.name)

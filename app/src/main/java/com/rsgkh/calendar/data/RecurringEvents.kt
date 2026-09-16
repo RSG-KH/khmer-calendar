@@ -2,8 +2,8 @@
 package com.rsgkh.calendar.data
 
 import com.rsgkh.calendar.domain.KhmerCalendar
-import com.rsgkh.calendar.domain.KhmerNewYear
-import com.rsgkh.calendar.domain.LunarDate
+import com.rsgkh.calendar.domain.toLocalDate
+import com.rsgkh.calendar.engine.RecurrenceRule
 import com.rsgkh.calendar.domain.khmerNumber
 import com.rsgkh.calendar.i18n.L
 import java.time.LocalDate
@@ -15,8 +15,18 @@ internal object RecurringEvents {
         val month: Int, val day: Int, val waxing: Boolean, val offset: Int, val duration: Int,
         val fromYear: Int, val throughYear: Int, val anniversaryBase: Int?, val secondAsadh: Boolean,
     ) {
-        fun matches(lunar: LunarDate): Boolean = lunar.day == day && lunar.waxing == waxing &&
-            (lunar.month == month || (secondAsadh && lunar.month == 13))
+        // The TSV stores weekday occurrence in offset, and unused fields as zero/false.
+        // Translate that legacy data representation into the engine's validated contract.
+        val calculation = RecurrenceRule(
+            id = id, type = type,
+            month = if (type.startsWith("new_year_")) 1 else month,
+            day = if (type.startsWith("new_year_")) 1 else day,
+            waxing = if (type == "khmer_lunar") waxing else true,
+            offset = if (type == "solar_nth_weekday") 0 else offset,
+            occurrence = if (type == "solar_nth_weekday") offset else 1,
+            duration = duration, fromYear = fromYear, throughYear = throughYear,
+            monthPolicy = if (secondAsadh) "ordinary_or_second_asadh" else "exact",
+        )
     }
 
     internal val rules: List<Rule> by lazy {
@@ -33,38 +43,10 @@ internal object RecurringEvents {
     }
 
     internal fun dates(year: Int): Map<Rule, List<LocalDate>> {
-        require(year in 1800..2200)
-        val active = rules.filter { year in it.fromYear..it.throughYear }
-        val lunarRules = active.filter { it.type == "khmer_lunar" }
-        val anchors = mutableMapOf<Rule, LocalDate>()
-        var date = LocalDate.of(year, 1, 1)
-        while (date.year == year) {
-            val lunar = KhmerCalendar.fromGregorian(date)
-            for (rule in lunarRules) if (rule.matches(lunar)) {
-                check(anchors.put(rule, date) == null) { "Multiple lunar anchors for ${rule.id}: $year" }
-            }
-            date = date.plusDays(1)
-        }
-        val newYear = KhmerNewYear.forYear(year)
-        return active.associateWith { rule ->
-            val dates = when (rule.type) {
-                "new_year_first" -> listOf(newYear.start)
-                "new_year_middle" -> newYear.dates.drop(1).dropLast(1)
-                "new_year_last" -> listOf(newYear.dates.last())
-                "solar_nth_weekday" -> {
-                    val first = LocalDate.of(year, rule.month, 1)
-                    val daysToAdd = (rule.day - first.dayOfWeek.value + 7) % 7 + (rule.offset - 1) * 7
-                    val anchor = first.plusDays(daysToAdd.toLong())
-                    (0 until rule.duration).map { anchor.plusDays(it.toLong()) }
-                }
-                else -> {
-                    val anchor = if (rule.type == "solar") LocalDate.of(year, rule.month, rule.day)
-                        else checkNotNull(anchors[rule]) { "Missing lunar anchor for ${rule.id}: $year" }
-                    (0 until rule.duration).map { anchor.plusDays(rule.offset.toLong() + it) }
-                }
-            }
-            check(dates.isNotEmpty() && dates.all { it.year == year })
-            dates
+        require(year in KhmerCalendar.engine.minYear..KhmerCalendar.engine.maxYear)
+        return rules.filter { year in it.fromYear..it.throughYear }.associateWith { rule ->
+            KhmerCalendar.engine.evaluateRule(year, rule.calculation).map { it.date.toLocalDate() }
+                .also { dates -> check(dates.isNotEmpty() && dates.all { it.year == year }) }
         }
     }
 

@@ -7,7 +7,7 @@ import com.rsgkh.calendar.i18n.CalendarWords
 
 /** Date-level traditional year labels; the animal year can change during New Year's first day.
  * Sak changes on Lerng Sak (the last festival day), separately from Buddhist Era rollover.
- * Names and transition conventions follow MomentKH; see the bundled MIT notice.
+ * The shared engine supplies these date-level results; this class formats their labels.
  */
 data class KhmerDateDetails(
     val date: LocalDate, val lunar: LunarDate, val animalYear: Int, val sak: Int,
@@ -37,12 +37,9 @@ data class KhmerDateDetails(
     companion object {
 
         fun fromGregorian(date: LocalDate): KhmerDateDetails {
-            val lunar = KhmerCalendar.fromGregorian(date)
-            val newYear = KhmerNewYear.forYear(date.year)
-            val lerngSak = newYear.start.plusDays(newYear.days - 1L)
-            val animalYear = Math.floorMod(date.year - 4 - if (date < newYear.start) 1 else 0, 12)
-            val sak = Math.floorMod(date.year - 638 - if (date < lerngSak) 1 else 0, 10)
-            return KhmerDateDetails(date, lunar, animalYear, sak, date == newYear.start)
+            val result = KhmerCalendar.details(date)
+            return KhmerDateDetails(date, LunarDate(result.lunar), result.animalYear, result.sak,
+                result.animalYearChangesToday)
         }
     }
 }

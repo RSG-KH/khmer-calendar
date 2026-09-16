@@ -66,6 +66,20 @@ data class NotificationAccess(val canPost: Boolean = true, val exact: Boolean = 
             }
         }
         if (fullyGranted) {
+            SettingSwitch(L.text("notifications.push_custom", k), L.text("notifications.push_custom_subtitle", k), checked = settings.pushCustomEvents) {
+                onChange(settings.copy(pushCustomEvents = it))
+            }
+            SettingSwitch(L.text("notifications.push_holidays", k), L.text("notifications.push_holidays_subtitle", k), checked = settings.pushHolidays) {
+                onChange(settings.copy(pushHolidays = it))
+            }
+            SettingSwitch(L.text("notifications.push_observances", k), L.text("notifications.push_observances_subtitle", k), checked = settings.pushObservances) {
+                onChange(settings.copy(pushObservances = it))
+            }
+            if (settings.showHolyDaysInEvents) {
+                SettingSwitch(L.text("notifications.push_holy_days", k), L.text("notifications.push_holy_days_subtitle", k), checked = settings.pushHolyDays) {
+                    onChange(settings.copy(pushHolyDays = it))
+                }
+            }
             SettingsRow(L.text("ui.push_time.8421c3", k),
                 L.text("ui.time_to_deliver_daily_reminders.7806df", k)) {
                 TextButton(onClick = { timePicker = true },

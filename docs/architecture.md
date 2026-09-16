@@ -1,87 +1,58 @@
-# System Architecture
+# System architecture
 
-Khmer Calendar is built entirely using native Kotlin and modern Android Jetpack libraries with Jetpack Compose for declarative UI rendering. The application is strictly offline: it contains no webviews, no background telemetry services, no network permissions, and zero third-party tracking or advertising SDKs.
+Khmer Calendar is an offline Kotlin/Jetpack Compose Android app. It uses a released calculation library and bundles its event data. The installed app has no Internet permission, telemetry or advertising SDKs.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Jetpack Compose UI                       │
-│  CalendarApp · MonthPicker · CustomEventEditor · Popups     │
-└───────────────┬─────────────────────────────┬───────────────┘
-                │                             │
-┌───────────────▼───────────────┐ ┌───────────▼───────────────┐
-│     Khmer Calendar Engine     │ │      Event Repository     │
-│ KhmerCalendar · KhmerNewYear  │ │ Bundled TSV · Recurrences │
-│       KhmerDateDetails        │ │  Custom SQLite Database   │
-└───────────────┬───────────────┘ └───────────┬───────────────┘
-                │                             │
-┌───────────────▼─────────────────────────────▼───────────────┐
-│              Alarms & Notification Subsystem                │
-│       AlarmManager · AlarmReceiver · BootReceiver           │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 1. Khmer Calendar Arithmetic Engine
-
-The calendar engine accurately computes Khmer lunar and Buddhist Era information for any Gregorian date between **January 1, 1800 and December 31, 2200** (146,462 consecutive calendar days).
-
-### Core Components
-- **`KhmerCalendarEngine`**: Interface defining month calculation, day mapping, and lunar properties. Allows alternative engines to be tested or plugged in.
-- **`KhmerCalendar.kt`**: Main arithmetic implementation adapted from [MetheaX/khmer-chhankitek-calendar](https://github.com/MetheaX/khmer-chhankitek-calendar) and aligned with [MomentKH](https://github.com/ThyrithSor/momentkh).
-- **`KhmerNewYear.kt`**: Computes astronomical New Year transitions (Moha Songkran, Lerng Sak, and animal year progression).
-- **`KhmerDateDetails.kt`**: Aggregates date attributes into a high-level representation (Khmer day/month names, waxing/waning moon count, Buddhist year, Sak, Animal Year, and Western Zodiac sign).
-
-### Lunar Arithmetic Principles
-1. **Pre-computed Month Indexing & Binary Search**:
-   - Rather than calculating every day incrementally from an epoch, month boundaries and leap properties are indexed once during initialization.
-   - Any Gregorian date is resolved in $O(\log N)$ time using binary search against month start epochs.
-2. **Leap Months (`Adhikamasa`)**:
-   - In lunar leap years, an extra month (Second Asadha, or *Chhantrea Adhikamasa*) is inserted.
-   - The engine validates consecutive leap-month intervals to accurately mirror Cambodian civil almanacs.
-3. **Leap Days (`Chhantrea Adhikavara`)**:
-   - In great leap years (*Adhikavara*), an extra day is added to Jestha, making it a 30-day month instead of 29 days.
-4. **Buddhist Era (BE) Transition**:
-   - Unlike naive algorithms that simply add 543 or 544 years indiscriminately, the Buddhist Era officially increments on **1 Roach Pisakh** (the day after Visak Bochea / Buddha Purnima).
-5. **Traditional Year Transitions**:
-   - **Animal Year (Zodiac)**: Changes on the arrival moment of **Moha Songkran** (mid-April).
-   - **Sak**: Increments at **Lerng Sak** (the final day of the New Year festival).
-   - **Buddhist Year**: Increments on **1 Roach of Pisakh** in May.
-
----
-
-## 2. Event System & Data Pipeline
-
-The event architecture merges four distinct tiers of information into a unified, searchable, and filterable event stream.
-
-```
-Bundled Dated Events (2000–2030, incl. 2025–2026 official holidays) ──┐
-Calculated Recurrences (1800–2200, 100 rules) ────────────────────────┼──► EventRepository ──► UI & Alarms
-User Custom Events (SQLite Database) ─────────────────────────────────┘
+```mermaid
+flowchart TD
+    Engine[Shared Khmer Calendar Engine] --> Adapters[Android date adapters]
+    Rules[App recurrence definitions] --> Recurring[RecurringEvents]
+    Engine --> Recurring
+    Adapters --> Events[EventRepository: holy days]
+    Recurring --> Events
+    Snapshot[Bundled dated events] --> Events
+    Events --> UI[Compose UI]
+    Adapters --> UI
+    Custom[CustomEventRepository: SQLite] --> UI
+    Events --> Planner[ReminderPlanner]
+    Custom --> Planner
+    Preferences[AppPreferences] --> UI
+    Preferences --> Planner
+    Planner --> Alarms[AlarmManager and notification receivers]
 ```
 
-### Event Kinds (`EventKind`)
-- `HOLIDAY`: Official public holidays recognized by royal decree or government gazette (MEF & LRC validated).
-- `HOLY_DAY`: Buddhist holy days (*Thngai Seil* / 8th & 15th waxing, 8th & 14th/15th waning).
-- `OBSERVANCE`: Cultural anniversaries, historical memorials, and UN international observances.
-- `CUSTOM`: User-created appointments, reminders, and personal events.
+## Calendar integration
 
-### Data Sources & Storage
-- **`calendar-events.tsv`**: Compact, pre-compiled UTF-8 resource bundling 3,246 verified historical events for 2000–2030 from the reference database.
-- **`recurring-event-rules.json` / `recurrence-rules.tsv`**: 100 normalized recurrence rules computing festival, royal, heritage, national, and floating weekday dates outside 2000–2030 across 1800–2200.
-- **`CustomEventRepository.kt`**: SQLite database (`custom-events.db`) storing custom user events with columns:
-  - `id`: Unique UUID string primary key.
-  - `title`: Event name (max 120 characters).
-  - `date`: Gregorian date (`YYYY-MM-DD`).
-  - `time`: Scheduled time (`HH:mm`, minutes precision).
-  - `notes`: Optional detailed description (max 2000 characters).
-  - `remind`: Boolean reminder-eligibility flag.
-  - `zone_id`: Persisted IANA time zone identifier (default `Asia/Phnom_Penh`).
-  - `offset_seconds`: Captured fixed UTC offset for the event's original zone (nullable).
+The [shared engine integration guide](shared-engine.md) describes the pinned dependency, API boundary, Android adapters and upgrade checks. The engine owns lunar conversion, traditional year transitions, holy days, New Year dates and recurrence evaluation for **1800–2200**. Android owns `LocalDate` conversion, localized labels and Western zodiac presentation.
 
----
+Calculation algorithms and supporting evidence are maintained in the engine project. Android tests verify that the app continues to consume its results correctly when the dependency changes.
 
-## 3. Alarm & Notification Subsystem
+## Events and storage
+
+`EventRepository` selects the bundled dated snapshot for 2000–2030 and calculated recurrences for other supported years. It adds engine-derived holy days in every year. User-created events come from a separate repository and are combined with built-in events by the UI and reminder planner.
+
+| Event kind | Source |
+| --- | --- |
+| `HOLIDAY` | Captured occurrence with a year-specific official source URL; current anchors cover 2025–2026 |
+| `OBSERVANCE` | Other captured occurrences or calculated recurrence results |
+| `HOLY_DAY` | Shared engine result, exposed through the Android adapter |
+| `CUSTOM` | User-created event stored locally |
+
+The [bundled data guide](reference-event-database.md) describes the 3,246 captured occurrences and their provenance. The [recurrence guide](recurring-event-rules.md) describes the 100 app-owned rules and their mapping to engine inputs. Engine upgrades do not replace these records or definitions.
+
+`CustomEventRepository.kt` stores events in `custom-events.db`:
+
+| Column | Value |
+| --- | --- |
+| `id` | UUID primary key |
+| `title` | Event name, up to 120 characters |
+| `date` | Gregorian date, `YYYY-MM-DD` |
+| `time` | Scheduled time, `HH:mm` |
+| `notes` | Optional description, up to 2,000 characters |
+| `remind` | Reminder eligibility |
+| `zone_id` | Saved IANA time zone |
+| `offset_seconds` | Saved UTC offset, when available |
+
+## Reminders and notifications
 
 The application provides local, reliable event notifications without relying on Google Play Services, Firebase Cloud Messaging (FCM), or external background workers.
 
@@ -92,17 +63,22 @@ The application provides local, reliable event notifications without relying on 
   - Rather than filling Android's alarm table with hundreds of future alarms, the app calculates the immediate next event moment and schedules a single alarm.
   - When that alarm fires, notifications are posted, and the queue automatically schedules the subsequent alarm.
 
+### Event-type controls
+
+Notification settings provide separate **Push custom**, **Push holidays**, **Push observances**, and **Push Buddhist holy days** switches before **Push time**. Custom, holiday and observance choices default to on; the master notification switch and holy-day reminders default to off. Turning off **Buddhist holy days in events** hides **Push Buddhist holy days** and suppresses its reminders while preserving the saved on/off choice. Showing holy days again restores that choice. Holy-day reminders require both switches to be on. The planner applies these choices to initial reminders and repeats, and alarm delivery rechecks current settings before posting. Disabling every eligible category leaves no alarm scheduled.
+
 ### Time-Zone Intelligence
+
 - **"Today Follows" Setting**:
   - `Local Time`: Follows the device's current time zone and adjusts automatically during travel or daylight saving time.
   - `Cambodia (UTC+7)`: Fixed to Phnom Penh time regardless of device location.
-- **Built-in Events**: Reminders trigger at the configured daily push time in Cambodia Time (UTC+7).
+- **Built-in Events**: Reminders trigger at the configured daily push time in the zone selected by **Today follows**: the device's local zone or Cambodia (UTC+7). Changing this setting or the device time zone reschedules the next alarm.
 - **Custom Events**: Reminders trigger at the exact instant intended in the time zone where the event was created, converting cleanly if the user switches display time zones.
-- **Repeats**: Configurable periodic repeats (**Off**, 2, 4, 6, 8, or 12 hours) terminate cleanly at midnight in the event's local day.
+- **Repeats**: Configurable periodic repeats (**Off**, 2, 4, 6, 8, or 12 hours) use elapsed hours and stop at midnight in the selected zone for built-in events, or the saved event zone for custom events. Daylight-saving gaps move a nonexistent push time forward by the gap; repeated clock times use the first occurrence for the initial reminder.
 
 ---
 
-## 4. UI Layer Architecture
+## UI layer
 
 The UI is built exclusively using Jetpack Compose with Material 3 design tokens:
 

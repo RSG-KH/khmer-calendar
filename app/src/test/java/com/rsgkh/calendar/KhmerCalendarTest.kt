@@ -74,7 +74,13 @@ class KhmerCalendarTest {
         val months = (1..12).flatMap { m -> (1..YearMonth.of(leapMonthYear, m).lengthOfMonth()).map { KhmerCalendar.fromGregorian(LocalDate.of(leapMonthYear, m, it)).month } }
         assertTrue(months.containsAll(listOf(12, 13)))
         assertFalse(months.contains(7))
-        assertTrue((2540..2580).any { KhmerCalendar.leapType(it) == 2 })
+        // Exercise the public result instead of reaching into a duplicated leap-year algorithm.
+        assertTrue((2020..2030).any { year ->
+            (1..30).any { day ->
+                val lunar = KhmerCalendar.fromGregorian(LocalDate.of(year, 6, day))
+                lunar.month == 6 && lunar.monthLength == 30
+            }
+        })
     }
     @Test fun officialHolidaysAreScopedAndOverlapIsPreserved() {
         val holidays = EventRepository.forYear(2026).filter { it.kind == EventKind.HOLIDAY }

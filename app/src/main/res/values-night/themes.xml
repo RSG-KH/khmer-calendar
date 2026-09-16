@@ -1,9 +1,10 @@
 <resources>
-    <style name="Theme.KhmerCalendar" parent="android:style/Theme.Material.NoActionBar">
+    <style name="Base.Theme.KhmerCalendar" parent="android:style/Theme.Material.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:windowSplashScreenBackground">#0C0E12</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
         <item name="android:windowBackground">#0C0E12</item>
+        <item name="android:enforceNavigationBarContrast">true</item>
     </style>
 </resources>
