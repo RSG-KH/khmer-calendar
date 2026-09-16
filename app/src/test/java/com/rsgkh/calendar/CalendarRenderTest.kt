@@ -332,6 +332,11 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNode(hasContentDescription("Friday, 11 September", substring = true)).performClick()
         compose.onNodeWithText("Date details").assertIsDisplayed()
         compose.onNodeWithText("Buddhist Holy Day", substring = true).assertIsDisplayed()
+        screenshot("date-details-holy-day-blossom")
+        compose.onNodeWithText("Close").performClick()
+        compose.onNode(hasContentDescription("Saturday, 5 September", substring = true)).performClick()
+        compose.onNodeWithText("Date details").assertIsDisplayed()
+        screenshot("date-details-holy-day-closed-lotus")
         compose.onNodeWithText("Close").performClick()
     }
 

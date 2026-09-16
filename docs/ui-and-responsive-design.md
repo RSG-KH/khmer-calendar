@@ -21,6 +21,10 @@ Swiping, using the month arrows, or choosing a month and year selects day 1 of t
 
 When Show copy buttons is enabled, date and event details display a copy icon aligned with the first text line near the right edge. The button retains a 48 dp tap area. After copying, an accent-colored checkmark appears for two seconds, then returns to the copy icon. Copying again restarts the timer. The confirmation is also exposed to accessibility services using the translated copied message.
 
+### Holy-day lotus artwork
+
+Calendar cells and date details use the supplied 300×300 PNGs unchanged: `lutos_03_300x300.png` as `holy_day_lotus.png` for day 8 of either lunar phase, and `lutos_03_blossom_300x300.png` as `holy_day_lotus_blossom.png` for the final holy day on day 14 or 15. The engine's holy-day flag controls which dates show a grid lotus, including 14 Roach in short months. Date-details shaving-day icons use the same lotus as the following holy day: closed before day 8 and blossomed before the phase end. Grid artwork keeps its 25% opacity and existing cell sizing; date-details icons remain 24 dp.
+
 ---
 
 ## 1. Adaptive Multi-Form-Factor Layouts

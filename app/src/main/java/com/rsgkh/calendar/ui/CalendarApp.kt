@@ -112,6 +112,11 @@ private val CustomEventRedDark = Color(0xFFFF5252)
 }
 
 @DrawableRes
+private fun holyDayLotusDrawable(lunar: LunarDate): Int =
+    // Day 8 and its shaving day use the bud; phase-end holy days and their eves use the blossom.
+    if (lunar.day <= 8) R.drawable.holy_day_lotus else R.drawable.holy_day_lotus_blossom
+
+@DrawableRes
 private fun zodiacDrawable(animalYear: Int, compact: Boolean = false): Int = when (Math.floorMod(animalYear, 12)) {
     0 -> if (compact) R.drawable.zodiac_rat_400 else R.drawable.zodiac_rat
     1 -> if (compact) R.drawable.zodiac_ox_400 else R.drawable.zodiac_ox
@@ -645,7 +650,7 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
                             contentAlignment = Alignment.Center,
                         ) {
                             if (settings.showHolyDaysInCalendar && lunar.isHolyDay) {
-                                Image(painterResource(R.drawable.holy_day_lotus), contentDescription = null,
+                                Image(painterResource(holyDayLotusDrawable(lunar)), contentDescription = null,
                                     modifier = Modifier.matchParentSize().padding(1.dp).scale(if (isPhoneLandscape) 0.90f else 1.0f), contentScale = ContentScale.Fit, alpha = 0.25f)
                             }
                             Column(Modifier.fillMaxWidth().offset(y = if (isPhoneLandscape) (-0.5).dp else (-1.0).dp).padding(vertical = if (isPhoneLandscape) 0.5.dp else 1.dp),
@@ -1030,7 +1035,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Image(
-                                    painter = painterResource(R.drawable.holy_day_lotus),
+                                    painter = painterResource(holyDayLotusDrawable(info.lunar)),
                                     contentDescription = null,
                                     modifier = Modifier.size(24.dp),
                                     contentScale = ContentScale.Fit

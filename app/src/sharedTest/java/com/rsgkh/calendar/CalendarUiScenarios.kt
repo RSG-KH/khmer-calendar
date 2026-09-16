@@ -76,6 +76,7 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithTag("month-grid").performTouchInput { swipeLeft() }
         compose.onNodeWithText("October").assertIsDisplayed()
         compose.onNode(hasContentDescription("Thursday, 1 October", substring = true)).assertIsSelected()
+        screenshot("calendar-october-light")
         compose.onNode(hasText("Today") and hasClickAction()).performClick()
         compose.onNodeWithText("September").assertIsDisplayed()
         compose.onNodeWithText("BE 2570").assertIsDisplayed()
@@ -174,6 +175,7 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithText("September 10, 2026").assertIsDisplayed()
         compose.onNodeWithText("Year of the Horse", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Shaving Day · Eve of Buddhist Holy Day").assertIsDisplayed()
+        screenshot("date-details-shaving-day")
         compose.onNodeWithText("Close").performClick()
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
         compose.onNode(hasText("Constitution Day") and hasAnyAncestor(isDialog())).performClick()

@@ -28,7 +28,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 ### 🌸 Buddhist Holy Days (*Thngai Seil*)
 - Accurately tracks the 8th and 15th waxing days, and 8th and 14th/15th waning days (including 29-day month boundary adjustments).
 - Identifies Shaving Day (*Thngai Kaor*), the day immediately preceding each holy day.
-- Elegant semi-transparent lotus artwork (25% opacity, full cell scale) adorns holy day cells in the calendar grid.
+- Semi-transparent lotus artwork (25% opacity, full cell scale) marks holy day cells: a closed lotus for day 8 of either lunar phase, and a blossom for the final holy day on day 14 or 15.
 - Independent visibility toggles allow users to show or hide holy day markers in the calendar grid and event lists.
 
 ### 🏛️ Bundled Events & Recurrence Rules
