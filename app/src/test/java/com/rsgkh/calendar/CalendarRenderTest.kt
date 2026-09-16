@@ -31,7 +31,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Test fun preferencesSurviveRepositoryRecreation() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val defaults = AppSettings(ThemeMode.SYSTEM, Accent.BLUE, khmer = true, mondayFirst = false, showLongerWeekdayNames = false, showCopyButtons = false, showLunar = true,
-            highlightWeekdayNames = false, showHolyDaysInCalendar = true, showHolyDaysInEvents = false,
+            highlightWeekdayNames = true, showHolyDaysInCalendar = true, showHolyDaysInEvents = false,
             highlightSunday = true, notificationsEnabled = false, pushCustomEvents = true, pushHolidays = true,
             pushObservances = true, pushHolyDays = false, pushMinutes = 300, repeatHours = 0, todayTimeZone = TodayTimeZone.LOCAL,
             fontScale = FontScale.PERCENT_100, backgroundAccent = true)
@@ -94,7 +94,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
     }
 
     @Test fun weekdayColorsFollowTheDayAcrossWeekStartLanguageAndThemeChanges() {
-        start(AppSettings(khmer = false, theme = ThemeMode.LIGHT, highlightSunday = false))
+        start(AppSettings(khmer = false, theme = ThemeMode.LIGHT, highlightSunday = false, highlightWeekdayNames = false))
         fun colors() = (1..7).map { day ->
             val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
             compose.onNodeWithTag("weekday-header-$day").performSemanticsAction(

@@ -55,7 +55,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 
 ### 🎨 Personalization & Accessibility
 - **Longer Weekday Names**: Optional calendar headings show Sun–Sat in English and full weekday names in Khmer. Off by default under Settings → Calendar.
-- **Weekday Colors**: Optional traditional weekday heading colors, with shades adapted for light and dark themes. Off by default under Settings → Calendar.
+- **Weekday Colors**: Traditional weekday heading colors, with shades adapted for light and dark themes. On by default under Settings → Calendar; existing saved choices are preserved.
 - **Curated Theme Accents**: Choose from **Blue** (Default), **Lavender**, **Rose**, **Amber**, and **Lime** (*បៃតងចាស់*).
 - **Theme Modes**: Full support for System, Light (`#F3F4F8`), and OLED Dark (`#0C0E12`) modes.
 - **Dynamic Font Scaling**: Choose 80%, 90%, 100%, 110%, or 120% on phones, with additional 130%, 140%, and 150% options on tablets.

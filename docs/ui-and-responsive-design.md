@@ -4,7 +4,7 @@ Khmer Calendar uses a custom responsive layout system built on Jetpack Compose a
 
 ### Weekday headings
 
-Settings → Calendar offers two independent options, both off by default:
+Settings → Calendar offers two independent options: longer names default off, while weekday colors default on. Existing saved choices are preserved.
 
 - **Show longer weekday names** uses three-letter English headings and full Khmer names without repeating the word “day.” All seven headings share a font size that fits the longest name in the available column width.
 - **Highlight weekday names** colors the calendar headings using the [Cambodian Development Foundation's traditional weekday color mapping](https://cambodiandevelopmentfoundation.org/7-colors-of-the-week/): Monday yellow, Tuesday violet/purple, Wednesday light green, Thursday green, Friday baby blue, Saturday dark purple and Sunday bright red.

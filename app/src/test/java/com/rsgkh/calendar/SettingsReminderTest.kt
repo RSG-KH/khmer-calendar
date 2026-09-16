@@ -39,7 +39,7 @@ class SettingsReminderTest {
                 enabled.copy(mondayFirst = true),
                 enabled.copy(showLongerWeekdayNames = true),
                 enabled.copy(showCopyButtons = true),
-                enabled.copy(highlightWeekdayNames = true),
+                enabled.copy(highlightWeekdayNames = false),
                 enabled.copy(showLunar = false),
                 enabled.copy(showHolyDaysInCalendar = false),
                 enabled.copy(highlightSunday = false),
