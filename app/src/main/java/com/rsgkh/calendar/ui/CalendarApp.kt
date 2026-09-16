@@ -220,6 +220,8 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
         } else 1f
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
+            // Keep system-bar spacing without reserving a strip for the camera cutout.
+            contentWindowInsets = WindowInsets.systemBars,
             bottomBar = {
                 if (!isLandscape) {
                     Surface(color = MaterialTheme.colorScheme.background) {
@@ -308,7 +310,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
             }
         }
     }
-        if (jump) MonthPicker(month, k, { jump = false }) { navigate(it); jump = false }
+        if (jump) MonthPicker(month, today.year, k, { jump = false }) { navigate(it); jump = false }
         if (detail == null) dateDetailText?.let { dateString ->
             val date = LocalDate.parse(dateString)
             DateDetailsDialog(
@@ -923,7 +925,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
     }
 }
 
-@Composable private fun MonthPicker(month: YearMonth, k: Boolean, onDismiss: () -> Unit, onConfirm: (YearMonth) -> Unit) {
+@Composable private fun MonthPicker(month: YearMonth, thisYear: Int, k: Boolean, onDismiss: () -> Unit, onConfirm: (YearMonth) -> Unit) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     var year by rememberSaveable { mutableStateOf(month.year.toString()) }
@@ -941,7 +943,10 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
             Column(Modifier.fillMaxWidth().verticalScrollbar(scrollState).verticalScroll(scrollState)
                 .padding(if (isLandscape) 18.dp else 24.dp).testTag("month-picker"),
                 verticalArrangement = Arrangement.spacedBy(if (isLandscape) 12.dp else 16.dp)) {
-                Text(L.text("ui.jump_to_month.b37571", k), fontSize = if (isLandscape) 20.sp else 22.sp, fontWeight = FontWeight.SemiBold)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text(L.text("ui.jump_to_month.b37571", k), fontSize = if (isLandscape) 20.sp else 22.sp, fontWeight = FontWeight.SemiBold)
+                    TextButton(onClick = { year = thisYear.toString() }) { Text(L.text("ui.this_year.02e981", k)) }
+                }
                 OutlinedTextField(value = year, onValueChange = { year = it.filter(Char::isDigit).take(4) }, modifier = Modifier.fillMaxWidth().testTag("month-year-input"), singleLine = true, label = { Text("${L.text("ui.year.61d597", k)} (1800–2200)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = !valid)
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
