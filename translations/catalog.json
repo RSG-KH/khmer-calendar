@@ -1194,36 +1194,16 @@
       }
     },
     {
-      "id": "ui.listed_in_cambodia_s_official_year_holiday_calendar.044398",
+      "id": "events.engine_calculations",
       "section": "interface",
-      "context": "CalendarApp.kt",
-      "en": "Listed in Cambodia’s official {year} holiday calendar.",
-      "km": "បានបញ្ជាក់ក្នុងប្រតិទិនថ្ងៃឈប់សម្រាកផ្លូវការ ឆ្នាំ{year}។",
+      "context": "Calendar calculation attribution in built-in event popups",
+      "en": "Calendar calculations by Khmer Calendar Engine.",
+      "km": "ការគណនាប្រតិទិនធ្វើឡើងដោយ Khmer Calendar Engine។",
       "original": {
-        "en": "Listed in Cambodia’s official {year} holiday calendar.",
-        "km": "បានបញ្ជាក់ក្នុងប្រតិទិនថ្ងៃឈប់សម្រាកផ្លូវការ ឆ្នាំ{year}។"
+        "en": "Calendar calculations by Khmer Calendar Engine.",
+        "km": "ការគណនាប្រតិទិនធ្វើឡើងដោយ Khmer Calendar Engine។"
       },
-      "reviewed": true,
-      "required": {
-        "en": [
-          "year"
-        ],
-        "km": [
-          "year"
-        ]
-      }
-    },
-    {
-      "id": "ui.a_buddhist_observance_on_the_8th_and_15th_waxing_days_t.4bac2c",
-      "section": "interface",
-      "context": "CalendarApp.kt",
-      "en": "A Buddhist observance on the 8th and 15th waxing days, the 8th waning day, and the last waning day of the lunar month.",
-      "km": "ថ្ងៃសីលតាមប្រតិទិនចន្ទគតិខ្មែរ៖ ថ្ងៃ៨កើត ១៥កើត ៨រោច និងថ្ងៃចុងក្រោយនៃខែចន្ទគតិ។",
-      "original": {
-        "en": "A Buddhist observance on the 8th and 15th waxing days, the 8th waning day, and the last waning day of the lunar month.",
-        "km": "ថ្ងៃសីលតាមប្រតិទិនចន្ទគតិខ្មែរ៖ ថ្ងៃ៨កើត ១៥កើត ៨រោច និងថ្ងៃចុងក្រោយនៃខែចន្ទគតិ។"
-      },
-      "reviewed": true,
+      "reviewed": false,
       "required": {
         "en": [],
         "km": []
@@ -1286,22 +1266,6 @@
       "original": {
         "en": "Calendar sources",
         "km": "ប្រភពប្រតិទិន"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
-      "id": "ui.events_2000_2030_from_khmer_lunar_calendar_available_of.93ee10",
-      "section": "about",
-      "context": "CalendarApp.kt",
-      "en": "Events for 2000–2030 were sourced from some official government websites and Khmer Chhankitek Calendar, with additional curation and corrections.",
-      "km": "ព្រឹត្តិការណ៍សម្រាប់ឆ្នាំ ២០០០–២០៣០ ត្រូវបានដកស្រង់ចេញពីគេហទំព័រផ្លូវការមួយចំនួនរបស់រដ្ឋាភិបាល និងប្រតិទិនចន្ទគតិខ្មែរ រួមជាមួយនឹងការសម្រិតសម្រាំង និងការកែតម្រូវបន្ថែម។",
-      "original": {
-        "en": "Events for 2000–2030 were sourced from some official government websites and Khmer Chhankitek Calendar, with additional curation and corrections.",
-        "km": "ព្រឹត្តិការណ៍សម្រាប់ឆ្នាំ ២០០០–២០៣០ ត្រូវបានដកស្រង់ចេញពីគេហទំព័រផ្លូវការមួយចំនួនរបស់រដ្ឋាភិបាល និងប្រតិទិនចន្ទគតិខ្មែរ រួមជាមួយនឹងការសម្រិតសម្រាំង និងការកែតម្រូវបន្ថែម។"
       },
       "reviewed": true,
       "required": {
@@ -35461,22 +35425,6 @@
       }
     },
     {
-      "id": "rules.calculated_details",
-      "section": "interface",
-      "context": "Provenance shown for a calculated event",
-      "en": "Calculated from a recurring calendar rule. The date and any anniversary count are estimates, not a record of a celebration or an official day off. Annual announcements may change the schedule.",
-      "km": "គណនាតាមក្បួនព្រឹត្តិការណ៍កើតឡើងរៀងរាល់ឆ្នាំ។ កាលបរិច្ឆេទ និងចំនួនខួប គឺជាការប៉ាន់ស្មាន មិនមែនជាកំណត់ត្រានៃការប្រារព្ធពិធី ឬថ្ងៃឈប់សម្រាកផ្លូវការទេ។ សេចក្តីប្រកាសប្រចាំឆ្នាំអាចផ្លាស់ប្ដូរកាលវិភាគ។",
-      "original": {
-        "en": "Calculated from a recurring calendar rule. The date and any anniversary count are estimates, not a record of a celebration or an official day off. Annual announcements may change the schedule.",
-        "km": "គណនាតាមក្បួនព្រឹត្តិការណ៍កើតឡើងរៀងរាល់ឆ្នាំ។ កាលបរិច្ឆេទ និងចំនួនខួប គឺជាការប៉ាន់ស្មាន មិនមែនជាកំណត់ត្រានៃការប្រារព្ធពិធី ឬថ្ងៃឈប់សម្រាកផ្លូវការទេ។ សេចក្តីប្រកាសប្រចាំឆ្នាំអាចផ្លាស់ប្ដូរកាលវិភាគ។"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
       "id": "rules.source_summary",
       "section": "about",
       "context": "Sources dialog: calculated recurrence coverage",
@@ -35859,6 +35807,38 @@
         "km": "បង្ហាញពណ៌ខុសៗគ្នា"
       },
       "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.expanded",
+      "section": "interface",
+      "context": "Accessibility state of a collapsible section",
+      "en": "Expanded",
+      "km": "បានពង្រីក",
+      "original": {
+        "en": "Expanded",
+        "km": "បានពង្រីក"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.collapsed",
+      "section": "interface",
+      "context": "Accessibility state of a collapsible section",
+      "en": "Collapsed",
+      "km": "បានបង្រួម",
+      "original": {
+        "en": "Collapsed",
+        "km": "បានបង្រួម"
+      },
+      "reviewed": false,
       "required": {
         "en": [],
         "km": []

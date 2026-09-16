@@ -22,12 +22,6 @@ data class CalendarEvent(
 
 /** Dated records take precedence for entire covered years; recurrence fills uncovered years. */
 object EventRepository {
-    const val SOURCE_URL = "https://khmer-lunar-calendar.com/"
-    val GOVERNMENT_SOURCE_URLS = listOf(
-        "https://library.ncdd.gov.kh/",
-        "https://www.ocm.gov.kh/",
-        "https://www.nbc.gov.kh/",
-    )
     val coveredYears = 2000..2030
     private val cache = ConcurrentHashMap<Int, List<CalendarEvent>>()
     private val snapshot by lazy {

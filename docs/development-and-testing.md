@@ -48,7 +48,7 @@ The app retains its pinned MomentKH fixture and generator to catch consumer regr
 
 Shared UI scenarios in `app/src/sharedTest` run under Robolectric and on a device. Device screenshots capture the full display so open dialogs are included. Inspect changed screens when updating layout or source-dialog content.
 
-The bilingual About/Sources interaction check runs in `CalendarUiTest` on Android, covering real inline-link rendering, event-source URL dialogs, the engine link and bundled licenses. Compose tests use the v2 test rules; alarm assertions use Robolectric's current accessors.
+The bilingual About/Sources interaction check runs in `CalendarUiTest` on Android, covering real inline-link rendering, the engine link's destination and bundled licenses. Compose tests use the v2 test rules; alarm assertions use Robolectric's current accessors.
 
 ## Translations
 

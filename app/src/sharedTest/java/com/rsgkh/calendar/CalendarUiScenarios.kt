@@ -4,6 +4,9 @@ package com.rsgkh.calendar
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
@@ -27,13 +30,17 @@ abstract class CalendarUiScenarios {
     @get:Rule val compose = createComposeRule()
     protected fun start(settings: AppSettings = AppSettings(khmer = false, theme = ThemeMode.LIGHT), now: Instant? = null,
         notificationAccess: NotificationAccess = NotificationAccess(),
-        customEvents: List<CustomEvent> = emptyList()) {
+        customEvents: List<CustomEvent> = emptyList(), uriHandler: UriHandler? = null) {
         val state = mutableStateOf(settings)
         val custom = mutableStateOf<List<CustomEvent>>(customEvents)
-        compose.setContent { CalendarApp(state.value, now?.let { state.value.todayTimeZone.today(it, ZoneId.of("Europe/Brussels")) } ?: LocalDate.of(2026, 9, 10), customEvents = custom.value,
-            notificationAccess = notificationAccess,
-            onSaveCustom = { event -> custom.value = custom.value.filterNot { it.id == event.id } + event },
-            onDeleteCustom = { id -> custom.value = custom.value.filterNot { it.id == id } }) { state.value = it } }
+        compose.setContent {
+            CompositionLocalProvider(LocalUriHandler provides (uriHandler ?: LocalUriHandler.current)) {
+                CalendarApp(state.value, now?.let { state.value.todayTimeZone.today(it, ZoneId.of("Europe/Brussels")) } ?: LocalDate.of(2026, 9, 10), customEvents = custom.value,
+                    notificationAccess = notificationAccess,
+                    onSaveCustom = { event -> custom.value = custom.value.filterNot { it.id == event.id } + event },
+                    onDeleteCustom = { id -> custom.value = custom.value.filterNot { it.id == id } }) { state.value = it }
+            }
+        }
     }
     protected fun screenshot(name: String) {
         compose.waitForIdle()
@@ -242,7 +249,7 @@ abstract class CalendarUiScenarios {
         val title = EventRepository.forDate(LocalDate.of(2031, 1, 1)).single { it.id == "calculated:new_year_day" }.titleEn
         compose.onNodeWithText(title).performScrollTo().performClick()
         compose.onNode(hasText(L.text("rules.calculated_label", false)) and hasAnyAncestor(isDialog())).assertIsDisplayed()
-        compose.onNodeWithText(L.text("rules.calculated_details", false)).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(L.text("events.engine_calculations", false)).performScrollTo().assertIsDisplayed()
         compose.onNodeWithText(L.text("about.source_link", false)).assertDoesNotExist()
         screenshot("calculated-event-details")
         compose.onNodeWithText(L.text("ui.close.7df7dc", false)).performClick()

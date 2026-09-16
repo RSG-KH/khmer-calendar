@@ -53,10 +53,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.LinkAnnotation
-import android.widget.Toast
-import android.content.Context
-import android.content.ClipboardManager
-import android.content.ClipData
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -1101,7 +1097,6 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
 @Composable private fun EventDialog(event: CalendarEvent, k: Boolean, zoneLabel: String, showCopyButtons: Boolean, onEdit: () -> Unit, onDelete: () -> Unit, onDismiss: () -> Unit) {
     val info = remember(event.date) { KhmerDateDetails.fromGregorian(event.date) }
     val lunar = info.lunar
-    val officialUrl = event.officialSourceUrl
     var deletePrompt by rememberSaveable(event.id) { mutableStateOf(false) }
     var deleteError by remember(event.id) { mutableStateOf(false) }
     if (deletePrompt && event.kind == EventKind.CUSTOM) {
@@ -1163,14 +1158,9 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                         HorizontalDivider()
                         Text(if (event.basis == DateBasis.CALCULATED) L.text("rules.calculated_label", k) else kindLabel(event.kind, k),
                             color = eventColor(event.kind), fontWeight = FontWeight.SemiBold)
-                        val description = when {
-                            event.kind == EventKind.CUSTOM -> L.text("ui.a_custom_event_saved_on_your_device.96d6e7", k)
-                            officialUrl != null -> L.text("ui.listed_in_cambodia_s_official_year_holiday_calendar.044398", k, "year" to number(event.date.year, k))
-                            event.kind == EventKind.HOLY_DAY -> L.text("ui.a_buddhist_observance_on_the_8th_and_15th_waxing_days_t.4bac2c", k)
-                            event.basis == DateBasis.CALCULATED -> L.text("rules.calculated_details", k)
-                            else -> null
-                        }
-                        description?.let { Text(it, fontSize = 14.readableSp, lineHeight = 23.readableSp) }
+                        val description = L.text(if (event.kind == EventKind.CUSTOM)
+                            "ui.a_custom_event_saved_on_your_device.96d6e7" else "events.engine_calculations", k)
+                        Text(description, fontSize = 14.readableSp, lineHeight = 23.readableSp)
                         if (event.kind != EventKind.CUSTOM) Text(if (k) event.titleEn else event.titleKm, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.readableSp)
                     }
                     Spacer(Modifier.height(24.dp))
@@ -1204,69 +1194,41 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
     )
 }
 
-private data class SourceUrlsDialogData(val title: String, val urls: List<String>)
-
 @Composable private fun SourcesDialog(k: Boolean, onDismiss: () -> Unit) {
     val context = LocalContext.current
-    var license by remember { mutableStateOf(false) }
-    var activeUrlDialog by remember { mutableStateOf<SourceUrlsDialogData?>(null) }
+    var license by rememberSaveable { mutableStateOf(false) }
     val notice = remember {
         listOf("engine-LICENSE.txt", "NOTICE.txt").joinToString("\n\n") { name ->
             context.assets.open(name).bufferedReader().use { it.readText() }
         }
     }
     val orangeColor = if (MaterialTheme.colorScheme.surface.luminance() > .5f) Color(0xFFC45E00) else Color(0xFFFFB36B)
-    val fullEventSourceText = L.text("ui.events_2000_2030_from_khmer_lunar_calendar_available_of.93ee10", k)
-    val govLink = if (k) "គេហទំព័រផ្លូវការមួយចំនួនរបស់រដ្ឋាភិបាល" else "some official government websites"
-    val calLink = if (k) "ប្រតិទិនចន្ទគតិខ្មែរ" else "Khmer Chhankitek Calendar"
-    val govIndex = fullEventSourceText.indexOf(govLink)
-    val calIndex = fullEventSourceText.indexOf(calLink)
+    val engineText = L.text("about.calendar_engine", k)
+    val engineName = "Khmer Calendar Engine"
+    val engineUrl = "https://github.com/RSG-KH/khmer-calendar-engine"
+    val uriHandler = LocalUriHandler.current
     val linkColor = MaterialTheme.colorScheme.primary
-    val eventSourceAnnotated = remember(fullEventSourceText, govLink, calLink, govIndex, calIndex, linkColor) {
-        val targets = buildList {
-            if (govIndex != -1) {
-                add(Triple(govIndex, govLink) {
-                    activeUrlDialog = SourceUrlsDialogData(
-                        title = if (k) "គេហទំព័រផ្លូវការមួយចំនួនរបស់រដ្ឋាភិបាល" else "Official government websites",
-                        urls = EventRepository.GOVERNMENT_SOURCE_URLS
-                    )
-                })
-            }
-            if (calIndex != -1) {
-                add(Triple(calIndex, calLink) {
-                    activeUrlDialog = SourceUrlsDialogData(
-                        title = calLink,
-                        urls = listOf(EventRepository.SOURCE_URL)
-                    )
-                })
-            }
-        }.sortedBy { it.first }
-
+    val engineSourceAnnotated = remember(engineText, linkColor, uriHandler) {
         buildAnnotatedString {
-            var cursor = 0
-            targets.forEach { (index, text, action) ->
-                if (index >= cursor) {
-                    append(fullEventSourceText.substring(cursor, index))
-                    withLink(
-                        LinkAnnotation.Clickable(
-                            tag = "source_url",
-                            styles = TextLinkStyles(
-                                style = SpanStyle(
-                                    color = linkColor,
-                                    textDecoration = TextDecoration.Underline,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            ),
-                            linkInteractionListener = { action() }
-                        )
-                    ) {
-                        append(text)
-                    }
-                    cursor = index + text.length
+            val index = engineText.indexOf(engineName)
+            if (index < 0) {
+                append(engineText)
+            } else {
+                append(engineText.substring(0, index))
+                withLink(
+                    LinkAnnotation.Url(
+                        url = engineUrl,
+                        styles = TextLinkStyles(style = SpanStyle(
+                            color = linkColor,
+                            textDecoration = TextDecoration.Underline,
+                            fontWeight = FontWeight.Medium
+                        )),
+                        linkInteractionListener = { uriHandler.openUri(engineUrl) }
+                    )
+                ) {
+                    append(engineName)
                 }
-            }
-            if (cursor < fullEventSourceText.length) {
-                append(fullEventSourceText.substring(cursor))
+                append(engineText.substring(index + engineName.length))
             }
         }
     }
@@ -1280,11 +1242,43 @@ private data class SourceUrlsDialogData(val title: String, val urls: List<String
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text(L.text("ui.new_event_years_and_corrections_are_delivered_through_a.a6af2d", k), fontSize = 12.readableSp, color = orangeColor)
-            Text(eventSourceAnnotated, fontSize = 14.readableSp, lineHeight = 22.readableSp)
             Text(L.text("rules.source_summary", k), fontSize = 14.readableSp)
-            Text(L.text("about.calendar_engine", k), fontSize = 14.readableSp)
-            SourceLink("https://github.com/RSG-KH/khmer-calendar-engine", "Khmer Calendar Engine")
-            TextButton(onClick = { license = !license }) { Text(L.text("ui.open_source_license.ab00af", k)) }
+            Text(engineSourceAnnotated, fontSize = 14.readableSp, lineHeight = 22.readableSp)
+            val licenseState = L.text(if (license) "ui.expanded" else "ui.collapsed", k)
+            val headerColor = MaterialTheme.colorScheme.primary
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .clickable(role = Role.Button) { license = !license }
+                    .semantics {
+                        heading()
+                        stateDescription = licenseState
+                        if (license) collapse { license = false; true }
+                        else expand { license = true; true }
+                    }
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Canvas(Modifier.size(16.dp)) {
+                    val chevron = Path().apply {
+                        if (license) {
+                            moveTo(size.width * .25f, size.height * .375f)
+                            lineTo(size.width * .5f, size.height * .625f)
+                            lineTo(size.width * .75f, size.height * .375f)
+                        } else {
+                            moveTo(size.width * .375f, size.height * .25f)
+                            lineTo(size.width * .625f, size.height * .5f)
+                            lineTo(size.width * .375f, size.height * .75f)
+                        }
+                    }
+                    drawPath(chevron, headerColor, style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round))
+                }
+                Text(L.text("ui.open_source_license.ab00af", k), color = headerColor,
+                    fontSize = 14.readableSp, fontWeight = FontWeight.Medium)
+                HorizontalDivider(Modifier.weight(1f), color = headerColor)
+            }
             if (license) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -1305,57 +1299,6 @@ private data class SourceUrlsDialogData(val title: String, val urls: List<String
             }
         }
     }, confirmButton = { TextButton(onClick = onDismiss) { Text(L.text("ui.close.7df7dc", k)) } })
-
-    activeUrlDialog?.let { dialogData ->
-        val urlScrollState = rememberScrollState()
-        val allUrlsText = dialogData.urls.joinToString("\n")
-        CalendarAlertDialog(
-            onDismissRequest = { activeUrlDialog = null },
-            title = { Text(dialogData.title, fontSize = 16.sp, lineHeight = 22.sp) },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .verticalScrollbar(urlScrollState)
-                        .verticalScroll(urlScrollState)
-                        .padding(end = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    SelectionContainer {
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            dialogData.urls.forEach { url ->
-                                Text(
-                                    url,
-                                    fontSize = 14.readableSp,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    clipboard.setPrimaryClip(ClipData.newPlainText("Source URLs", allUrlsText))
-                    val message = if (dialogData.urls.size > 1) {
-                        if (k) "បានចម្លងតំណភ្ជាប់ទាំងអស់" else "URLs copied"
-                    } else {
-                        if (k) "បានចម្លងតំណភ្ជាប់" else "URL copied"
-                    }
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                    activeUrlDialog = null
-                }) {
-                    Text(if (k) "ចម្លង" else "Copy")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { activeUrlDialog = null }) {
-                    Text(L.text("ui.close.7df7dc", k))
-                }
-            }
-        )
-    }
 }
 
 @Composable private fun EmptyEvents(k: Boolean) {

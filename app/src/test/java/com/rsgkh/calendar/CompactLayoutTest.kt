@@ -178,6 +178,7 @@ class CompactLayoutTest {
         compose.onNodeWithText(EventRepository.forDate(LocalDate.of(2026, 9, 24)).single { it.kind == EventKind.HOLIDAY }.titleKm).performClick()
         compose.onNodeWithText(L.text("about.source_link", true)).assertDoesNotExist()
         compose.onNodeWithText(L.text("ui.an_event_from_khmer_lunar_calendar_saved_for_offline_vi.98ee90", true)).assertDoesNotExist()
+        compose.onNodeWithText(L.text("events.engine_calculations", true)).performScrollTo().assertIsDisplayed()
         screenshot("event-details-light")
     }
 }
