@@ -816,15 +816,12 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                         { it.label },
                         "font-scale", fontSizeTitle) { onChange(settings.copy(fontScale = it)) }
                 }
-                fun themeModeLabel(mode: ThemeMode) = when (mode) {
-                    ThemeMode.SYSTEM -> L.text("ui.system.8f97a4", k)
-                    ThemeMode.LIGHT -> L.text("ui.light.aa790e", k)
-                    ThemeMode.DARK -> L.text("ui.dark.4ae267", k)
-                }
                 SettingsRow(L.text("ui.theme.99ca72", k), L.text("ui.theme_subtitle", k)) {
-                    SettingDropdown(settings.theme, ThemeMode.entries,
-                        ::themeModeLabel,
-                        "theme-mode", L.text("ui.theme.99ca72", k)) { onChange(settings.copy(theme = it)) }
+                    val dark = MaterialTheme.colorScheme.surface.luminance() < .5f
+                    Row(Modifier.testTag("theme-mode"), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        SettingChoice(L.text("ui.light.aa790e", k), !dark) { onChange(settings.copy(theme = ThemeMode.LIGHT)) }
+                        SettingChoice(L.text("ui.dark.4ae267", k), dark) { onChange(settings.copy(theme = ThemeMode.DARK)) }
+                    }
                 }
                 fun accentName(accent: Accent) = when (accent) { Accent.BLUE -> L.text("ui.blue.cf6f1f", k); Accent.LAVENDER -> L.text("ui.lavender.b7c95a", k); Accent.ROSE -> L.text("ui.rose.ea1e14", k); Accent.AMBER -> L.text("ui.amber.195385", k); Accent.LIME -> L.text("ui.lime.46ea65", k) }
                 SettingsRow(L.text("ui.accent_color.97e2af", k), L.text("ui.accent_color_subtitle", k)) {
@@ -832,6 +829,9 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                         ::accentName,
                         "accent-color", L.text("ui.accent_color.97e2af", k),
                         itemColor = ::accentColor) { onChange(settings.copy(accent = it)) }
+                }
+                SettingSwitch(L.text("ui.background_accent", k), L.text("ui.background_accent_subtitle", k), settings.backgroundAccent) {
+                    onChange(settings.copy(backgroundAccent = it))
                 }
             }
         }

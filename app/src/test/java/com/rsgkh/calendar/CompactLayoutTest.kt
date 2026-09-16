@@ -138,9 +138,12 @@ class CompactLayoutTest {
         for (k in listOf(true, false)) {
             assertTitle("ui.language.b03320", k)
             assertTitle("ui.theme.99ca72", k)
+            compose.onNode(hasText(L.text("ui.light.aa790e", k)) and hasAnyAncestor(hasTestTag("theme-mode"))).assertIsSelected()
+            compose.onNode(hasText(L.text("ui.dark.4ae267", k)) and hasAnyAncestor(hasTestTag("theme-mode"))).assertIsNotSelected()
             assertTitle("ui.accent_color.97e2af", k)
+            assertTitle("ui.background_accent", k)
             screenshot("settings-appearance-$k")
-            compose.onNodeWithTag("accent-color").performClick()
+            compose.onNodeWithTag("accent-color").performScrollTo().performClick()
             screenshot("settings-accent-dropdown-$k")
             compose.onNode(hasText(L.text("ui.blue.cf6f1f", k)) and hasAnyAncestor(isPopup())).performClick()
             for (key in listOf("ui.today_follows.b52168", "ui.start_week_on_monday.5578c3", "ui.show_longer_weekday_names", "ui.highlight_sunday_column.549462", "ui.lunar_dates_in_calendar.4dffed", "ui.buddhist_holy_days_in_calendar.d1e9b6", "ui.buddhist_holy_days_in_events.53e502")) assertTitle(key, k)

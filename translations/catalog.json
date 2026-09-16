@@ -490,22 +490,6 @@
       }
     },
     {
-      "id": "ui.system.8f97a4",
-      "section": "interface",
-      "context": "CalendarApp.kt",
-      "en": "System",
-      "km": "ប្រព័ន្ធ",
-      "original": {
-        "en": "System",
-        "km": "ប្រព័ន្ធ"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
       "id": "ui.light.aa790e",
       "section": "interface",
       "context": "CalendarApp.kt",
@@ -35512,13 +35496,13 @@
       "id": "ui.theme_subtitle",
       "section": "interface",
       "context": "CalendarApp.kt",
-      "en": "Light, dark, or system mode",
-      "km": "ភ្លឺ ងងឹត ឬតាមប្រព័ន្ធ",
+      "en": "Light or dark appearance",
+      "km": "រូបរាងភ្លឺ ឬងងឹត",
       "original": {
         "en": "Light, dark, or system mode",
         "km": "ភ្លឺ ងងឹត ឬតាមប្រព័ន្ធ"
       },
-      "reviewed": true,
+      "reviewed": false,
       "required": {
         "en": [],
         "km": []
@@ -35535,6 +35519,38 @@
         "km": "ពណ៌សម្រាប់រំលេចនិងសញ្ញាសម្គាល់"
       },
       "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.background_accent",
+      "section": "interface",
+      "context": "Appearance switch after Accent color; enabled by default",
+      "en": "Background accent",
+      "km": "ពណ៌លម្អផ្ទៃខាងក្រោយ",
+      "original": {
+        "en": "Background accent",
+        "km": "ពណ៌លម្អផ្ទៃខាងក្រោយ"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.background_accent_subtitle",
+      "section": "interface",
+      "context": "Appearance switch subtitle; tint applies to all tabs and navigation",
+      "en": "Tint pages and navigation",
+      "km": "ពណ៌ស្រាលសម្រាប់ទំព័រ និងរបាររុករក",
+      "original": {
+        "en": "Tint pages and navigation",
+        "km": "ពណ៌ស្រាលសម្រាប់ទំព័រ និងរបាររុករក"
+      },
+      "reviewed": false,
       "required": {
         "en": [],
         "km": []

@@ -1,6 +1,10 @@
 // Copyright (c) 2026 RSG-KH | Apache-2.0 License
 package com.rsgkh.calendar
 
+import android.content.res.Configuration
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalConfiguration
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -12,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.domain.KhmerDateDetails
 import com.rsgkh.calendar.i18n.L
+import com.rsgkh.calendar.ui.CalendarApp
 import com.rsgkh.calendar.ui.NotificationAccess
 import java.time.LocalDate
 import java.time.LocalTime
@@ -29,18 +34,63 @@ class CalendarRenderTest : CalendarUiScenarios() {
             highlightWeekdayNames = false, showHolyDaysInCalendar = true, showHolyDaysInEvents = false,
             highlightSunday = true, notificationsEnabled = false, pushCustomEvents = true, pushHolidays = true,
             pushObservances = true, pushHolyDays = false, pushMinutes = 300, repeatHours = 0, todayTimeZone = TodayTimeZone.LOCAL,
-            fontScale = FontScale.PERCENT_100)
+            fontScale = FontScale.PERCENT_100, backgroundAccent = true)
         assertEquals(defaults, AppSettings())
         assertEquals(defaults, AppPreferences(context).read())
         val expected = AppSettings(ThemeMode.DARK, Accent.LIME, khmer = false, mondayFirst = true, showLongerWeekdayNames = true, showCopyButtons = true, showLunar = false,
             highlightWeekdayNames = true, showHolyDaysInCalendar = false, showHolyDaysInEvents = true,
             highlightSunday = false, pushCustomEvents = false, pushHolidays = false, pushObservances = false, pushHolyDays = false,
             repeatHours = 6, todayTimeZone = TodayTimeZone.CAMBODIA,
-            fontScale = FontScale.PERCENT_110)
+            fontScale = FontScale.PERCENT_110, backgroundAccent = false)
         AppPreferences(context).write(expected)
         assertEquals(expected, AppPreferences(context).read())
-        AppPreferences(context).write(expected.copy(showCopyButtons = false, showLongerWeekdayNames = false, highlightWeekdayNames = false))
-        assertEquals(expected.copy(showCopyButtons = false, showLongerWeekdayNames = false, highlightWeekdayNames = false), AppPreferences(context).read())
+        AppPreferences(context).write(expected.copy(showCopyButtons = false, showLongerWeekdayNames = false, highlightWeekdayNames = false, backgroundAccent = true))
+        assertEquals(expected.copy(showCopyButtons = false, showLongerWeekdayNames = false, highlightWeekdayNames = false, backgroundAccent = true), AppPreferences(context).read())
+    }
+
+    @Test fun systemThemeFollowsDeviceUntilAChipIsChosen() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val state = mutableStateOf(AppPreferences(context).read().copy(khmer = false))
+        val configuration = mutableStateOf(Configuration(context.resources.configuration).apply {
+            uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or Configuration.UI_MODE_NIGHT_NO
+        })
+        compose.setContent {
+            CompositionLocalProvider(LocalConfiguration provides configuration.value) {
+                CalendarApp(state.value, LocalDate.of(2026, 9, 10)) {
+                    AppPreferences(context).write(it)
+                    state.value = it
+                }
+            }
+        }
+        fun chip(label: String) = compose.onNode(hasText(label) and hasAnyAncestor(hasTestTag("theme-mode")))
+        fun systemNight(night: Boolean) = compose.runOnIdle {
+            configuration.value = Configuration(configuration.value).apply {
+                uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
+                    if (night) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+            }
+            state.value = AppPreferences(context).read()
+        }
+        compose.onNodeWithText("Settings").performClick()
+        chip("Light").assertIsSelected()
+        chip("Dark").assertIsNotSelected()
+        compose.onNodeWithText("System", substring = false).assertDoesNotExist()
+        compose.onNodeWithContentDescription("Background accent").performScrollTo().performClick()
+        assertEquals(ThemeMode.SYSTEM, AppPreferences(context).read().theme)
+        systemNight(true)
+        chip("Dark").performScrollTo().assertIsSelected()
+        chip("Light").assertIsNotSelected()
+        assertEquals(ThemeMode.SYSTEM, AppPreferences(context).read().theme)
+
+        // Choosing the already highlighted chip must still create an override.
+        chip("Dark").performClick()
+        assertEquals(ThemeMode.DARK, AppPreferences(context).read().theme)
+        systemNight(false)
+        chip("Dark").assertIsSelected()
+        chip("Light").assertIsNotSelected().performClick()
+        assertEquals(ThemeMode.LIGHT, AppPreferences(context).read().theme)
+        systemNight(true)
+        chip("Light").assertIsSelected()
+        chip("Dark").assertIsNotSelected()
     }
 
     @Test fun weekdayColorsFollowTheDayAcrossWeekStartLanguageAndThemeChanges() {
@@ -75,9 +125,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         screenshot("weekday-colors-long-light")
 
         compose.onNodeWithText("Settings").performClick()
-        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasTestTag("theme-mode"))
-        compose.onNodeWithTag("theme-mode").performClick()
-        compose.onNode(hasText("Dark") and hasAnyAncestor(isPopup())).performClick()
+        compose.onNode(hasText("Dark") and hasAnyAncestor(hasTestTag("theme-mode"))).performScrollTo().performClick()
         compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("ខ្មែរ"))
         compose.onNodeWithText("ខ្មែរ").performClick()
         compose.onNode(hasText("ប្រតិទិន") and hasClickAction()).performClick()

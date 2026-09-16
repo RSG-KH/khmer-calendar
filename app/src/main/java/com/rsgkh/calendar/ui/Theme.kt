@@ -14,6 +14,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -244,6 +245,15 @@ fun accentColor(accent: Accent, dark: Boolean = false): Color = when (accent) {
     Accent.LIME -> if (dark) Color(0xFFCDDF70) else Color(0xFF647500)
 }
 
+// Muted hues near the neutral background's lightness, with a clearer green shift for lime.
+private fun darkAccentBackground(accent: Accent): Color = when (accent) {
+    Accent.BLUE -> Color(0xFF0A0E16)
+    Accent.LAVENDER -> Color(0xFF0D0D16)
+    Accent.ROSE -> Color(0xFF100C12)
+    Accent.AMBER -> Color(0xFF0F0E0E)
+    Accent.LIME -> Color(0xFF0A100C)
+}
+
 @Composable
 fun CalendarTheme(settings: AppSettings, content: @Composable () -> Unit) {
     val dark = when (settings.theme) {
@@ -252,9 +262,14 @@ fun CalendarTheme(settings: AppSettings, content: @Composable () -> Unit) {
         ThemeMode.DARK -> true
     }
     val accent = accentColor(settings.accent, dark)
+    val baseBackground = if (dark) Color(0xFF0C0E12) else Color(0xFFF3F4F8)
+    val background = if (settings.backgroundAccent) {
+        if (dark) darkAccentBackground(settings.accent)
+        else accent.copy(alpha = .10f).compositeOver(baseBackground)
+    } else baseBackground
     val colors = if (dark) darkColorScheme(
         primary = accent, onPrimary = Color(0xFF182139), primaryContainer = accent.copy(alpha = .14f),
-        onPrimaryContainer = accent, background = Color(0xFF0C0E12), onBackground = Color(0xFFE9EAF0),
+        onPrimaryContainer = accent, background = background, onBackground = Color(0xFFE9EAF0),
         surface = Color(0xFF1A1D24), onSurface = Color(0xFFE9EAF0),
         surfaceTint = Color.Transparent,
         surfaceDim = Color(0xFF11141A), surfaceBright = Color(0xFF343840),
@@ -266,7 +281,7 @@ fun CalendarTheme(settings: AppSettings, content: @Composable () -> Unit) {
         tertiary = Color(0xFFEEA0A7), error = Color(0xFFEEA0A7),
     ) else lightColorScheme(
         primary = accent, onPrimary = Color.White, primaryContainer = accent.copy(alpha = .09f),
-        onPrimaryContainer = accent, background = Color(0xFFF3F4F8), onBackground = Color(0xFF222632),
+        onPrimaryContainer = accent, background = background, onBackground = Color(0xFF222632),
         surface = Color.White, onSurface = Color(0xFF222632), surfaceVariant = Color(0xFFF0F2F7),
         surfaceTint = Color.Transparent,
         surfaceDim = Color(0xFFE3E5EA), surfaceBright = Color.White,

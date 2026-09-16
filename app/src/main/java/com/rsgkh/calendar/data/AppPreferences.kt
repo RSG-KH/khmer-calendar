@@ -41,6 +41,7 @@ enum class TodayTimeZone {
 data class AppSettings(
     val theme: ThemeMode = ThemeMode.SYSTEM,
     val accent: Accent = Accent.BLUE,
+    val backgroundAccent: Boolean = true,
     val khmer: Boolean = true,
     val mondayFirst: Boolean = false,
     val showLongerWeekdayNames: Boolean = false,
@@ -69,6 +70,7 @@ class AppPreferences(context: Context) {
         return AppSettings(
             theme = ThemeMode.entries.firstOrNull { it.name == prefs.getString("theme", "SYSTEM") } ?: ThemeMode.SYSTEM,
             accent = Accent.entries.firstOrNull { it.name == prefs.getString("accent", "BLUE") } ?: Accent.BLUE,
+            backgroundAccent = prefs.getBoolean("backgroundAccent", true),
             khmer = prefs.getBoolean("khmer", true),
             mondayFirst = prefs.getBoolean("mondayFirst", false),
             showLongerWeekdayNames = prefs.getBoolean("showLongerWeekdayNames", false),
@@ -93,6 +95,7 @@ class AppPreferences(context: Context) {
         prefs.edit {
             putString("theme", settings.theme.name)
             putString("accent", settings.accent.name)
+            putBoolean("backgroundAccent", settings.backgroundAccent)
             putBoolean("khmer", settings.khmer)
             putBoolean("mondayFirst", settings.mondayFirst)
             putBoolean("showLongerWeekdayNames", settings.showLongerWeekdayNames)

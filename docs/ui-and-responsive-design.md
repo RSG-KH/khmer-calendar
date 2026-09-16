@@ -204,14 +204,18 @@ All shapes are drawn with balanced optical center and volume, guaranteeing consi
 
 ## 3. Theming, Typography & Accessibility
 
+### Theme selection
+
+**Settings → Appearance → Theme** offers **Light** and **Dark** chips styled like the language choices. Before a manual choice, the app follows the device theme and highlights the chip matching the current appearance. Tapping either chip, including the already highlighted one, saves a persistent override. Later system theme changes do not affect that choice. Existing saved Light or Dark preferences are preserved; the internal System default remains automatic until a chip is tapped.
+
 ### Themed launcher icons
 
 Both adaptive launcher icons use `ic_launcher_monochrome.xml` for wallpaper-tinted icons. It wraps `drawable-nodpi/launcher_monochrome.png`, the supplied `khmer_calendar_app_transparent_mono_light_full.png` artwork copied without modification at 1254×1254, matching the full-color artwork's resolution. Its transparent lettering and temple cutouts preserve the app's Khmer calendar design. The wrapper uses the same 20% inset as the full-color foreground, keeping the artwork inside the adaptive-icon safe area.
 
 ### Color Palette & Accents
-The app features deep, calibrated surface backgrounds for maximum battery efficiency and readability:
-- **Dark Mode**: High-contrast slate `#0C0E12` with elevated surface `#161920`.
-- **Light Mode**: Clean daylight `#F3F4F8` with pure white surface `#FFFFFF`.
+The **Background accent** switch follows **Accent color** under **Settings → Appearance**. It is enabled by default and persists across app restarts. When enabled, Calendar, Events and Settings blend the selected accent over the theme's base background. The bottom navigation bar, its system-navigation padding and the landscape navigation rail use the same opaque color. Changing the switch, accent or theme updates the background immediately; switching it off restores the base background.
+- **Dark Mode**: Muted background shades stay near the lightness of the neutral background `#0C0E12`: blue `#0A0E16`, lavender `#0D0D16`, rose `#100C12`, amber `#0F0E0E` and lime `#0A100C`. Lime has a clearer green shift to balance its visibility with the other accents. These are final background colors, without an additional darkening blend. Card surfaces use `#1A1D24`.
+- **Light Mode**: The accent overlays base background `#F3F4F8` at 10% opacity; card surfaces use `#FFFFFF`.
 - **Theme Accents**: 5 curated accent colors selectable in Settings:
   - **Blue** (Default)
   - **Lavender**
