@@ -33,6 +33,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 
 ### 🏛️ Bundled Events & Recurrence Rules
 - **Bundled Reference Database**: Contains **3,246 captured event occurrences** for 2000–2030. These preserve the reference website's records; they are not all independently verified.
+- **Precomputed Event Dates**: Bundles engine-calculated observances for 1980–1999 and 2031–2050 and Buddhist holy days for 1980–2050, avoiding runtime event-date calculations within that range. Other supported years are calculated on demand.
 - **Official Government Holidays**: The 2025–2026 public holiday markers use year-specific Ministry of Economy and Finance (MEF) and Legal Reform Committee (LRC) calendar snapshots.
 - **Historical & Cultural Recurrences (1800–2200)**: 100 reviewed rules calculate traditional festivals (Water Festival, Pchum Ben, Royal Ploughing, Meak Bochea, Visak Bochea, Khmer New Year) and national/UN observances outside the primary reference window.
 
@@ -96,6 +97,7 @@ KhmerCalendar/
 │   │   │       └── Theme.kt             # Material 3 tokens, accents, & readableSp
 │   │   ├── resources/
 │   │   │   ├── calendar-events.tsv      # 3,246 bundled historical events (2000–2030)
+│   │   │   ├── engine-event-dates.tsv   # Precomputed recurrence and holy-day dates through 2050
 │   │   │   ├── recurrence-rules.tsv     # 100 reviewed recurrence rules (1800–2200)
 │   │   │   ├── translations.tsv         # Offline localization dictionary
 │   │   │   └── event-translations.tsv   # Translated event name templates

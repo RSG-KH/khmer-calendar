@@ -2,6 +2,7 @@
 package com.rsgkh.calendar
 
 import com.rsgkh.calendar.data.*
+import com.rsgkh.calendar.domain.KhmerCalendar
 import org.junit.Assert.*
 import org.junit.Test
 import java.time.LocalDate
@@ -25,7 +26,7 @@ class EventRepositoryTest {
 
     @Test fun outsideDatabaseCoverageOnlyCalculatedObservancesAndHolyDaysAppear() {
         for (year in 1900..2100) {
-            if (year in 2000..2030) continue
+            if (year in 1980..2050) continue
             assertFalse(EventRepository.hasBundledYear(year))
             val events = EventRepository.forYear(year)
             assertTrue(events.isNotEmpty())
@@ -34,6 +35,32 @@ class EventRepositoryTest {
             assertTrue(events.any { it.basis == DateBasis.CALCULATED })
             assertTrue(events.all { it.officialSourceUrl == null })
         }
+    }
+
+    @Test fun bundledEngineDatesMatchCurrentCalculationsAcrossAllSeventyOneYears() {
+        assertEquals(1980..2050, EventRepository.coveredYears)
+        for (year in 1980..2050) {
+            assertTrue(EventRepository.hasBundledYear(year))
+            val events = EventRepository.forYear(year)
+            val expectedHolyDays = generateSequence(LocalDate.of(year, 1, 1)) { it.plusDays(1) }
+                .takeWhile { it.year == year }.filter { KhmerCalendar.fromGregorian(it).isHolyDay }.toList()
+            assertEquals("Holy days in $year", expectedHolyDays, events.filter { it.kind == EventKind.HOLY_DAY }.map { it.date })
+            assertEquals("Unique keys in $year", events.size, events.map { it.key }.distinct().size)
+            if (year !in 2000..2030) {
+                val calculated = events.filter { it.basis == DateBasis.CALCULATED }
+                assertEquals("Recurrences in $year", RecurringEvents.forYear(year).toSet(), calculated.toSet())
+                assertTrue(events.all { it.officialSourceUrl == null && it.kind != EventKind.HOLIDAY })
+                assertTrue(events.none { it.basis == DateBasis.WEBSITE })
+            }
+        }
+        // The generated file must contain exactly the engine results, including every rule.
+        val rows = javaClass.getResourceAsStream("/engine-event-dates.tsv")!!.bufferedReader().useLines { lines ->
+            lines.filter { it.isNotBlank() && !it.startsWith('#') }.toList()
+        }
+        val expected = (1980..2050).flatMap { year -> EventRepository.forYear(year)
+            .filter { it.basis != DateBasis.WEBSITE }.map { "${it.id}\t${it.date}" } }
+        assertEquals(expected.toSet(), rows.toSet())
+        assertEquals(expected.size, rows.size)
     }
 
     @Test fun importedEventsIncludeChineseFestivalsAndPreserveMultiDayEntries() {

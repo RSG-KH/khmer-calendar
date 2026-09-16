@@ -38,8 +38,8 @@ Connected tests require a running emulator or device listed by `adb devices`.
 | --- | --- |
 | Calendar adapters | Supported range, date conversion, localized year labels and festival results |
 | Pinned reference fixtures | Compatibility through the app adapters, including the reviewed 2012 correction |
-| Event repository and recurrence | Snapshot precedence, rule translation, captured-date comparisons and event classification |
-| Reminder planner and delivery | Category controls, permissions, saved event instants, time-zone changes, daylight saving and repeats |
+| Event repository and recurrence | Snapshot precedence, all 71 precomputed years against current engine results, rule translation, captured-date comparisons and classification |
+| Reminder planner and delivery | Category controls, appearance changes preserving alarms, permissions, saved event instants, time-zone changes, daylight saving and repeats |
 | Compose UI | Phone/tablet layouts, both languages, dialogs, font scaling and settings |
 | System window behavior | Light/dark edge-to-edge configuration on API 31, 34 and 35 |
 | Translation tools | Catalog validation, export, backups and conflicting saves |
@@ -71,5 +71,7 @@ python tools/build-recurring-events.py
 ```
 
 This reads the JSON manifest and writes the runtime `recurrence-rules.tsv` and captured-occurrence test fixture `recurrence-reference.tsv`. See [recurring event rules](recurring-event-rules.md) for mappings and review requirements.
+
+After changing the engine, recurrence rules or bundled year range, also regenerate `engine-event-dates.tsv` using `tools/ExportEngineEventDates.java`. Follow the [precomputed engine dates workflow](reference-event-database.md#precomputed-engine-dates); tests reject stale dates. This resource covers holy days for 1980–2050 and recurrences for 1980–1999 and 2031–2050 without altering the captured archive.
 
 Rebuilding `calendar-events.tsv` requires the saved external capture and a current daily export from the app adapter. Follow [bundled event data](reference-event-database.md#capture-artifacts-and-maintenance) before running `python tools/build-reference-events.py`; its required inputs are not included in a fresh clone. The legacy audit tool produces review artifacts and does not update runtime events.

@@ -28,13 +28,13 @@ Calculation algorithms and supporting evidence are maintained in the engine proj
 
 ## Events and storage
 
-`EventRepository` selects the bundled dated snapshot for 2000–2030 and calculated recurrences for other supported years. It adds engine-derived holy days in every year. User-created events come from a separate repository and are combined with built-in events by the UI and reminder planner.
+`EventRepository` selects captured records for 2000–2030 and precomputed engine recurrences for 1980–1999 and 2031–2050. Engine-derived holy days are also precomputed for 1980–2050. The committed resources are read lazily, and each requested year's localized event list is cached in memory. Years outside 1980–2050 use the engine on demand. This is an event-date cache; the calendar grid and date details still use the engine directly. User-created events come from a separate repository and are combined with built-in events by the UI and reminder planner.
 
 | Event kind | Source |
 | --- | --- |
 | `HOLIDAY` | Captured occurrence with a year-specific official source URL; current anchors cover 2025–2026 |
 | `OBSERVANCE` | Other captured occurrences or calculated recurrence results |
-| `HOLY_DAY` | Shared engine result, exposed through the Android adapter |
+| `HOLY_DAY` | Shared engine result, precomputed for 1980–2050 and calculated on demand otherwise |
 | `CUSTOM` | User-created event stored locally |
 
 The [bundled data guide](reference-event-database.md) describes the 3,246 captured occurrences and their provenance. The [recurrence guide](recurring-event-rules.md) describes the 100 app-owned rules and their mapping to engine inputs. Engine upgrades do not replace these records or definitions.
@@ -66,6 +66,8 @@ The application provides local, reliable event notifications without relying on 
 ### Event-type controls
 
 Notification settings provide separate **Push custom**, **Push holidays**, **Push observances**, and **Push Buddhist holy days** switches before **Push time**. Custom, holiday and observance choices default to on; the master notification switch and holy-day reminders default to off. Turning off **Buddhist holy days in events** hides **Push Buddhist holy days** and suppresses its reminders while preserving the saved on/off choice. Showing holy days again restores that choice. Holy-day reminders require both switches to be on. The planner applies these choices to initial reminders and repeats, and alarm delivery rechecks current settings before posting. Disabling every eligible category leaves no alarm scheduled.
+
+Settings changes reschedule alarms only when reminder enablement, event categories, holy-day event visibility, push time, repeat interval or **Today follows** changes. Appearance and calendar display settings leave the existing alarm in place. Language changes update the channel labels; delivery reads the current language. Custom-event edits, permission changes, app resume and system restore broadcasts still refresh the next alarm.
 
 ### Time-Zone Intelligence
 

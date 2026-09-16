@@ -12,7 +12,7 @@ The engine's [API contract](https://github.com/RSG-KH/khmer-calendar-engine/blob
 | `domain/KhmerNewYear.kt` | Converts the engine's New Year dates to `LocalDate` |
 | `domain/KhmerDateDetails.kt` | Formats lunar and traditional year results for the UI |
 | `data/RecurringEvents.kt` | Translates app recurrence definitions into engine rules and attaches event titles |
-| `data/EventRepository.kt` | Selects dated records or calculated recurrences and adds engine-derived holy days |
+| `data/EventRepository.kt` | Selects captured records or engine recurrences, using precomputed event dates for 1980–2050 and live calculations otherwise |
 
 The engine operates on civil dates without a time zone. Android chooses the date for **Today follows** and resolves reminder instants. Event definitions, effective years, translations and official holiday records are app data; the engine release does not supply or update them. The Android app does not yet consume manager exports.
 
@@ -35,7 +35,8 @@ The release is resolved as an artifact without Maven metadata. Version 0.1.0's o
 1. Review the new release and its dependency metadata. Add any new runtime dependencies explicitly, or change the repository integration to consume its Maven metadata.
 2. Update `calendarEngine` in `gradle/libs.versions.toml` and the expected SHA-256 in `app/build.gradle.kts`, using the release's `SHA256SUMS`.
 3. Refresh the engine license and notices in `app/src/main/assets` from the released JAR's `META-INF/LICENSE` and `META-INF/NOTICE`.
-4. Run the [app checks](development-and-testing.md#testing) and debug/release builds. Review changed date results against the engine's cited evidence before updating fixtures.
+4. Regenerate the [precomputed engine dates](reference-event-database.md#precomputed-engine-dates) for 1980–2050 and review the data diff against the engine's cited evidence.
+5. Run the [app checks](development-and-testing.md#testing) and debug/release builds. Review changed date results against the engine's cited evidence before updating fixtures.
 
 New engine releases do not silently change an Android build or an installed app.
 

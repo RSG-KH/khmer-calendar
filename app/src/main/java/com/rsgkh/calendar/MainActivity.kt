@@ -87,13 +87,18 @@ class MainActivity : ComponentActivity() {
                 onOpenNotificationSettings = { requestNotificationAccess() },
                 onAllowExact = { startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, "package:$packageName".toUri())) },
                 openDateRequest = openDateRequest,
-            ) { next ->
-                preferences.write(next)
-                changed()
-                if (next.notificationsEnabled && !EventNotifications.canPost(this)) {
-                    requestNotificationAccess()
-                }
-            }
+            ) { updateSettings(it) }
+        }
+    }
+    internal fun updateSettings(next: AppSettings) {
+        val previous = preferences.read()
+        preferences.write(next)
+        revision++
+        if (next.remindersDifferFrom(previous)) EventNotifications.rescheduleAsync(this)
+        // Delivery reads the current language; updating channel labels needs no new alarm.
+        if (next.khmer != previous.khmer) EventNotifications.createChannel(this)
+        if (next.notificationsEnabled && !previous.notificationsEnabled && !EventNotifications.canPost(this)) {
+            requestNotificationAccess()
         }
     }
     private fun changed() { revision++; EventNotifications.rescheduleAsync(this) }

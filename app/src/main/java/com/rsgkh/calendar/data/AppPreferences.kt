@@ -62,6 +62,14 @@ data class AppSettings(
     val fontScale: FontScale = FontScale.PERCENT_100,
 )
 
+/** Only settings used to select an alarm's events or time belong here. */
+internal fun AppSettings.remindersDifferFrom(other: AppSettings): Boolean =
+    notificationsEnabled != other.notificationsEnabled ||
+        pushCustomEvents != other.pushCustomEvents || pushHolidays != other.pushHolidays ||
+        pushObservances != other.pushObservances || pushHolyDays != other.pushHolyDays ||
+        showHolyDaysInEvents != other.showHolyDaysInEvents || pushMinutes != other.pushMinutes ||
+        repeatHours != other.repeatHours || todayTimeZone != other.todayTimeZone
+
 class AppPreferences(context: Context) {
     private val prefs = context.getSharedPreferences("appearance", Context.MODE_PRIVATE)
     fun read(): AppSettings {

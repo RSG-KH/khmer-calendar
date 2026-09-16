@@ -2,7 +2,21 @@
 
 The Android app packages **3,246 dated event occurrences for 2000–2030** in [`calendar-events.tsv`](../app/src/main/resources/calendar-events.tsv). These records were captured from the publicly rendered [Khmer Lunar Calendar website](https://khmer-lunar-calendar.com/) on 10 September 2026. They are app data, separate from the [shared calculation engine](shared-engine.md).
 
-`EventRepository` uses the snapshot for all covered years and [calculated recurrences](recurring-event-rules.md) outside them, across 1800–2200. It adds engine-derived holy days in every supported year. The Android app does not yet consume event-manager exports; replacing this snapshot requires a separate data migration.
+`EventRepository` preserves the captured snapshot for 2000–2030. A separate engine-generated resource extends bundled event dates through 2050 and supplies holy days for 1980–2050. Other supported years use [calculated recurrences](recurring-event-rules.md) and holy days on demand, across 1800–2200. The Android app does not yet consume event-manager exports; replacing the captured snapshot requires a separate data migration.
+
+## Precomputed engine dates
+
+[`engine-event-dates.tsv`](../app/src/main/resources/engine-event-dates.tsv) contains 6,240 ID/date pairs: holy days for 1980–2050 and applicable recurrences for 1980–1999 and 2031–2050. It is generated with the app's pinned engine and recurrence rules, not captured from a website. It stores no translated titles: Android resolves titles and anniversary numbers from the current translation catalog when a year is requested.
+
+The two fields are `id` and Gregorian `date`. IDs use `sil` for holy days (`KHMER_LUNAR`) or `calculated:<rule-id>` for observances (`CALCULATED`). Calculated records have no official holiday status or source URL. Chinese festivals still appear only in the captured 2000–2030 records; this cache does not add new recurrence rules.
+
+Regenerate this file whenever the engine, recurrence definitions or bundled year range changes:
+
+1. Run `.\gradlew.bat :app:compileDebugKotlin` to compile the current adapter and rules against the verified engine release.
+2. Run `tools/ExportEngineEventDates.java` with the compiled debug Kotlin classes, `app/src/main/resources`, the pinned engine JAR and Kotlin stdlib on the Java classpath. Pass `app/src/main/resources/engine-event-dates.tsv` as the output argument. The generator reads the year ranges from `EventRepository` and calls the engine directly through the app adapters; it does not read the existing cache.
+3. Run `.\gradlew.bat testDebugUnitTest`. `EventRepositoryTest` compares all 71 bundled years with fresh engine results, including recurrence dates, holy days, unique IDs and classification. Review the resulting data diff before committing.
+
+Normal builds package this committed file without regenerating it. No initial precaching job, network request or writable on-device database is needed.
 
 ## Runtime format and classification
 

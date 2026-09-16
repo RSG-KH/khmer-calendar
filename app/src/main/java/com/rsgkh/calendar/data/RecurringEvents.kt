@@ -50,7 +50,9 @@ internal object RecurringEvents {
         }
     }
 
-    fun forYear(year: Int): List<CalendarEvent> = dates(year).flatMap { (rule, dates) ->
+    fun forYear(year: Int): List<CalendarEvent> = fromDates(year, dates(year))
+
+    internal fun fromDates(year: Int, dates: Map<Rule, List<LocalDate>>): List<CalendarEvent> = dates.flatMap { (rule, dates) ->
         val anniversary = rule.anniversaryBase?.let { year - it }
         fun title(khmer: Boolean): String = if (anniversary == null) L.text(rule.titleKey, khmer)
             else L.text(rule.titleKey, khmer, "anniversary" to if (khmer) khmerNumber(anniversary) else anniversary.toString())
