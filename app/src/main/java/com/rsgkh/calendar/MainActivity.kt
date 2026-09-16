@@ -21,7 +21,6 @@ import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.notifications.EventNotifications
 import com.rsgkh.calendar.ui.CalendarApp
 import com.rsgkh.calendar.ui.NotificationAccess
-import kotlinx.coroutines.delay
 import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
@@ -78,7 +77,7 @@ class MainActivity : ComponentActivity() {
             val custom = remember(customRevision) { customRepository.all() }
             val access = remember(revision) { NotificationAccess(EventNotifications.canPost(this), EventNotifications.canBeExact(this)) }
             val today by produceState(settings.todayTimeZone.today(), settings.todayTimeZone, revision) {
-                while (true) { value = settings.todayTimeZone.today(); delay(30_000) }
+                lifecycle.refreshTodayWhileVisible({ settings.todayTimeZone.today() }) { value = it }
             }
             CalendarApp(settings, today, customEvents = custom,
                 onSaveCustom = { customRepository.save(it); customRevision++; EventNotifications.clearDisplayedAsync(this); changed() },

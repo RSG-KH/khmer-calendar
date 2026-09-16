@@ -78,6 +78,8 @@ Settings changes reschedule alarms only when reminder enablement, event categori
 - **Custom Events**: Reminders trigger at the exact instant intended in the time zone where the event was created, converting cleanly if the user switches display time zones.
 - **Repeats**: Configurable periodic repeats (**Off**, 2, 4, 6, 8, or 12 hours) use elapsed hours and stop at midnight in the selected zone for built-in events, or the saved event zone for custom events. Daylight-saving gaps move a nonexistent push time forward by the gap; repeated clock times use the first occurrence for the initial reminder.
 
+The UI reads today's date immediately when the activity becomes visible and every 30 seconds while its lifecycle is at least `STARTED`, including visible multi-window use. Polling stops when the activity is hidden and restarts with an immediate read when it returns. This keeps the Today marker current across midnight or device clock changes without hidden UI polling. Reminder delivery is independent: `AlarmManager` invokes its receiver, and the manifest-registered restore receiver recalculates the next alarm after system date/time or time-zone changes, reboot, app replacement and exact-alarm access changes.
+
 ---
 
 ## UI layer

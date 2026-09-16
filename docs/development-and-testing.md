@@ -39,7 +39,8 @@ Connected tests require a running emulator or device listed by `adb devices`.
 | Calendar adapters | Supported range, date conversion, localized year labels and festival results |
 | Pinned reference fixtures | Compatibility through the app adapters, including the reviewed 2012 correction |
 | Event repository and recurrence | Snapshot precedence, all 71 precomputed years against current engine results, rule translation, captured-date comparisons and classification |
-| Reminder planner and delivery | Category controls, appearance changes preserving alarms, permissions, saved event instants, time-zone changes, daylight saving and repeats |
+| Reminder planner and delivery | Category controls, appearance changes preserving alarms, permissions, saved event instants, clock/time-zone broadcasts without an activity, daylight saving and repeats |
+| Today refresh | Visible-only polling, immediate refresh on return, midnight, clock jumps and device time-zone changes |
 | Compose UI | Phone/tablet layouts, both languages, dialogs, font scaling and settings |
 | System window behavior | Light/dark edge-to-edge configuration on API 31, 34 and 35 |
 | Translation tools | Catalog validation, export, backups and conflicting saves |
