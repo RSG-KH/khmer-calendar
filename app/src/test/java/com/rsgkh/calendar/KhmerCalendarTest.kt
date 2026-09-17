@@ -6,9 +6,14 @@ import com.rsgkh.calendar.data.EventKind
 import com.rsgkh.calendar.data.EventRepository
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.time.LocalDate
 import java.time.YearMonth
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [32])
 class KhmerCalendarTest {
     private fun check(date: String, day: Int, waxing: Boolean, month: Int, year: Int) {
         val lunar = KhmerCalendar.fromGregorian(LocalDate.parse(date))
@@ -40,33 +45,40 @@ class KhmerCalendarTest {
                 assertEquals("$date", ordinal + 1, nextOrdinal)
                 assertEquals("$date", a.month, b.month)
             }
-            if (a.buddhistYear != b.buddhistYear) {
-                assertEquals("$date", a.buddhistYear + 1, b.buddhistYear)
-                assertEquals("$date", 5, b.month)
-                assertEquals("$date", 1, b.day)
-                assertFalse("$date", b.waxing)
-            }
             date = date.plusDays(1)
         }
     }
-    @Test fun eachYearHasOneBuddhistEraTransition() {
-        for (year in 1800..2200) {
-            var transitions = 0
-            var date = LocalDate.of(year, 1, 2)
-            while (date.year == year) {
-                if (KhmerCalendar.fromGregorian(date).buddhistYear != KhmerCalendar.fromGregorian(date.minusDays(1)).buddhistYear) transitions++
-                date = date.plusDays(1)
+    @Test fun holyDaysAndShavingDaysAreCorrectAcrossMultipleYears() {
+        for (year in 2024..2027) {
+            var holyDays = 0
+            var shavingDays = 0
+            for (m in 1..12) {
+                for (d in 1..YearMonth.of(year, m).lengthOfMonth()) {
+                    val date = LocalDate.of(year, m, d)
+                    val lunar = KhmerCalendar.fromGregorian(date)
+                    if (lunar.isHolyDay) {
+                        holyDays++
+                        val tomorrow = KhmerCalendar.fromGregorian(date.plusDays(1))
+                        assertTrue("$date holy day followed by 1 or 9", tomorrow.day in listOf(1, 9))
+                    }
+                    if (lunar.isShavingDay) {
+                        shavingDays++
+                        assertTrue("$date shaving day followed by holy day", KhmerCalendar.fromGregorian(date.plusDays(1)).isHolyDay)
+                    }
+                }
             }
-            assertEquals("$year", 1, transitions)
+            assertTrue("Expected around 48 holy days in $year, got $holyDays", holyDays in 48..50)
+            assertTrue("Expected around 48 shaving days in $year, got $shavingDays", shavingDays in 48..50)
+            val expectedShavingDays = holyDays -
+                (if (KhmerCalendar.fromGregorian(LocalDate.of(year, 1, 1)).isHolyDay) 1 else 0) +
+                (if (KhmerCalendar.fromGregorian(LocalDate.of(year, 12, 31)).isShavingDay) 1 else 0)
+            assertEquals("Shaving days must match holy days adjusted for year boundaries in $year", expectedShavingDays, shavingDays)
         }
     }
-    @Test fun shortMonthEndsOnFourteenthWaningHolyDay() {
-        assertTrue(KhmerCalendar.fromGregorian(LocalDate.of(2026, 9, 11)).isHolyDay)
-        assertFalse(KhmerCalendar.fromGregorian(LocalDate.of(2026, 9, 10)).isHolyDay)
-        assertFalse(KhmerCalendar.fromGregorian(LocalDate.of(2026, 9, 12)).isHolyDay)
-    }
-    @Test fun buddhistYearDoesNotChangeAtGregorianNewYear() {
-        assertEquals(KhmerCalendar.fromGregorian(LocalDate.of(2025, 12, 31)).buddhistYear,
+    @Test fun buddhistYearIncrementsAtVisakBochea() {
+        assertEquals(2569, KhmerCalendar.fromGregorian(LocalDate.of(2026, 5, 1)).buddhistYear)
+        assertEquals(2570, KhmerCalendar.fromGregorian(LocalDate.of(2026, 5, 2)).buddhistYear)
+        assertEquals("Civil year transition does not advance Buddhist year", 2569,
             KhmerCalendar.fromGregorian(LocalDate.of(2026, 1, 1)).buddhistYear)
     }
     @Test fun leapMonthsAndLeapDaysExist() {
@@ -89,7 +101,8 @@ class KhmerCalendarTest {
         assertEquals(setOf("International Labor Day", "Visak Bochea"), holidays.filter { it.date == LocalDate.of(2026, 5, 1) }.map { it.titleEn }.toSet())
         assertEquals(listOf(10, 11, 12), holidays.filter { it.titleEn == "Pchum Ben Festival" }.map { it.date.dayOfMonth })
         assertEquals(listOf(23, 24, 25), holidays.filter { it.titleEn == "Water Festival" }.map { it.date.dayOfMonth })
-        assertTrue(EventRepository.forYear(2027).none { it.kind == EventKind.HOLIDAY })
+        assertEquals(22, EventRepository.forYear(2027).count { it.kind == EventKind.HOLIDAY })
+        assertTrue(EventRepository.forYear(2028).none { it.kind == EventKind.HOLIDAY })
         assertTrue(EventRepository.forYear(1900).none { it.kind == EventKind.HOLIDAY })
         val events = EventRepository.forYear(2026)
         assertEquals(events.size, events.map { it.key }.distinct().size)

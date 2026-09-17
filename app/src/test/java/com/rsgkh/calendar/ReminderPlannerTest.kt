@@ -5,13 +5,18 @@ import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.notifications.ReminderPlanner
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.time.*
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [32])
 class ReminderPlannerTest {
     private val day = LocalDate.of(2026, 9, 24)
     private val settings = AppSettings(notificationsEnabled = true, showHolyDaysInEvents = false, repeatHours = 4,
         todayTimeZone = TodayTimeZone.CAMBODIA)
-    private val event = CalendarEvent("test", day, "ថ្ងៃពិសេស", "Special day", EventKind.OBSERVANCE, DateBasis.WEBSITE)
+    private val event = CalendarEvent("test", day, "ថ្ងៃពិសេស", "Special day", EventKind.OBSERVANCE, DateBasis.RECORDED)
     private fun at(date: LocalDate = day, hour: Int, minute: Int = 0) = date.atTime(hour, minute).atZone(CAMBODIA_ZONE).toInstant()
     private fun next(now: Instant, config: AppSettings = settings, custom: List<CustomEvent> = emptyList()) =
         ReminderPlanner.next(now, config, custom) { year -> if (year == 2026) listOf(event) else emptyList() }
@@ -27,7 +32,7 @@ class ReminderPlannerTest {
         val date = LocalDate.of(2031, 1, 1)
         val batch = ReminderPlanner.next(at(date, 4, 59), settings.copy(repeatHours = 0), emptyList())!!
         assertEquals(at(date, 5), batch.at)
-        assertTrue(batch.events.any { it.id == "calculated:new_year_day" && it.basis == DateBasis.CALCULATED })
+        assertTrue(batch.events.any { it.id == "new_year_day" && it.basis == DateBasis.CALCULATED })
         assertTrue(batch.events.none { it.kind == EventKind.HOLIDAY })
     }
 

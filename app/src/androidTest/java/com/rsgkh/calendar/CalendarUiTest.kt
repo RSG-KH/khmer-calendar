@@ -28,7 +28,8 @@ class CalendarUiTest : CalendarUiScenarios() {
             screenshot("about-$k")
             compose.onNodeWithText(L.text("ui.calendar_sources_licenses.c2bdb3", k)).performScrollTo().performClick()
             val holidayText = L.text("about.public_holiday_source", k)
-            val holidayName = if (k) "គេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាល" else "official government websites"
+            val holidayCandidates = if (k) listOf("ឯកសារផ្លូវការរបស់រដ្ឋ", "គេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាល") else listOf("official government publications", "official government websites")
+            val holidayName = holidayCandidates.firstOrNull { holidayText.contains(it) } ?: holidayCandidates[0]
             compose.onNodeWithText(holidayText).performScrollTo().assertIsDisplayed().performFirstLinkClick {
                 holidayText.substring(it.start, it.end) == holidayName
             }

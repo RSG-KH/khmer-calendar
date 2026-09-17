@@ -5,11 +5,10 @@ Khmer Calendar is an offline Kotlin/Jetpack Compose Android app. It uses a relea
 ```mermaid
 flowchart TD
     Engine[Shared Khmer Calendar Engine] --> Adapters[Android date adapters]
-    Rules[App recurrence definitions] --> Recurring[RecurringEvents]
+    Catalog[Bundled event catalog JSON] --> Recurring[RecurringEvents]
     Engine --> Recurring
-    Adapters --> Events[EventRepository: holy days]
+    Adapters --> Events[EventRepository]
     Recurring --> Events
-    Snapshot[Bundled dated events] --> Events
     Events --> UI[Compose UI]
     Adapters --> UI
     Custom[CustomEventRepository: SQLite] --> UI
@@ -28,16 +27,16 @@ Calculation algorithms and supporting evidence are maintained in the engine proj
 
 ## Events and storage
 
-`EventRepository` selects captured records for 2000–2030 and precomputed engine recurrences for 1980–1999 and 2031–2050. Engine-derived holy days are also precomputed for 1980–2050. The committed resources are read lazily, and each requested year's localized event list is cached in memory. Years outside 1980–2050 use the engine on demand. This is an event-date cache; the calendar grid and date details still use the engine directly. User-created events come from a separate repository and are combined with built-in events by the UI and reminder planner.
+`EventRepository` builds every supported year (1800–2200) on demand and caches each requested year's localized event list in memory. Each year is layered from the bundled event catalog (`khmer-calendar-data.json`) and the shared engine: recorded date lists (Chinese festivals and fixed heritage milestones), engine-evaluated recurrence rules with reviewed per-year date overrides, official government holiday calendars for 2020–2027 that promote matching occurrences to cited public holidays, and Buddhist holy days computed day by day from the engine. The calendar grid and date details use the engine directly. User-created events come from a separate repository and are combined with built-in events by the UI and reminder planner.
 
 | Event kind | Source |
 | --- | --- |
-| `HOLIDAY` | Captured occurrence with a year-specific official source URL; current anchors cover 2025–2026 |
-| `OBSERVANCE` | Other captured occurrences or calculated recurrence results |
-| `HOLY_DAY` | Shared engine result, precomputed for 1980–2050 and calculated on demand otherwise |
+| `HOLIDAY` | Date from an official government holiday calendar (2020–2027), carrying the citing subdecree or ministry source |
+| `OBSERVANCE` | Recorded date lists, calculated recurrence results, or recurrence dates corrected by a reviewed override |
+| `HOLY_DAY` | Shared engine holy-day result, computed per day for the requested year |
 | `CUSTOM` | User-created event stored locally |
 
-The [bundled data guide](reference-event-database.md) describes the 3,246 captured occurrences and their provenance. The [recurrence guide](recurring-event-rules.md) describes the 100 app-owned rules and their mapping to engine inputs. Engine upgrades do not replace these records or definitions.
+The [bundled data guide](reference-event-database.md) describes the event catalog: recurrence rules, dated records, official holiday calendars, date overrides and their sources. The [recurrence guide](recurring-event-rules.md) describes how catalog rules map to engine inputs. Engine upgrades do not replace these definitions or records.
 
 `CustomEventRepository.kt` stores events in `custom-events.db`:
 

@@ -1,46 +1,41 @@
 # Recurring event rules
 
-Android owns 100 recurrence definitions in [`tools/recurring-event-rules.json`](../tools/recurring-event-rules.json). The [shared engine](shared-engine.md) evaluates their dates; Android supplies effective years, localized titles and event classification.
+Android owns 100 recurrence definitions, stored on each event in the bundled [event catalog](reference-event-database.md) (`khmer-calendar-data.json`). The [shared engine](shared-engine.md) evaluates their dates for every supported year; Android supplies effective years, localized titles, event classification and reviewed date overrides.
 
 ## Coverage and precedence
 
 | Years | Event source |
 | --- | --- |
-| 2000–2030 | The 3,246 [captured dated records](reference-event-database.md); recurrences do not supplement or replace them |
-| 1980–1999 and 2031–2050 | Applicable recurrence dates precomputed with the engine and bundled in `engine-event-dates.tsv` |
-| 1800–1979 and 2051–2200 | Applicable recurrence rules evaluated by the engine on demand |
+| 1800–2200 | Applicable rules evaluated by the engine on demand; reviewed [overrides](reference-event-database.md#holiday-calendars-and-overrides) replace calculated dates for pinned years |
+| 2020–2027 | Official government holiday calendars overlay matching occurrences as cited public holidays |
 
-Engine-derived Buddhist holy days are available throughout 1800–2200, with precomputed dates bundled for 1980–2050. User-created events are stored separately and combined with built-in events by the UI and reminder planner.
+Engine-derived Buddhist holy days are computed on demand for every supported year. User-created events are stored separately and combined with built-in events by the UI and reminder planner.
 
-Calculated occurrences use `DateBasis.CALCULATED`, `EventKind.OBSERVANCE` and an ID of `calculated:<rule-id>`. The event key also includes the date. They have no official-source URL or arrival time. A recurrence describes a calendar pattern; it does not establish government leave for a year.
+Calculated occurrences use `DateBasis.CALCULATED`, `EventKind.OBSERVANCE` and the catalog event's ID; the event key also includes the date. Overridden occurrences use `DateBasis.CORRECTED` and carry the override's source. Neither has an official-source URL or arrival time. A recurrence describes a calendar pattern; it does not establish government leave for a year.
 
 ## Definition mapping
 
-`tools/build-recurring-events.py` compiles the JSON manifest to `app/src/main/resources/recurrence-rules.tsv`. `RecurringEvents.Rule` translates the TSV fields to the engine's validated `RecurrenceRule` contract:
+Each event's `rule` object maps directly to the engine's validated `RecurrenceRule` contract; `RecurringEvents.parseRule` fills engine-compatible defaults (month/day 1 for the festival stages, waxing, offset 0, duration 1, years 1800–2200, `exact` month policy, occurrence 1):
 
-| Definition | Android mapping |
+| Definition | Mapping |
 | --- | --- |
 | `solar` | Fixed Gregorian month/day with the supplied offset and duration |
 | `khmer_lunar` | Lunar month, day and phase; `ordinary_or_second_asadh` selects the applicable Asadh month for Lent-related rules |
-| `solar_nth_weekday` | TSV `day` becomes the weekday; TSV `offset` becomes `occurrence`, with engine offset set to zero |
-| `new_year_first`, `new_year_middle`, `new_year_last` | Engine festival stages; unused TSV month/day values are replaced with valid defaults |
+| `solar_nth_weekday` | ISO weekday in `day` with `occurrence` selecting the first–fifth match |
+| `new_year_first`, `new_year_middle`, `new_year_last` | Engine festival stages |
 | `fromYear`, `throughYear` | Inclusive years in which the rule applies |
 | `anniversaryBase` | Android inserts `year - anniversaryBase` into the localized `{anniversary}` title |
 
 The engine [API documentation](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.1.0/docs/api.md) defines month numbering, weekday numbering, offsets and festival behavior. Keep those calculation rules in the engine. Android currently requires every applicable rule to return at least one date within its requested year; review this constraint before adding rules that cross a year boundary.
 
-The manifest covers Khmer festivals, royal and national commemorations, heritage anniversaries, international observances and floating weekday events. Chinese festivals remain available only where captured in the dated snapshot; the current fallback does not calculate them.
+The rules cover Khmer festivals, royal and national commemorations, heritage anniversaries, international observances and floating weekday events. Chinese festivals are not rules: they ship as [recorded date lists](reference-event-database.md) in the catalog. Historical commemorations set `originalDate`, before which occurrences are suppressed.
 
 ## Regression checks
 
-`RecurringEventsTest.kt` compares rule results against captured occurrences for 2000–2030, even though runtime recurrence fallback is disabled in those years. This checks integration and compatibility with the snapshot, not independent historical accuracy.
-
-The expected differences are the extra May 13 and 15 dates in the captured 2005–2019 King Sihamoni birthday holiday blocks. The recurrence represents the May 14 birthday. The 2012 New Year correction is covered by the [engine migration checks](shared-engine.md#migration-behavior) and is no longer an allowed recurrence mismatch.
+`RecurringEventsTest.kt` compares rule results for 2000–2030 against the captured-occurrence fixture `app/src/test/resources/recurrence-reference.tsv`. The only allowed differences are the 2005–2019 King Sihamoni birthday years, where the source records the full three-day official block while the rule yields May 14; the repository layer reconciles those years through catalog overrides. This checks integration against the reviewed capture, not independent historical accuracy. The 2012 New Year correction is covered by the [engine migration checks](shared-engine.md#migration-behavior).
 
 ## Updating definitions
 
-1. Edit `tools/recurring-event-rules.json`, keeping IDs stable and reviewing effective years and source evidence.
+1. Edit the event's `rule` in `khmer-calendar-data.json`, keeping IDs stable and reviewing effective years and source evidence. (`tools/recurring-event-rules.json` is the retired manifest of the old TSV pipeline; it no longer feeds the app.)
 2. Update titles in `translations/catalog.json` when necessary and export translations as described in the [translation guide](../tools/translation/README.md).
-3. Run `python tools/build-recurring-events.py`. It generates the runtime TSV and `app/src/test/resources/recurrence-reference.tsv` from existing captured occurrences; it does not calculate replacement reference dates.
-4. Regenerate the [bundled engine dates](reference-event-database.md#precomputed-engine-dates) with the updated app classes.
-5. Run `.\gradlew.bat testDebugUnitTest` and inspect the generated diffs before committing. Tests compare every bundled engine date with the current engine and rules.
+3. Run `.\gradlew.bat testDebugUnitTest` and inspect failures before committing. Tests compare rule results with the fixture, engine parity, official calendars and repository classification.

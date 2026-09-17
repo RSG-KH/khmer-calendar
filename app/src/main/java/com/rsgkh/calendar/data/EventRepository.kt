@@ -1,21 +1,42 @@
 // Copyright (c) 2026 RSG-KH | Apache-2.0 License
 package com.rsgkh.calendar.data
 
-import com.rsgkh.calendar.domain.KhmerCalendar
 import com.rsgkh.calendar.domain.EventRepeat
+import com.rsgkh.calendar.domain.KhmerCalendar
+import com.rsgkh.calendar.domain.khmerNumber
+import com.rsgkh.calendar.engine.EventDateOverride
+import com.rsgkh.calendar.engine.GregorianDate
 import com.rsgkh.calendar.i18n.L
 import java.time.LocalDate
-import java.time.YearMonth
 import java.time.LocalTime
+import java.time.YearMonth
 import java.util.concurrent.ConcurrentHashMap
 
 enum class EventKind { HOLIDAY, OBSERVANCE, HOLY_DAY, CUSTOM }
-enum class DateBasis { WEBSITE, KHMER_LUNAR, USER, CALCULATED }
+enum class DateBasis {
+    OFFICIAL,
+    CALCULATED,
+    CORRECTED,
+    RECORDED,
+    KHMER_LUNAR,
+    USER,
+    WEBSITE;
+}
+
 data class CalendarEvent(
-    val id: String, val date: LocalDate, val titleKm: String, val titleEn: String,
-    val kind: EventKind, val basis: DateBasis,
-    val time: LocalTime? = null, val notes: String = "",
+    val id: String,
+    val date: LocalDate,
+    val titleKm: String,
+    val titleEn: String,
+    val kind: EventKind,
+    val basis: DateBasis,
+    val time: LocalTime? = null,
+    val notes: String = "",
     val officialSourceUrl: String? = null,
+    val citation: String? = null,
+    val citationEn: String? = null,
+    val citationKm: String? = null,
+    val sourceIds: List<String> = emptyList(),
     val customSeriesId: String? = null,
     val repeat: EventRepeat? = null,
 ) {
@@ -23,77 +44,214 @@ data class CalendarEvent(
     val key get() = "$id:$date"
 }
 
-/** Captured records take precedence; engine dates are bundled for 1980–2050. */
+data class SourceInfo(
+    val url: String?,
+    val citationEn: String?,
+    val citationKm: String?,
+)
+
 object EventRepository {
-    val coveredYears = 1980..2050
-    val capturedYears = 2000..2030
+    val coveredYears = 1800..2200
     private val cache = ConcurrentHashMap<Int, List<CalendarEvent>>()
-    private val snapshot by lazy {
-        val stream = checkNotNull(EventRepository::class.java.getResourceAsStream("/calendar-events.tsv")) {
-            "Bundled calendar event snapshot is missing"
-        }
-        val events = stream.bufferedReader(Charsets.UTF_8).useLines { lines ->
-            lines.filterNot { it.startsWith('#') || it.isBlank() }.map { line ->
-                val fields = line.split('\t')
-                check(fields.size == 5) { "Invalid event snapshot row" }
-                val (id, dateText, km, en, officialUrl) = fields
-                val date = LocalDate.parse(dateText)
-                check(date.year in capturedYears && km.isNotBlank() && en.isNotBlank())
-                CalendarEvent("website:$id", date, L.eventTitle(id, true, km), L.eventTitle(id, false, en),
-                    if (officialUrl.isEmpty()) EventKind.OBSERVANCE else EventKind.HOLIDAY,
-                    DateBasis.WEBSITE, officialSourceUrl = officialUrl.ifEmpty { null })
-            }.toList()
-        }
-        check(events.isNotEmpty() && events.map { it.key }.distinct().size == events.size)
-        events.groupBy { it.date.year }.also { check(it.keys == capturedYears.toSet()) }
+
+    private val sourcesMap: Map<String, CatalogSource> by lazy {
+        RecurringEvents.catalog.sources.associateBy { it.id }
     }
-    // Only IDs and dates are stored: translations and anniversary titles stay live.
-    private val bundledDates by lazy {
-        val rules = RecurringEvents.rules.associateBy { "calculated:${it.id}" }
-        val stream = checkNotNull(EventRepository::class.java.getResourceAsStream("/engine-event-dates.tsv")) {
-            "Bundled engine event dates are missing"
-        }
-        val rows = stream.bufferedReader(Charsets.UTF_8).useLines { lines ->
-            lines.filterNot { it.startsWith('#') || it.isBlank() }.map { line ->
-                val fields = line.split('\t')
-                check(fields.size == 2) { "Invalid engine event date row" }
-                val (id, dateText) = fields
-                val date = LocalDate.parse(dateText)
-                check(date.year in coveredYears)
-                if (id != "sil") {
-                    val rule = checkNotNull(rules[id]) { "Unknown bundled recurrence: $id" }
-                    check(date.year !in capturedYears && date.year in rule.fromYear..rule.throughYear)
-                }
-                id to date
-            }.toList()
-        }
-        check(rows.distinct().size == rows.size) { "Duplicate engine event date" }
-        rows.groupBy { it.second.year }.mapValues { (_, dates) ->
-            dates.groupBy({ it.first }, { it.second }).also { check(it.getValue("sil").isNotEmpty()) }
-        }.also { check(it.keys == coveredYears.toSet()) }
+    private val eventsMap: Map<String, CatalogEvent> by lazy {
+        RecurringEvents.catalog.events.associateBy { it.id }
     }
-    fun hasBundledYear(year: Int) = year in coveredYears
-    fun forMonth(month: YearMonth): List<CalendarEvent> = forYear(month.year).filter { it.date.month == month.month }
-    fun forDate(date: LocalDate): List<CalendarEvent> = forYear(date.year).filter { it.date == date }
+    private val staticEvents: List<CatalogEvent> by lazy {
+        RecurringEvents.catalog.events.filter { !it.dates.isNullOrEmpty() }
+    }
+    private val holidayCalendars: Map<Int, CatalogHolidayCalendar> by lazy {
+        RecurringEvents.catalog.holidayCalendars.associateBy { it.year }
+    }
+    private val overridesByYear: Map<Int, List<CatalogOverride>> by lazy {
+        RecurringEvents.catalog.overrides.groupBy { it.year }
+    }
+
+    private fun getSourceInfo(sourceIds: List<String>): SourceInfo {
+        val sources = sourceIds.mapNotNull { sourcesMap[it] }
+        val govSources = sources.filter { it.kind == "government" }
+        if (govSources.isEmpty()) {
+            return SourceInfo(url = null, citationEn = null, citationKm = null)
+        }
+        val withUrl = govSources.firstOrNull { !it.url.isNullOrBlank() }
+        val withRef = govSources.firstOrNull { !it.reference.isNullOrBlank() }
+        val primary = withRef ?: govSources.first()
+
+        val url = withUrl?.url ?: primary.url
+        val citationEn = primary.reference ?: primary.title
+        val citationKm = primary.notes ?: primary.reference ?: primary.title
+        return SourceInfo(url = url, citationEn = citationEn, citationKm = citationKm)
+    }
+
+    private fun formatHolidayNames(h: CatalogHoliday, year: Int): CatalogNames {
+        var km = h.names.km
+        var en = h.names.en
+        if (km.contains("{anniversary}") || en.contains("{anniversary}")) {
+            val ev = eventsMap[h.eventId ?: h.id]
+            val base = ev?.anniversaryBase
+            if (base != null) {
+                val anniversary = year - base
+                km = km.replace("{anniversary}", khmerNumber(anniversary))
+                en = en.replace("{anniversary}", anniversary.toString())
+            }
+        }
+        return CatalogNames(en = en, km = km)
+    }
+
+    fun hasBundledYear(year: Int): Boolean = year in coveredYears
+
+    fun clearCache() {
+        cache.clear()
+    }
+
+    fun forMonth(month: YearMonth): List<CalendarEvent> =
+        forYear(month.year).filter { it.date.month == month.month }
+
+    fun forDate(date: LocalDate): List<CalendarEvent> =
+        forYear(date.year).filter { it.date == date }
+
     fun forYear(year: Int): List<CalendarEvent> {
-        require(year in 1800..2200)
+        require(year in coveredYears) { "Supported years: 1800–2200." }
         return cache.getOrPut(year) { buildYear(year) }
     }
 
     private fun buildYear(year: Int): List<CalendarEvent> {
-        val dates = if (hasBundledYear(year)) bundledDates.getValue(year) else null
-        val events = when {
-            year in capturedYears -> snapshot.getValue(year)
-            dates != null -> RecurringEvents.fromDates(year, RecurringEvents.rules
-                .filter { year in it.fromYear..it.throughYear }
-                .associateWith { dates.getValue("calculated:${it.id}") })
-            else -> RecurringEvents.forYear(year)
-        }.toMutableList()
-        val holyDays = dates?.getValue("sil") ?: generateSequence(LocalDate.of(year, 1, 1)) { it.plusDays(1) }
-            .takeWhile { it.year == year }.filter { KhmerCalendar.fromGregorian(it).isHolyDay }.toList()
-        holyDays.forEach { date ->
-            events.add(CalendarEvent("sil", date, L.text("event.holy_day", true), L.text("event.holy_day", false), EventKind.HOLY_DAY, DateBasis.KHMER_LUNAR))
+        val events = mutableListOf<CalendarEvent>()
+
+        // 1. Static date-backed events (Chinese festivals & UNESCO milestones)
+        for (event in staticEvents) {
+            val dates = event.dates ?: continue
+            for (dateStr in dates) {
+                if (!dateStr.startsWith("$year-")) continue
+                val date = LocalDate.parse(dateStr)
+                events.add(
+                    CalendarEvent(
+                        id = event.id,
+                        date = date,
+                        titleKm = event.names.km,
+                        titleEn = event.names.en,
+                        kind = EventKind.OBSERVANCE,
+                        basis = DateBasis.RECORDED,
+                        sourceIds = event.sourceIds,
+                    )
+                )
+            }
         }
-        return events.sortedWith(compareBy({ it.date }, { it.kind.ordinal }, { it.id }))
+
+        // 2. Recurring events evaluated via engine, with historical date overrides
+        val yearOverrides = overridesByYear[year].orEmpty()
+        for (event in RecurringEvents.recurrenceEvents) {
+            val rule = event.rule ?: continue
+            if (year < rule.fromYear || year > rule.throughYear) continue
+
+            val override = yearOverrides.firstOrNull { it.eventId == event.id }
+            val replacement = override?.let { o ->
+                EventDateOverride(
+                    o.eventId,
+                    year,
+                    o.dates.map { iso ->
+                        val parts = iso.split('-').map { it.toInt() }
+                        GregorianDate(parts[0], parts[1], parts[2])
+                    }.toTypedArray(),
+                    o.sourceId,
+                    o.reason,
+                )
+            }
+
+            val occurrences = KhmerCalendar.engine.evaluateRule(year, rule, replacement)
+            val names = eventNames(event, year)
+
+            for (occ in occurrences) {
+                if (occ.date.year != year) continue
+                val date = LocalDate.of(occ.date.year, occ.date.month, occ.date.day)
+                if (event.kind == "historical" && event.originalDate != null) {
+                    if (date < LocalDate.parse(event.originalDate)) continue
+                }
+
+                val isCorrected = occ.basis == "source_override"
+                val sourceIds = if (isCorrected && !occ.sourceId.isNullOrEmpty()) listOf(occ.sourceId!!) else event.sourceIds
+
+                events.add(
+                    CalendarEvent(
+                        id = event.id,
+                        date = date,
+                        titleKm = names.km,
+                        titleEn = names.en,
+                        kind = EventKind.OBSERVANCE,
+                        basis = if (isCorrected) DateBasis.CORRECTED else DateBasis.CALCULATED,
+                        sourceIds = sourceIds,
+                    )
+                )
+            }
+        }
+
+        // 3. Official public holiday calendars (2020–2027)
+        val holidayCalendar = holidayCalendars[year]
+        if (holidayCalendar != null) {
+            for (h in holidayCalendar.holidays) {
+                if (h.status == "cancelled") continue
+                val (url, citationEn, citationKm) = getSourceInfo(h.sourceIds)
+                val candidateIds = setOfNotNull(h.id, h.eventId)
+                val holidayNames = formatHolidayNames(h, year)
+
+                for (dateStr in h.dates) {
+                    val date = LocalDate.parse(dateStr)
+                    val existingIndex = events.indexOfFirst { it.date == date && it.id in candidateIds }
+                    if (existingIndex >= 0) {
+                        val existing = events[existingIndex]
+                        events[existingIndex] = existing.copy(
+                            kind = EventKind.HOLIDAY,
+                            basis = DateBasis.OFFICIAL,
+                            titleKm = holidayNames.km.ifBlank { existing.titleKm },
+                            titleEn = holidayNames.en.ifBlank { existing.titleEn },
+                            sourceIds = (existing.sourceIds + h.sourceIds).distinct(),
+                            officialSourceUrl = url ?: existing.officialSourceUrl,
+                            citation = citationEn ?: existing.citation,
+                            citationEn = citationEn ?: existing.citationEn,
+                            citationKm = citationKm ?: existing.citationKm,
+                        )
+                    } else {
+                        events.add(
+                            CalendarEvent(
+                                id = h.id,
+                                date = date,
+                                titleKm = holidayNames.km,
+                                titleEn = holidayNames.en,
+                                kind = EventKind.HOLIDAY,
+                                basis = DateBasis.OFFICIAL,
+                                officialSourceUrl = url,
+                                citation = citationEn,
+                                citationEn = citationEn,
+                                citationKm = citationKm,
+                                sourceIds = h.sourceIds,
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        // 4. Buddhist Holy Days (Thngai Sil)
+        val holyDays = generateSequence(LocalDate.of(year, 1, 1)) { it.plusDays(1) }
+            .takeWhile { it.year == year }
+            .filter { KhmerCalendar.fromGregorian(it).isHolyDay }
+        for (date in holyDays) {
+            events.add(
+                CalendarEvent(
+                    id = "sil",
+                    date = date,
+                    titleKm = L.text("event.holy_day", true),
+                    titleEn = L.text("event.holy_day", false),
+                    kind = EventKind.HOLY_DAY,
+                    basis = DateBasis.KHMER_LUNAR,
+                )
+            )
+        }
+
+        events.sortWith(compareBy({ it.date }, { it.kind.ordinal }, { it.id }))
+        return events
     }
 }

@@ -5,8 +5,13 @@ import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.domain.KhmerCalendar
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.time.LocalDate
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [32])
 class RecurringEventsTest {
     @Test fun reviewedRulesMatchCapturedDatesExceptHistoricalOfficialBirthdayLeave() {
         val reference = javaClass.getResourceAsStream("/recurrence-reference.tsv")!!.bufferedReader().useLines { lines ->
@@ -31,14 +36,10 @@ class RecurringEventsTest {
             expectedDifferences.add("$year king_sihamoni_birthday: source=[$year-05-13, $year-05-14, $year-05-15], calculated=[$year-05-14]")
         }
         assertEquals(expectedDifferences, differences)
-        // Source identities come from the unchanged dated resource, not editable names.
-        val newYearIds = javaClass.getResourceAsStream("/calendar-events.tsv")!!.bufferedReader().useLines { lines ->
-            lines.filter { !it.startsWith('#') && it.contains("Khmer New Year - ") }
-                .map { "website:" + it.substringBefore('\t') }.toSet()
-        }
-        val capturedNewYear = EventRepository.forYear(2012).filter { it.id in newYearIds }
+
+        val capturedNewYear = EventRepository.forYear(2012).filter { it.id.startsWith("khmer_new_year_") }
         assertEquals((13..15).map { LocalDate.of(2012, 4, it) }, capturedNewYear.map { it.date })
-        assertTrue(capturedNewYear.all { it.basis == DateBasis.WEBSITE })
+        assertTrue(capturedNewYear.all { it.basis == DateBasis.CALCULATED })
     }
 
     @Test fun rulesHaveOneAnnualAnchorAndUniqueOccurrencesAcrossTheSupportedRange() {
@@ -65,37 +66,41 @@ class RecurringEventsTest {
 
     @Test fun historicalYearsDoNotAcquireModernNationalEventsOrUnsupportedRules() {
         val old = RecurringEvents.forYear(1999)
-        assertTrue(old.any { it.id == "calculated:new_year_day" })
-        assertTrue(old.any { it.id == "calculated:meak_bochea" })
-        assertFalse(old.any { it.id == "calculated:constitution_day" || it.id == "calculated:victory_over_genocide" })
-        assertFalse(RecurringEvents.forYear(2000).any { it.id == "calculated:national_fish_day" })
-        assertTrue(RecurringEvents.forYear(2001).any { it.id == "calculated:national_fish_day" })
+        assertTrue(old.any { it.id == "new_year_day" })
+        assertTrue(old.any { it.id == "meak_bochea" })
+        assertFalse(old.any { it.id == "constitution_day" || it.id == "victory_over_genocide" })
+        assertFalse(RecurringEvents.forYear(2000).any { it.id == "national_fish_day" })
+        assertTrue(RecurringEvents.forYear(2001).any { it.id == "national_fish_day" })
         assertFalse(RecurringEvents.rules.any { it.id in setOf("buddhist_lent_candles", "chinese_new_year_day1", "qingming_festival") })
     }
 
-    @Test fun datedSnapshotWinsWithoutAddingPredictionsToAnyCoveredYear() {
-        for (year in 2000..2030) assertFalse(EventRepository.forYear(year).any { it.basis == DateBasis.CALCULATED })
+    @Test fun dynamicCalculationProducesCorrectBasesAcrossCoveredYears() {
+        for (year in 2005..2019) {
+            val birthday = EventRepository.forYear(year).filter { it.id == "king_sihamoni_birthday" }
+            assertEquals(listOf(LocalDate.of(year, 5, 13), LocalDate.of(year, 5, 14), LocalDate.of(year, 5, 15)), birthday.map { it.date })
+            assertTrue(birthday.all { it.basis == DateBasis.CORRECTED })
+        }
         for (year in listOf(1800, 1900, 1993, 1999, 2031, 2200)) {
             val actual = EventRepository.forYear(year)
             assertEquals(RecurringEvents.forYear(year).toSet(), actual.filter { it.basis == DateBasis.CALCULATED }.toSet())
             assertTrue(actual.any { it.kind == EventKind.HOLY_DAY })
-            assertTrue(actual.none { it.kind == EventKind.HOLIDAY || it.basis == DateBasis.WEBSITE })
+            assertTrue(actual.none { it.kind == EventKind.HOLIDAY })
         }
     }
 
     @Test fun ordainedDragonMonkAndPreLentTraditionsCalculateFor1993AndAllYears() {
         val events1993 = EventRepository.forYear(1993)
-        val dragon1993 = events1993.firstOrNull { it.id == "calculated:the_ordained_dragon_monk" }
+        val dragon1993 = events1993.firstOrNull { it.id == "the_ordained_dragon_monk" }
         assertNotNull(dragon1993)
         assertEquals(LocalDate.of(1993, 8, 1), dragon1993!!.date)
         assertEquals("The Ordained Dragon Monk", dragon1993.titleEn)
         assertEquals("ពិធី​បំបួស​នាគ​ខ្នាន", dragon1993.titleKm)
 
-        val candles1993 = events1993.firstOrNull { it.id == "calculated:buddhist_lent_candles_making_day" }
+        val candles1993 = events1993.firstOrNull { it.id == "buddhist_lent_candles_making_day" }
         assertNotNull(candles1993)
         assertEquals(LocalDate.of(1993, 7, 26), candles1993!!.date)
 
-        val lent1993 = events1993.firstOrNull { it.id == "calculated:beginning_buddhist_lent" }
+        val lent1993 = events1993.firstOrNull { it.id == "beginning_buddhist_lent" }
         assertNotNull(lent1993)
         assertEquals(LocalDate.of(1993, 8, 3), lent1993!!.date)
     }
@@ -113,26 +118,26 @@ class RecurringEventsTest {
     @Test fun royalHolidaysAndNationalHeritageCalculateWithAnniversariesForFutureYears() {
         val events2031 = EventRepository.forYear(2031)
 
-        val sihampni = events2031.single { it.id == "calculated:king_sihamoni_birthday" }
-        assertEquals(LocalDate.of(2031, 5, 14), sihampni.date)
+        val sihamoni = events2031.single { it.id == "king_sihamoni_birthday" }
+        assertEquals(LocalDate.of(2031, 5, 14), sihamoni.date)
 
-        val queenMother = events2031.single { it.id == "calculated:queen_mother_birthday" }
+        val queenMother = events2031.single { it.id == "queen_mother_birthday" }
         assertEquals(LocalDate.of(2031, 6, 18), queenMother.date)
 
-        val kingFather = events2031.single { it.id == "calculated:king_father_commemoration" }
+        val kingFather = events2031.single { it.id == "king_father_commemoration" }
         assertEquals(LocalDate.of(2031, 10, 15), kingFather.date)
 
-        val coronation = events2031.single { it.id == "calculated:king_coronation_day" }
+        val coronation = events2031.single { it.id == "king_coronation_day" }
         assertEquals(LocalDate.of(2031, 10, 29), coronation.date)
 
-        val peaceDay = events2031.single { it.id == "calculated:peace_day_cambodia" }
+        val peaceDay = events2031.single { it.id == "peace_day_cambodia" }
         assertEquals(LocalDate.of(2031, 12, 29), peaceDay.date)
 
-        val angkor = events2031.single { it.id == "calculated:angkor_wat_unesco" }
+        val angkor = events2031.single { it.id == "angkor_wat_unesco" }
         assertEquals(LocalDate.of(2031, 12, 14), angkor.date)
         assertTrue(angkor.titleKm.contains("៣៩")) // 2031 - 1992 = 39
 
-        val preahVihear = events2031.single { it.id == "calculated:preah_vihear_unesco" }
+        val preahVihear = events2031.single { it.id == "preah_vihear_unesco" }
         assertEquals(LocalDate.of(2031, 7, 7), preahVihear.date)
         assertTrue(preahVihear.titleKm.contains("២៣")) // 2031 - 2008 = 23
     }

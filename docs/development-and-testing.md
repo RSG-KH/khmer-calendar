@@ -38,7 +38,7 @@ Connected tests require a running emulator or device listed by `adb devices`.
 | --- | --- |
 | Calendar adapters | Supported range, date conversion, localized year labels and festival results |
 | Pinned reference fixtures | Compatibility through the app adapters, including the reviewed 2012 correction |
-| Event repository and recurrence | Snapshot precedence, all 71 precomputed years against current engine results, rule translation, captured-date comparisons and classification |
+| Event repository and recurrence | Catalog coverage across 1800–2200, engine parity for calculated events and holy days, recorded date lists, official holiday calendars with citations, rule translation, captured-date comparisons and classification |
 | Reminder planner and delivery | Category controls, appearance changes preserving alarms, permissions, saved event instants, clock/time-zone broadcasts without an activity, daylight saving and repeats |
 | Today refresh | Visible-only polling, immediate refresh on return, midnight, clock jumps and device time-zone changes |
 | Compose UI | Phone/tablet layouts, both languages, dialogs, font scaling and settings |
@@ -63,16 +63,8 @@ The catalog generates `translations.tsv`, `event-translations.tsv` and launcher 
 
 ## Event resources
 
-The app owns its event snapshot and recurrence definitions separately from the engine. Normal builds use their committed resources and do not run Python generators.
+The app owns its event catalog separately from the engine. Normal builds use the committed `khmer-calendar-data.json` and do not run any generator.
 
-To update recurrence definitions, edit `tools/recurring-event-rules.json`, then run:
+To change event definitions, official holiday years or date overrides, edit the catalog directly following the [bundled data guide](reference-event-database.md#maintenance), then run `.\gradlew.bat testDebugUnitTest`. The catalog embeds event titles and sources; the [translation catalog](#translations) continues to supply all other app strings.
 
-```powershell
-python tools/build-recurring-events.py
-```
-
-This reads the JSON manifest and writes the runtime `recurrence-rules.tsv` and captured-occurrence test fixture `recurrence-reference.tsv`. See [recurring event rules](recurring-event-rules.md) for mappings and review requirements.
-
-After changing the engine, recurrence rules or bundled year range, also regenerate `engine-event-dates.tsv` using `tools/ExportEngineEventDates.java`. Follow the [precomputed engine dates workflow](reference-event-database.md#precomputed-engine-dates); tests reject stale dates. This resource covers holy days for 1980–2050 and recurrences for 1980–1999 and 2031–2050 without altering the captured archive.
-
-Rebuilding `calendar-events.tsv` requires the saved external capture and a current daily export from the app adapter. Follow [bundled event data](reference-event-database.md#capture-artifacts-and-maintenance) before running `python tools/build-reference-events.py`; its required inputs are not included in a fresh clone. The legacy audit tool produces review artifacts and does not update runtime events.
+The retired TSV pipeline's scripts (`tools/build-recurring-events.py`, `tools/ExportEngineEventDates.java`) remain under `tools/` for history; they no longer produce runtime resources and expect files removed with the old snapshot. The capture-assist tools (`tools/reference-event-import.cjs`, `tools/audit-supplied-events.py`, `tools/generate-calendar-reference.cjs`) still support reviewing new website captures.

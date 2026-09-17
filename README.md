@@ -33,7 +33,8 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 
 ### 🏛️ Holidays & Cultural Observances
 
-- **Bundled Event Dates (1980–2050)**: Event lists use dates shipped with the app. Outside that range, observances and holy days are calculated on-device within **1800–2200**.
+- **Official Holiday Calendars (2020–2027)**: Bundled government calendars mark public holidays with their citing subdecree or ministry source, shown in event details.
+- **On-Device Event Calculation (1800–2200)**: Observances, traditional festivals and Buddhist holy days are calculated on the device from bundled rules for every supported year, with reviewed date corrections where captured records differ.
 - **Cambodian Holidays & Festivals**: Browse public holidays and traditional festivals, including Khmer New Year, Pchum Ben, Water Festival and Royal Ploughing.
 - **National & International Observances**: Includes commemorations and UN observances alongside Buddhist holy days.
 
@@ -99,9 +100,7 @@ KhmerCalendar/
 │   │   │       ├── SettingsControls.kt  # Reusable settings rows & dropdowns
 │   │   │       └── Theme.kt             # Material 3 tokens, accents, & readableSp
 │   │   ├── resources/
-│   │   │   ├── calendar-events.tsv      # Bundled holidays and observances
-│   │   │   ├── engine-event-dates.tsv   # Precalculated event dates (1980–2050)
-│   │   │   ├── recurrence-rules.tsv     # Built-in observance definitions
+│   │   │   ├── khmer-calendar-data.json # Event catalog: rules, dated records, official calendars, overrides & sources
 │   │   │   ├── translations.tsv         # Offline localization dictionary
 │   │   │   └── event-translations.tsv   # Translated event name templates
 │   │   └── assets/
@@ -162,9 +161,9 @@ Android architecture, integration and developer guides are maintained in the [`d
 - 📖 **[System Architecture](docs/architecture.md)**: Engine adapters, event repository pipeline and exact alarm subsystem.
 - 🎨 **[UI & Responsive Design](docs/ui-and-responsive-design.md)**: Phone vs. tablet layouts, landscape navigation rail distribution, dynamic scrollbar modifier, and font scaling architecture.
 - 🛠️ **[Development & Testing Guide](docs/development-and-testing.md)**: Environment configuration, test suite details, translation tool setup, and dataset generation pipelines.
-- 📜 **[Recurring Event Rules](docs/recurring-event-rules.md)**: App recurrence definitions, engine mapping and snapshot precedence.
+- 📜 **[Recurring Event Rules](docs/recurring-event-rules.md)**: App recurrence definitions, engine mapping and reviewed date overrides.
 - ✅ **[Custom Repeat Verification](docs/custom-repeat-verification.md)**: Behavior checklist and test record for repeating personal events.
-- 🗃️ **[Bundled Event Data](docs/reference-event-database.md)**: Resource formats, maintenance and cache generation.
+- 🗃️ **[Bundled Event Data](docs/reference-event-database.md)**: Event catalog schema, official holiday calendars, provenance and maintenance.
 
 ---
 

@@ -249,9 +249,9 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithTag("event-year").assertTextEquals("2026")
         compose.onNodeWithText("Constitution Day").assertIsDisplayed()
         compose.onNodeWithContentDescription("Choose year").performClick()
-        compose.onNodeWithTag("event-year-input").performTextReplacement("2027")
+        compose.onNodeWithTag("event-year-input").performTextReplacement("2028")
         compose.onNodeWithText("Go").performClick()
-        compose.onNodeWithTag("event-year").assertTextEquals("2027")
+        compose.onNodeWithTag("event-year").assertTextEquals("2028")
         compose.onNodeWithText("Search events").assertTextContains("Constitution")
         compose.onNodeWithText("Holidays").assertIsSelected()
         compose.onNodeWithText("No matching events. Try another filter or search.").assertIsDisplayed()
@@ -364,7 +364,7 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithContentDescription(L.text("ui.choose_year.0853a0", false)).performClick()
         compose.onNodeWithTag("event-year-input").performTextReplacement("2031")
         compose.onNodeWithText(L.text("ui.go.ba4f19", false)).performClick()
-        val title = EventRepository.forDate(LocalDate.of(2031, 1, 1)).single { it.id == "calculated:new_year_day" }.titleEn
+        val title = EventRepository.forDate(LocalDate.of(2031, 1, 1)).single { it.id == "new_year_day" }.titleEn
         compose.onNodeWithText(title).performScrollTo().performClick()
         compose.onNode(hasText(L.text("rules.calculated_label", false)) and hasAnyAncestor(isDialog())).assertIsDisplayed()
         compose.onNodeWithText(L.text("events.engine_calculations", false)).performScrollTo().assertIsDisplayed()

@@ -1185,6 +1185,12 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                             "ui.a_custom_event_saved_on_your_device.96d6e7" else "events.engine_calculations", k)
                         Text(description, fontSize = 14.readableSp, lineHeight = 23.readableSp)
                         if (event.kind != EventKind.CUSTOM) Text(if (k) event.titleEn else event.titleKm, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.readableSp)
+                        if (event.kind == EventKind.HOLIDAY) {
+                            val citation = if (k) (event.citationKm ?: event.citation ?: event.citationEn) else (event.citationEn ?: event.citation ?: event.citationKm)
+                            if (!citation.isNullOrBlank()) {
+                                Text(citation, fontSize = 12.readableSp, lineHeight = 18.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
                     }
                     Spacer(Modifier.height(24.dp))
                     if (event.kind == EventKind.CUSTOM) {
@@ -1238,7 +1244,8 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
     }
     val orangeColor = if (MaterialTheme.colorScheme.surface.luminance() > .5f) Color(0xFFC45E00) else Color(0xFFFFB36B)
     val holidayText = L.text("about.public_holiday_source", k)
-    val holidayName = if (k) "គេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាល" else "official government websites"
+    val holidayCandidates = if (k) listOf("ឯកសារផ្លូវការរបស់រដ្ឋ", "គេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាល") else listOf("official government publications", "official government websites")
+    val holidayName = holidayCandidates.firstOrNull { holidayText.contains(it) } ?: holidayCandidates[0]
     val holidayTitle = L.text("about.government_websites_title", k)
     val holidayUrls = listOf(
         "https://library.ncdd.gov.kh/",

@@ -1,63 +1,65 @@
 # Bundled event data
 
-The Android app packages **3,246 dated event occurrences for 2000–2030** in [`calendar-events.tsv`](../app/src/main/resources/calendar-events.tsv). These records were captured from the publicly rendered [Khmer Lunar Calendar website](https://khmer-lunar-calendar.com/) on 10 September 2026. They are app data, separate from the [shared calculation engine](shared-engine.md).
+The Android app packages its event catalog in [`khmer-calendar-data.json`](../app/src/main/resources/khmer-calendar-data.json) — one versioned JSON resource (`schemaVersion: 2`) holding recurrence rules, recorded date lists, official holiday calendars, reviewed date overrides and their sources. It is app data, separate from the [shared calculation engine](shared-engine.md). Version 0.4.0 replaced the former three-resource pipeline (the 3,246-row captured snapshot, the precomputed engine date cache and the runtime rules TSV) with this single catalog.
 
-`EventRepository` preserves the captured snapshot for 2000–2030. A separate engine-generated resource extends bundled event dates through 2050 and supplies holy days for 1980–2050. Other supported years use [calculated recurrences](recurring-event-rules.md) and holy days on demand, across 1800–2200. The Android app does not yet consume event-manager exports; replacing the captured snapshot requires a separate data migration.
+`dataVersion` inside the file tracks catalog data revisions independently of the app version. Titles are stored in the catalog itself, including `{anniversary}` placeholders resolved per year; nothing is fetched or computed from translations at load time.
 
-## Precomputed engine dates
+## Catalog structure
 
-[`engine-event-dates.tsv`](../app/src/main/resources/engine-event-dates.tsv) contains 6,240 ID/date pairs: holy days for 1980–2050 and applicable recurrences for 1980–1999 and 2031–2050. It is generated with the app's pinned engine and recurrence rules, not captured from a website. It stores no translated titles: Android resolves titles and anniversary numbers from the current translation catalog when a year is requested.
-
-The two fields are `id` and Gregorian `date`. IDs use `sil` for holy days (`KHMER_LUNAR`) or `calculated:<rule-id>` for observances (`CALCULATED`). Calculated records have no official holiday status or source URL. Chinese festivals still appear only in the captured 2000–2030 records; this cache does not add new recurrence rules.
-
-Regenerate this file whenever the engine, recurrence definitions or bundled year range changes:
-
-1. Run `.\gradlew.bat :app:compileDebugKotlin` to compile the current adapter and rules against the verified engine release.
-2. Run `tools/ExportEngineEventDates.java` with the compiled debug Kotlin classes, `app/src/main/resources`, the pinned engine JAR and Kotlin stdlib on the Java classpath. Pass `app/src/main/resources/engine-event-dates.tsv` as the output argument. The generator reads the year ranges from `EventRepository` and calls the engine directly through the app adapters; it does not read the existing cache.
-3. Run `.\gradlew.bat testDebugUnitTest`. `EventRepositoryTest` compares all 71 bundled years with fresh engine results, including recurrence dates, holy days, unique IDs and classification. Review the resulting data diff before committing.
-
-Normal builds package this committed file without regenerating it. No initial precaching job, network request or writable on-device database is needed.
-
-## Runtime format and classification
-
-Each non-comment TSV row contains five tab-separated fields:
-
-| Field | Meaning |
+| Top-level field | Contents |
 | --- | --- |
-| `id` | Stable occurrence identifier derived from the captured date and original label |
-| `date` | Gregorian date in `YYYY-MM-DD` format |
-| `title_km` | Captured Khmer title |
-| `title_en` | Captured English title |
-| `official_source_url` | Year-specific holiday source, or an empty field |
+| `schemaVersion` | Catalog schema major version; the current bundle is `2` |
+| `dataVersion` | Data revision of this bundle |
+| `sources` | Provenance records referenced by `sourceIds` elsewhere |
+| `events` | 124 event definitions: rules and recorded dates |
+| `holidayCalendars` | Official public-holiday calendars, one per year (2020–2027) |
+| `overrides` | Reviewed per-year date replacements for specific events |
+| `eventCalendars` | Reserved for future per-year calendar records; currently empty |
 
-Android assigns `DateBasis.WEBSITE` and prefixes IDs with `website:`. A nonempty official-source URL produces `EventKind.HOLIDAY`; other records are `OBSERVANCE`. Translated titles are applied through `event-translations.tsv`, generated from the [translation catalog](../translations/catalog.json). Multiple events and multi-day festival occurrences remain separate records.
+### Sources
 
-The importer matched **44 holiday date/event pairs in 2025–2026** against the transcribed [2025 Ministry of Economy and Finance calendar](https://mef.gov.kh/calendar-holiday-2025/) and [2026 Legal Reform Committee calendar](https://lrc.gov.kh/en/annual-holiday-calendar-2026/). The checked inputs are in [`tools/reference-government-holidays.json`](../tools/reference-government-holidays.json). Holiday status is not inferred for other years.
+Each source records `id`, `kind` (`government` or `calendar`), `title`, `publisher` and optional `url`, `reference`, `publishedOn` and `notes`. The bundle currently carries one calendar source — the [Khmer Lunar Calendar website](https://khmer-lunar-calendar.com/) capture of 10 September 2026 that reviewed the event definitions — and ten government sources: the annual holiday subdecrees for 2020–2027, the [2025 Ministry of Economy and Finance calendar](https://mef.gov.kh/calendar-holiday-2025/) and the [2026 Legal Reform Committee calendar](https://lrc.gov.kh/en/annual-holiday-calendar-2026/). Event details cite the first government source carrying a reference or URL.
+
+### Events
+
+Each event has `id`, `kind` (`observance`, `traditional` or `historical`), bilingual `names` (plus optional `description`), `sourceIds`, and one of two date carriers:
+
+- **`rule`** (100 events): engine `RecurrenceRule` fields — 72 `solar`, 23 `khmer_lunar`, 2 `solar_nth_weekday` and the 3 Khmer New Year stages. Optional `anniversaryBase` inserts `year − anniversaryBase` into the `{anniversary}` title placeholder. `historical` events may set `originalDate`, before which occurrences are suppressed.
+- **`dates`** (24 events): explicit ISO date lists — the nine Chinese festivals (each 31 captured years) and fifteen fixed heritage milestones such as the UNESCO inscription anniversaries. These are emitted as `DateBasis.RECORDED` without calculation.
+
+### Holiday calendars and overrides
+
+Each `holidayCalendars` year carries `coverage` (`complete` for all bundled years) and `holidays` with `id`, bilingual `names`, explicit `dates`, `status` (`cancelled` entries are skipped), `sourceIds` and an optional `eventId` linking a catalog event — used to resolve `{anniversary}` counts. Years 2020–2027 are bundled; 173 official days in total, each carrying a subdecree or ministry citation.
+
+`overrides` pin a specific `eventId`/`year` to explicit `dates`, with a mandatory `sourceId` and `reason`. They preserve reviewed differences between captured records and the calculation — currently the 2005–2019 three-day King Sihamoni birthday holiday blocks, where the rule yields only May 14. Overridden occurrences use `DateBasis.CORRECTED`.
+
+## Runtime loading and precedence
+
+`RecurringEvents` parses the catalog lazily on first use. For each requested year, `EventRepository.buildYear` layers:
+
+1. Recorded `dates` entries falling in the year (`RECORDED`).
+2. Rule events within `fromYear`..`throughYear`, evaluated by the engine with any year override passed as an `EventDateOverride` (`CALCULATED`, or `CORRECTED` when the override supplies the dates).
+3. The year's official holiday calendar, which promotes matching calculated occurrences — or adds new events — to `EventKind.HOLIDAY` with `DateBasis.OFFICIAL`, merging citations and source references; cancelled entries are skipped.
+4. Buddhist holy days, computed day by day from the engine (`KHMER_LUNAR`).
+
+Every supported year 1800–2200 is built this way on demand and cached in memory per year. Outside 2020–2027 no event is marked as an official holiday; a calculated festival date alone never establishes government leave. The former `DateBasis.WEBSITE` classification no longer occurs at runtime.
+
+Normal builds package the committed catalog; there is no on-device database, precaching job or network request for built-in events.
 
 ## Provenance and limits
 
-The capture covered 372 months and 11,323 consecutive dates. The original review database contained those dates, 3,246 event occurrences and 1,533 holy-day flags. Its comparison report checked the captured lunar labels and holy-day flags against the app calculation available at capture time. Those historical counts are not a fresh audit of the released engine.
+The catalog's event definitions were compiled by reviewing the publicly rendered Khmer Lunar Calendar website, captured on 10 September 2026 across 372 months and 11,323 consecutive dates (3,246 event occurrences). The capture is credited in Settings → Calendar sources & licenses; the raw capture artifacts are not versioned. The review established what the website displayed, not independent historical validation: ceremony occurrence, cancellations and future holiday decisions require year-specific government records, which is exactly what the official holiday calendars and overrides carry, with their limits stated above.
 
-The records establish what the website displayed when captured. They do not independently establish historical ceremony occurrence, cancellations, future holiday decisions or the correctness of recorded anniversary counts and New Year arrival times. Arrival text is preserved as source data and is not used to schedule notifications. No reference-app executable code or imagery was copied. The original review did not establish an open-data reuse license from the publisher's pages.
+Chinese festival dates are recorded lists, not calculated rules; they exist only for their captured years. Anniversaries and other counts inherit the catalog's `anniversaryBase` values and are only as accurate as the reviewed definitions.
 
-A separately supplied legacy database contained 43 recurrence definitions and no dated archive. It was used as a review input, not as a replacement snapshot. Its unverified holiday flags, missing leap-month policies and incomplete festival durations must not be imported as historical facts. Current fallback behavior is defined by the versioned recurrence manifest and its tests.
+## Maintenance
 
-## Capture artifacts and maintenance
+Edit `khmer-calendar-data.json` directly, keeping event IDs stable and recording sources for any new or changed dates:
 
-Normal builds use the committed TSV and need neither capture tools nor Python. The raw JSON, SQLite database and original audit report are not versioned; regenerating the snapshot requires the saved external capture.
+- Adding an official holiday year: append a `holidayCalendars` entry with its subdecree source, then extend `EventRepositoryTest`'s expectations.
+- Correcting a calculated date: add an `overrides` entry with `sourceId` and `reason`; tests will then expect the corrected dates.
+- Changing a rule: update the event's `rule`, then re-run the tests below.
 
-| File under `artifacts/reference-events/` | Purpose |
-| --- | --- |
-| `site-observed-months.json` | Required input: captured month grids and original labels |
-| `app-lunar-reference.csv` | Required input: daily results exported from the current Android adapter |
-| `khmer-calendar-reference-2000-2030.sqlite` | Generated review database with daily observations, occurrences, source fields and capture metadata |
-| `audit.json` | Generated coverage, calendar and government-snapshot comparisons |
+`RecurringEventsTest` compares every rule against the committed captured-occurrence fixture [`recurrence-reference.tsv`](../app/src/test/resources/recurrence-reference.tsv) for 2000–2030, allowing exactly the documented King Sihamoni birthday differences (which the repository layer resolves through overrides). `EventRepositoryTest` re-checks catalog coverage, engine parity for calculated events and holy days across sampled years, the recorded Chinese festival and milestone dates, and every official calendar's day counts, URLs and citations. Run `.\gradlew.bat testDebugUnitTest` after any catalog change.
 
-For a deliberate snapshot rebuild:
-
-1. Restore the saved `site-observed-months.json` to the artifact directory. New captures use the rendered month header and consecutive grid dates; `tools/reference-event-import.cjs` accepts reviewed batches locally.
-2. Build the app classes. Run `tools/ExportCalendarReference.java` with the compiled debug Kotlin classes, the pinned engine JAR and Kotlin stdlib on the Java classpath, passing `artifacts/reference-events/app-lunar-reference.csv` as its output argument.
-3. Run `python tools/build-reference-events.py`. It validates coverage and comparisons before publishing the SQLite database, audit and runtime TSV.
-4. Review changes to dates, IDs, translations and holiday provenance. Update dependent translation and recurrence fixtures as needed, then run the [app tests](development-and-testing.md#testing).
-
-`tools/audit-supplied-events.py "<event-database-directory>"` remains available for comparing a legacy candidate with the bundled snapshot and daily export. It produces review artifacts only. Calendar algorithm evidence is maintained in the engine project, as linked from the integration guide.
+The scripts of the retired TSV pipeline (`tools/build-recurring-events.py`, `tools/ExportEngineEventDates.java`) and its manifests remain under `tools/` for history; they no longer produce runtime resources and expect files that were removed with the snapshot. The capture-assist tools (`tools/reference-event-import.cjs`, `tools/audit-supplied-events.py`, `tools/generate-calendar-reference.cjs`) still support reviewing new website captures.

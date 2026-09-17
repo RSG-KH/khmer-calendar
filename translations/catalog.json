@@ -1261,11 +1261,11 @@
       "id": "about.event_archive_source",
       "section": "about",
       "context": "CalendarApp.kt",
-      "en": "Events for 2000–2030 were captured from Khmer Lunar Calendar.",
-      "km": "ព្រឹត្តិការណ៍សម្រាប់ឆ្នាំ ២០០០–២០៣០ ត្រូវបានដកស្រង់ចេញពីប្រតិទិនចន្ទគតិខ្មែរ។",
+      "en": "Traditional Chinese festivals and historical commemorations are preserved from Khmer Lunar Calendar records.",
+      "km": "ពិធីបុណ្យប្រពៃណីចិន និងទិវាប្រវត្តិសាស្ត្រនានា ត្រូវបានដកស្រង់ចេញពីកំណត់ត្រាប្រតិទិនចន្ទគតិខ្មែរ។",
       "original": {
-        "en": "Events for 2000–2030 were captured from Khmer Lunar Calendar.",
-        "km": "ព្រឹត្តិការណ៍សម្រាប់ឆ្នាំ ២០០០–២០៣០ ត្រូវបានដកស្រង់ចេញពីប្រតិទិនចន្ទគតិខ្មែរ។"
+        "en": "Traditional Chinese festivals and historical commemorations are preserved from Khmer Lunar Calendar records.",
+        "km": "ពិធីបុណ្យប្រពៃណីចិន និងទិវាប្រវត្តិសាស្ត្រនានា ត្រូវបានដកស្រង់ចេញពីកំណត់ត្រាប្រតិទិនចន្ទគតិខ្មែរ។"
       },
       "reviewed": true,
       "required": {
@@ -1277,11 +1277,11 @@
       "id": "about.public_holiday_source",
       "section": "about",
       "context": "CalendarApp.kt",
-      "en": "Official public holidays are sourced from official government websites.",
-      "km": "ថ្ងៃឈប់សម្រាកផ្លូវការ ត្រូវបានដកស្រង់ចេញពីគេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាល។",
+      "en": "Official public holidays are confirmed from Royal Government of Cambodia Sub-Decrees (Anukret) and official government publications.",
+      "km": "ថ្ងៃឈប់សម្រាកការងារផ្លូវការ ត្រូវបានផ្ទៀងផ្ទាត់ និងបញ្ជាក់ចេញពីអនុក្រឹត្យរបស់រាជរដ្ឋាភិបាលកម្ពុជា និងឯកសារផ្លូវការរបស់រដ្ឋ។",
       "original": {
-        "en": "Official public holidays are sourced from official government websites.",
-        "km": "ថ្ងៃឈប់សម្រាកផ្លូវការ ត្រូវបានដកស្រង់ចេញពីគេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាល។"
+        "en": "Official public holidays are confirmed from Royal Government of Cambodia Sub-Decrees (Anukret) and official government publications.",
+        "km": "ថ្ងៃឈប់សម្រាកការងារផ្លូវការ ត្រូវបានផ្ទៀងផ្ទាត់ និងបញ្ជាក់ចេញពីអនុក្រឹត្យរបស់រាជរដ្ឋាភិបាលកម្ពុជា និងឯកសារផ្លូវការរបស់រដ្ឋ។"
       },
       "reviewed": true,
       "required": {
@@ -35492,11 +35492,11 @@
       "id": "rules.source_summary",
       "section": "about",
       "context": "Sources dialog: calculated recurrence coverage",
-      "en": "Selected recurring observances fill years outside 2000–2030 using Gregorian dates and the Khmer calendar. Modern fixed-date observances are not projected before their first captured year. Calculations do not confirm official leave, cancellations, or historical celebrations.",
-      "km": "ទិវា និងពិធីបុណ្យប្រចាំឆ្នាំមួយចំនួន ក្រៅពីចន្លោះឆ្នាំ ២០០០–២០៣០ ត្រូវបានគណនាផ្អែកលើប្រតិទិនសុរិយគតិ និងចន្ទគតិខ្មែរ។ ចំពោះទិវានានាក្នុងសម័យទំនើបដែលមានកាលបរិច្ឆេទថេរ មិនត្រូវបានគណនាថយក្រោយហួសឆ្នាំដែលបានកត់ត្រាដំបូងឡើយ។ ការគណនានេះមិនអាចយកជាការបញ្ជាក់អំពីថ្ងៃឈប់សម្រាកផ្លូវការ ការលុបចោល ឬការប្រារព្ធពិធីជាក់ស្ដែងក្នុងប្រវត្តិសាស្ត្រនោះទេ។",
+      "en": "Recurring observances and traditional festivals are calculated dynamically across 1800–2200 using Gregorian dates and the Khmer lunisolar calendar. Modern fixed-date observances are not projected before their historical inception. Calculations alone do not establish official government leave.",
+      "km": "ទិវា និងពិធីបុណ្យប្រចាំឆ្នាំនានា ត្រូវបានគណនាដោយស្វ័យប្រវត្តិចន្លោះឆ្នាំ ១៨០០–២២០០ ផ្អែកលើប្រតិទិនសុរិយគតិ និងចន្ទគតិខ្មែរ។ ចំពោះទិវាសម័យទំនើបដែលមានកាលបរិច្ឆេទថេរ មិនត្រូវបានគណនាថយក្រោយហួសឆ្នាំបង្កើតដំបូងឡើយ។ ការគណនានេះមិនអាចយកជាការបញ្ជាក់អំពីថ្ងៃឈប់សម្រាកការងារផ្លូវការនោះទេ។",
       "original": {
-        "en": "Selected recurring observances fill years outside 2000–2030 using Gregorian dates and the Khmer calendar. Modern fixed-date observances are not projected before their first captured year. Calculations do not confirm official leave, cancellations, or historical celebrations.",
-        "km": "ទិវា និងពិធីបុណ្យប្រចាំឆ្នាំមួយចំនួន ក្រៅពីចន្លោះឆ្នាំ ២០០០–២០៣០ ត្រូវបានគណនាផ្អែកលើប្រតិទិនសុរិយគតិ និងចន្ទគតិខ្មែរ។ ចំពោះទិវានានាក្នុងសម័យទំនើបដែលមានកាលបរិច្ឆេទថេរ មិនត្រូវបានគណនាថយក្រោយហួសឆ្នាំដែលបានកត់ត្រាដំបូងឡើយ។ ការគណនានេះមិនអាចយកជាការបញ្ជាក់អំពីថ្ងៃឈប់សម្រាកផ្លូវការ ការលុបចោល ឬការប្រារព្ធពិធីជាក់ស្ដែងក្នុងប្រវត្តិសាស្ត្រនោះទេ។"
+        "en": "Recurring observances and traditional festivals are calculated dynamically across 1800–2200 using Gregorian dates and the Khmer lunisolar calendar. Modern fixed-date observances are not projected before their historical inception. Calculations alone do not establish official government leave.",
+        "km": "ទិវា និងពិធីបុណ្យប្រចាំឆ្នាំនានា ត្រូវបានគណនាដោយស្វ័យប្រវត្តិចន្លោះឆ្នាំ ១៨០០–២២០០ ផ្អែកលើប្រតិទិនសុរិយគតិ និងចន្ទគតិខ្មែរ។ ចំពោះទិវាសម័យទំនើបដែលមានកាលបរិច្ឆេទថេរ មិនត្រូវបានគណនាថយក្រោយហួសឆ្នាំបង្កើតដំបូងឡើយ។ ការគណនានេះមិនអាចយកជាការបញ្ជាក់អំពីថ្ងៃឈប់សម្រាកការងារផ្លូវការនោះទេ។"
       },
       "reviewed": true,
       "required": {
