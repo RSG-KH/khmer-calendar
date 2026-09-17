@@ -1258,6 +1258,54 @@
       }
     },
     {
+      "id": "about.event_archive_source",
+      "section": "about",
+      "context": "CalendarApp.kt",
+      "en": "Events for 2000–2030 were captured from Khmer Lunar Calendar.",
+      "km": "ព្រឹត្តិការណ៍សម្រាប់ឆ្នាំ ២០០០–២០៣០ ត្រូវបានដកស្រង់ចេញពីប្រតិទិនចន្ទគតិខ្មែរ។",
+      "original": {
+        "en": "Events for 2000–2030 were captured from Khmer Lunar Calendar.",
+        "km": "ព្រឹត្តិការណ៍សម្រាប់ឆ្នាំ ២០០០–២០៣០ ត្រូវបានដកស្រង់ចេញពីប្រតិទិនចន្ទគតិខ្មែរ។"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.copy",
+      "section": "about",
+      "context": "CalendarApp.kt",
+      "en": "Copy",
+      "km": "ចម្លង",
+      "original": {
+        "en": "Copy",
+        "km": "ចម្លង"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.url_copied",
+      "section": "about",
+      "context": "CalendarApp.kt",
+      "en": "URL copied",
+      "km": "បានចម្លងតំណភ្ជាប់",
+      "original": {
+        "en": "URL copied",
+        "km": "បានចម្លងតំណភ្ជាប់"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
       "id": "about.calendar_engine",
       "section": "about",
       "context": "CalendarApp.kt",

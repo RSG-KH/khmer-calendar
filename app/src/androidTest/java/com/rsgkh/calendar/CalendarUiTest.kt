@@ -27,6 +27,17 @@ class CalendarUiTest : CalendarUiScenarios() {
             compose.onNodeWithText("Android · RSG-KH/khmer-calendar").assertIsDisplayed().assertHasClickAction()
             screenshot("about-$k")
             compose.onNodeWithText(L.text("ui.calendar_sources_licenses.c2bdb3", k)).performScrollTo().performClick()
+            val archiveText = L.text("about.event_archive_source", k)
+            val archiveName = if (k) "ប្រតិទិនចន្ទគតិខ្មែរ" else "Khmer Lunar Calendar"
+            compose.onNodeWithText(archiveText).performScrollTo().assertIsDisplayed().performFirstLinkClick {
+                archiveText.substring(it.start, it.end) == archiveName
+            }
+            compose.onNodeWithText("https://khmer-lunar-calendar.com/").assertIsDisplayed()
+            compose.runOnIdle {
+                assertEquals(emptyList<String>(), openedUrls)
+            }
+            compose.onNodeWithText(L.text("ui.copy", k)).assertIsDisplayed().performClick()
+            compose.onNodeWithText("https://khmer-lunar-calendar.com/").assertDoesNotExist()
             val engineText = L.text("about.calendar_engine", k)
             compose.onNodeWithText(engineText).performScrollTo().assertIsDisplayed().performFirstLinkClick {
                 engineText.substring(it.start, it.end) == "Khmer Calendar Engine"
@@ -36,7 +47,6 @@ class CalendarUiTest : CalendarUiScenarios() {
                 openedUrls.clear()
             }
             compose.onNodeWithText("Khmer Calendar Engine").assertDoesNotExist()
-            compose.onNodeWithText(if (k) "ព្រឹត្តិការណ៍សម្រាប់ឆ្នាំ ២០០០" else "Events for 2000", substring = true).assertDoesNotExist()
             screenshot("engine-sources-$k")
             val licenseHeader = compose.onNodeWithText(L.text("ui.open_source_license.ab00af", k))
             val notice = compose.onNodeWithText("Apache License", substring = true)

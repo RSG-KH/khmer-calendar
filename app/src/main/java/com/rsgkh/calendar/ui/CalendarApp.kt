@@ -3,6 +3,10 @@
 
 package com.rsgkh.calendar.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.os.Build
+import android.widget.Toast
 import com.rsgkh.calendar.i18n.L
 import com.rsgkh.calendar.i18n.CalendarWords
 
@@ -1226,17 +1230,45 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
 @Composable private fun SourcesDialog(k: Boolean, onDismiss: () -> Unit) {
     val context = LocalContext.current
     var license by rememberSaveable { mutableStateOf(false) }
+    var showArchiveUrl by remember { mutableStateOf(false) }
     val notice = remember {
         listOf("engine-LICENSE.txt", "NOTICE.txt").joinToString("\n\n") { name ->
             context.assets.open(name).bufferedReader().use { it.readText() }
         }
     }
     val orangeColor = if (MaterialTheme.colorScheme.surface.luminance() > .5f) Color(0xFFC45E00) else Color(0xFFFFB36B)
+    val archiveText = L.text("about.event_archive_source", k)
+    val archiveName = if (k) "ប្រតិទិនចន្ទគតិខ្មែរ" else "Khmer Lunar Calendar"
+    val archiveUrl = "https://khmer-lunar-calendar.com/"
     val engineText = L.text("about.calendar_engine", k)
     val engineName = "Khmer Calendar Engine"
     val engineUrl = "https://github.com/RSG-KH/khmer-calendar-engine"
     val uriHandler = LocalUriHandler.current
     val linkColor = MaterialTheme.colorScheme.primary
+    val archiveSourceAnnotated = remember(archiveText, archiveName, linkColor) {
+        buildAnnotatedString {
+            val index = archiveText.indexOf(archiveName)
+            if (index < 0) {
+                append(archiveText)
+            } else {
+                append(archiveText.substring(0, index))
+                withLink(
+                    LinkAnnotation.Clickable(
+                        tag = "archive_source_url",
+                        styles = TextLinkStyles(style = SpanStyle(
+                            color = linkColor,
+                            textDecoration = TextDecoration.Underline,
+                            fontWeight = FontWeight.Medium
+                        )),
+                        linkInteractionListener = { showArchiveUrl = true }
+                    )
+                ) {
+                    append(archiveName)
+                }
+                append(archiveText.substring(index + archiveName.length))
+            }
+        }
+    }
     val engineSourceAnnotated = remember(engineText, linkColor, uriHandler) {
         buildAnnotatedString {
             val index = engineText.indexOf(engineName)
@@ -1272,6 +1304,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
         ) {
             Text(L.text("ui.new_event_years_and_corrections_are_delivered_through_a.a6af2d", k), fontSize = 12.readableSp, color = orangeColor)
             Text(L.text("rules.source_summary", k), fontSize = 14.readableSp)
+            Text(archiveSourceAnnotated, fontSize = 14.readableSp, lineHeight = 22.readableSp)
             Text(engineSourceAnnotated, fontSize = 14.readableSp, lineHeight = 22.readableSp)
             val licenseState = L.text(if (license) "ui.expanded" else "ui.collapsed", k)
             val headerColor = MaterialTheme.colorScheme.primary
@@ -1328,6 +1361,40 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
             }
         }
     }, confirmButton = { TextButton(onClick = onDismiss) { Text(L.text("ui.close.7df7dc", k)) } })
+
+    if (showArchiveUrl) {
+        CalendarAlertDialog(
+            onDismissRequest = { showArchiveUrl = false },
+            title = { Text(archiveName, fontSize = 16.sp, lineHeight = 22.sp) },
+            text = {
+                SelectionContainer {
+                    Text(
+                        archiveUrl,
+                        fontSize = 14.readableSp,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    context.getSystemService(ClipboardManager::class.java)
+                        .setPrimaryClip(ClipData.newPlainText(archiveName, archiveUrl))
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        Toast.makeText(context, L.text("ui.url_copied", k), Toast.LENGTH_SHORT).show()
+                    }
+                    showArchiveUrl = false
+                }) {
+                    Text(L.text("ui.copy", k))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showArchiveUrl = false }) {
+                    Text(L.text("ui.close.7df7dc", k))
+                }
+            },
+        )
+    }
 }
 
 @Composable private fun EmptyEvents(k: Boolean) {
