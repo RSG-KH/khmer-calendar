@@ -32,6 +32,6 @@ To recover a saved version, stop editing, copy a backup over the project's `tran
 
 The versioned tool lives at `tools/translation` inside the Android repository. For a separate installation, set `project` in its `config.json` to the Android repository's location. To update that installation, copy `server.py`, `static`, the launchers and this README into its directory; preserve its config, logs and backups.
 
-Run `python -m unittest discover -s tools/translation -p "test_*.py"` from the repository to check saving, export, backups, placeholder validation and conflicts. `python tools/translation/server.py --export` regenerates resources after an intentional direct catalog edit. The one-time `bootstrap.py` script documents the initial extraction; it refuses to overwrite an existing catalog.
+Run `python -m unittest discover -s tools/translation -p "test_*.py"` from the repository to check saving, export, backups, placeholder validation and conflicts. `python tools/translation/server.py --export` regenerates resources after an intentional direct catalog edit.
 
 The server binds only to loopback, checks request origins and a session token, and has no endpoint for changing event dates or arbitrary files.
