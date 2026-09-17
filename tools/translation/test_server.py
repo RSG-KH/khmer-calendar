@@ -1,13 +1,12 @@
 # Copyright (c) 2026 RSG-KH | Apache-2.0 License
 import base64
-import copy
 import json
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from server import Conflict, Store, exports, render, replace_files, validate
+from server import Conflict, Store, exports, replace_files, validate
 
 PROJECT = Path(__file__).resolve().parents[2]
 
@@ -31,27 +30,6 @@ class TranslationStoreTest(unittest.TestCase):
     def edit(self, entry, **changes):
         return dict(id=entry['id'], **({k: entry[k] for k in ('en', 'km', 'reviewed')} | changes))
 
-    def test_original_templates_losslessly_cover_every_source_occurrence(self):
-        legacy_file = PROJECT / 'app/src/main/resources/calendar-events.tsv'
-        if not legacy_file.exists():
-            return
-        source_dates = {}
-        for line in legacy_file.read_text(encoding='utf-8').splitlines():
-            if not line or line.startswith('#'):
-                continue
-            key, date, _, _, _ = line.split('\t')
-            source_dates[key] = date
-        exported_events = decoded_rows((PROJECT / 'app/src/main/resources/event-translations.tsv').read_bytes())
-        reconstructed = {}
-        for entry in self.catalog['entries']:
-            for event in entry.get('occurrences', []):
-                reconstructed[event['id']] = (event['date'], *[render(entry['original'][lang], event['values'][lang]) for lang in ('km', 'en')])
-        self.assertEqual(3246, len(reconstructed))
-        self.assertEqual(len(source_dates), len(reconstructed))
-        for key, (date, km, en) in reconstructed.items():
-            self.assertEqual(source_dates[key], date)
-            self.assertEqual(exported_events[key], (km, en))
-
     def test_saved_khmer_and_multiline_text_reach_android_and_survive_reopen(self):
         entry = next(e for e in self.catalog['entries'] if e['id'] == 'language.khmer')
         original = self.store.path.read_bytes()
@@ -68,16 +46,11 @@ class TranslationStoreTest(unittest.TestCase):
         self.assertEqual([original], [p.read_bytes() for p in self.store.backups.glob('*.json')])
         self.assertNotEqual(old['revision'], new['revision'])
 
-    def test_event_correction_reaches_all_linked_years_with_original_values(self):
+    def test_event_template_edit_reaches_android_and_preserves_occurrence_data(self):
         entry = next(e for e in self.catalog['entries'] if 'anniversary' in e['required']['km'])
         result = self.store.save(self.store.public()['revision'], [self.edit(entry, km='ខួប {anniversary} — កែសម្រួល', en='Edited anniversary {anniversary}')])
-        rows = decoded_rows((self.project / 'app/src/main/resources/event-translations.tsv').read_bytes())
-        self.assertEqual(3246, len(rows))
         templates = decoded_rows((self.project / 'app/src/main/resources/translations.tsv').read_bytes())
         self.assertEqual(('ខួប {anniversary} — កែសម្រួល', 'Edited anniversary {anniversary}'), templates[entry['id']])
-        for event in entry['occurrences']:
-            self.assertEqual('ខួប ' + event['values']['km']['anniversary'] + ' — កែសម្រួល', rows[event['id']][0])
-            self.assertEqual('Edited anniversary ' + event['values']['en']['anniversary'], rows[event['id']][1])
         saved = json.loads(self.store.path.read_text(encoding='utf-8'))
         updated = next(e for e in saved['entries'] if e['id'] == entry['id'])
         self.assertEqual(entry['occurrences'], updated['occurrences'])

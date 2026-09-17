@@ -101,8 +101,7 @@ KhmerCalendar/
 │   │   │       └── Theme.kt             # Material 3 tokens, accents, & readableSp
 │   │   ├── resources/
 │   │   │   ├── khmer-calendar-data.json # Event catalog: rules, dated records, official calendars, overrides & sources
-│   │   │   ├── translations.tsv         # Offline localization dictionary
-│   │   │   └── event-translations.tsv   # Translated event name templates
+│   │   │   └── translations.tsv         # Offline localization dictionary
 │   │   └── assets/
 │   │       ├── NOTICE.txt               # Engine & upstream attribution notices
 │   │       └── engine-LICENSE.txt       # Shared engine's Apache 2.0 license

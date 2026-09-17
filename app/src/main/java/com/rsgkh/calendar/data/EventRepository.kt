@@ -19,8 +19,7 @@ enum class DateBasis {
     CORRECTED,
     RECORDED,
     KHMER_LUNAR,
-    USER,
-    WEBSITE;
+    USER;
 }
 
 data class CalendarEvent(

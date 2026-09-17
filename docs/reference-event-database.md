@@ -2,7 +2,7 @@
 
 The Android app packages its event catalog in [`khmer-calendar-data.json`](../app/src/main/resources/khmer-calendar-data.json) — one versioned JSON resource (`schemaVersion: 2`) holding recurrence rules, recorded date lists, official holiday calendars, reviewed date overrides and their sources. It is app data, separate from the [shared calculation engine](shared-engine.md). Version 0.4.0 replaced the former three-resource pipeline (the 3,246-row captured snapshot, the precomputed engine date cache and the runtime rules TSV) with this single catalog.
 
-`dataVersion` inside the file tracks catalog data revisions independently of the app version. Titles are stored in the catalog itself, including `{anniversary}` placeholders resolved per year; nothing is fetched or computed from translations at load time.
+`dataVersion` inside the file tracks catalog data revisions independently of the app version. Titles for catalog events are stored in the catalog itself, including `{anniversary}` placeholders resolved per year; only the holy-day label comes from the shared app translations.
 
 ## Catalog structure
 
@@ -42,7 +42,7 @@ Each `holidayCalendars` year carries `coverage` (`complete` for all bundled year
 3. The year's official holiday calendar, which promotes matching calculated occurrences — or adds new events — to `EventKind.HOLIDAY` with `DateBasis.OFFICIAL`, merging citations and source references; cancelled entries are skipped.
 4. Buddhist holy days, computed day by day from the engine (`KHMER_LUNAR`).
 
-Every supported year 1800–2200 is built this way on demand and cached in memory per year. Outside 2020–2027 no event is marked as an official holiday; a calculated festival date alone never establishes government leave. The former `DateBasis.WEBSITE` classification no longer occurs at runtime.
+Every supported year 1800–2200 is built this way on demand and cached in memory per year. Outside 2020–2027 no event is marked as an official holiday; a calculated festival date alone never establishes government leave.
 
 Normal builds package the committed catalog; there is no on-device database, precaching job or network request for built-in events.
 
@@ -62,4 +62,4 @@ Edit `khmer-calendar-data.json` directly, keeping event IDs stable and recording
 
 `RecurringEventsTest` compares every rule against the committed captured-occurrence fixture [`recurrence-reference.tsv`](../app/src/test/resources/recurrence-reference.tsv) for 2000–2030, allowing exactly the documented King Sihamoni birthday differences (which the repository layer resolves through overrides). `EventRepositoryTest` re-checks catalog coverage, engine parity for calculated events and holy days across sampled years, the recorded Chinese festival and milestone dates, and every official calendar's day counts, URLs and citations. Run `.\gradlew.bat testDebugUnitTest` after any catalog change.
 
-The scripts of the retired TSV pipeline (`tools/build-recurring-events.py`, `tools/ExportEngineEventDates.java`) and its manifests remain under `tools/` for history; they no longer produce runtime resources and expect files that were removed with the snapshot. The capture-assist tools (`tools/reference-event-import.cjs`, `tools/audit-supplied-events.py`, `tools/generate-calendar-reference.cjs`) still support reviewing new website captures.
+The capture-assist tools (`tools/reference-event-import.cjs`, `tools/audit-supplied-events.py`, `tools/generate-calendar-reference.cjs`) still support reviewing new website captures. The scripts of the retired TSV pipeline were removed with the resources they generated; git history preserves them.

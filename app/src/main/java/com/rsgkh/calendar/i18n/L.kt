@@ -6,7 +6,6 @@ import java.util.Base64
 /** Generated UTF-8 catalogs are shared by Compose, calendar labels and reminders. */
 object L {
     private val words by lazy { read("translations.tsv") }
-    private val events by lazy { read("event-translations.tsv") }
     private val token = Regex("\\{([A-Za-z][A-Za-z0-9_]*)\\}")
 
     private fun read(file: String): Map<String, Pair<String, String>> {
@@ -32,6 +31,4 @@ object L {
             checkNotNull(args[match.groupValues[1]]) { "Missing ${match.value} for $key" }.toString()
         }
     }
-
-    fun eventTitle(id: String, khmer: Boolean, fallback: String): String = events[id]?.let { if (khmer) it.first else it.second } ?: fallback
 }

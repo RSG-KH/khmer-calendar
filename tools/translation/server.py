@@ -60,21 +60,17 @@ def validate(catalog):
 
 def exports(project, catalog, revision):
     validate(catalog)
-    words, events = [], []
+    words = []
     name = None
     for entry in catalog['entries']:
         if entry['id'] == 'app.name':
             name = entry
-        # Templates also serve calculated events outside the captured date range.
         words.append((entry['id'], encoded(entry['km']), encoded(entry['en'])))
-        if 'occurrences' in entry:
-            for occurrence in entry['occurrences']:
-                events.append((occurrence['id'], *[encoded(render(entry[lang], occurrence['values'][lang])) for lang in ('km', 'en')]))
     def tsv(rows):
         return ('# Generated from translations/catalog.json; edit with the translation tool.\n# catalog-sha256: ' + revision + '\n'
                 + '\n'.join('\t'.join(row) for row in sorted(rows)) + '\n').encode('utf-8')
     resource = project / 'app/src/main/resources'
-    outputs = {resource / 'translations.tsv': tsv(words), resource / 'event-translations.tsv': tsv(events)}
+    outputs = {resource / 'translations.tsv': tsv(words)}
     for lang, folder in [('en', 'values'), ('km', 'values-km')]:
         root = ET.Element('resources')
         element = ET.SubElement(root, 'string', name='app_name', formatted='false')

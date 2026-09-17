@@ -36,6 +36,6 @@ The rules cover Khmer festivals, royal and national commemorations, heritage ann
 
 ## Updating definitions
 
-1. Edit the event's `rule` in `khmer-calendar-data.json`, keeping IDs stable and reviewing effective years and source evidence. (`tools/recurring-event-rules.json` is the retired manifest of the old TSV pipeline; it no longer feeds the app.)
+1. Edit the event's `rule` in `khmer-calendar-data.json`, keeping IDs stable and reviewing effective years and source evidence.
 2. Update titles in `translations/catalog.json` when necessary and export translations as described in the [translation guide](../tools/translation/README.md).
 3. Run `.\gradlew.bat testDebugUnitTest` and inspect failures before committing. Tests compare rule results with the fixture, engine parity, official calendars and repository classification.
