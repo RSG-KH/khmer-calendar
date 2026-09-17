@@ -1274,6 +1274,38 @@
       }
     },
     {
+      "id": "about.public_holiday_source",
+      "section": "about",
+      "context": "CalendarApp.kt",
+      "en": "Official public holidays are sourced from official government websites.",
+      "km": "ថ្ងៃឈប់សម្រាកផ្លូវការ ត្រូវបានដកស្រង់ចេញពីគេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាល។",
+      "original": {
+        "en": "Official public holidays are sourced from official government websites.",
+        "km": "ថ្ងៃឈប់សម្រាកផ្លូវការ ត្រូវបានដកស្រង់ចេញពីគេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាល។"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "about.government_websites_title",
+      "section": "about",
+      "context": "CalendarApp.kt",
+      "en": "Official government websites",
+      "km": "គេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាល",
+      "original": {
+        "en": "Official government websites",
+        "km": "គេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាល"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
       "id": "ui.copy",
       "section": "about",
       "context": "CalendarApp.kt",

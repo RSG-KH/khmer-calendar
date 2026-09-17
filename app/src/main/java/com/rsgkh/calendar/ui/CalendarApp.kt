@@ -1230,13 +1230,21 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
 @Composable private fun SourcesDialog(k: Boolean, onDismiss: () -> Unit) {
     val context = LocalContext.current
     var license by rememberSaveable { mutableStateOf(false) }
-    var showArchiveUrl by remember { mutableStateOf(false) }
+    var urlDialogData by remember { mutableStateOf<Pair<String, String>?>(null) }
     val notice = remember {
         listOf("engine-LICENSE.txt", "NOTICE.txt").joinToString("\n\n") { name ->
             context.assets.open(name).bufferedReader().use { it.readText() }
         }
     }
     val orangeColor = if (MaterialTheme.colorScheme.surface.luminance() > .5f) Color(0xFFC45E00) else Color(0xFFFFB36B)
+    val holidayText = L.text("about.public_holiday_source", k)
+    val holidayName = if (k) "គេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាល" else "official government websites"
+    val holidayTitle = L.text("about.government_websites_title", k)
+    val holidayUrls = listOf(
+        "https://library.ncdd.gov.kh/",
+        "https://www.ocm.gov.kh/",
+        "https://www.nbc.gov.kh/",
+    ).joinToString("\n")
     val archiveText = L.text("about.event_archive_source", k)
     val archiveName = if (k) "ប្រតិទិនចន្ទគតិខ្មែរ" else "Khmer Lunar Calendar"
     val archiveUrl = "https://khmer-lunar-calendar.com/"
@@ -1245,6 +1253,30 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
     val engineUrl = "https://github.com/RSG-KH/khmer-calendar-engine"
     val uriHandler = LocalUriHandler.current
     val linkColor = MaterialTheme.colorScheme.primary
+    val holidaySourceAnnotated = remember(holidayText, holidayName, holidayTitle, linkColor) {
+        buildAnnotatedString {
+            val index = holidayText.indexOf(holidayName)
+            if (index < 0) {
+                append(holidayText)
+            } else {
+                append(holidayText.substring(0, index))
+                withLink(
+                    LinkAnnotation.Clickable(
+                        tag = "holiday_source_url",
+                        styles = TextLinkStyles(style = SpanStyle(
+                            color = linkColor,
+                            textDecoration = TextDecoration.Underline,
+                            fontWeight = FontWeight.Medium
+                        )),
+                        linkInteractionListener = { urlDialogData = holidayTitle to holidayUrls }
+                    )
+                ) {
+                    append(holidayName)
+                }
+                append(holidayText.substring(index + holidayName.length))
+            }
+        }
+    }
     val archiveSourceAnnotated = remember(archiveText, archiveName, linkColor) {
         buildAnnotatedString {
             val index = archiveText.indexOf(archiveName)
@@ -1260,7 +1292,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                             textDecoration = TextDecoration.Underline,
                             fontWeight = FontWeight.Medium
                         )),
-                        linkInteractionListener = { showArchiveUrl = true }
+                        linkInteractionListener = { urlDialogData = archiveName to archiveUrl }
                     )
                 ) {
                     append(archiveName)
@@ -1304,6 +1336,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
         ) {
             Text(L.text("ui.new_event_years_and_corrections_are_delivered_through_a.a6af2d", k), fontSize = 12.readableSp, color = orangeColor)
             Text(L.text("rules.source_summary", k), fontSize = 14.readableSp)
+            Text(holidaySourceAnnotated, fontSize = 14.readableSp, lineHeight = 22.readableSp)
             Text(archiveSourceAnnotated, fontSize = 14.readableSp, lineHeight = 22.readableSp)
             Text(engineSourceAnnotated, fontSize = 14.readableSp, lineHeight = 22.readableSp)
             val licenseState = L.text(if (license) "ui.expanded" else "ui.collapsed", k)
@@ -1362,34 +1395,39 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
         }
     }, confirmButton = { TextButton(onClick = onDismiss) { Text(L.text("ui.close.7df7dc", k)) } })
 
-    if (showArchiveUrl) {
+    urlDialogData?.let { (title, urlText) ->
         CalendarAlertDialog(
-            onDismissRequest = { showArchiveUrl = false },
-            title = { Text(archiveName, fontSize = 16.sp, lineHeight = 22.sp) },
+            onDismissRequest = { urlDialogData = null },
+            title = { Text(title, fontSize = 16.sp, lineHeight = 22.sp) },
             text = {
                 SelectionContainer {
-                    Text(
-                        archiveUrl,
-                        fontSize = 14.readableSp,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Medium,
-                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        urlText.lines().forEach { url ->
+                            Text(
+                                url,
+                                fontSize = 14.readableSp,
+                                lineHeight = 20.readableSp,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
                     context.getSystemService(ClipboardManager::class.java)
-                        .setPrimaryClip(ClipData.newPlainText(archiveName, archiveUrl))
+                        .setPrimaryClip(ClipData.newPlainText(title, urlText))
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                         Toast.makeText(context, L.text("ui.url_copied", k), Toast.LENGTH_SHORT).show()
                     }
-                    showArchiveUrl = false
+                    urlDialogData = null
                 }) {
                     Text(L.text("ui.copy", k))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showArchiveUrl = false }) {
+                TextButton(onClick = { urlDialogData = null }) {
                     Text(L.text("ui.close.7df7dc", k))
                 }
             },

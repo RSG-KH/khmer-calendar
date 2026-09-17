@@ -27,6 +27,14 @@ class CalendarUiTest : CalendarUiScenarios() {
             compose.onNodeWithText("Android · RSG-KH/khmer-calendar").assertIsDisplayed().assertHasClickAction()
             screenshot("about-$k")
             compose.onNodeWithText(L.text("ui.calendar_sources_licenses.c2bdb3", k)).performScrollTo().performClick()
+            val holidayText = L.text("about.public_holiday_source", k)
+            val holidayName = if (k) "គេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាល" else "official government websites"
+            compose.onNodeWithText(holidayText).performScrollTo().assertIsDisplayed().performFirstLinkClick {
+                holidayText.substring(it.start, it.end) == holidayName
+            }
+            compose.onNodeWithText("https://www.ocm.gov.kh/", substring = true).assertIsDisplayed()
+            compose.onNodeWithText(L.text("ui.copy", k)).assertIsDisplayed().performClick()
+            compose.onNodeWithText("https://www.ocm.gov.kh/", substring = true).assertDoesNotExist()
             val archiveText = L.text("about.event_archive_source", k)
             val archiveName = if (k) "ប្រតិទិនចន្ទគតិខ្មែរ" else "Khmer Lunar Calendar"
             compose.onNodeWithText(archiveText).performScrollTo().assertIsDisplayed().performFirstLinkClick {
