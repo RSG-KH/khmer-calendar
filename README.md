@@ -10,7 +10,7 @@
 [![Offline](https://img.shields.io/badge/Network-100%25%20Offline-success)](docs/architecture.md)
 [![Privacy](https://img.shields.io/badge/Privacy-0%20Ads%20%7C%200%20Trackers-blue)](PRIVACY_POLICY.md)
 
-A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose. It uses the shared Khmer Calendar Engine for lunar dates (*Chhankitek*), Buddhist Era and traditional year transitions, and combines stored public holidays and cultural observances with customizable local notifications.
+A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose. Browse Khmer lunar dates, Buddhist holy days, holidays and observances, and manage personal events with local reminders.
 
 **[Live Web (PWA) Calendar](https://rsg-kh.github.io/khmer-calendar-pwa/)** — Open the web version in your browser on phones, tablets, and desktops.
 
@@ -21,29 +21,30 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 ## Key Features
 
 ### 📅 Shared Khmer Calendar Engine (1800–2200)
-- Uses the dedicated [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine) for lunar dates, Buddhist Era, traditional year labels, holy days and New Year dates.
-- Android handles localized presentation, event records, personal events and reminders. See [engine integration](docs/shared-engine.md) for the dependency and [engine reference evidence](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.1.0/docs/references.md) for calculation validation and limits.
-- Western zodiac signs, elements and ruling bodies are supplied by the Android app.
+
+- Gregorian and Khmer lunar dates, Buddhist Era, animal year, Sak and New Year dates are provided by [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine).
+- Calendar algorithms, source references and validation are documented in the [engine project](https://github.com/RSG-KH/khmer-calendar-engine#verification-and-accuracy). Android supplies the interface, translations, personal events and reminders.
+- Date details also show Western zodiac signs, elements and ruling bodies.
 
 ### 🌸 Buddhist Holy Days (*Thngai Seil*)
-- Accurately tracks the 8th and 15th waxing days, and 8th and 14th/15th waning days (including 29-day month boundary adjustments).
-- Identifies Shaving Day (*Thngai Kaor*), the day immediately preceding each holy day.
-- Semi-transparent lotus artwork (25% opacity, full cell scale) marks holy day cells: a closed lotus for day 8 of either lunar phase, and a blossom for the final holy day on day 14 or 15.
-- Independent visibility toggles allow users to show or hide holy day markers in the calendar grid and event lists.
 
-### 🏛️ Bundled Events & Recurrence Rules
-- **Bundled Reference Database**: Contains **3,246 captured event occurrences** for 2000–2030. These preserve the reference website's records; they are not all independently verified.
-- **Precomputed Event Dates**: Bundles engine-calculated observances for 1980–1999 and 2031–2050 and Buddhist holy days for 1980–2050, avoiding runtime event-date calculations within that range. Other supported years are calculated on demand.
-- **Official Government Holidays**: The 2025–2026 public holiday markers use year-specific Ministry of Economy and Finance (MEF) and Legal Reform Committee (LRC) calendar snapshots.
-- **Historical & Cultural Recurrences (1800–2200)**: 100 reviewed rules calculate traditional festivals (Water Festival, Pchum Ben, Royal Ploughing, Meak Bochea, Visak Bochea, Khmer New Year) and national/UN observances outside the primary reference window.
+- Shows Buddhist holy days and Shaving Day (*Thngai Kaor*) using the engine's results.
+- Lotus artwork marks holy days, with separate visibility settings for the calendar and event lists.
+
+### 🏛️ Holidays & Cultural Observances
+
+- **Bundled Event Dates (1980–2050)**: Event lists use dates shipped with the app. Outside that range, observances and holy days are calculated on-device within **1800–2200**.
+- **Cambodian Holidays & Festivals**: Browse public holidays and traditional festivals, including Khmer New Year, Pchum Ben, Water Festival and Royal Ploughing.
+- **National & International Observances**: Includes commemorations and UN observances alongside Buddhist holy days.
 
 ### ⏰ Custom Events & Precision Notifications
 - **Local SQLite Persistence**: Create, edit, and delete personal events with titles, dates, times, and notes.
+- **Repeating Events**: Repeat every X days, weekly, monthly or yearly, with a required end date and a preview. Choose whether to skip missing month-end or leap-day dates or include the available date. Edit or delete the whole series together.
 - **Time Zone Intelligence**:
-  - **Local Time**: Follows device time zone changes during travel and daylight saving time.
-  - **Cambodia Time (UTC+7)**: Option to fix calculations to Cambodia time regardless of location.
-- **Local Alarms**: Powered by Android's `AlarmManager.setExactAndAllowWhileIdle`—delivers notifications reliably without background battery drain or remote push servers.
-- **Flexible Repeat Intervals**: Configure daily push times with repeat reminders set to **Off**, 2, 4, 6, 8, or 12 hours.
+  - **Display Time Zone**: Choose device local time or Cambodia time (UTC+7) for Today, event display and the daily reminder clock.
+  - **Repeating Event Time Zone**: Each series keeps its saved time zone and wall-clock time across daylight saving changes; occurrences are shown in the selected display zone.
+- **Local Alarms**: Android's `AlarmManager.setExactAndAllowWhileIdle` schedules reminders on-device, with notification and exact-alarm access enabled. No remote push server is used.
+- **Repeat Reminders**: Configure the daily reminder time and optional additional reminders every 2, 4, 6, 8 or 12 hours. These are separate from an event's repeat schedule.
 - **Event-Type Controls**: Choose reminders for custom events, holidays, observances, and Buddhist holy days independently.
 
 ### 📱 Adaptive Multi-Form-Factor UI
@@ -57,7 +58,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 - **Longer Weekday Names**: Optional calendar headings show Sun–Sat in English and full weekday names in Khmer. Off by default under Settings → Calendar.
 - **Weekday Colors**: Traditional weekday heading colors, with shades adapted for light and dark themes. On by default under Settings → Calendar; existing saved choices are preserved.
 - **Curated Theme Accents**: Choose from **Blue** (Default), **Lavender**, **Rose**, **Amber**, and **Lime** (*បៃតងចាស់*).
-- **Theme Modes**: Full support for System, Light (`#F3F4F8`), and OLED Dark (`#0C0E12`) modes.
+- **Theme Modes**: Initially follows the system theme; choosing Light or Dark saves that preference. Background accent is on by default, tinting pages and navigation with the chosen accent; turning it off restores neutral backgrounds.
 - **Dynamic Font Scaling**: Choose 80%, 90%, 100%, 110%, or 120% on phones, with additional 130%, 140%, and 150% options on tablets.
 - **Bilingual Experience**: Instant switching between Khmer and English with full localization.
 
@@ -75,8 +76,9 @@ KhmerCalendar/
 │   │   │   │   ├── AppPreferences.kt    # Settings (theme, accent, font scale, timezone)
 │   │   │   │   ├── CustomEventRepository.kt # Custom event CRUD (local persistence)
 │   │   │   │   ├── EventRepository.kt   # Event models & bundled snapshot loading
-│   │   │   │   └── RecurringEvents.kt   # 100-rule recurrence fallback (1800–2200)
+│   │   │   │   └── RecurringEvents.kt   # Built-in observance recurrence rules
 │   │   │   ├── domain/
+│   │   │   │   ├── EventRepeat.kt       # Custom repeat schedules, fallbacks & previews
 │   │   │   │   ├── KhmerCalendar.kt     # Shared-engine date adapter & lunar labels
 │   │   │   │   ├── KhmerDateDetails.kt  # Engine results & Android formatting
 │   │   │   │   ├── KhmerNewYear.kt      # Shared-engine festival date adapter
@@ -89,16 +91,17 @@ KhmerCalendar/
 │   │   │   │   └── ReminderPlanner.kt   # Push time & repeat interval planning
 │   │   │   └── ui/
 │   │   │       ├── CalendarApp.kt       # Main screens, responsive nav & month picker
-│   │   │       ├── CustomEventEditor.kt # Custom event creator & time zone picker
+│   │   │       ├── CustomEventEditor.kt # Custom event editor with native date/time pickers
+│   │   │       ├── EventRepeatEditor.kt # Repeat choices, end date, switches & preview
 │   │   │       ├── NotificationSettings.kt # Notification preference screens
 │   │   │       ├── Previews.kt          # Compose previews
 │   │   │       ├── Scrollbars.kt        # Zero-recomposition dynamic scrollbar
 │   │   │       ├── SettingsControls.kt  # Reusable settings rows & dropdowns
 │   │   │       └── Theme.kt             # Material 3 tokens, accents, & readableSp
 │   │   ├── resources/
-│   │   │   ├── calendar-events.tsv      # 3,246 bundled historical events (2000–2030)
-│   │   │   ├── engine-event-dates.tsv   # Precomputed recurrence and holy-day dates through 2050
-│   │   │   ├── recurrence-rules.tsv     # 100 reviewed recurrence rules (1800–2200)
+│   │   │   ├── calendar-events.tsv      # Bundled holidays and observances
+│   │   │   ├── engine-event-dates.tsv   # Precalculated event dates (1980–2050)
+│   │   │   ├── recurrence-rules.tsv     # Built-in observance definitions
 │   │   │   ├── translations.tsv         # Offline localization dictionary
 │   │   │   └── event-translations.tsv   # Translated event name templates
 │   │   └── assets/
@@ -160,7 +163,8 @@ Android architecture, integration and developer guides are maintained in the [`d
 - 🎨 **[UI & Responsive Design](docs/ui-and-responsive-design.md)**: Phone vs. tablet layouts, landscape navigation rail distribution, dynamic scrollbar modifier, and font scaling architecture.
 - 🛠️ **[Development & Testing Guide](docs/development-and-testing.md)**: Environment configuration, test suite details, translation tool setup, and dataset generation pipelines.
 - 📜 **[Recurring Event Rules](docs/recurring-event-rules.md)**: App recurrence definitions, engine mapping and snapshot precedence.
-- 🗃️ **[Reference Event Database](docs/reference-event-database.md)**: Provenance and schema for the 3,246 captured 2000–2030 event database.
+- ✅ **[Custom Repeat Verification](docs/custom-repeat-verification.md)**: Behavior checklist and test record for repeating personal events.
+- 🗃️ **[Bundled Event Data](docs/reference-event-database.md)**: Resource formats, maintenance and cache generation.
 
 ---
 
@@ -181,7 +185,7 @@ For detailed workflow instructions, consult the [Translation Tool Guide](tools/t
 
 - **Zero Network Permissions**: The application does not request the Android `INTERNET` permission.
 - **Zero Advertising or Telemetry**: No third-party SDKs, analytics, or tracking services are bundled.
-- **Local Data Ownership**: User events and preferences are stored exclusively on-device in SQLite.
+- **Local Data Ownership**: Personal events and repeat schedules are stored on-device in SQLite; settings use Android SharedPreferences.
 
 For complete details on our data practices and user controls, read our [Privacy Policy](PRIVACY_POLICY.md).
 

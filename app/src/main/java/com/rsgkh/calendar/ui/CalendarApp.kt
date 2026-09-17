@@ -91,10 +91,6 @@ private fun number(n: Int, k: Boolean) = if (k) khmerNumber(n) else n.toString()
 private fun searchText(text: String) = text.filterNot { it.isWhitespace() || it == '\u200B' }.lowercase(Locale.ROOT)
 private fun monthName(month: YearMonth, k: Boolean, short: Boolean = k) = CalendarWords.month(month.monthValue, k, short = short)
 private fun dateLabel(date: LocalDate, k: Boolean) = CalendarWords.date(date, k)
-@Composable internal fun selectionChipColors() = FilterChipDefaults.filterChipColors(
-    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-    selectedLabelColor = MaterialTheme.colorScheme.primary,
-)
 private fun kindLabel(kind: EventKind, k: Boolean) = when (kind) {
     EventKind.HOLIDAY -> L.text("ui.public_holiday.5bd66a", k)
     EventKind.OBSERVANCE -> L.text("ui.observance.5b9a87", k)
@@ -192,7 +188,10 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
         var creating by rememberSaveable { mutableStateOf(false) }
         var customFocus by rememberSaveable { mutableIntStateOf(0) }
         val displayZone = settings.todayTimeZone.zone()
-        val allCustom = remember(customEvents, displayZone) { customEvents.map { it.asCalendarEvent(displayZone) } }
+        val allCustom = remember(customEvents, displayZone, month.year, eventYear, selected.year, dateDetailText) {
+            val years = setOf(month.year, eventYear, selected.year, dateDetailText?.let { LocalDate.parse(it).year } ?: selected.year)
+            years.flatMap { year -> customEvents.flatMap { it.occurrences(LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31), displayZone) } }
+        }
         LaunchedEffect(openDateRequest) {
             openDateRequest?.first?.let { date ->
                 if (date in KhmerCalendar.minDate..KhmerCalendar.maxDate) {
@@ -332,9 +331,9 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
         detail?.let { original ->
             val event = if (original.kind == EventKind.CUSTOM) allCustom.firstOrNull { it.id == original.id } ?: original else original
             EventDialog(event, k, timeZoneLabel(settings.todayTimeZone, k), settings.showCopyButtons, onEdit = {
-            editingId = event.id.removePrefix("custom:"); detail = null; dateDetailText = null
+            editingId = event.customSeriesId ?: event.id.removePrefix("custom:"); detail = null; dateDetailText = null
         }, onDelete = {
-            onDeleteCustom(event.id.removePrefix("custom:")); detail = null
+            onDeleteCustom(event.customSeriesId ?: event.id.removePrefix("custom:")); detail = null
         }) { detail = null } }
     }
 }
@@ -737,7 +736,13 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
                 item {
                     Row(Modifier.padding(bottom = 16.dp).testTag("event-filters").horizontalScroll(filterScroll), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         val filters = listOf(0 to L.text("ui.all.c10205", k), 4 to L.text("ui.custom.917053", k), 1 to L.text("ui.holidays.8a894c", k), 2 to L.text("ui.observances.e4454c", k), 3 to L.text("ui.holy_days.9569a6", k))
-                        filters.forEach { (id, text) -> if (settings.showHolyDaysInEvents || id != 3) FilterChip(selected = filter == id, onClick = { filter = id }, colors = selectionChipColors(), label = { Text(text) }) }
+                        filters.forEach { (id, text) ->
+                            if (settings.showHolyDaysInEvents || id != 3) SelectionChip(
+                                selected = filter == id,
+                                onClick = { filter = id },
+                                label = { Text(text) },
+                            )
+                        }
                     }
                 }
                 if (events.isEmpty()) item { EmptyEvents(k) }
@@ -1112,7 +1117,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
     if (deletePrompt && event.kind == EventKind.CUSTOM) {
         val scrollState = rememberScrollState()
         CalendarAlertDialog(onDismissRequest = { deletePrompt = false }, containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp,
-            title = { Text(L.text("ui.delete_this_event.925263", k)) },
+            title = { Text(L.text(if (event.repeat != null) "repeat.delete_confirm" else "ui.delete_this_event.925263", k)) },
             text = {
                 Column(
                     modifier = Modifier.verticalScrollbar(scrollState).verticalScroll(scrollState).padding(end = 4.dp),
@@ -1161,6 +1166,10 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                         Column(verticalArrangement = Arrangement.spacedBy(if (event.kind == EventKind.CUSTOM) 14.dp else 4.dp)) {
                             Text("${dateLabel(event.date, k)} ${number(event.date.year, k)}", fontWeight = FontWeight.Medium)
                             event.time?.let { Text("$it · $zoneLabel", fontWeight = FontWeight.Medium) }
+                            event.repeat?.let { repeat ->
+                                Text("${L.text("repeat.${repeat.frequency.key}", k)} · ${L.text("repeat.end", k)} ${repeatDateLabel(repeat.until, k)}",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                             if (event.notes.isNotBlank()) Text(event.notes)
                             Text(lunar.fullLabel(k))
                             Text("${L.text("ui.buddhist_era.ea617c", k)} ${number(lunar.buddhistYear, k)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -1175,11 +1184,21 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                     }
                     Spacer(Modifier.height(24.dp))
                     if (event.kind == EventKind.CUSTOM) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            TextButton(onClick = { deleteError = false; deletePrompt = true }) { Text(L.text("ui.delete.4708f4", k), color = MaterialTheme.colorScheme.error) }
-                            Spacer(Modifier.weight(1f))
-                            TextButton(onClick = onEdit) { Text(L.text("ui.edit.bbdcac", k)) }
-                            TextButton(onClick = onDismiss) { Text(L.text("ui.close.7df7dc", k)) }
+                        if (event.repeat != null) {
+                            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                TextButton(onClick = { deleteError = false; deletePrompt = true }) { Text(L.text("repeat.delete_series", k), color = MaterialTheme.colorScheme.error) }
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End)) {
+                                    TextButton(onClick = onEdit) { Text(L.text("repeat.edit_series", k)) }
+                                    TextButton(onClick = onDismiss) { Text(L.text("ui.close.7df7dc", k)) }
+                                }
+                            }
+                        } else {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                TextButton(onClick = { deleteError = false; deletePrompt = true }) { Text(L.text("ui.delete.4708f4", k), color = MaterialTheme.colorScheme.error) }
+                                Spacer(Modifier.weight(1f))
+                                TextButton(onClick = onEdit) { Text(L.text("ui.edit.bbdcac", k)) }
+                                TextButton(onClick = onDismiss) { Text(L.text("ui.close.7df7dc", k)) }
+                            }
                         }
                     } else {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {

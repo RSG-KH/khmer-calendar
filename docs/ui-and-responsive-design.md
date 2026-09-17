@@ -21,6 +21,36 @@ Swiping, using the month arrows, or choosing a month and year selects day 1 of t
 
 When Show copy buttons is enabled, date and event details display a copy icon aligned with the first text line near the right edge. The button retains a 48 dp tap area. After copying, an accent-colored checkmark appears for two seconds, then returns to the copy icon. Copying again restarts the timer. The confirmation is also exposed to accessibility services using the translated copied message.
 
+### Custom event repeats
+
+`SelectionChip` defines the shared appearance for Events filters and Repeat choices:
+unselected chips use the theme outline at 45% opacity, and selected chips use a 1 dp
+accent border with the accent container and label colors. Both screens use this
+component so light and dark theme borders remain consistent.
+
+The event editor keeps Android's Material filter chips, switches, date picker and
+time selection dialog. Date is labeled without a fixed format; manual input still
+uses ISO dates, and Pick opens the existing calendar control. The selected date's
+time-zone offset appears in accent color beside the title. Title and End by use an
+asterisk; Notes has no optional suffix and occupies two lines,
+followed by a divider and Repeat, without an enclosing border.
+
+None hides repeat inputs and the schedule preview. Days defaults to 3 in an outlined
+number field with a floating label; Weekly, Monthly and Yearly share the required End by field. The
+end-date picker excludes dates before the start. Missing month-end options appear
+only when affected dates fall within the chosen interval. Independent switches
+include day 30 or February's last day; leaving them off skips those missing dates.
+These two rows use regular-weight labels and compact spacing while retaining native
+switch tap targets. Settings rows keep their existing styling and spacing.
+The preview shows the first dates, final date, count and skipped months/years.
+Repeat labels and messages match the PWA's English and Khmer text.
+
+Repeat chips stay in one horizontally scrollable row, matching the Events filters.
+Preview dates wrap on narrow screens. Series detail actions also wrap to
+accommodate Khmer labels. Delete series stays on the left, with Edit series and
+Close grouped on the right. Edit series and Delete series apply to all occurrences;
+the delete confirmation makes that scope explicit.
+
 ### Holy-day lotus artwork
 
 Calendar cells and date details use the supplied 300×300 PNGs unchanged: `lutos_03_300x300.png` as `holy_day_lotus.png` for day 8 of either lunar phase, and `lutos_03_blossom_300x300.png` as `holy_day_lotus_blossom.png` for the final holy day on day 14 or 15. The engine's holy-day flag controls which dates show a grid lotus, including 14 Roach in short months. Date-details shaving-day icons use the same lotus as the following holy day: closed before day 8 and blossomed before the phase end. Grid artwork keeps its 25% opacity and existing cell sizing; date-details icons remain 24 dp.
@@ -218,7 +248,7 @@ Both adaptive launcher icons use `ic_launcher_monochrome.xml` for wallpaper-tint
 
 ### Color Palette & Accents
 The **Background accent** switch follows **Accent color** under **Settings → Appearance**. It is enabled by default and persists across app restarts. When enabled, Calendar, Events and Settings blend the selected accent over the theme's base background. The bottom navigation bar, its system-navigation padding and the landscape navigation rail use the same opaque color. Changing the switch, accent or theme updates the background immediately; switching it off restores the base background.
-- **Dark Mode**: Muted background shades stay near the lightness of the neutral background `#0C0E12`: blue `#0A0E16`, lavender `#0D0D16`, rose `#100C12`, amber `#0F0E0E` and lime `#0A100C`. Lime has a clearer green shift to balance its visibility with the other accents. These are final background colors, without an additional darkening blend. Card surfaces use `#1A1D24`.
+- **Dark Mode**: Muted background shades have a subtle boost of approximately 10% in brightness and saturation: blue `#0A0F18`, lavender `#0D0D18`, rose `#110D14`, amber `#110F0F` and lime `#0A120D`. Lime keeps its clearer green shift. These are final background colors, without an additional darkening blend. The neutral background remains `#0C0E12` and card surfaces use `#1A1D24`.
 - **Light Mode**: The accent overlays base background `#F3F4F8` at 10% opacity; card surfaces use `#FFFFFF`.
 - **Theme Accents**: 5 curated accent colors selectable in Settings:
   - **Blue** (Default)

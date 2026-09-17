@@ -51,6 +51,23 @@ The [bundled data guide](reference-event-database.md) describes the 3,246 captur
 | `remind` | Reminder eligibility |
 | `zone_id` | Saved IANA time zone |
 | `offset_seconds` | Saved UTC offset, when available |
+| `repeat_frequency` / `repeat_until` | Optional custom series rule and inclusive end date |
+| `repeat_interval` | Number of days for a Days series; defaults to 3 |
+| `include_thirty` / `include_february` | Independent fallback choices for missing month-end dates |
+| `remind_after` | Save instant; earlier occurrences cannot send retrospective reminders |
+
+Database version 3 adds nullable recurrence metadata to existing rows, preserving
+their dates, saved offsets, notes and reminder eligibility. One row represents a
+whole series. `EventRepeat` generates civil dates lazily from the original anchor;
+February and 30-day fallbacks never shift later months. All repeat modes require
+an end date within 1800–2200. Yearly February 29 series can skip non-leap years or
+include February 28.
+
+Calendar and Events expand only the years being viewed, projecting each occurrence
+from its saved zone into the selected display zone. Occurrence IDs include the
+source date, with a separate series ID for editing and deletion. Both operations
+apply to the entire series. Editing a series keeps its original date, wall time and
+zone; switching a single event to a series anchors it in the editor's displayed zone.
 
 ## Reminders and notifications
 
@@ -76,6 +93,7 @@ Settings changes reschedule alarms only when reminder enablement, event categori
   - `Cambodia (UTC+7)`: Fixed to Phnom Penh time regardless of device location.
 - **Built-in Events**: Reminders trigger at the configured daily push time in the zone selected by **Today follows**: the device's local zone or Cambodia (UTC+7). Changing this setting or the device time zone reschedules the next alarm.
 - **Custom Events**: Reminders trigger at the exact instant intended in the time zone where the event was created, converting cleanly if the user switches display time zones.
+- **Custom series**: Each date resolves in the saved zone, keeping its wall time across DST. Future gaps move forward by the gap; future folds choose the first offset. The original occurrence retains its saved offset. The planner lazily searches from the current day for the next eligible occurrence, including distant leap years, while retaining the single-alarm queue. Past anchors can have future reminders, but occurrences at or before the save instant are suppressed.
 - **Repeats**: Configurable periodic repeats (**Off**, 2, 4, 6, 8, or 12 hours) use elapsed hours and stop at midnight in the selected zone for built-in events, or the saved event zone for custom events. Daylight-saving gaps move a nonexistent push time forward by the gap; repeated clock times use the first occurrence for the initial reminder.
 
 The UI reads today's date immediately when the activity becomes visible and every 30 seconds while its lifecycle is at least `STARTED`, including visible multi-window use. Polling stops when the activity is hidden and restarts with an immediate read when it returns. This keeps the Today marker current across midnight or device clock changes without hidden UI polling. Reminder delivery is independent: `AlarmManager` invokes its receiver, and the manifest-registered restore receiver recalculates the next alarm after system date/time or time-zone changes, reboot, app replacement and exact-alarm access changes.

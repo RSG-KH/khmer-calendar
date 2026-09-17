@@ -28,6 +28,40 @@ import org.junit.Test
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @LooperMode(LooperMode.Mode.PAUSED)
 class CalendarRenderTest : CalendarUiScenarios() {
+    @Test @Config(qualifiers = "w320dp-h568dp-xhdpi")
+    fun recurringEditorFitsSmallKhmerPhone() = checkRepeatLayout(FontScale.PERCENT_120, "phone")
+
+    @Test @Config(qualifiers = "w800dp-h1280dp-xhdpi")
+    fun recurringEditorFitsLargeKhmerTabletText() = checkRepeatLayout(FontScale.PERCENT_150, "tablet")
+
+    private fun checkRepeatLayout(scale: FontScale, name: String) {
+        start(AppSettings(khmer = true, theme = ThemeMode.DARK, fontScale = scale))
+        compose.onNodeWithText("ព្រឹត្តិការណ៍").performClick()
+        compose.onNodeWithContentDescription(L.text("ui.add_event.bf2f10", true)).performClick()
+        compose.onNodeWithTag("custom-title").performTextInput("ស៊េរីសាកល្បង")
+        compose.onNodeWithTag("custom-date").performTextReplacement("2026-01-31")
+        screenshot("repeat-$name-header-khmer")
+        compose.onNodeWithTag("custom-repeat").performScrollTo()
+        compose.onNodeWithTag("repeat-yearly").performScrollTo().assertIsDisplayed()
+        screenshot("repeat-$name-choices-khmer")
+        compose.onNodeWithTag("repeat-monthly").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithTag("repeat-end").performScrollTo().performTextReplacement("2026-12-31")
+        val root = compose.onRoot().getUnclippedBoundsInRoot()
+        for (key in listOf("repeat.include_thirty", "repeat.include_february")) {
+            val node = compose.onNodeWithContentDescription(L.text(key, true)).performScrollTo()
+            val bounds = node.getUnclippedBoundsInRoot()
+            org.junit.Assert.assertTrue(bounds.left >= root.left && bounds.right <= root.right)
+            node.performClick().assertIsOn()
+        }
+        compose.onNodeWithTag("repeat-count").performScrollTo().assertTextContains("១២ លើក", substring = true)
+        screenshot("repeat-$name-preview-khmer")
+        compose.onNodeWithText(L.text("ui.save.1b0623", true)).performScrollTo().performClick()
+        compose.onAllNodesWithText("ស៊េរីសាកល្បង").onFirst().performClick()
+        compose.onNodeWithText(L.text("repeat.edit_series", true)).assertIsDisplayed()
+        compose.onNodeWithText(L.text("repeat.delete_series", true)).assertIsDisplayed()
+        screenshot("repeat-$name-details-khmer")
+    }
+
     @Test fun preferencesSurviveRepositoryRecreation() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val defaults = AppSettings(ThemeMode.SYSTEM, Accent.BLUE, khmer = true, mondayFirst = false, showLongerWeekdayNames = false, showCopyButtons = false, showLunar = true,

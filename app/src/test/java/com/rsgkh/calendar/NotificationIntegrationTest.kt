@@ -28,6 +28,32 @@ import java.util.concurrent.TimeUnit
 class NotificationIntegrationTest {
     private val context get() = ApplicationProvider.getApplicationContext<Application>()
     private val now = Instant.parse("2026-09-23T21:59:00Z")
+    @Test fun recurringCustomAlarmsAdvanceThroughOccurrencesAndRespectSeriesDeletion() {
+        val first = Instant.parse("2026-09-24T02:00:00Z")
+        val series = CustomEvent(title = "Every three days", date = LocalDate.of(2026, 1, 3), time = LocalTime.of(9, 0),
+            repeat = com.rsgkh.calendar.domain.EventRepeat(com.rsgkh.calendar.domain.RepeatFrequency.DAYS, LocalDate.of(2026, 10, 3)))
+        // Use an anchor aligned to September 24 without depending on a hand-counted interval.
+        val aligned = series.copy(date = LocalDate.of(2026, 9, 21))
+        CustomEventRepository(context).use { it.save(aligned, now) }
+        AppPreferences(context).write(AppSettings(notificationsEnabled = true, khmer = false,
+            pushHolidays = false, pushObservances = false, pushHolyDays = false, todayTimeZone = TodayTimeZone.CAMBODIA))
+        EventNotifications.reschedule(context, now)
+        val alarm = Shadows.shadowOf(context.getSystemService(AlarmManager::class.java))
+        assertEquals(first.toEpochMilli(), alarm.scheduledAlarms.single().triggerAtMs)
+        EventNotifications.deliver(context, first.toEpochMilli(), first)
+        val manager = context.getSystemService(NotificationManager::class.java)
+        val posted = manager.activeNotifications.single().notification
+        assertTrue(posted.extras.getCharSequence("android.bigText").toString().contains("09:00 · Every three days"))
+        assertEquals("2026-09-24", Shadows.shadowOf(posted.contentIntent).savedIntent.getStringExtra(EventNotifications.EXTRA_DATE))
+        val next = first.plusSeconds(3 * 86400)
+        assertEquals(next.toEpochMilli(), alarm.scheduledAlarms.single().triggerAtMs)
+        EventNotifications.clearDisplayed(context)
+        CustomEventRepository(context).use { it.delete(aligned.id) }
+        // Delivery must recheck storage even if deletion beats the async reschedule.
+        EventNotifications.deliver(context, next.toEpochMilli(), next)
+        assertTrue(manager.activeNotifications.isEmpty())
+        assertTrue(alarm.scheduledAlarms.isEmpty())
+    }
     @Test fun existingDatabaseMigratesWithoutMovingSavedCambodiaEvents() {
         val file = context.getDatabasePath("custom-events.db")
         file.parentFile!!.mkdirs()
@@ -42,7 +68,7 @@ class NotificationIntegrationTest {
             assertEquals(Instant.parse("2026-09-24T02:00:00Z"), saved.instant)
             assertEquals("Keep notes", saved.notes)
             assertTrue(saved.remindersEligible)
-            assertEquals(2, repository.readableDatabase.version)
+            assertEquals(3, repository.readableDatabase.version)
         }
     }
     @Test fun localTimeAndRepeatedClockOffsetSurviveStorageAndDeterminePastEligibility() {

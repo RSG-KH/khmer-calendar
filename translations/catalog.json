@@ -1441,8 +1441,8 @@
       "id": "ui.notes_optional.fde199",
       "section": "interface",
       "context": "CustomEventEditor.kt",
-      "en": "Notes (optional)",
-      "km": "កំណត់ចំណាំ (មិនចាំបាច់)",
+      "en": "Notes",
+      "km": "កំណត់ចំណាំ",
       "original": {
         "en": "Notes (optional)",
         "km": "កំណត់ចំណាំ (មិនចាំបាច់)"
@@ -35513,7 +35513,7 @@
       "section": "interface",
       "context": "CalendarApp.kt",
       "en": "Highlight and indicator color",
-      "km": "ពណ៌សម្រាប់រំលេចនិងសញ្ញាសម្គាល់",
+      "km": "សម្រាប់រំលេចនិងសញ្ញាសម្គាល់",
       "original": {
         "en": "Highlight and indicator color",
         "km": "ពណ៌សម្រាប់រំលេចនិងសញ្ញាសម្គាល់"
@@ -35545,7 +35545,7 @@
       "section": "interface",
       "context": "Appearance switch subtitle; tint applies to all tabs and navigation",
       "en": "Tint pages and navigation",
-      "km": "ពណ៌ស្រាលសម្រាប់ទំព័រ និងរបាររុករក",
+      "km": "សម្រាប់ទំព័រ និងរបាររុករក",
       "original": {
         "en": "Tint pages and navigation",
         "km": "ពណ៌ស្រាលសម្រាប់ទំព័រ និងរបាររុករក"
@@ -35855,6 +35855,406 @@
         "km": "បានបង្រួម"
       },
       "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.label",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Repeat",
+      "km": "ធ្វើឡើងវិញ",
+      "original": {
+        "en": "Repeat",
+        "km": "ធ្វើឡើងវិញ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.none",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "None",
+      "km": "គ្មាន",
+      "original": {
+        "en": "None",
+        "km": "គ្មាន"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.days",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Days",
+      "km": "រាល់ចំនួនថ្ងៃ",
+      "original": {
+        "en": "Days",
+        "km": "រាល់ចំនួនថ្ងៃ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.weekly",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Weekly",
+      "km": "រាល់សប្ដាហ៍",
+      "original": {
+        "en": "Weekly",
+        "km": "រាល់សប្ដាហ៍"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.monthly",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Monthly",
+      "km": "រាល់ខែ",
+      "original": {
+        "en": "Monthly",
+        "km": "រាល់ខែ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.yearly",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Yearly",
+      "km": "រាល់ឆ្នាំ",
+      "original": {
+        "en": "Yearly",
+        "km": "រាល់ឆ្នាំ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.interval",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Number of days",
+      "km": "ចំនួនថ្ងៃ",
+      "original": {
+        "en": "Number of days",
+        "km": "ចំនួនថ្ងៃ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.end",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "End by",
+      "km": "បញ្ចប់ត្រឹមថ្ងៃ",
+      "original": {
+        "en": "End by",
+        "km": "បញ្ចប់ត្រឹមថ្ងៃ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.include_thirty",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Include day 30 in 30-day months",
+      "km": "រួមបញ្ចូលថ្ងៃទី ៣០ សម្រាប់ខែ៣០ថ្ងៃ",
+      "original": {
+        "en": "Include day 30 in 30-day months",
+        "km": "រួមបញ្ចូលថ្ងៃទី៣០ សម្រាប់ខែដែលមាន៣០ថ្ងៃ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.include_february",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Include day 28 or 29 of February",
+      "km": "រួមបញ្ចូលថ្ងៃទី ២៨ ឬ ២៩ ខែកុម្ភៈ",
+      "original": {
+        "en": "Include February’s last day (28 or 29)",
+        "km": "រួមបញ្ចូលថ្ងៃចុងក្រោយនៃខែកុម្ភៈ (២៨ ឬ ២៩)"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.include_february_28",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Include February 28 in non-leap years",
+      "km": "រួមបញ្ចូលថ្ងៃទី២៨ ខែកុម្ភៈ ក្នុងឆ្នាំដែលមិនមែនជាឆ្នាំបង្គ្រប់",
+      "original": {
+        "en": "Include February 28 in non-leap years",
+        "km": "រួមបញ្ចូលថ្ងៃទី២៨ ខែកុម្ភៈ ក្នុងឆ្នាំដែលមិនមែនជាឆ្នាំបង្គ្រប់"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.scheduled",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Scheduled dates",
+      "km": "កាលបរិច្ឆេទដែលបានកំណត់",
+      "original": {
+        "en": "Scheduled dates",
+        "km": "កាលបរិច្ឆេទដែលបានកំណត់"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.more",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "More occurrences",
+      "km": "ព្រឹត្តិការណ៍បន្តទៀត",
+      "original": {
+        "en": "More occurrences",
+        "km": "ព្រឹត្តិការណ៍បន្តទៀត"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.count_one",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "{count} occurrence · Last: {date}",
+      "km": "{count} លើក · ចុងក្រោយ៖ {date}",
+      "original": {
+        "en": "{count} occurrence · Last: {date}",
+        "km": "{count} លើក · ចុងក្រោយ៖ {date}"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [
+          "count",
+          "date"
+        ],
+        "km": [
+          "count",
+          "date"
+        ]
+      }
+    },
+    {
+      "id": "repeat.count_many",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "{count} occurrences · Last: {date}",
+      "km": "{count} លើក · ចុងក្រោយ៖ {date}",
+      "original": {
+        "en": "{count} occurrences · Last: {date}",
+        "km": "{count} លើក · ចុងក្រោយ៖ {date}"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [
+          "count",
+          "date"
+        ],
+        "km": [
+          "count",
+          "date"
+        ]
+      }
+    },
+    {
+      "id": "repeat.skipped",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Skip: {dates}",
+      "km": "រំលង៖ {dates}",
+      "original": {
+        "en": "Skipped: {dates}",
+        "km": "បានរំលង៖ {dates}"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [
+          "dates"
+        ],
+        "km": [
+          "dates"
+        ]
+      }
+    },
+    {
+      "id": "repeat.invalid_interval",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Enter a whole number of days, starting from 1.",
+      "km": "សូមបញ្ចូលចំនួនថ្ងៃជាចំនួនគត់ ចាប់ពី១ឡើងទៅ។",
+      "original": {
+        "en": "Enter a whole number of days, starting from 1.",
+        "km": "សូមបញ្ចូលចំនួនថ្ងៃជាចំនួនគត់ ចាប់ពី១ឡើងទៅ។"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.required_end",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Choose an end date for this repeat.",
+      "km": "សូមជ្រើសរើសថ្ងៃបញ្ចប់សម្រាប់ការធ្វើឡើងវិញនេះ។",
+      "original": {
+        "en": "Choose an end date for this repeat.",
+        "km": "សូមជ្រើសរើសថ្ងៃបញ្ចប់សម្រាប់ការធ្វើឡើងវិញនេះ។"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.invalid_end",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "End by must be on or after the start date, and no later than December 31, 2200.",
+      "km": "ថ្ងៃបញ្ចប់ត្រូវនៅថ្ងៃចាប់ផ្ដើម ឬក្រោយថ្ងៃចាប់ផ្ដើម ហើយមិនលើសពីថ្ងៃទី៣១ ខែធ្នូ ឆ្នាំ២២០០។",
+      "original": {
+        "en": "End by must be on or after the start date, and no later than December 31, 2200.",
+        "km": "ថ្ងៃបញ្ចប់ត្រូវនៅថ្ងៃចាប់ផ្ដើម ឬក្រោយថ្ងៃចាប់ផ្ដើម ហើយមិនលើសពីថ្ងៃទី៣១ ខែធ្នូ ឆ្នាំ២២០០។"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.edit_series",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Edit series",
+      "km": "កែប្រែស៊េរី",
+      "original": {
+        "en": "Edit series",
+        "km": "កែសម្រួលព្រឹត្តិការណ៍ទាំងអស់ក្នុងស៊េរី"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.delete_series",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Delete series",
+      "km": "លុបស៊េរី",
+      "original": {
+        "en": "Delete series",
+        "km": "លុបព្រឹត្តិការណ៍ទាំងអស់ក្នុងស៊េរី"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.delete_confirm",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Delete all occurrences in this series?",
+      "km": "លុបព្រឹត្តិការណ៍ទាំងអស់ក្នុងស៊េរីនេះ?",
+      "original": {
+        "en": "Delete all occurrences in this series?",
+        "km": "លុបព្រឹត្តិការណ៍ទាំងអស់ក្នុងស៊េរីនេះឬ?"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "repeat.edit_hint",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Changes apply to all occurrences in this series.",
+      "km": "ការកែប្រែអនុវត្តចំពោះព្រឹត្តិការណ៍ទាំងអស់ក្នុងស៊េរីនេះ។",
+      "original": {
+        "en": "Changes apply to all occurrences in this series.",
+        "km": "ការកែប្រែអនុវត្តចំពោះព្រឹត្តិការណ៍ទាំងអស់ក្នុងស៊េរីនេះ។"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.event_date",
+      "section": "interface",
+      "context": "EventRepeatEditor.kt / CustomEventEditor.kt / CalendarApp.kt",
+      "en": "Date",
+      "km": "កាលបរិច្ឆេទ",
+      "original": {
+        "en": "Date",
+        "km": "កាលបរិច្ឆេទ"
+      },
+      "reviewed": true,
       "required": {
         "en": [],
         "km": []

@@ -2,6 +2,7 @@
 package com.rsgkh.calendar.data
 
 import com.rsgkh.calendar.domain.KhmerCalendar
+import com.rsgkh.calendar.domain.EventRepeat
 import com.rsgkh.calendar.i18n.L
 import java.time.LocalDate
 import java.time.YearMonth
@@ -15,6 +16,8 @@ data class CalendarEvent(
     val kind: EventKind, val basis: DateBasis,
     val time: LocalTime? = null, val notes: String = "",
     val officialSourceUrl: String? = null,
+    val customSeriesId: String? = null,
+    val repeat: EventRepeat? = null,
 ) {
     fun title(khmer: Boolean) = if (khmer) titleKm else titleEn
     val key get() = "$id:$date"

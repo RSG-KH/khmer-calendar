@@ -245,13 +245,13 @@ fun accentColor(accent: Accent, dark: Boolean = false): Color = when (accent) {
     Accent.LIME -> if (dark) Color(0xFFCDDF70) else Color(0xFF647500)
 }
 
-// Muted hues near the neutral background's lightness, with a clearer green shift for lime.
+// Muted hues with a subtle boost in brightness and saturation; lime keeps its green shift.
 private fun darkAccentBackground(accent: Accent): Color = when (accent) {
-    Accent.BLUE -> Color(0xFF0A0E16)
-    Accent.LAVENDER -> Color(0xFF0D0D16)
-    Accent.ROSE -> Color(0xFF100C12)
-    Accent.AMBER -> Color(0xFF0F0E0E)
-    Accent.LIME -> Color(0xFF0A100C)
+    Accent.BLUE -> Color(0xFF0A0F18)
+    Accent.LAVENDER -> Color(0xFF0D0D18)
+    Accent.ROSE -> Color(0xFF110D14)
+    Accent.AMBER -> Color(0xFF110F0F)
+    Accent.LIME -> Color(0xFF0A120D)
 }
 
 @Composable

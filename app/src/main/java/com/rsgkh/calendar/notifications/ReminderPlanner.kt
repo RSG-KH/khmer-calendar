@@ -52,7 +52,17 @@ object ReminderPlanner {
                 if (earliest != null) break
             }
         }
-        custom.filter { it.remindersEligible }.forEach { consider(it.asCalendarEvent(reminderZone), it.zonedDateTime) }
+        custom.filter { it.remindersEligible && settings.pushCustomEvents }.forEach { source ->
+            // Scan lazily, starting today in the saved zone. This also finds a leap-day
+            // series whose next occurrence is several years away without expanding it all.
+            for (date in source.occurrenceDates(now.atZone(source.zone).toLocalDate().minusDays(1))) {
+                val start = source.atOccurrence(date)
+                if (source.remindersAfter?.let { start.toInstant() <= it } == true) continue
+                if (earliest?.let { start.toInstant() > it } == true) break
+                consider(source.asCalendarEvent(reminderZone, date), start)
+                if (start.toInstant() > now) break
+            }
+        }
         return earliest?.let { ReminderBatch(it, due.first().date, due.distinctBy { event -> event.key }, expirations.toMap()) }
     }
 }
