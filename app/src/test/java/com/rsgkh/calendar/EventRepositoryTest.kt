@@ -51,17 +51,43 @@ class EventRepositoryTest {
         assertEquals(DateBasis.RECORDED, kohKer.basis)
     }
 
-    @Test fun officialHolidayCalendarsStandardizeOffDaysWithSubDecreeCitationsAcrossEightYears() {
-        // 8 official holiday calendars (2020–2027) totaling 173 off-days
+    @Test fun officialHolidayCalendarsStandardizeOffDaysWithSubDecreeCitationsAcrossTwelveYears() {
+        assertEquals("0.3.3", RecurringEvents.catalog.dataVersion)
+        // 12 official holiday calendars (2016–2027) totaling 283 off-days
         var totalOfficialDays = 0
-        for (year in 2020..2027) {
+        for (year in 2016..2027) {
             val holidays = EventRepository.forYear(year).filter { it.kind == EventKind.HOLIDAY }
             assertTrue(holidays.isNotEmpty())
             assertTrue(holidays.all { it.basis == DateBasis.OFFICIAL })
-            assertTrue(holidays.all { it.citation != null })
+            assertTrue(holidays.all { it.citation?.startsWith("📜 Anukret No. ") == true })
+            if (year <= 2024) {
+                assertTrue(holidays.all { it.citation?.contains("signed by Prime Minister Hun Sen") == true })
+            } else {
+                assertTrue(holidays.all { it.citation?.contains("signed by Prime Minister Hun Manet") == true })
+            }
             totalOfficialDays += holidays.size
         }
-        assertEquals(173, totalOfficialDays)
+        assertEquals(283, totalOfficialDays)
+
+        // 2016 Sub-decree No. 137
+        val official2016 = EventRepository.forYear(2016).filter { it.kind == EventKind.HOLIDAY }
+        assertEquals(28, official2016.size)
+        assertTrue(official2016.all { it.citation?.contains("Anukret No. 137") == true })
+
+        // 2017 Sub-decree No. 223
+        val official2017 = EventRepository.forYear(2017).filter { it.kind == EventKind.HOLIDAY }
+        assertEquals(27, official2017.size)
+        assertTrue(official2017.all { it.citation?.contains("Anukret No. 223") == true })
+
+        // 2018 Sub-decree No. 202
+        val official2018 = EventRepository.forYear(2018).filter { it.kind == EventKind.HOLIDAY }
+        assertEquals(27, official2018.size)
+        assertTrue(official2018.all { it.citation?.contains("Anukret No. 202") == true })
+
+        // 2019 Sub-decree No. 126
+        val official2019 = EventRepository.forYear(2019).filter { it.kind == EventKind.HOLIDAY }
+        assertEquals(28, official2019.size)
+        assertTrue(official2019.all { it.citation?.contains("Anukret No. 126") == true })
 
         // 2025 MEF official calendar
         val official2025 = EventRepository.forYear(2025).filter { it.kind == EventKind.HOLIDAY }
@@ -84,13 +110,21 @@ class EventRepositoryTest {
     }
 
     @Test fun historicalKingSihamoniBirthdayOverridesApplyFor2005To2019() {
-        for (year in 2005..2019) {
+        // 2005–2015: Historical 3-day observances from website capture
+        for (year in 2005..2015) {
             val bday = EventRepository.forYear(year).filter { it.id == "king_sihamoni_birthday" }
             assertEquals(3, bday.size)
             assertEquals(listOf(LocalDate.of(year, 5, 13), LocalDate.of(year, 5, 14), LocalDate.of(year, 5, 15)), bday.map { it.date })
-            assertTrue(bday.all { it.basis == DateBasis.CORRECTED })
+            assertTrue(bday.all { it.basis == DateBasis.CORRECTED && it.kind == EventKind.OBSERVANCE })
         }
-        // From 2020 onward: 1-day official holiday or recurrence
+        // 2016–2019: 3-day official public holidays confirmed by Royal Government Sub-Decrees
+        for (year in 2016..2019) {
+            val bday = EventRepository.forYear(year).filter { it.id == "king_sihamoni_birthday" }
+            assertEquals(3, bday.size)
+            assertEquals(listOf(LocalDate.of(year, 5, 13), LocalDate.of(year, 5, 14), LocalDate.of(year, 5, 15)), bday.map { it.date })
+            assertTrue(bday.all { it.basis == DateBasis.OFFICIAL && it.kind == EventKind.HOLIDAY })
+        }
+        // From 2020 onward: 1-day official holiday (2020–2027) or recurrence (2028+)
         val bday2020 = EventRepository.forYear(2020).filter { it.id == "king_sihamoni_birthday" }
         assertEquals(listOf(LocalDate.of(2020, 5, 14)), bday2020.map { it.date })
         assertEquals(EventKind.HOLIDAY, bday2020.single().kind)

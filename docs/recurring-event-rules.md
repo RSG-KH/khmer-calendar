@@ -7,7 +7,7 @@ Android owns 100 recurrence definitions, stored on each event in the bundled [ev
 | Years | Event source |
 | --- | --- |
 | 1800–2200 | Applicable rules evaluated by the engine on demand; reviewed [overrides](reference-event-database.md#holiday-calendars-and-overrides) replace calculated dates for pinned years |
-| 2020–2027 | Official government holiday calendars overlay matching occurrences as cited public holidays |
+| 2016–2027 | Official government holiday calendars overlay matching occurrences as cited public holidays |
 
 Engine-derived Buddhist holy days are computed on demand for every supported year. User-created events are stored separately and combined with built-in events by the UI and reminder planner.
 

@@ -44,7 +44,7 @@ New engine releases do not silently change an Android build or an installed app.
 
 Version 0.1.0 corrects the former embedded calculation's 2012 New Year dates to **13–15 April**, with the animal-year change on April 13 and Sak change on April 15. Supporting publications are recorded in the engine's reference evidence above. The original MomentKH fixture is retained so the rejected April 14 start remains visible in the Android regression test.
 
-The former bundled snapshot of 3,246 captured occurrences (2000–2030) was replaced in version 0.4.0 by the Schema v2 event catalog: recurrence rules, recorded date lists, official holiday calendars for 2020–2027 and reviewed date overrides, each with source records. Captured dates that differed from the calculation — such as the 2005–2019 three-day King Sihamoni birthday blocks — are preserved as overrides with their provenance.
+The former bundled snapshot of 3,246 captured occurrences (2000–2030) was replaced in version 0.4.0 by the Schema v2 event catalog: recurrence rules, recorded date lists, official holiday calendars for 2016–2027 and reviewed date overrides, each with source records. Captured dates that differed from the calculation — such as the 2005–2019 three-day King Sihamoni birthday blocks — are preserved as overrides with their provenance.
 
 Version 0.2.0 introduces the zero-dependency `ChineseLunisolarEngine` in `commonMain` and integrates dynamic `type: "chinese_festival"` recurrence rules directly into the calculation pipeline (1900–2100). Event catalog v0.3.0 adopts these rules for all 9 traditional Chinese festivals, preserving 100% legacy parity via 3 explicit overrides (Qingming 2009 & 2029, Zongzi 2013).
 

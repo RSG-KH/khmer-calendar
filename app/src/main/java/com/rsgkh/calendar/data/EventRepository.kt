@@ -187,7 +187,7 @@ object EventRepository {
             }
         }
 
-        // 3. Official public holiday calendars (2020–2027)
+        // 3. Official public holiday calendars (2016–2027)
         val holidayCalendar = holidayCalendars[year]
         if (holidayCalendar != null) {
             for (h in holidayCalendar.holidays) {

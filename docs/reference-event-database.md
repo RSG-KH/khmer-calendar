@@ -12,13 +12,13 @@ The Android app packages its event catalog in [`khmer-calendar-data.json`](../ap
 | `dataVersion` | Data revision of this bundle |
 | `sources` | Provenance records referenced by `sourceIds` elsewhere |
 | `events` | 124 event definitions: rules and recorded dates |
-| `holidayCalendars` | Official public-holiday calendars, one per year (2020–2027) |
+| `holidayCalendars` | Official public-holiday calendars, one per year (2016–2027) |
 | `overrides` | Reviewed per-year date replacements for specific events |
 | `eventCalendars` | Reserved for future per-year calendar records; currently empty |
 
 ### Sources
 
-Each source records `id`, `kind` (`government` or `calendar`), `title`, `publisher` and optional `url`, `reference`, `publishedOn` and `notes`. The bundle currently carries one calendar source — the [Khmer Lunar Calendar website](https://khmer-lunar-calendar.com/) capture of 10 September 2026 that reviewed the event definitions — and ten government sources: the annual holiday subdecrees for 2020–2027, the [2025 Ministry of Economy and Finance calendar](https://mef.gov.kh/calendar-holiday-2025/) and the [2026 Legal Reform Committee calendar](https://lrc.gov.kh/en/annual-holiday-calendar-2026/). Event details cite the first government source carrying a reference or URL.
+Each source records `id`, `kind` (`government` or `calendar`), `title`, `publisher` and optional `url`, `reference`, `publishedOn` and `notes`. The bundle currently carries one calendar source — the [Khmer Lunar Calendar website](https://khmer-lunar-calendar.com/) capture of 10 September 2026 that reviewed the event definitions — and 14 government sources: the annual holiday subdecrees for 2016–2027, the [2025 Ministry of Economy and Finance calendar](https://mef.gov.kh/calendar-holiday-2025/) and the [2026 Legal Reform Committee calendar](https://lrc.gov.kh/en/annual-holiday-calendar-2026/). Event details cite the first government source carrying a reference or URL.
 
 ### Events
 
@@ -29,7 +29,7 @@ Each event has `id`, `kind` (`observance`, `traditional` or `historical`), bilin
 
 ### Holiday calendars and overrides
 
-Each `holidayCalendars` year carries `coverage` (`complete` for all bundled years) and `holidays` with `id`, bilingual `names`, explicit `dates`, `status` (`cancelled` entries are skipped), `sourceIds` and an optional `eventId` linking a catalog event — used to resolve `{anniversary}` counts. Years 2020–2027 are bundled; 173 official days in total, each carrying a subdecree or ministry citation.
+Each `holidayCalendars` year carries `coverage` (`complete` for all bundled years) and `holidays` with `id`, bilingual `names`, explicit `dates`, `status` (`cancelled` entries are skipped), `sourceIds` and an optional `eventId` linking a catalog event — used to resolve `{anniversary}` counts. Years 2016–2027 are bundled; 283 official days in total (110 days for 2016–2019 and 173 days for 2020–2027), each carrying a subdecree or ministry citation.
 
 `overrides` pin a specific `eventId`/`year` to explicit `dates`, with a mandatory `sourceId` and `reason`. They preserve reviewed differences between captured records and the calculation — the 2005–2019 three-day King Sihamoni birthday holiday blocks (where the rule yields only May 14) and 3 Chinese festival parity overrides (Qingming 2009 & 2029, Zongzi 2013). Overridden occurrences use `DateBasis.CORRECTED`.
 
@@ -42,7 +42,7 @@ Each `holidayCalendars` year carries `coverage` (`complete` for all bundled year
 3. The year's official holiday calendar, which promotes matching calculated occurrences — or adds new events — to `EventKind.HOLIDAY` with `DateBasis.OFFICIAL`, merging citations and source references; cancelled entries are skipped.
 4. Buddhist holy days, computed day by day from the engine (`KHMER_LUNAR`).
 
-Every supported year 1800–2200 is built this way on demand and cached in memory per year. Outside 2020–2027 no event is marked as an official holiday; a calculated festival date alone never establishes government leave.
+Every supported year 1800–2200 is built this way on demand and cached in memory per year. Outside 2016–2027 no event is marked as an official holiday; a calculated festival date alone never establishes government leave.
 
 Normal builds package the committed catalog; there is no on-device database, precaching job or network request for built-in events.
 

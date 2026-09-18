@@ -91,10 +91,15 @@ class RecurringEventsTest {
     }
 
     @Test fun dynamicCalculationProducesCorrectBasesAcrossCoveredYears() {
-        for (year in 2005..2019) {
+        for (year in 2005..2015) {
             val birthday = EventRepository.forYear(year).filter { it.id == "king_sihamoni_birthday" }
             assertEquals(listOf(LocalDate.of(year, 5, 13), LocalDate.of(year, 5, 14), LocalDate.of(year, 5, 15)), birthday.map { it.date })
             assertTrue(birthday.all { it.basis == DateBasis.CORRECTED })
+        }
+        for (year in 2016..2019) {
+            val birthday = EventRepository.forYear(year).filter { it.id == "king_sihamoni_birthday" }
+            assertEquals(listOf(LocalDate.of(year, 5, 13), LocalDate.of(year, 5, 14), LocalDate.of(year, 5, 15)), birthday.map { it.date })
+            assertTrue(birthday.all { it.basis == DateBasis.OFFICIAL })
         }
         for (year in listOf(1800, 1900, 1993, 2031, 2200)) {
             val actual = EventRepository.forYear(year)
