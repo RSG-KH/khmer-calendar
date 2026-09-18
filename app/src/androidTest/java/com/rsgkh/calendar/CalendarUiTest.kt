@@ -36,17 +36,6 @@ class CalendarUiTest : CalendarUiScenarios() {
             compose.onNodeWithText("https://www.ocm.gov.kh/", substring = true).assertIsDisplayed()
             compose.onNodeWithText(L.text("ui.copy", k)).assertIsDisplayed().performClick()
             compose.onNodeWithText("https://www.ocm.gov.kh/", substring = true).assertDoesNotExist()
-            val archiveText = L.text("about.event_archive_source", k)
-            val archiveName = if (k) "ប្រតិទិនចន្ទគតិខ្មែរ" else "Khmer Lunar Calendar"
-            compose.onNodeWithText(archiveText).performScrollTo().assertIsDisplayed().performFirstLinkClick {
-                archiveText.substring(it.start, it.end) == archiveName
-            }
-            compose.onNodeWithText("https://khmer-lunar-calendar.com/").assertIsDisplayed()
-            compose.runOnIdle {
-                assertEquals(emptyList<String>(), openedUrls)
-            }
-            compose.onNodeWithText(L.text("ui.copy", k)).assertIsDisplayed().performClick()
-            compose.onNodeWithText("https://khmer-lunar-calendar.com/").assertDoesNotExist()
             val engineText = L.text("about.calendar_engine", k)
             compose.onNodeWithText(engineText).performScrollTo().assertIsDisplayed().performFirstLinkClick {
                 engineText.substring(it.start, it.end) == "Khmer Calendar Engine"

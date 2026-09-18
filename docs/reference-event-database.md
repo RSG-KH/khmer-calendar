@@ -24,14 +24,14 @@ Each source records `id`, `kind` (`government` or `calendar`), `title`, `publish
 
 Each event has `id`, `kind` (`observance`, `traditional` or `historical`), bilingual `names` (plus optional `description`), `sourceIds`, and one of two date carriers:
 
-- **`rule`** (100 events): engine `RecurrenceRule` fields — 72 `solar`, 23 `khmer_lunar`, 2 `solar_nth_weekday` and the 3 Khmer New Year stages. Optional `anniversaryBase` inserts `year − anniversaryBase` into the `{anniversary}` title placeholder. `historical` events may set `originalDate`, before which occurrences are suppressed.
-- **`dates`** (24 events): explicit ISO date lists — the nine Chinese festivals (each 31 captured years) and fifteen fixed heritage milestones such as the UNESCO inscription anniversaries. These are emitted as `DateBasis.RECORDED` without calculation.
+- **`rule`** (109 events): engine `RecurrenceRule` fields — 72 `solar`, 23 `khmer_lunar`, 2 `solar_nth_weekday`, the 3 Khmer New Year stages, and 9 traditional Chinese festivals (`chinese_festival` with `monthPolicy: "cn-reference-utc8"` across 1900–2100). Optional `anniversaryBase` inserts `year − anniversaryBase` into the `{anniversary}` title placeholder. `historical` events may set `originalDate`, before which occurrences are suppressed.
+- **`dates`** (15 events): explicit ISO date lists for fixed heritage milestones such as the UNESCO inscription anniversaries. These are emitted as `DateBasis.RECORDED` without calculation.
 
 ### Holiday calendars and overrides
 
 Each `holidayCalendars` year carries `coverage` (`complete` for all bundled years) and `holidays` with `id`, bilingual `names`, explicit `dates`, `status` (`cancelled` entries are skipped), `sourceIds` and an optional `eventId` linking a catalog event — used to resolve `{anniversary}` counts. Years 2020–2027 are bundled; 173 official days in total, each carrying a subdecree or ministry citation.
 
-`overrides` pin a specific `eventId`/`year` to explicit `dates`, with a mandatory `sourceId` and `reason`. They preserve reviewed differences between captured records and the calculation — currently the 2005–2019 three-day King Sihamoni birthday holiday blocks, where the rule yields only May 14. Overridden occurrences use `DateBasis.CORRECTED`.
+`overrides` pin a specific `eventId`/`year` to explicit `dates`, with a mandatory `sourceId` and `reason`. They preserve reviewed differences between captured records and the calculation — the 2005–2019 three-day King Sihamoni birthday holiday blocks (where the rule yields only May 14) and 3 Chinese festival parity overrides (Qingming 2009 & 2029, Zongzi 2013). Overridden occurrences use `DateBasis.CORRECTED`.
 
 ## Runtime loading and precedence
 
@@ -48,9 +48,9 @@ Normal builds package the committed catalog; there is no on-device database, pre
 
 ## Provenance and limits
 
-The catalog's event definitions were compiled by reviewing the publicly rendered Khmer Lunar Calendar website, captured on 10 September 2026 across 372 months and 11,323 consecutive dates (3,246 event occurrences). The capture is credited in Settings → Calendar sources & licenses; the raw capture artifacts are not versioned. The review established what the website displayed, not independent historical validation: ceremony occurrence, cancellations and future holiday decisions require year-specific government records, which is exactly what the official holiday calendars and overrides carry, with their limits stated above.
+The catalog's event definitions were compiled by reviewing the publicly rendered Khmer Lunar Calendar website, captured on 10 September 2026 across 372 months and 11,323 consecutive dates (3,246 event occurrences). Full provenance, validation datasets and curation tools are maintained in the [Khmer Calendar Manager](https://github.com/RSG-KH/khmer-calendar-manager) repository. The review established what the website displayed, not independent historical validation: ceremony occurrence, cancellations and future holiday decisions require year-specific government records, which is exactly what the official holiday calendars and overrides carry, with their limits stated above.
 
-Chinese festival dates are recorded lists, not calculated rules; they exist only for their captured years. Anniversaries and other counts inherit the catalog's `anniversaryBase` values and are only as accurate as the reviewed definitions.
+Chinese festivals are evaluated dynamically via `ChineseLunisolarEngine` for years 1900–2100 (`DateBasis.CALCULATED`), with 3 explicit overrides for historical parity. Anniversaries and other counts inherit the catalog's `anniversaryBase` values and are only as accurate as the reviewed definitions.
 
 ## Maintenance
 

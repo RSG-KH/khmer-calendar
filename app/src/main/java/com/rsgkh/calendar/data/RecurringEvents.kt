@@ -97,8 +97,9 @@ internal object RecurringEvents {
     private fun parseRule(obj: JSONObject): RecurrenceRule {
         val id = obj.getString("id")
         val type = obj.getString("type")
-        val month = obj.optInt("month", if (type.startsWith("new_year_")) 1 else 0)
-        val day = obj.optInt("day", if (type.startsWith("new_year_")) 1 else 0)
+        val defaultMonthDay = if (type.startsWith("new_year_") || type == "chinese_festival") 1 else 0
+        val month = obj.optInt("month", defaultMonthDay)
+        val day = obj.optInt("day", defaultMonthDay)
         val waxing = obj.optBoolean("waxing", true)
         val offset = obj.optInt("offset", 0)
         val duration = obj.optInt("duration", 1)

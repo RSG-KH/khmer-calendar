@@ -1246,10 +1246,15 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
     val context = LocalContext.current
     var license by rememberSaveable { mutableStateOf(false) }
     var urlDialogData by remember { mutableStateOf<Pair<String, String>?>(null) }
-    val notice = remember {
-        listOf("engine-LICENSE.txt", "NOTICE.txt").joinToString("\n\n") { name ->
-            context.assets.open(name).bufferedReader().use { it.readText() }
-        }
+    val appLicenseText = remember {
+        val notice = context.assets.open("NOTICE.txt").bufferedReader().use { it.readText() }
+        val license = context.assets.open("app-LICENSE.txt").bufferedReader().use { it.readText() }
+        "$notice\n\n$license"
+    }
+    val engineLicenseText = remember {
+        val license = context.assets.open("engine-LICENSE.txt").bufferedReader().use { it.readText() }
+        val notice = context.assets.open("engine-NOTICE.txt").bufferedReader().use { it.readText() }
+        "$license\n\n$notice"
     }
     val orangeColor = if (MaterialTheme.colorScheme.surface.luminance() > .5f) Color(0xFFC45E00) else Color(0xFFFFB36B)
     val holidayText = L.text("about.public_holiday_source", k)
@@ -1261,9 +1266,6 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
         "https://www.ocm.gov.kh/",
         "https://www.nbc.gov.kh/",
     ).joinToString("\n")
-    val archiveText = L.text("about.event_archive_source", k)
-    val archiveName = if (k) "ប្រតិទិនចន្ទគតិខ្មែរ" else "Khmer Lunar Calendar"
-    val archiveUrl = "https://khmer-lunar-calendar.com/"
     val engineText = L.text("about.calendar_engine", k)
     val engineName = "Khmer Calendar Engine"
     val engineUrl = "https://github.com/RSG-KH/khmer-calendar-engine"
@@ -1290,30 +1292,6 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                     append(holidayName)
                 }
                 append(holidayText.substring(index + holidayName.length))
-            }
-        }
-    }
-    val archiveSourceAnnotated = remember(archiveText, archiveName, linkColor) {
-        buildAnnotatedString {
-            val index = archiveText.indexOf(archiveName)
-            if (index < 0) {
-                append(archiveText)
-            } else {
-                append(archiveText.substring(0, index))
-                withLink(
-                    LinkAnnotation.Clickable(
-                        tag = "archive_source_url",
-                        styles = TextLinkStyles(style = SpanStyle(
-                            color = linkColor,
-                            textDecoration = TextDecoration.Underline,
-                            fontWeight = FontWeight.Medium
-                        )),
-                        linkInteractionListener = { urlDialogData = archiveName to archiveUrl }
-                    )
-                ) {
-                    append(archiveName)
-                }
-                append(archiveText.substring(index + archiveName.length))
             }
         }
     }
@@ -1353,7 +1331,6 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
             Text(L.text("ui.new_event_years_and_corrections_are_delivered_through_a.a6af2d", k), fontSize = 12.readableSp, color = orangeColor)
             Text(L.text("rules.source_summary", k), fontSize = 14.readableSp)
             Text(holidaySourceAnnotated, fontSize = 14.readableSp, lineHeight = 22.readableSp)
-            Text(archiveSourceAnnotated, fontSize = 14.readableSp, lineHeight = 22.readableSp)
             Text(engineSourceAnnotated, fontSize = 14.readableSp, lineHeight = 22.readableSp)
             val licenseState = L.text(if (license) "ui.expanded" else "ui.collapsed", k)
             val headerColor = MaterialTheme.colorScheme.primary
@@ -1391,20 +1368,56 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                 HorizontalDivider(Modifier.weight(1f), color = headerColor)
             }
             if (license) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    modifier = Modifier.fillMaxWidth()
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    SelectionContainer {
-                        Text(
-                            text = notice,
-                            fontSize = 11.readableSp,
-                            lineHeight = 16.readableSp,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(14.dp)
-                        )
+                    Text(
+                        "${L.text("app.name", k)} · Apache-2.0",
+                        fontSize = 13.readableSp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        SelectionContainer {
+                            Text(
+                                text = appLicenseText,
+                                fontSize = 11.readableSp,
+                                lineHeight = 16.readableSp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(14.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(4.dp))
+
+                    Text(
+                        "Khmer Calendar Engine · Apache-2.0 / MIT",
+                        fontSize = 13.readableSp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        SelectionContainer {
+                            Text(
+                                text = engineLicenseText,
+                                fontSize = 11.readableSp,
+                                lineHeight = 16.readableSp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(14.dp)
+                            )
+                        }
                     }
                 }
             }

@@ -27,7 +27,7 @@ Calculation algorithms and supporting evidence are maintained in the engine proj
 
 ## Events and storage
 
-`EventRepository` builds every supported year (1800–2200) on demand and caches each requested year's localized event list in memory. Each year is layered from the bundled event catalog (`khmer-calendar-data.json`) and the shared engine: recorded date lists (Chinese festivals and fixed heritage milestones), engine-evaluated recurrence rules with reviewed per-year date overrides, official government holiday calendars for 2020–2027 that promote matching occurrences to cited public holidays, and Buddhist holy days computed day by day from the engine. The calendar grid and date details use the engine directly. User-created events come from a separate repository and are combined with built-in events by the UI and reminder planner.
+`EventRepository` builds every supported year (1800–2200) on demand and caches each requested year's localized event list in memory. Each year is layered from the bundled event catalog (`khmer-calendar-data.json`) and the shared engine: recorded date lists (fixed heritage milestones), engine-evaluated recurrence rules (including dynamic Chinese festivals for 1900–2100) with reviewed per-year date overrides, official government holiday calendars for 2020–2027 that promote matching occurrences to cited public holidays, and Buddhist holy days computed day by day from the engine. The calendar grid and date details use the engine directly. User-created events come from a separate repository and are combined with built-in events by the UI and reminder planner.
 
 | Event kind | Source |
 | --- | --- |

@@ -42,7 +42,7 @@ class EventRepositoryTest {
         val events2027 = EventRepository.forYear(2027)
         assertEquals(listOf(6, 7, 8), events2027.filter { it.titleEn == "Chinese New Year" }.map { it.date.dayOfMonth })
         assertEquals(LocalDate.of(2027, 2, 5), events2027.single { it.titleEn == "Chinese New Year's Eve" }.date)
-        assertTrue(events2027.filter { it.id.startsWith("chinese_") }.all { it.basis == DateBasis.RECORDED })
+        assertTrue(events2027.filter { it.id.startsWith("chinese_") }.all { it.basis == DateBasis.CALCULATED })
 
         // UNESCO static milestone in 2023: Koh Ker inscribed on World Heritage List
         val events2023 = EventRepository.forYear(2023)

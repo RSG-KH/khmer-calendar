@@ -22,7 +22,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 
 ### 📅 Shared Khmer Calendar Engine (1800–2200)
 
-- Gregorian and Khmer lunar dates, Buddhist Era, animal year, Sak and New Year dates are provided by [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine).
+- Gregorian and Khmer lunar dates, Buddhist Era, animal year, Sak, New Year dates and traditional Chinese festivals are provided by [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine).
 - Calendar algorithms, source references and validation are documented in the [engine project](https://github.com/RSG-KH/khmer-calendar-engine#verification-and-accuracy). Android supplies the interface, translations, personal events and reminders.
 - Date details also show Western zodiac signs, elements and ruling bodies.
 
@@ -34,7 +34,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 ### 🏛️ Holidays & Cultural Observances
 
 - **Official Holiday Calendars (2020–2027)**: Bundled government calendars mark public holidays with their citing subdecree or ministry source, shown in event details.
-- **On-Device Event Calculation (1800–2200)**: Observances, traditional festivals and Buddhist holy days are calculated on the device from bundled rules for every supported year, with reviewed date corrections where captured records differ.
+- **On-Device Event Calculation (1800–2200)**: Observances, traditional Cambodian festivals, Chinese festivals and Buddhist holy days are calculated on the device from bundled rules for every supported year, with reviewed date corrections where captured records differ.
 - **Cambodian Holidays & Festivals**: Browse public holidays and traditional festivals, including Khmer New Year, Pchum Ben, Water Festival and Royal Ploughing.
 - **National & International Observances**: Includes commemorations and UN observances alongside Buddhist holy days.
 

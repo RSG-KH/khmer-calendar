@@ -20,7 +20,9 @@ class RecurringEventsTest {
                 fields[0] to LocalDate.parse(fields[1])
             }.toList().groupBy({ it.first }, { it.second })
         }
-        assertEquals(reference.keys, RecurringEvents.rules.map { it.id }.toSet())
+        val baseRules = RecurringEvents.rules.filter { !it.id.startsWith("chinese_") }
+        assertEquals(reference.keys, baseRules.map { it.id }.toSet())
+        assertEquals(9, RecurringEvents.rules.count { it.id.startsWith("chinese_") })
         val differences = mutableListOf<String>()
         for (year in 2000..2030) {
             val calculated = RecurringEvents.dates(year).mapKeys { it.key.id }
@@ -72,6 +74,17 @@ class RecurringEventsTest {
         assertFalse(RecurringEvents.forYear(2000).any { it.id == "national_fish_day" })
         assertTrue(RecurringEvents.forYear(2001).any { it.id == "national_fish_day" })
         assertFalse(RecurringEvents.rules.any { it.id in setOf("buddhist_lent_candles", "chinese_new_year_day1", "qingming_festival") })
+
+        val chineseRuleIds = setOf(
+            "chinese_new_year_days", "chinese_new_year_eve", "chinese_kitchen_god_festival",
+            "chinese_spirit_parade", "chinese_zongzi_festival", "chinese_ghost_festival",
+            "chinese_mid_autumn_festival", "chinese_qingming_festival", "chinese_winter_solstice",
+        )
+        val activeChineseRules = RecurringEvents.rules.filter { it.type == "chinese_festival" }
+        assertEquals(chineseRuleIds, activeChineseRules.map { it.id }.toSet())
+        assertTrue(activeChineseRules.all { it.fromYear == 1900 && it.throughYear == 2100 && it.monthPolicy == "cn-reference-utc8" })
+        assertTrue(old.any { it.id == "chinese_new_year_days" })
+        assertFalse(RecurringEvents.forYear(1899).any { it.id.startsWith("chinese_") })
     }
 
     @Test fun dynamicCalculationProducesCorrectBasesAcrossCoveredYears() {

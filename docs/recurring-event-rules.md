@@ -23,12 +23,13 @@ Each event's `rule` object maps directly to the engine's validated `RecurrenceRu
 | `khmer_lunar` | Lunar month, day and phase; `ordinary_or_second_asadh` selects the applicable Asadh month for Lent-related rules |
 | `solar_nth_weekday` | ISO weekday in `day` with `occurrence` selecting the first–fifth match |
 | `new_year_first`, `new_year_middle`, `new_year_last` | Engine festival stages |
+| `chinese_festival` | Traditional Chinese festival evaluated dynamically by `ChineseLunisolarEngine` (1900–2100) |
 | `fromYear`, `throughYear` | Inclusive years in which the rule applies |
 | `anniversaryBase` | Android inserts `year - anniversaryBase` into the localized `{anniversary}` title |
 
-The engine [API documentation](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.1.0/docs/api.md) defines month numbering, weekday numbering, offsets and festival behavior. Keep those calculation rules in the engine. Android currently requires every applicable rule to return at least one date within its requested year; review this constraint before adding rules that cross a year boundary.
+The engine [API documentation](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.2.0/docs/api.md) defines month numbering, weekday numbering, offsets and festival behavior. Keep those calculation rules in the engine. Android currently requires every applicable rule to return at least one date within its requested year; review this constraint before adding rules that cross a year boundary.
 
-The rules cover Khmer festivals, royal and national commemorations, heritage anniversaries, international observances and floating weekday events. Chinese festivals are not rules: they ship as [recorded date lists](reference-event-database.md) in the catalog. Historical commemorations set `originalDate`, before which occurrences are suppressed.
+The rules cover Khmer festivals, 9 traditional Chinese festivals, royal and national commemorations, heritage anniversaries, international observances and floating weekday events. Historical commemorations set `originalDate`, before which occurrences are suppressed. Fixed milestones (such as UNESCO inscription anniversaries) ship as recorded date lists in the catalog.
 
 ## Regression checks
 
