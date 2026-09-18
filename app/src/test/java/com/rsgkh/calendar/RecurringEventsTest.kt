@@ -20,7 +20,7 @@ class RecurringEventsTest {
                 fields[0] to LocalDate.parse(fields[1])
             }.toList().groupBy({ it.first }, { it.second })
         }
-        val baseRules = RecurringEvents.rules.filter { !it.id.startsWith("chinese_") }
+        val baseRules = RecurringEvents.rules.filter { !it.id.startsWith("chinese_") && it.id != "international_peace_day_ga_opening" }
         assertEquals(reference.keys, baseRules.map { it.id }.toSet())
         assertEquals(9, RecurringEvents.rules.count { it.id.startsWith("chinese_") })
         val differences = mutableListOf<String>()
@@ -70,9 +70,12 @@ class RecurringEventsTest {
         val old = RecurringEvents.forYear(1999)
         assertTrue(old.any { it.id == "new_year_day" })
         assertTrue(old.any { it.id == "meak_bochea" })
-        assertFalse(old.any { it.id == "constitution_day" || it.id == "victory_over_genocide" })
+        assertTrue(old.any { it.id == "constitution_day" })
+        assertTrue(old.any { it.id == "victory_over_genocide" })
+        assertFalse(RecurringEvents.forYear(1978).any { it.id == "victory_over_genocide" })
+        assertFalse(RecurringEvents.forYear(1992).any { it.id == "constitution_day" })
         assertFalse(RecurringEvents.forYear(2000).any { it.id == "national_fish_day" })
-        assertTrue(RecurringEvents.forYear(2001).any { it.id == "national_fish_day" })
+        assertTrue(RecurringEvents.forYear(2003).any { it.id == "national_fish_day" })
         assertFalse(RecurringEvents.rules.any { it.id in setOf("buddhist_lent_candles", "chinese_new_year_day1", "qingming_festival") })
 
         val chineseRuleIds = setOf(
@@ -93,12 +96,16 @@ class RecurringEventsTest {
             assertEquals(listOf(LocalDate.of(year, 5, 13), LocalDate.of(year, 5, 14), LocalDate.of(year, 5, 15)), birthday.map { it.date })
             assertTrue(birthday.all { it.basis == DateBasis.CORRECTED })
         }
-        for (year in listOf(1800, 1900, 1993, 1999, 2031, 2200)) {
+        for (year in listOf(1800, 1900, 1993, 2031, 2200)) {
             val actual = EventRepository.forYear(year)
             assertEquals(RecurringEvents.forYear(year).toSet(), actual.filter { it.basis == DateBasis.CALCULATED }.toSet())
             assertTrue(actual.any { it.kind == EventKind.HOLY_DAY })
             assertTrue(actual.none { it.kind == EventKind.HOLIDAY })
         }
+        val actual1999 = EventRepository.forYear(1999)
+        val calculated1999 = RecurringEvents.forYear(1999).filter { it.id != "international_peace_day_ga_opening" }.toSet()
+        assertEquals(calculated1999, actual1999.filter { it.basis == DateBasis.CALCULATED }.toSet())
+        assertEquals(listOf("international_peace_day_ga_opening"), actual1999.filter { it.basis == DateBasis.CORRECTED }.map { it.id })
     }
 
     @Test fun ordainedDragonMonkAndPreLentTraditionsCalculateFor1993AndAllYears() {
