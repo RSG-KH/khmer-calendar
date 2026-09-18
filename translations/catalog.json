@@ -35086,10 +35086,10 @@
       "section": "calendar",
       "context": "Date wording / keep named placeholders",
       "en": "{weekday}, {day} {month}",
-      "km": "{weekday}, {day} {month}",
+      "km": "{weekday} {day} {month}",
       "original": {
         "en": "{weekday}, {day} {month}",
-        "km": "{weekday}, {day} {month}"
+        "km": "{weekday} {day} {month}"
       },
       "reviewed": true,
       "required": {

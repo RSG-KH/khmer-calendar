@@ -322,6 +322,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                 k = k,
                 custom = allCustom,
                 showHolyDays = settings.showHolyDaysInEvents,
+                showHolyDaysInCalendar = settings.showHolyDaysInCalendar,
                 showCopyButtons = settings.showCopyButtons,
                 onEvent = { detail = it },
                 onAddEvent = {
@@ -648,7 +649,11 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
                                 .then(if (active && !isToday) Modifier.border(1.dp, colors.primary, RoundedCornerShape(if (isPhoneLandscape) 8.dp else 11.dp)) else Modifier)
                                 .clickable { onSelect(date) }
                                 .semantics(mergeDescendants = true) {
-                                    contentDescription = "${dateLabel(date, k)}, ${lunar.fullLabel(k)}. ${entries.joinToString { it.title(k) }}"
+                                    contentDescription = if (k) {
+                                        "${dateLabel(date, true)} ${lunar.fullLabel(true)}. ${entries.joinToString(" ") { it.title(true) }}"
+                                    } else {
+                                        "${dateLabel(date, false)}, ${lunar.fullLabel(false)}. ${entries.joinToString { it.title(false) }}"
+                                    }
                                     this.selected = active
                                 }
                                 .height(cellHeight),
@@ -985,7 +990,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
 
 @Composable private fun DateDetailsDialog(
     date: LocalDate, today: LocalDate, k: Boolean, custom: List<CalendarEvent>,
-    showHolyDays: Boolean, showCopyButtons: Boolean, onEvent: (CalendarEvent) -> Unit, onAddEvent: () -> Unit, onDismiss: () -> Unit
+    showHolyDays: Boolean, showHolyDaysInCalendar: Boolean, showCopyButtons: Boolean, onEvent: (CalendarEvent) -> Unit, onAddEvent: () -> Unit, onDismiss: () -> Unit
 ) {
     val info = remember(date) { KhmerDateDetails.fromGregorian(date) }
     val events = remember(date, custom, showHolyDays) {
@@ -1043,17 +1048,26 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                             if (showCopyButtons) CopyTextButton(fullDate, L.text("ui.copy_full_date", k), L.text("ui.full_date_copied", k),
                                 firstLineHeight = 32.readableSp)
                         }
-                        if (info.lunar.isHolyDay || info.lunar.isShavingDay) {
+                        if (showHolyDaysInCalendar && (info.lunar.isHolyDay || info.lunar.isShavingDay)) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                Image(
-                                    painter = painterResource(holyDayLotusDrawable(info.lunar)),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(24.dp),
-                                    contentScale = ContentScale.Fit
-                                )
+                                if (info.lunar.isHolyDay) {
+                                    Image(
+                                        painter = painterResource(holyDayLotusDrawable(info.lunar)),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier.size(24.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("🙏", fontSize = 18.readableSp)
+                                    }
+                                }
                                 Text(
                                     if (info.lunar.isHolyDay) L.text("ui.thngai_sil_buddhist_holy_day.89de73", k)
                                     else L.text("ui.thngai_kaor_before_a_holy_day.d02977", k),
@@ -1186,14 +1200,22 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                         if (event.kind != EventKind.CUSTOM) {
                             Text(if (k) event.titleEn else event.titleKm, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.readableSp)
                         }
-                        val description = when {
-                            event.kind == EventKind.CUSTOM -> L.text("ui.a_custom_event_saved_on_your_device.96d6e7", k)
-                            event.kind == EventKind.HOLY_DAY -> L.text("ui.a_buddhist_observance_on_the_8th_and_15th_waxing_days_t.4bac2c", k)
+                        val (description, isEngine) = when {
+                            event.kind == EventKind.CUSTOM ->
+                                L.text("ui.a_custom_event_saved_on_your_device.96d6e7", k) to false
+                            event.kind == EventKind.HOLY_DAY ->
+                                L.text("ui.a_buddhist_observance_on_the_8th_and_15th_waxing_days_t.4bac2c", k) to false
                             event.kind == EventKind.HOLIDAY && event.basis == DateBasis.OFFICIAL ->
-                                L.text("ui.listed_in_cambodia_s_official_year_holiday_calendar.044398", k, "year" to number(event.date.year, k))
-                            else -> L.text("events.engine_calculations", k)
+                                L.text("ui.listed_in_cambodia_s_official_year_holiday_calendar.044398", k, "year" to number(event.date.year, k)) to false
+                            else ->
+                                L.text("events.engine_calculations", k) to true
                         }
-                        Text(description, fontSize = 14.readableSp, lineHeight = 23.readableSp)
+                        Text(
+                            description,
+                            fontSize = if (isEngine) 12.readableSp else 14.readableSp,
+                            lineHeight = if (isEngine) 18.readableSp else 23.readableSp,
+                            color = if (isEngine) MaterialTheme.colorScheme.onSurfaceVariant else LocalContentColor.current,
+                        )
                         if (event.kind == EventKind.HOLIDAY) {
                             val citation = if (k) (event.citationKm ?: event.citation ?: event.citationEn) else (event.citationEn ?: event.citation ?: event.citationKm)
                             if (!citation.isNullOrBlank()) {

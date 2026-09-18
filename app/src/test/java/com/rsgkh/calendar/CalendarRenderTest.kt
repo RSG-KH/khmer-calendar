@@ -372,6 +372,37 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithText("Date details").assertIsDisplayed()
         screenshot("date-details-holy-day-closed-lotus")
         compose.onNodeWithText("Close").performClick()
+        // Open date details for a shaving day (Sept 10, 2026 is 13 Roach / Shaving Day)
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNodeWithText("Date details").assertIsDisplayed()
+        compose.onNodeWithText("Shaving Day · Eve of Buddhist Holy Day", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("🙏").assertIsDisplayed()
+        screenshot("date-details-shaving-day-praying-hands")
+        compose.onNodeWithText("Close").performClick()
+
+        // Disable "Buddhist holy days in calendar" in Settings
+        compose.onNodeWithText("Settings").performClick()
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("Buddhist holy days in calendar"))
+        compose.onNode(hasContentDescription("Buddhist holy days in calendar") and isToggleable()).performClick()
+        compose.onNodeWithText("Calendar").performClick()
+
+        // Verify lotus marker does NOT exist in calendar grid
+        compose.onAllNodes(hasContentDescription("Buddhist Holy Day", substring = true)).assertCountEquals(0)
+
+        // Open date details for Holy Day (Sept 11) - should NOT show Buddhist Holy Day
+        compose.onNode(hasContentDescription("Friday, 11 September", substring = true)).performClick()
+        compose.onNodeWithText("Date details").assertIsDisplayed()
+        compose.onNodeWithText("Buddhist Holy Day", substring = true).assertDoesNotExist()
+        screenshot("date-details-holy-day-disabled")
+        compose.onNodeWithText("Close").performClick()
+
+        // Open date details for Shaving Day (Sept 10) - should NOT show Shaving Day or 🙏
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNodeWithText("Date details").assertIsDisplayed()
+        compose.onNodeWithText("Shaving Day · Eve of Buddhist Holy Day", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("🙏").assertDoesNotExist()
+        screenshot("date-details-shaving-day-disabled")
+        compose.onNodeWithText("Close").performClick()
     }
 
     @Test
