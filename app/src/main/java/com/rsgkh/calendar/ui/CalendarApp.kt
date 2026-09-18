@@ -1177,7 +1177,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             if (event.notes.isNotBlank()) Text(event.notes)
-                            Text(lunar.fullLabel(k))
+                            Text(info.lunarSummary(k))
                             Text("${L.text("ui.buddhist_era.ea617c", k)} ${number(lunar.buddhistYear, k)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         HorizontalDivider()

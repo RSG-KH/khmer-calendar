@@ -13,6 +13,13 @@ data class KhmerDateDetails(
     val date: LocalDate, val lunar: LunarDate, val animalYear: Int, val sak: Int,
     val animalYearChangesToday: Boolean,
 ) {
+    fun lunarSummary(khmer: Boolean): String {
+        return if (khmer) {
+            "${lunar.fullLabel(true)} ឆ្នាំ${animalLabel(true)} ${L.text("calendar.sak.$sak", true)}"
+        } else {
+            "${lunar.fullLabel(false)} · Year of the ${animalLabel(false)} · ${L.text("calendar.sak.$sak", false)}"
+        }
+    }
     fun animalLabel(khmer: Boolean): String {
         val current = L.text("calendar.animal.$animalYear", khmer)
         return if (animalYearChangesToday) "${L.text("calendar.animal.${Math.floorMod(animalYear - 1, 12)}", khmer)} → $current" else current
