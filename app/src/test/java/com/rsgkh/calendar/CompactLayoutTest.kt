@@ -11,6 +11,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.test.platform.app.InstrumentationRegistry
 import com.rsgkh.calendar.data.*
+import com.rsgkh.calendar.i18n.CalendarWords
 import com.rsgkh.calendar.i18n.L
 import com.rsgkh.calendar.ui.CalendarApp
 import com.rsgkh.calendar.ui.NotificationAccess
@@ -181,7 +182,7 @@ class CompactLayoutTest {
         compose.onNodeWithText(EventRepository.forDate(LocalDate.of(2026, 9, 24)).single { it.kind == EventKind.HOLIDAY }.titleKm).performClick()
         compose.onNodeWithText(L.text("about.source_link", true)).assertDoesNotExist()
         compose.onNodeWithText(L.text("ui.an_event_from_khmer_lunar_calendar_saved_for_offline_vi.98ee90", true)).assertDoesNotExist()
-        compose.onNodeWithText(L.text("events.engine_calculations", true)).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(L.text("ui.listed_in_cambodia_s_official_year_holiday_calendar.044398", true, "year" to CalendarWords.number(2026, true))).performScrollTo().assertIsDisplayed()
         screenshot("event-details-light")
     }
 }

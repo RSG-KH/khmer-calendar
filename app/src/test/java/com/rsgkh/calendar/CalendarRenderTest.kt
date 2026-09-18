@@ -517,7 +517,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         holyDayEventRow.assertIsDisplayed()
         holyDayEventRow.performClick()
         // Clicking should open EventDialog with description
-        compose.onNodeWithText(L.text("events.engine_calculations", false)).assertIsDisplayed()
+        compose.onNodeWithText(L.text("ui.a_buddhist_observance_on_the_8th_and_15th_waxing_days_t.4bac2c", false)).assertIsDisplayed()
     }
 
     @Test

@@ -1157,7 +1157,9 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                         if (showCopyButtons) CopyTextButton(event.title(k), L.text("ui.copy_event_title", k), L.text("ui.event_title_copied", k),
                             firstLineHeight = 26.readableSp)
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(12.dp))
+                    HorizontalDivider()
+                    Spacer(Modifier.height(14.dp))
                     val scrollState = rememberScrollState()
                     Column(
                         modifier = Modifier
@@ -1181,10 +1183,17 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                         HorizontalDivider()
                         Text(if (event.basis == DateBasis.CALCULATED) L.text("rules.calculated_label", k) else kindLabel(event.kind, k),
                             color = eventColor(event.kind), fontWeight = FontWeight.SemiBold)
-                        val description = L.text(if (event.kind == EventKind.CUSTOM)
-                            "ui.a_custom_event_saved_on_your_device.96d6e7" else "events.engine_calculations", k)
+                        if (event.kind != EventKind.CUSTOM) {
+                            Text(if (k) event.titleEn else event.titleKm, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.readableSp)
+                        }
+                        val description = when {
+                            event.kind == EventKind.CUSTOM -> L.text("ui.a_custom_event_saved_on_your_device.96d6e7", k)
+                            event.kind == EventKind.HOLY_DAY -> L.text("ui.a_buddhist_observance_on_the_8th_and_15th_waxing_days_t.4bac2c", k)
+                            event.kind == EventKind.HOLIDAY && event.basis == DateBasis.OFFICIAL ->
+                                L.text("ui.listed_in_cambodia_s_official_year_holiday_calendar.044398", k, "year" to number(event.date.year, k))
+                            else -> L.text("events.engine_calculations", k)
+                        }
                         Text(description, fontSize = 14.readableSp, lineHeight = 23.readableSp)
-                        if (event.kind != EventKind.CUSTOM) Text(if (k) event.titleEn else event.titleKm, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.readableSp)
                         if (event.kind == EventKind.HOLIDAY) {
                             val citation = if (k) (event.citationKm ?: event.citation ?: event.citationEn) else (event.citationEn ?: event.citation ?: event.citationKm)
                             if (!citation.isNullOrBlank()) {
