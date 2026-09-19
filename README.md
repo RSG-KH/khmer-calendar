@@ -22,7 +22,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 
 ### 📅 Shared Khmer Calendar Engine (1800–2200)
 
-- Gregorian and Khmer lunar dates, Buddhist Era, animal year, Sak, New Year dates and traditional Chinese festivals are provided by [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine).
+- Gregorian and Khmer lunar dates, Buddhist Era, animal year, Sak, New Year dates, traditional Moha Sangkran arrival estimates, and traditional Chinese festivals are provided by [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine).
 - Calendar algorithms, source references and validation are documented in the [engine project](https://github.com/RSG-KH/khmer-calendar-engine#verification-and-accuracy). Android supplies the interface, translations, personal events and reminders.
 - Date details also show Western zodiac signs, elements and ruling bodies.
 
@@ -33,6 +33,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 
 ### 🏛️ Holidays & Cultural Observances
 
+- **Unified Moha Sangkran Arrival Time**: Displays verified official arrival times (TVK broadcasts and government decrees, 1997, 2009, 2010–2026 unbroken) and traditional astronomical estimates (2027+) directly in event titles with authentic Khmer 12-hour period descriptors (`ព្រឹក`, `រសៀល`, `ល្ងាច`, `យប់`, `រំលងអធ្រាត្រ`).
 - **Official Holiday Calendars (2020–2027)**: Bundled government calendars mark public holidays with their citing subdecree or ministry source, shown in event details.
 - **On-Device Event Calculation (1800–2200)**: Observances, traditional Cambodian festivals, Chinese festivals and Buddhist holy days are calculated on the device from bundled rules for every supported year, with reviewed date corrections where captured records differ.
 - **Cambodian Holidays & Festivals**: Browse public holidays and traditional festivals, including Khmer New Year, Pchum Ben, Water Festival and Royal Ploughing.
@@ -58,6 +59,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 ### 🎨 Personalization & Accessibility
 - **Longer Weekday Names**: Optional calendar headings show Sun–Sat in English and full weekday names in Khmer. Off by default under Settings → Calendar.
 - **Weekday Colors**: Traditional weekday heading colors, with shades adapted for light and dark themes. On by default under Settings → Calendar; existing saved choices are preserved.
+- **Western Zodiac Signs**: The selected-date card, date details and event details show the Western zodiac sign, element and ruling body. On by default under Settings → Calendar.
 - **Curated Theme Accents**: Choose from **Blue** (Default), **Lavender**, **Rose**, **Amber**, and **Lime** (*បៃតងចាស់*).
 - **Theme Modes**: Initially follows the system theme; choosing Light or Dark saves that preference. Background accent is on by default, tinting pages and navigation with the chosen accent; turning it off restores neutral backgrounds.
 - **Dynamic Font Scaling**: Choose 80%, 90%, 100%, 110%, or 120% on phones, with additional 130%, 140%, and 150% options on tablets.

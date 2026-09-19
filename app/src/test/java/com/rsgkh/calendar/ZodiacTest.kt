@@ -12,18 +12,18 @@ class ZodiacTest {
 
     @Test
     fun allTwelveSignsFormatCorrectly() {
-        assertEquals("♈︎ Aries (Fire · Mars)", ZodiacSign.ARIES.label)
-        assertEquals("♉︎ Taurus (Earth · Venus)", ZodiacSign.TAURUS.label)
-        assertEquals("♊︎ Gemini (Air · Mercury)", ZodiacSign.GEMINI.label)
-        assertEquals("♋︎ Cancer (Water · Moon)", ZodiacSign.CANCER.label)
-        assertEquals("♌︎ Leo (Fire · Sun)", ZodiacSign.LEO.label)
-        assertEquals("♍︎ Virgo (Earth · Mercury)", ZodiacSign.VIRGO.label)
-        assertEquals("♎︎ Libra (Air · Venus)", ZodiacSign.LIBRA.label)
-        assertEquals("♏︎ Scorpio (Water · Pluto)", ZodiacSign.SCORPIO.label)
-        assertEquals("♐︎ Sagittarius (Fire · Jupiter)", ZodiacSign.SAGITTARIUS.label)
-        assertEquals("♑︎ Capricorn (Earth · Saturn)", ZodiacSign.CAPRICORN.label)
-        assertEquals("♒︎ Aquarius (Air · Uranus)", ZodiacSign.AQUARIUS.label)
-        assertEquals("♓︎ Pisces (Water · Neptune)", ZodiacSign.PISCES.label)
+        assertEquals("♈️ Aries (Fire · Mars)", ZodiacSign.ARIES.label)
+        assertEquals("♉️ Taurus (Earth · Venus)", ZodiacSign.TAURUS.label)
+        assertEquals("♊️ Gemini (Air · Mercury)", ZodiacSign.GEMINI.label)
+        assertEquals("♋️ Cancer (Water · Moon)", ZodiacSign.CANCER.label)
+        assertEquals("♌️ Leo (Fire · Sun)", ZodiacSign.LEO.label)
+        assertEquals("♍️ Virgo (Earth · Mercury)", ZodiacSign.VIRGO.label)
+        assertEquals("♎️ Libra (Air · Venus)", ZodiacSign.LIBRA.label)
+        assertEquals("♏️ Scorpio (Water · Pluto)", ZodiacSign.SCORPIO.label)
+        assertEquals("♐️ Sagittarius (Fire · Jupiter)", ZodiacSign.SAGITTARIUS.label)
+        assertEquals("♑️ Capricorn (Earth · Saturn)", ZodiacSign.CAPRICORN.label)
+        assertEquals("♒️ Aquarius (Air · Uranus)", ZodiacSign.AQUARIUS.label)
+        assertEquals("♓️ Pisces (Water · Neptune)", ZodiacSign.PISCES.label)
     }
 
     @Test
@@ -86,10 +86,10 @@ class ZodiacTest {
     @Test
     fun khmerDateDetailsExposesZodiac() {
         val detailsSep10 = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 10))
-        assertEquals("♍︎ Virgo (Earth · Mercury)", detailsSep10.zodiac.label)
+        assertEquals("♍️ Virgo (Earth · Mercury)", detailsSep10.zodiac.label)
 
         val detailsSep24 = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 24))
-        assertEquals("♎︎ Libra (Air · Venus)", detailsSep24.zodiac.label)
+        assertEquals("♎️ Libra (Air · Venus)", detailsSep24.zodiac.label)
     }
 
     @Test

@@ -1,6 +1,6 @@
 # Recurring event rules
 
-Android owns 100 recurrence definitions, stored on each event in the bundled [event catalog](reference-event-database.md) (`khmer-calendar-data.json`). The [shared engine](shared-engine.md) evaluates their dates for every supported year; Android supplies effective years, localized titles, event classification and reviewed date overrides.
+Android owns 111 recurrence definitions, stored on each event in the bundled [event catalog](reference-event-database.md) (`khmer-calendar-data.json`). The [shared engine](shared-engine.md) evaluates their dates for every supported year; Android supplies effective years, localized titles, event classification and reviewed date overrides.
 
 ## Coverage and precedence
 
@@ -27,7 +27,7 @@ Each event's `rule` object maps directly to the engine's validated `RecurrenceRu
 | `fromYear`, `throughYear` | Inclusive years in which the rule applies |
 | `anniversaryBase` | Android inserts `year - anniversaryBase` into the localized `{anniversary}` title |
 
-The engine [API documentation](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.2.0/docs/api.md) defines month numbering, weekday numbering, offsets and festival behavior. Keep those calculation rules in the engine. Android currently requires every applicable rule to return at least one date within its requested year; review this constraint before adding rules that cross a year boundary.
+The engine [API documentation](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.3.0/docs/api.md) defines month numbering, weekday numbering, offsets and festival behavior. Keep those calculation rules in the engine. Android currently requires every applicable rule to return at least one date within its requested year; review this constraint before adding rules that cross a year boundary.
 
 The rules cover Khmer festivals, 9 traditional Chinese festivals, royal and national commemorations, heritage anniversaries, international observances and floating weekday events. Historical commemorations set `originalDate`, before which occurrences are suppressed. Fixed milestones (such as UNESCO inscription anniversaries) ship as recorded date lists in the catalog.
 

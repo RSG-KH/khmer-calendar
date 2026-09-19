@@ -153,7 +153,7 @@ private fun westernZodiacDrawable(sign: ZodiacSign): Int = when (sign) {
 private fun zodiacAlpha(): Float = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) 0.03f else 0.05f
 
 @Composable
-private fun BoxScope.DetailsZodiacBackground(info: KhmerDateDetails) {
+private fun BoxScope.DetailsZodiacBackground(info: KhmerDateDetails, showWesternZodiac: Boolean = true) {
     Image(
         painter = painterResource(zodiacDrawable(info.animalYear, compact = true)),
         contentDescription = null,
@@ -162,15 +162,17 @@ private fun BoxScope.DetailsZodiacBackground(info: KhmerDateDetails) {
         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
         alpha = zodiacAlpha(),
     )
-    Image(
-        painter = painterResource(westernZodiacDrawable(info.zodiac)),
-        contentDescription = null,
-        modifier = Modifier.align(Alignment.BottomStart).padding(start = 20.dp, bottom = 20.dp)
-            .fillMaxWidth(0.20f).aspectRatio(1f),
-        contentScale = ContentScale.Fit,
-        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
-        alpha = zodiacAlpha(),
-    )
+    if (showWesternZodiac) {
+        Image(
+            painter = painterResource(westernZodiacDrawable(info.zodiac)),
+            contentDescription = null,
+            modifier = Modifier.align(Alignment.BottomStart).padding(start = 20.dp, bottom = 20.dp)
+                .fillMaxWidth(0.20f).aspectRatio(1f),
+            contentScale = ContentScale.Fit,
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+            alpha = zodiacAlpha(),
+        )
+    }
 }
 
 @Composable
@@ -324,6 +326,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                 showHolyDays = settings.showHolyDaysInEvents,
                 showHolyDaysInCalendar = settings.showHolyDaysInCalendar,
                 showCopyButtons = settings.showCopyButtons,
+                showWesternZodiac = settings.showWesternZodiac,
                 onEvent = { detail = it },
                 onAddEvent = {
                     selectedText = date.toString()
@@ -335,7 +338,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
         }
         detail?.let { original ->
             val event = if (original.kind == EventKind.CUSTOM) allCustom.firstOrNull { it.id == original.id } ?: original else original
-            EventDialog(event, k, timeZoneLabel(settings.todayTimeZone, k), settings.showCopyButtons, onEdit = {
+            EventDialog(event, k, timeZoneLabel(settings.todayTimeZone, k), settings.showCopyButtons, settings.showWesternZodiac, onEdit = {
             editingId = event.customSeriesId ?: event.id.removePrefix("custom:"); detail = null; dateDetailText = null
         }, onDelete = {
             onDeleteCustom(event.customSeriesId ?: event.id.removePrefix("custom:")); detail = null
@@ -539,14 +542,16 @@ private fun CalendarScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     textAlign = TextAlign.End
                                 )
-                                Text(
-                                    selectedInfo.zodiac.label,
-                                    fontSize = 12.readableSp,
-                                    lineHeight = 20.readableSp,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Medium,
-                                    textAlign = TextAlign.End
-                                )
+                                if (settings.showWesternZodiac) {
+                                    Text(
+                                        selectedInfo.zodiac.label,
+                                        fontSize = 12.readableSp,
+                                        lineHeight = 20.readableSp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Medium,
+                                        textAlign = TextAlign.End
+                                    )
+                                }
                             }
                         }
                     }
@@ -876,6 +881,9 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                 SettingSwitch(L.text("ui.buddhist_holy_days_in_events.53e502", k), L.text("ui.show_in_the_events_list_and_filters.425758", k), settings.showHolyDaysInEvents) {
                     onChange(settings.copy(showHolyDaysInEvents = it))
                 }
+                SettingSwitch(L.text("ui.show_western_zodiac", k), L.text("ui.show_western_zodiac_subtitle", k), settings.showWesternZodiac) {
+                    onChange(settings.copy(showWesternZodiac = it))
+                }
                 SettingSwitch(L.text("ui.start_week_on_monday.5578c3", k), L.text("ui.sunday_when_turned_off.e40816", k), settings.mondayFirst) { onChange(settings.copy(mondayFirst = it)) }
             }
         }
@@ -990,7 +998,8 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
 
 @Composable private fun DateDetailsDialog(
     date: LocalDate, today: LocalDate, k: Boolean, custom: List<CalendarEvent>,
-    showHolyDays: Boolean, showHolyDaysInCalendar: Boolean, showCopyButtons: Boolean, onEvent: (CalendarEvent) -> Unit, onAddEvent: () -> Unit, onDismiss: () -> Unit
+    showHolyDays: Boolean, showHolyDaysInCalendar: Boolean, showCopyButtons: Boolean, showWesternZodiac: Boolean = true,
+    onEvent: (CalendarEvent) -> Unit, onAddEvent: () -> Unit, onDismiss: () -> Unit
 ) {
     val info = remember(date) { KhmerDateDetails.fromGregorian(date) }
     val events = remember(date, custom, showHolyDays) {
@@ -1009,7 +1018,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
             tonalElevation = 0.dp,
         ) {
             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp))) {
-                DetailsZodiacBackground(info)
+                DetailsZodiacBackground(info, showWesternZodiac)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1041,45 +1050,51 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        if (!k) Text(CalendarWords.weekday(date.dayOfWeek.value, k), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        val gregorianDate = if (!k) "${CalendarWords.weekday(date.dayOfWeek.value, false)}, ${info.gregorianLabel}" else info.gregorianLabel
+                        Text(gregorianDate, fontSize = 16.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         val fullDate = if (k) info.fullKhmerDate() else info.fullEnglishDate()
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(fullDate, modifier = Modifier.weight(1f), fontSize = 18.readableSp, lineHeight = 32.readableSp, color = MaterialTheme.colorScheme.onSurface)
                             if (showCopyButtons) CopyTextButton(fullDate, L.text("ui.copy_full_date", k), L.text("ui.full_date_copied", k),
                                 firstLineHeight = 32.readableSp)
                         }
-                        if (showHolyDaysInCalendar && (info.lunar.isHolyDay || info.lunar.isShavingDay)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                if (info.lunar.isHolyDay) {
-                                    Image(
-                                        painter = painterResource(holyDayLotusDrawable(info.lunar)),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(24.dp),
-                                        contentScale = ContentScale.Fit
-                                    )
-                                } else {
-                                    Box(
-                                        modifier = Modifier.size(24.dp),
-                                        contentAlignment = Alignment.Center
+                        val hasHolyDay = showHolyDaysInCalendar && (info.lunar.isHolyDay || info.lunar.isShavingDay)
+                        if (hasHolyDay || showWesternZodiac) {
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                if (hasHolyDay) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
-                                        Text("🙏", fontSize = 18.readableSp)
+                                        if (info.lunar.isHolyDay) {
+                                            Image(
+                                                painter = painterResource(holyDayLotusDrawable(info.lunar)),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(24.dp),
+                                                contentScale = ContentScale.Fit
+                                            )
+                                        } else {
+                                            Box(
+                                                modifier = Modifier.size(24.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text("🙏", fontSize = 18.readableSp)
+                                            }
+                                        }
+                                        Text(
+                                            if (info.lunar.isHolyDay) L.text("ui.thngai_sil_buddhist_holy_day.89de73", k)
+                                            else L.text("ui.thngai_kaor_before_a_holy_day.d02977", k),
+                                            color = MaterialTheme.colorScheme.secondary,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 14.readableSp
+                                        )
                                     }
                                 }
-                                Text(
-                                    if (info.lunar.isHolyDay) L.text("ui.thngai_sil_buddhist_holy_day.89de73", k)
-                                    else L.text("ui.thngai_kaor_before_a_holy_day.d02977", k),
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 16.readableSp
-                                )
+                                if (showWesternZodiac) {
+                                    Text(info.zodiac.label, fontSize = 14.readableSp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
+                                }
                             }
-                        }
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(info.gregorianLabel, fontSize = 16.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(info.zodiac.label, fontSize = 14.readableSp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
                         }
                         if (events.isNotEmpty()) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -1127,7 +1142,16 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
     }
 }
 
-@Composable private fun EventDialog(event: CalendarEvent, k: Boolean, zoneLabel: String, showCopyButtons: Boolean, onEdit: () -> Unit, onDelete: () -> Unit, onDismiss: () -> Unit) {
+@Composable private fun EventDialog(
+    event: CalendarEvent,
+    k: Boolean,
+    zoneLabel: String,
+    showCopyButtons: Boolean,
+    showWesternZodiac: Boolean = true,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit
+) {
     val info = remember(event.date) { KhmerDateDetails.fromGregorian(event.date) }
     val lunar = info.lunar
     var deletePrompt by rememberSaveable(event.id) { mutableStateOf(false) }
@@ -1160,18 +1184,25 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
             tonalElevation = 0.dp,
         ) {
             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp))) {
-                DetailsZodiacBackground(info)
+                DetailsZodiacBackground(info, showWesternZodiac)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(24.dp)
                 ) {
+                    var isSingleLine by remember(event.title(k)) { mutableStateOf(true) }
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(event.title(k), modifier = Modifier.weight(1f), fontSize = 18.readableSp, lineHeight = 26.readableSp)
+                        Text(
+                            event.title(k),
+                            modifier = Modifier.weight(1f),
+                            fontSize = 18.readableSp,
+                            lineHeight = 26.readableSp,
+                            onTextLayout = { isSingleLine = it.lineCount == 1 }
+                        )
                         if (showCopyButtons) CopyTextButton(event.title(k), L.text("ui.copy_event_title", k), L.text("ui.event_title_copied", k),
                             firstLineHeight = 26.readableSp)
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(if (showCopyButtons && isSingleLine) 2.dp else 12.dp))
                     HorizontalDivider()
                     Spacer(Modifier.height(14.dp))
                     val scrollState = rememberScrollState()
@@ -1191,8 +1222,11 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             if (event.notes.isNotBlank()) Text(event.notes)
-                            Text(info.lunarSummary(k))
-                            Text("${L.text("ui.buddhist_era.ea617c", k)} ${number(lunar.buddhistYear, k)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                "${info.lunarSummary(k)}\n${L.text("ui.buddhist_era.ea617c", k)} ${number(lunar.buddhistYear, k)}",
+                                lineHeight = 22.readableSp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                         HorizontalDivider()
                         Text(if (event.basis == DateBasis.CALCULATED) L.text("rules.calculated_label", k) else kindLabel(event.kind, k),

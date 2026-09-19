@@ -62,6 +62,24 @@ data class CatalogOverride(
     val reason: String,
 )
 
+data class CatalogNewYearArrival(
+    val year: Int,
+    val localDate: String,
+    val localTime: String,
+    val minuteOfDay: Int,
+    val second: Int? = null,
+    val status: String,
+    val grade: String,
+    val sourceIds: List<String>,
+    val precision: String? = null,
+    val interpretedZone: String? = null,
+    val interpretedOffset: String? = null,
+    val zoneStated: Boolean = false,
+    val zoneBasis: String? = null,
+    val role: String? = null,
+    val retrieved: String? = null,
+)
+
 data class CalendarCatalog(
     val schemaVersion: Int,
     val dataVersion: String,
@@ -69,20 +87,119 @@ data class CalendarCatalog(
     val events: List<CatalogEvent>,
     val holidayCalendars: List<CatalogHolidayCalendar>,
     val overrides: List<CatalogOverride>,
+    val newYearArrivals: List<CatalogNewYearArrival> = emptyList(),
 )
 
+data class NewYearArrivalDisplay(
+    val hour24: Int,
+    val minute: Int,
+    val second: Int?,
+    val isOfficial: Boolean,
+    val titleKm: String,
+    val titleEn: String,
+    val sourceIds: List<String>,
+)
+
+fun getKhmerPeriod(hour24: Int, minute: Int): String = when {
+    hour24 < 3 -> "រំលងអធ្រាត្រ"
+    hour24 < 12 -> "ព្រឹក"
+    hour24 == 12 && minute == 0 -> "ថ្ងៃត្រង់"
+    hour24 < 15 -> "រសៀល"
+    hour24 < 20 -> "ល្ងាច"
+    else -> "យប់"
+}
+
+fun String.toKhmerNumerals(): String =
+    map { if (it in '0'..'9') '០' + (it - '0') else it }.joinToString("")
+
+fun formatNewYearArrivalTime(
+    hour24: Int,
+    minute: Int,
+    second: Int? = null,
+    isOfficial: Boolean,
+    isKhmer: Boolean
+): String {
+    val hour12 = if (hour24 % 12 == 0) 12 else hour24 % 12
+    return if (isKhmer) {
+        val period = getKhmerPeriod(hour24, minute)
+        val status = if (isOfficial) "(ម៉ោងផ្លូវការ)" else "(ម៉ោងប៉ាន់ស្មាន)"
+        val timeDigits = if (second != null) {
+            "%02d:%02d:%02d".format(hour12, minute, second)
+        } else {
+            "%02d:%02d".format(hour12, minute)
+        }.toKhmerNumerals()
+        "ម៉ោង $timeDigits $period $status"
+    } else {
+        val amPm = if (hour24 < 12) "AM" else "PM"
+        val status = if (isOfficial) "(Official time)" else "(Estimated time)"
+        val timeStr = if (second != null) {
+            "%d:%02d:%02d %s".format(hour12, minute, second, amPm)
+        } else {
+            "%d:%02d %s".format(hour12, minute, amPm)
+        }
+        "$timeStr $status"
+    }
+}
+
+fun resolveNewYearArrival(year: Int): NewYearArrivalDisplay {
+    val record = RecurringEvents.newYearArrivalsByYear[year]
+    return if (record != null) {
+        val timeParts = record.localTime.split(':').map { it.toInt() }
+        val hour24 = timeParts[0]
+        val minute = timeParts[1]
+        val second = record.second ?: timeParts.getOrNull(2)
+        NewYearArrivalDisplay(
+            hour24 = hour24,
+            minute = minute,
+            second = second,
+            isOfficial = true,
+            titleKm = formatNewYearArrivalTime(hour24, minute, second, isOfficial = true, isKhmer = true),
+            titleEn = formatNewYearArrivalTime(hour24, minute, second, isOfficial = true, isKhmer = false),
+            sourceIds = record.sourceIds,
+        )
+    } else {
+        val arrival = KhmerCalendar.engine.newYear(year).arrivalEstimate
+        val hour24 = arrival.hour
+        val minute = arrival.minute
+        NewYearArrivalDisplay(
+            hour24 = hour24,
+            minute = minute,
+            second = null,
+            isOfficial = false,
+            titleKm = formatNewYearArrivalTime(hour24, minute, null, isOfficial = false, isKhmer = true),
+            titleEn = formatNewYearArrivalTime(hour24, minute, null, isOfficial = false, isKhmer = false),
+            sourceIds = emptyList(),
+        )
+    }
+}
+
 fun eventNames(event: CatalogEvent, year: Int): CatalogNames {
-    val base = event.anniversaryBase ?: return event.names
-    val anniversary = year - base
-    return CatalogNames(
-        en = event.names.en.replace("{anniversary}", anniversary.toString()),
-        km = event.names.km.replace("{anniversary}", khmerNumber(anniversary)),
-    )
+    val base = event.anniversaryBase
+    var names = if (base != null) {
+        val anniversary = year - base
+        CatalogNames(
+            en = event.names.en.replace("{anniversary}", anniversary.toString()),
+            km = event.names.km.replace("{anniversary}", khmerNumber(anniversary)),
+        )
+    } else {
+        event.names
+    }
+    if (event.id == "khmer_new_year_1") {
+        val arrival = resolveNewYearArrival(year)
+        names = CatalogNames(
+            en = "${names.en} ${arrival.titleEn}",
+            km = "${names.km} ${arrival.titleKm}",
+        )
+    }
+    return names
 }
 
 /** Evaluates canonical Schema v2 recurrence rules dynamically for 1800–2200. */
 internal object RecurringEvents {
     val catalog: CalendarCatalog by lazy { parseCatalog() }
+    val newYearArrivalsByYear: Map<Int, CatalogNewYearArrival> by lazy {
+        catalog.newYearArrivals.associateBy { it.year }
+    }
     val recurrenceEvents: List<CatalogEvent> by lazy { catalog.events.filter { it.rule != null } }
     val rules: List<RecurrenceRule> by lazy { recurrenceEvents.mapNotNull { it.rule } }
 
@@ -197,6 +314,28 @@ internal object RecurringEvents {
             )
         }
 
+        val arrivalsArr = root.optJSONArray("newYearArrivals") ?: JSONArray()
+        val newYearArrivals = (0 until arrivalsArr.length()).map { i ->
+            val obj = arrivalsArr.getJSONObject(i)
+            CatalogNewYearArrival(
+                year = obj.getInt("year"),
+                localDate = obj.getString("localDate"),
+                localTime = obj.getString("localTime"),
+                minuteOfDay = obj.getInt("minuteOfDay"),
+                second = if (obj.has("second") && !obj.isNull("second")) obj.getInt("second") else null,
+                status = obj.optString("status", "evidenced"),
+                grade = obj.optString("grade", "A"),
+                sourceIds = parseStringList(obj.optJSONArray("sourceIds")),
+                precision = if (obj.has("precision") && !obj.isNull("precision")) obj.getString("precision") else null,
+                interpretedZone = if (obj.has("interpretedZone") && !obj.isNull("interpretedZone")) obj.getString("interpretedZone") else null,
+                interpretedOffset = if (obj.has("interpretedOffset") && !obj.isNull("interpretedOffset")) obj.getString("interpretedOffset") else null,
+                zoneStated = obj.optBoolean("zoneStated", false),
+                zoneBasis = if (obj.has("zoneBasis") && !obj.isNull("zoneBasis")) obj.getString("zoneBasis") else null,
+                role = if (obj.has("role") && !obj.isNull("role")) obj.getString("role") else null,
+                retrieved = if (obj.has("retrieved") && !obj.isNull("retrieved")) obj.getString("retrieved") else null,
+            )
+        }
+
         return CalendarCatalog(
             schemaVersion = root.getInt("schemaVersion"),
             dataVersion = root.getString("dataVersion"),
@@ -204,6 +343,7 @@ internal object RecurringEvents {
             events = events,
             holidayCalendars = holidayCalendars,
             overrides = overrides,
+            newYearArrivals = newYearArrivals,
         )
     }
 
@@ -226,6 +366,11 @@ internal object RecurringEvents {
     internal fun fromDates(year: Int, dates: Map<CatalogEvent, List<LocalDate>>): List<CalendarEvent> =
         dates.flatMap { (event, eventDates) ->
             val names = eventNames(event, year)
+            val sourceIds = if (event.id == "khmer_new_year_1") {
+                (event.sourceIds + resolveNewYearArrival(year).sourceIds).distinct()
+            } else {
+                event.sourceIds
+            }
             eventDates.map { date ->
                 CalendarEvent(
                     id = event.id,
@@ -234,7 +379,7 @@ internal object RecurringEvents {
                     titleEn = names.en,
                     kind = EventKind.OBSERVANCE,
                     basis = DateBasis.CALCULATED,
-                    sourceIds = event.sourceIds,
+                    sourceIds = sourceIds,
                 )
             }
         }

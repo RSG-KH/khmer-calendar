@@ -1,6 +1,6 @@
 # Bundled event data
 
-The Android app packages its event catalog in [`khmer-calendar-data.json`](../app/src/main/resources/khmer-calendar-data.json) — one versioned JSON resource (`schemaVersion: 2`) holding recurrence rules, recorded date lists, official holiday calendars, reviewed date overrides and their sources. It is app data, separate from the [shared calculation engine](shared-engine.md). Version 0.4.0 replaced the former three-resource pipeline (the 3,246-row captured snapshot, the precomputed engine date cache and the runtime rules TSV) with this single catalog.
+The Android app packages its event catalog in [`khmer-calendar-data.json`](../app/src/main/resources/khmer-calendar-data.json) — one versioned JSON resource (`schemaVersion: 3`) holding recurrence rules, recorded date lists, official holiday calendars, reviewed date overrides, verified New Year arrival records, and their sources. It is app data, separate from the [shared calculation engine](shared-engine.md). Version 0.4.0 replaced the former three-resource pipeline (the 3,246-row captured snapshot, the precomputed engine date cache and the runtime rules TSV) with this single catalog.
 
 `dataVersion` inside the file tracks catalog data revisions independently of the app version. Titles for catalog events are stored in the catalog itself, including `{anniversary}` placeholders resolved per year; only the holy-day label comes from the shared app translations.
 
@@ -8,24 +8,31 @@ The Android app packages its event catalog in [`khmer-calendar-data.json`](../ap
 
 | Top-level field | Contents |
 | --- | --- |
-| `schemaVersion` | Catalog schema major version; the current bundle is `2` |
-| `dataVersion` | Data revision of this bundle |
+| `schemaVersion` | Catalog schema major version; the current bundle is `3` |
+| `dataVersion` | Data revision of this bundle (`0.4.0`) |
 | `sources` | Provenance records referenced by `sourceIds` elsewhere |
-| `events` | 124 event definitions: rules and recorded dates |
+| `events` | 137 event definitions: rules and recorded dates |
 | `holidayCalendars` | Official public-holiday calendars, one per year (2016–2027) |
 | `overrides` | Reviewed per-year date replacements for specific events |
+| `newYearArrivals` | 19 verified traditional Moha Sangkran arrival records (1997, 2009, 2010–2026 unbroken) |
 | `eventCalendars` | Reserved for future per-year calendar records; currently empty |
 
 ### Sources
 
-Each source records `id`, `kind` (`government` or `calendar`), `title`, `publisher` and optional `url`, `reference`, `publishedOn` and `notes`. The bundle currently carries one calendar source — the [Khmer Lunar Calendar website](https://khmer-lunar-calendar.com/) capture of 10 September 2026 that reviewed the event definitions — and 14 government sources: the annual holiday subdecrees for 2016–2027, the [2025 Ministry of Economy and Finance calendar](https://mef.gov.kh/calendar-holiday-2025/) and the [2026 Legal Reform Committee calendar](https://lrc.gov.kh/en/annual-holiday-calendar-2026/). Event details cite the first government source carrying a reference or URL.
+Each source records `id`, `kind` (`government`, `calendar`, `other` or `historical`), `title`, `publisher` and optional `url`, `reference`, `publishedOn` and `notes`. The bundle carries 46 sources: 25 `government` — the annual holiday subdecrees for 2016–2027, the [2025 Ministry of Economy and Finance calendar](https://mef.gov.kh/calendar-holiday-2025/) and the [2026 Legal Reform Committee calendar](https://lrc.gov.kh/en/annual-holiday-calendar-2026/), plus TVK Moha Sangkran broadcasts and AKP reports for the New Year arrival records — 10 `calendar` sources (the [Khmer Lunar Calendar website](https://khmer-lunar-calendar.com/) capture of 10 September 2026 that reviewed the event definitions, and pagoda calendars from Wat Ratanarangsey and Wat Kiryvongsa Bopharam), 10 `other` news and travel articles backing arrival records, and one `historical` research dossier set establishing event origin years. Event details cite the first government source carrying a reference or URL.
 
 ### Events
 
 Each event has `id`, `kind` (`observance`, `traditional` or `historical`), bilingual `names` (plus optional `description`), `sourceIds`, and one of two date carriers:
 
-- **`rule`** (109 events): engine `RecurrenceRule` fields — 72 `solar`, 23 `khmer_lunar`, 2 `solar_nth_weekday`, the 3 Khmer New Year stages, and 9 traditional Chinese festivals (`chinese_festival` with `monthPolicy: "cn-reference-utc8"` across 1900–2100). Optional `anniversaryBase` inserts `year − anniversaryBase` into the `{anniversary}` title placeholder. `historical` events may set `originalDate`, before which occurrences are suppressed.
-- **`dates`** (15 events): explicit ISO date lists for fixed heritage milestones such as the UNESCO inscription anniversaries. These are emitted as `DateBasis.RECORDED` without calculation.
+- **`rule`** (111 events): engine `RecurrenceRule` fields — 73 `solar`, 23 `khmer_lunar`, 3 `solar_nth_weekday`, the 3 Khmer New Year stages, and 9 traditional Chinese festivals (`chinese_festival` with `monthPolicy: "cn-reference-utc8"` across 1900–2100). Optional `anniversaryBase` inserts `year − anniversaryBase` into the `{anniversary}` title placeholder. `historical` events may set `originalDate`, before which occurrences are suppressed.
+- **`dates`** (26 events): explicit ISO date lists for fixed heritage milestones such as the UNESCO inscription anniversaries. These are emitted as `DateBasis.RECORDED` without calculation.
+
+### New Year arrival records
+
+`newYearArrivals` carries 19 verified Moha Sangkran arrival times (1997, 2009, and 2010–2026 unbroken) from TVK national broadcasts, pagoda calendar proclamations and contemporaneous press coverage. Each record pins `year`, `localDate`, `localTime` (with optional `second`), `minuteOfDay`, an evidence `status`/`grade` (all bundled records are `evidenced`, grade `A`), `sourceIds`, and zone attribution fields (`precision`, `zoneStated`, `interpretedZone`, `interpretedOffset`, `zoneBasis`) recording how the printed time was interpreted.
+
+At runtime the repository prefers a bundled record — tagged official, `ម៉ោងផ្លូវការ` — and otherwise falls back to the engine's traditional `arrivalEstimate`, tagged estimated, `ម៉ោងប៉ាន់ស្មាន`. The resolved phrase uses Khmer 12-hour period descriptors (`ព្រឹក`, `រសៀល`, `ល្ងាច`, `យប់`, `រំលងអធ្រាត្រ`) and is appended to the unified Moha Sangkran title; the record's sources are merged into the event.
 
 ### Holiday calendars and overrides
 
@@ -41,6 +48,8 @@ Each `holidayCalendars` year carries `coverage` (`complete` for all bundled year
 2. Rule events within `fromYear`..`throughYear`, evaluated by the engine with any year override passed as an `EventDateOverride` (`CALCULATED`, or `CORRECTED` when the override supplies the dates).
 3. The year's official holiday calendar, which promotes matching calculated occurrences — or adds new events — to `EventKind.HOLIDAY` with `DateBasis.OFFICIAL`, merging citations and source references; cancelled entries are skipped.
 4. Buddhist holy days, computed day by day from the engine (`KHMER_LUNAR`).
+
+For the first New Year stage (`khmer_new_year_1`), both the calculated occurrence and any official holiday promotion append the resolved Moha Sangkran arrival time to the title and merge the arrival record's sources, as described above.
 
 Every supported year 1800–2200 is built this way on demand and cached in memory per year. Outside 2016–2027 no event is marked as an official holiday; a calculated festival date alone never establishes government leave.
 

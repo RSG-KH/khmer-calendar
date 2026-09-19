@@ -60,6 +60,7 @@ data class AppSettings(
     val repeatHours: Int = 0,
     val todayTimeZone: TodayTimeZone = TodayTimeZone.LOCAL,
     val fontScale: FontScale = FontScale.PERCENT_100,
+    val showWesternZodiac: Boolean = true,
 )
 
 /** Only settings used to select an alarm's events or time belong here. */
@@ -75,6 +76,11 @@ class AppPreferences(context: Context) {
     fun read(): AppSettings {
         val legacyHolyDays = prefs.getBoolean("showHolyDays", true)
         val showHolyDaysInEvents = prefs.getBoolean("showHolyDaysInEvents", false)
+        val showWesternZodiac = if (prefs.contains("showWesternZodiac")) {
+            prefs.getBoolean("showWesternZodiac", true)
+        } else {
+            !prefs.getBoolean("hideWesternZodiac", false)
+        }
         return AppSettings(
             theme = ThemeMode.entries.firstOrNull { it.name == prefs.getString("theme", "SYSTEM") } ?: ThemeMode.SYSTEM,
             accent = Accent.entries.firstOrNull { it.name == prefs.getString("accent", "BLUE") } ?: Accent.BLUE,
@@ -97,6 +103,7 @@ class AppPreferences(context: Context) {
             repeatHours = prefs.getInt("repeatHours", 0).takeIf { it in listOf(0, 2, 4, 6, 8, 12) } ?: 0,
             todayTimeZone = TodayTimeZone.entries.firstOrNull { it.name == prefs.getString("todayTimeZone", "LOCAL") } ?: TodayTimeZone.LOCAL,
             fontScale = FontScale.entries.firstOrNull { it.name == prefs.getString("fontScale", "PERCENT_100") } ?: FontScale.PERCENT_100,
+            showWesternZodiac = showWesternZodiac,
         )
     }
     fun write(settings: AppSettings) {
@@ -123,6 +130,8 @@ class AppPreferences(context: Context) {
             putInt("repeatHours", settings.repeatHours)
             putString("todayTimeZone", settings.todayTimeZone.name)
             putString("fontScale", settings.fontScale.name)
+            putBoolean("showWesternZodiac", settings.showWesternZodiac)
+            remove("hideWesternZodiac")
         }
     }
 }

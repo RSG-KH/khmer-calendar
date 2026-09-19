@@ -941,11 +941,11 @@
       "id": "ui.no_account_no_internet_no_tracking_just_your_calendar_a.9bc7bf",
       "section": "interface",
       "context": "CalendarApp.kt",
-      "en": "No account, no internet, no data collection. Just your calendar and the dates that matter.",
-      "km": "មិនត្រូវការគណនី មិនត្រូវការអ៊ីនធឺណិត មិនប្រមូលទិន្នន័យ មានតែប្រតិទិនរបស់អ្នក និងថ្ងៃសំខាន់ៗ។",
+      "en": "No account, no internet, no data collection, just your calendar and the dates that matter.",
+      "km": "មិនត្រូវការគណនី មិនប្រមូលទិន្នន័យ មានតែប្រតិទិន និងថ្ងៃសំខាន់ៗរបស់អ្នក។",
       "original": {
-        "en": "No account, no internet, no data collection. Just your calendar and the dates that matter.",
-        "km": "មិនត្រូវការគណនី មិនត្រូវការអ៊ីនធឺណិត មិនប្រមូលទិន្នន័យ មានតែប្រតិទិនរបស់អ្នក និងថ្ងៃសំខាន់ៗ។"
+        "en": "No account, no internet, no data collection, just your calendar and the dates that matter.",
+        "km": "មិនត្រូវការគណនី មិនប្រមូលទិន្នន័យ មានតែប្រតិទិន និងថ្ងៃសំខាន់ៗរបស់អ្នក។"
       },
       "reviewed": true,
       "required": {
@@ -35697,6 +35697,38 @@
       "original": {
         "en": "In date and event details",
         "km": "ក្នុងកាលបរិច្ឆេទ និងព្រឹត្តិការណ៍លម្អិត"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.show_western_zodiac",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Show Western zodiac signs",
+      "km": "បង្ហាញតារានិករ",
+      "original": {
+        "en": "Show Western zodiac signs",
+        "km": "បង្ហាញតារានិករ"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.show_western_zodiac_subtitle",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "In date summary and details",
+      "km": "ក្នុងកាលបរិច្ឆេទសង្ខេប និងលម្អិត",
+      "original": {
+        "en": "In date summary and details",
+        "km": "ក្នុងកាលបរិច្ឆេទសង្ខេប និងលម្អិត"
       },
       "reviewed": false,
       "required": {

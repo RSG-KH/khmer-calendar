@@ -147,7 +147,7 @@ class CompactLayoutTest {
             compose.onNodeWithTag("accent-color").performScrollTo().performClick()
             screenshot("settings-accent-dropdown-$k")
             compose.onNode(hasText(L.text("ui.blue.cf6f1f", k)) and hasAnyAncestor(isPopup())).performClick()
-            for (key in listOf("ui.today_follows.b52168", "ui.start_week_on_monday.5578c3", "ui.show_longer_weekday_names", "ui.highlight_sunday_column.549462", "ui.lunar_dates_in_calendar.4dffed", "ui.buddhist_holy_days_in_calendar.d1e9b6", "ui.buddhist_holy_days_in_events.53e502")) assertTitle(key, k)
+            for (key in listOf("ui.today_follows.b52168", "ui.show_western_zodiac", "ui.start_week_on_monday.5578c3", "ui.show_longer_weekday_names", "ui.highlight_sunday_column.549462", "ui.lunar_dates_in_calendar.4dffed", "ui.buddhist_holy_days_in_calendar.d1e9b6", "ui.buddhist_holy_days_in_events.53e502")) assertTitle(key, k)
             compose.onNodeWithTag("settings-scroll").performScrollToNode(hasTestTag("today-time-zone"))
             compose.onNodeWithTag("today-time-zone").performClick()
             compose.onNode(hasText(L.text("ui.cambodia_utc_7.458037", k)) and hasAnyAncestor(isPopup())).performClick()

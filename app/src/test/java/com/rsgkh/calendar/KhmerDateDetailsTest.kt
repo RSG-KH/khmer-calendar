@@ -38,11 +38,11 @@ class KhmerDateDetailsTest {
         val sep24 = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 24))
         assertEquals("13 Koeut (Waxing) · Phutrobot", sep24.lunar.fullLabel(false))
         assertEquals("13 Koeut (Waxing) · Phutrobot\nYear of the Horse · Atthasak\nBuddhist Era 2570", sep24.fullEnglishDate())
-        assertEquals("១៣កើត ខែភទ្របទ ឆ្នាំមមី អដ្ឋស័ក", sep24.lunarSummary(true))
-        assertEquals("13 Koeut (Waxing) · Phutrobot · Year of the Horse · Atthasak", sep24.lunarSummary(false))
+        assertEquals("១៣កើត ខែភទ្របទ\nឆ្នាំមមី អដ្ឋស័ក", sep24.lunarSummary(true))
+        assertEquals("13 Koeut (Waxing) · Phutrobot\nYear of the Horse · Atthasak", sep24.lunarSummary(false))
 
         val sep21 = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 21))
-        assertEquals("១០កើត ខែភទ្របទ ឆ្នាំមមី អដ្ឋស័ក", sep21.lunarSummary(true))
+        assertEquals("១០កើត ខែភទ្របទ\nឆ្នាំមមី អដ្ឋស័ក", sep21.lunarSummary(true))
     }
 
     @Test fun animalSakAndBuddhistYearsHaveSeparateTransitions() {

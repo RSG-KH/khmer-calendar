@@ -166,4 +166,34 @@ class RecurringEventsTest {
         assertEquals(LocalDate.of(2031, 7, 7), preahVihear.date)
         assertTrue(preahVihear.titleKm.contains("២៣")) // 2031 - 2008 = 23
     }
+
+    @Test fun mohaSangkranUnifiedTitleMatchesAllNineteenVerifiedYears() {
+        val expected = mapOf(
+            1997 to ("Khmer New Year – Moha Sankranta 10:48 PM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ១០:៤៨ យប់ (ម៉ោងផ្លូវការ)"),
+            2009 to ("Khmer New Year – Moha Sankranta 1:30 AM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០១:៣០ រំលងអធ្រាត្រ (ម៉ោងផ្លូវការ)"),
+            2010 to ("Khmer New Year – Moha Sankranta 7:36 AM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០៧:៣៦ ព្រឹក (ម៉ោងផ្លូវការ)"),
+            2011 to ("Khmer New Year – Moha Sankranta 1:12 PM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០១:១២ រសៀល (ម៉ោងផ្លូវការ)"),
+            2012 to ("Khmer New Year – Moha Sankranta 7:11 PM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០៧:១១ ល្ងាច (ម៉ោងផ្លូវការ)"),
+            2013 to ("Khmer New Year – Moha Sankranta 2:12 AM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០២:១២ រំលងអធ្រាត្រ (ម៉ោងផ្លូវការ)"),
+            2014 to ("Khmer New Year – Moha Sankranta 8:07 AM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០៨:០៧ ព្រឹក (ម៉ោងផ្លូវការ)"),
+            2015 to ("Khmer New Year – Moha Sankranta 2:01 PM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០២:០១ រសៀល (ម៉ោងផ្លូវការ)"),
+            2016 to ("Khmer New Year – Moha Sankranta 8:00 PM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០៨:០០ យប់ (ម៉ោងផ្លូវការ)"),
+            2017 to ("Khmer New Year – Moha Sankranta 3:12 AM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០៣:១២ ព្រឹក (ម៉ោងផ្លូវការ)"),
+            2018 to ("Khmer New Year – Moha Sankranta 9:12 AM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០៩:១២ ព្រឹក (ម៉ោងផ្លូវការ)"),
+            2019 to ("Khmer New Year – Moha Sankranta 3:12 PM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០៣:១២ ល្ងាច (ម៉ោងផ្លូវការ)"),
+            2020 to ("Khmer New Year – Moha Sankranta 8:48 PM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០៨:៤៨ យប់ (ម៉ោងផ្លូវការ)"),
+            2021 to ("Khmer New Year – Moha Sankranta 4:00 AM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០៤:០០ ព្រឹក (ម៉ោងផ្លូវការ)"),
+            2022 to ("Khmer New Year – Moha Sankranta 10:00 AM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ១០:០០ ព្រឹក (ម៉ោងផ្លូវការ)"),
+            2023 to ("Khmer New Year – Moha Sankranta 4:00 PM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០៤:០០ ល្ងាច (ម៉ោងផ្លូវការ)"),
+            2024 to ("Khmer New Year – Moha Sankranta 10:17:24 PM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ១០:១៧:២៤ យប់ (ម៉ោងផ្លូវការ)"),
+            2025 to ("Khmer New Year – Moha Sankranta 4:48 AM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០៤:៤៨ ព្រឹក (ម៉ោងផ្លូវការ)"),
+            2026 to ("Khmer New Year – Moha Sankranta 10:48 AM (Official time)" to "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ១០:៤៨ ព្រឹក (ម៉ោងផ្លូវការ)"),
+        )
+        for ((year, expectedTitles) in expected) {
+            val event = RecurringEvents.forYear(year).single { it.id == "khmer_new_year_1" }
+            assertEquals("Year $year English title", expectedTitles.first, event.titleEn)
+            assertEquals("Year $year Khmer title", expectedTitles.second, event.titleKm)
+            assertTrue("Year $year should have arrival sources", event.sourceIds.isNotEmpty())
+        }
+    }
 }

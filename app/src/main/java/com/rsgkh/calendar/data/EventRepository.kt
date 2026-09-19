@@ -97,6 +97,11 @@ object EventRepository {
                 en = en.replace("{anniversary}", anniversary.toString())
             }
         }
+        if (h.eventId == "khmer_new_year_1" || h.id == "khmer_new_year_1") {
+            val arrival = resolveNewYearArrival(year)
+            km = "$km ${arrival.titleKm}"
+            en = "$en ${arrival.titleEn}"
+        }
         return CatalogNames(en = en, km = km)
     }
 
@@ -171,7 +176,10 @@ object EventRepository {
                 }
 
                 val isCorrected = occ.basis == "source_override"
-                val sourceIds = if (isCorrected && !occ.sourceId.isNullOrEmpty()) listOf(occ.sourceId!!) else event.sourceIds
+                var sourceIds = if (isCorrected && !occ.sourceId.isNullOrEmpty()) listOf(occ.sourceId!!) else event.sourceIds
+                if (event.id == "khmer_new_year_1") {
+                    sourceIds = (sourceIds + resolveNewYearArrival(year).sourceIds).distinct()
+                }
 
                 events.add(
                     CalendarEvent(

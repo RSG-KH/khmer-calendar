@@ -52,7 +52,8 @@ class EventRepositoryTest {
     }
 
     @Test fun officialHolidayCalendarsStandardizeOffDaysWithSubDecreeCitationsAcrossTwelveYears() {
-        assertEquals("0.3.3", RecurringEvents.catalog.dataVersion)
+        assertEquals("0.4.0", RecurringEvents.catalog.dataVersion)
+        assertEquals(3, RecurringEvents.catalog.schemaVersion)
         // 12 official holiday calendars (2016–2027) totaling 283 off-days
         var totalOfficialDays = 0
         for (year in 2016..2027) {
@@ -133,5 +134,52 @@ class EventRepositoryTest {
         assertEquals(listOf(LocalDate.of(2031, 5, 14)), bday2031.map { it.date })
         assertEquals(EventKind.OBSERVANCE, bday2031.single().kind)
         assertEquals(DateBasis.CALCULATED, bday2031.single().basis)
+    }
+
+    @Test fun newYearArrivalCatalogAndUnifiedTitleDisplay() {
+        assertEquals(3, RecurringEvents.catalog.schemaVersion)
+        assertEquals("0.4.0", RecurringEvents.catalog.dataVersion)
+        val arrivals = RecurringEvents.catalog.newYearArrivals
+        assertEquals(19, arrivals.size)
+        val expectedYears = listOf(1997, 2009) + (2010..2026).toList()
+        assertEquals(expectedYears, arrivals.map { it.year }.sorted())
+        assertTrue(arrivals.all { it.status == "evidenced" })
+
+        // 2024 with seconds precision from official TVK broadcast
+        val arrival2024 = arrivals.single { it.year == 2024 }
+        assertEquals("22:17:24", arrival2024.localTime)
+        assertEquals(24, arrival2024.second)
+        val ny2024 = EventRepository.forYear(2024).single { it.id == "khmer_new_year_1" || it.id == "2024_khmer_new_year_1" }
+        assertEquals("Khmer New Year – Moha Sankranta 10:17:24 PM (Official time)", ny2024.titleEn)
+        assertEquals("ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ១០:១៧:២៤ យប់ (ម៉ោងផ្លូវការ)", ny2024.titleKm)
+        assertNull(ny2024.time)
+
+        // 2026 official arrival from AKP / TVK
+        val arrival2026 = arrivals.single { it.year == 2026 }
+        assertEquals("10:48", arrival2026.localTime)
+        assertNull(arrival2026.second)
+        val ny2026 = EventRepository.forYear(2026).single { it.id == "khmer_new_year_1" || it.id == "2026_khmer_new_year_1" }
+        assertEquals("Khmer New Year – Moha Sankranta 10:48 AM (Official time)", ny2026.titleEn)
+        assertEquals("ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ១០:៤៨ ព្រឹក (ម៉ោងផ្លូវការ)", ny2026.titleKm)
+        assertNull(ny2026.time)
+
+        // 2027 calculated estimate fallback
+        val ny2027 = EventRepository.forYear(2027).single { it.id == "khmer_new_year_1" || it.id == "2027_khmer_new_year_1" }
+        assertEquals("Khmer New Year – Moha Sankranta 4:48 PM (Estimated time)", ny2027.titleEn)
+        assertEquals("ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត ម៉ោង ០៤:៤៨ ល្ងាច (ម៉ោងប៉ាន់ស្មាន)", ny2027.titleKm)
+        assertNull(ny2027.time)
+
+        // Helper functions for Khmer period descriptors
+        assertEquals("រំលងអធ្រាត្រ", getKhmerPeriod(0, 0))
+        assertEquals("រំលងអធ្រាត្រ", getKhmerPeriod(2, 59))
+        assertEquals("ព្រឹក", getKhmerPeriod(3, 0))
+        assertEquals("ព្រឹក", getKhmerPeriod(11, 59))
+        assertEquals("ថ្ងៃត្រង់", getKhmerPeriod(12, 0))
+        assertEquals("រសៀល", getKhmerPeriod(12, 1))
+        assertEquals("រសៀល", getKhmerPeriod(14, 59))
+        assertEquals("ល្ងាច", getKhmerPeriod(15, 0))
+        assertEquals("ល្ងាច", getKhmerPeriod(19, 59))
+        assertEquals("យប់", getKhmerPeriod(20, 0))
+        assertEquals("យប់", getKhmerPeriod(23, 59))
     }
 }

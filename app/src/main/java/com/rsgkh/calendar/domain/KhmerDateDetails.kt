@@ -15,9 +15,9 @@ data class KhmerDateDetails(
 ) {
     fun lunarSummary(khmer: Boolean): String {
         return if (khmer) {
-            "${lunar.fullLabel(true)} ឆ្នាំ${animalLabel(true)} ${L.text("calendar.sak.$sak", true)}"
+            "${lunar.fullLabel(true)}\nឆ្នាំ${animalLabel(true)} ${L.text("calendar.sak.$sak", true)}"
         } else {
-            "${lunar.fullLabel(false)} · Year of the ${animalLabel(false)} · ${L.text("calendar.sak.$sak", false)}"
+            "${lunar.fullLabel(false)}\nYear of the ${animalLabel(false)} · ${L.text("calendar.sak.$sak", false)}"
         }
     }
     fun animalLabel(khmer: Boolean): String {

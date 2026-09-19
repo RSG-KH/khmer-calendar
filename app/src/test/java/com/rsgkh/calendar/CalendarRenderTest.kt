@@ -68,18 +68,18 @@ class CalendarRenderTest : CalendarUiScenarios() {
             highlightWeekdayNames = true, showHolyDaysInCalendar = true, showHolyDaysInEvents = false,
             highlightSunday = true, notificationsEnabled = false, pushCustomEvents = true, pushHolidays = true,
             pushObservances = true, pushHolyDays = false, pushMinutes = 300, repeatHours = 0, todayTimeZone = TodayTimeZone.LOCAL,
-            fontScale = FontScale.PERCENT_100, backgroundAccent = true)
+            fontScale = FontScale.PERCENT_100, backgroundAccent = true, showWesternZodiac = true)
         assertEquals(defaults, AppSettings())
         assertEquals(defaults, AppPreferences(context).read())
         val expected = AppSettings(ThemeMode.DARK, Accent.LIME, khmer = false, mondayFirst = true, showLongerWeekdayNames = true, showCopyButtons = true, showLunar = false,
             highlightWeekdayNames = true, showHolyDaysInCalendar = false, showHolyDaysInEvents = true,
             highlightSunday = false, pushCustomEvents = false, pushHolidays = false, pushObservances = false, pushHolyDays = false,
             repeatHours = 6, todayTimeZone = TodayTimeZone.CAMBODIA,
-            fontScale = FontScale.PERCENT_110, backgroundAccent = false)
+            fontScale = FontScale.PERCENT_110, backgroundAccent = false, showWesternZodiac = false)
         AppPreferences(context).write(expected)
         assertEquals(expected, AppPreferences(context).read())
-        AppPreferences(context).write(expected.copy(showCopyButtons = false, showLongerWeekdayNames = false, highlightWeekdayNames = false, backgroundAccent = true))
-        assertEquals(expected.copy(showCopyButtons = false, showLongerWeekdayNames = false, highlightWeekdayNames = false, backgroundAccent = true), AppPreferences(context).read())
+        AppPreferences(context).write(expected.copy(showCopyButtons = false, showLongerWeekdayNames = false, highlightWeekdayNames = false, backgroundAccent = true, showWesternZodiac = true))
+        assertEquals(expected.copy(showCopyButtons = false, showLongerWeekdayNames = false, highlightWeekdayNames = false, backgroundAccent = true, showWesternZodiac = true), AppPreferences(context).read())
     }
 
     @Test fun systemThemeFollowsDeviceUntilAChipIsChosen() {
@@ -765,5 +765,34 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithText("Year (1800–2200)").assertIsDisplayed()
         screenshot("tablet-$orientation-year-picker-150")
         compose.onNodeWithText("Cancel").performScrollTo().performClick()
+    }
+
+    @Test
+    fun showWesternZodiacSettingTogglesZodiacInDateDetailsAndBanner() {
+        start(AppSettings(khmer = false, theme = ThemeMode.LIGHT))
+        val zodiacLabel = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 10)).zodiac.label
+
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNodeWithText("Date details").assertIsDisplayed()
+        compose.onNodeWithText(zodiacLabel).assertIsDisplayed()
+        compose.onNodeWithText("Close").performClick()
+
+        compose.onNodeWithText("Settings").performClick()
+        compose.onNodeWithContentDescription(L.text("ui.show_western_zodiac", false)).performScrollTo().assertIsOn().performClick().assertIsOff()
+
+        compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
+
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNodeWithText("Date details").assertIsDisplayed()
+        compose.onNodeWithText(zodiacLabel).assertDoesNotExist()
+        compose.onNodeWithText("Close").performClick()
+
+        // 2026-09-12 has neither a Buddhist holy day/shaving day nor western zodiac when hidden
+        compose.onNode(hasContentDescription("Saturday, 12 September", substring = true)).performClick()
+        compose.onNodeWithText("Date details").assertIsDisplayed()
+        val sep12Zodiac = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 12)).zodiac.label
+        compose.onNodeWithText(sep12Zodiac).assertDoesNotExist()
+        compose.onNodeWithText(L.text("ui.thngai_sil_buddhist_holy_day.89de73", false)).assertDoesNotExist()
+        compose.onNodeWithText(L.text("ui.thngai_kaor_before_a_holy_day.d02977", false)).assertDoesNotExist()
     }
 }

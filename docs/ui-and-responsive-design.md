@@ -21,6 +21,10 @@ Swiping, using the month arrows, or choosing a month and year selects day 1 of t
 
 When Show copy buttons is enabled, date and event details display a copy icon aligned with the first text line near the right edge. The button retains a 48 dp tap area. After copying, an accent-colored checkmark appears for two seconds, then returns to the copy icon. Copying again restarts the timer. The confirmation is also exposed to accessibility services using the translated copied message.
 
+### Western zodiac visibility
+
+**Settings → Calendar → Show Western zodiac signs** is on by default and saved on the device. Turning it off removes the Western zodiac line from the selected-date card and from date details — the divider above that block also disappears unless a Buddhist holy day or shaving day is shown — and omits the zodiac glyph from event-detail backgrounds while keeping the animal-year artwork. Month-grid cells never show zodiac signs. An inverted `hideWesternZodiac` choice saved by an earlier build carries over when the setting is next written.
+
 ### Custom event repeats
 
 `SelectionChip` defines the shared appearance for Events filters and Repeat choices:
