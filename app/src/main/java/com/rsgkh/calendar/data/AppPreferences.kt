@@ -61,6 +61,11 @@ data class AppSettings(
     val todayTimeZone: TodayTimeZone = TodayTimeZone.LOCAL,
     val fontScale: FontScale = FontScale.PERCENT_100,
     val showWesternZodiac: Boolean = true,
+    val widgetsEnabled: Boolean = false,
+    val widgetShowPersonal: Boolean = true,
+    val widgetShowHolidays: Boolean = true,
+    val widgetShowObservances: Boolean = true,
+    val widgetHidePersonalDetails: Boolean = false,
 )
 
 /** Only settings used to select an alarm's events or time belong here. */
@@ -104,6 +109,11 @@ class AppPreferences(context: Context) {
             todayTimeZone = TodayTimeZone.entries.firstOrNull { it.name == prefs.getString("todayTimeZone", "LOCAL") } ?: TodayTimeZone.LOCAL,
             fontScale = FontScale.entries.firstOrNull { it.name == prefs.getString("fontScale", "PERCENT_100") } ?: FontScale.PERCENT_100,
             showWesternZodiac = showWesternZodiac,
+            widgetsEnabled = prefs.getBoolean("widgetsEnabled", false),
+            widgetShowPersonal = prefs.getBoolean("widgetShowPersonal", true),
+            widgetShowHolidays = prefs.getBoolean("widgetShowHolidays", true),
+            widgetShowObservances = prefs.getBoolean("widgetShowObservances", true),
+            widgetHidePersonalDetails = prefs.getBoolean("widgetHidePersonalDetails", false),
         )
     }
     fun write(settings: AppSettings) {
@@ -131,6 +141,11 @@ class AppPreferences(context: Context) {
             putString("todayTimeZone", settings.todayTimeZone.name)
             putString("fontScale", settings.fontScale.name)
             putBoolean("showWesternZodiac", settings.showWesternZodiac)
+            putBoolean("widgetsEnabled", settings.widgetsEnabled)
+            putBoolean("widgetShowPersonal", settings.widgetShowPersonal)
+            putBoolean("widgetShowHolidays", settings.widgetShowHolidays)
+            putBoolean("widgetShowObservances", settings.widgetShowObservances)
+            putBoolean("widgetHidePersonalDetails", settings.widgetHidePersonalDetails)
             remove("hideWesternZodiac")
         }
     }

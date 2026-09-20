@@ -21,6 +21,7 @@ import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.notifications.EventNotifications
 import com.rsgkh.calendar.ui.CalendarApp
 import com.rsgkh.calendar.ui.NotificationAccess
+import com.rsgkh.calendar.widgets.WidgetUpdater
 import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
@@ -29,6 +30,7 @@ class MainActivity : ComponentActivity() {
     private var revision by mutableIntStateOf(0)
     private var customRevision by mutableIntStateOf(0)
     private var openDateRequest by mutableStateOf<Pair<LocalDate, Long>?>(null)
+    private var openWidgetEventRequest by mutableStateOf<com.rsgkh.calendar.widgets.WidgetEventRequest?>(null)
     private var awaitingNotificationPermission = false
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         awaitingNotificationPermission = false
@@ -71,6 +73,7 @@ class MainActivity : ComponentActivity() {
             layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
         }
         EventNotifications.createChannel(this)
+        WidgetUpdater.setWidgetsEnabled(this, preferences.read().widgetsEnabled)
         readDateIntent(intent)
         setContent {
             val settings = remember(revision) { preferences.read() }
@@ -86,6 +89,7 @@ class MainActivity : ComponentActivity() {
                 onOpenNotificationSettings = { requestNotificationAccess() },
                 onAllowExact = { startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, "package:$packageName".toUri())) },
                 openDateRequest = openDateRequest,
+                openWidgetEventRequest = openWidgetEventRequest,
             ) { updateSettings(it) }
         }
     }
@@ -93,6 +97,10 @@ class MainActivity : ComponentActivity() {
         val previous = preferences.read()
         preferences.write(next)
         revision++
+        com.rsgkh.calendar.widgets.WidgetUpdater.requestUpdate(this)
+        if (next.widgetsEnabled != previous.widgetsEnabled) {
+            WidgetUpdater.setWidgetsEnabled(this, next.widgetsEnabled)
+        }
         if (next.remindersDifferFrom(previous)) EventNotifications.rescheduleAsync(this)
         // Delivery reads the current language; updating channel labels needs no new alarm.
         if (next.khmer != previous.khmer) EventNotifications.createChannel(this)
@@ -100,7 +108,11 @@ class MainActivity : ComponentActivity() {
             requestNotificationAccess()
         }
     }
-    private fun changed() { revision++; EventNotifications.rescheduleAsync(this) }
+    private fun changed() {
+        revision++
+        EventNotifications.rescheduleAsync(this)
+        com.rsgkh.calendar.widgets.WidgetUpdater.requestUpdate(this)
+    }
     override fun onResume() {
         super.onResume()
         if (awaitingNotificationPermission) {
@@ -115,7 +127,13 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); setIntent(intent); readDateIntent(intent) }
     private fun readDateIntent(intent: Intent) {
         val date = runCatching { LocalDate.parse(intent.getStringExtra(EventNotifications.EXTRA_DATE)) }.getOrNull()
-        if (date != null && date.year in 1800..2200) openDateRequest = date to System.nanoTime()
+        if (date != null && date.year in 1800..2200) {
+            val nonce = System.nanoTime()
+            openDateRequest = date to nonce
+            openWidgetEventRequest = intent.getStringExtra(com.rsgkh.calendar.widgets.WidgetNavigation.EXTRA_EVENT_ID)
+                ?.takeIf { it.isNotBlank() }
+                ?.let { com.rsgkh.calendar.widgets.WidgetEventRequest(date, it, nonce) }
+        }
     }
     override fun onDestroy() { customRepository.close(); super.onDestroy() }
 }

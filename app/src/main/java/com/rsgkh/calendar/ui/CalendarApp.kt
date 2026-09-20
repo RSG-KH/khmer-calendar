@@ -79,6 +79,7 @@ import com.rsgkh.calendar.BuildConfig
 import com.rsgkh.calendar.R
 import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.domain.*
+import com.rsgkh.calendar.widgets.WidgetUpdater
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
@@ -179,7 +180,9 @@ private fun BoxScope.DetailsZodiacBackground(info: KhmerDateDetails, showWestern
 fun CalendarApp(settings: AppSettings, today: LocalDate,
     customEvents: List<CustomEvent> = emptyList(), onSaveCustom: (CustomEvent) -> Unit = {}, onDeleteCustom: (String) -> Unit = {},
     notificationAccess: NotificationAccess = NotificationAccess(), onOpenNotificationSettings: () -> Unit = {}, onAllowExact: () -> Unit = {},
-    openDateRequest: Pair<LocalDate, Long>? = null, onSettings: (AppSettings) -> Unit) {
+    openDateRequest: Pair<LocalDate, Long>? = null,
+    openWidgetEventRequest: com.rsgkh.calendar.widgets.WidgetEventRequest? = null,
+    onSettings: (AppSettings) -> Unit) {
     CalendarTheme(settings) {
         var page by rememberSaveable { mutableIntStateOf(0) }
         var selectedText by rememberSaveable { mutableStateOf(today.coerceIn(KhmerCalendar.minDate, KhmerCalendar.maxDate).toString()) }
@@ -198,11 +201,21 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
             val years = setOf(month.year, eventYear, selected.year, dateDetailText?.let { LocalDate.parse(it).year } ?: selected.year)
             years.flatMap { year -> customEvents.flatMap { it.occurrences(LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31), displayZone) } }
         }
-        LaunchedEffect(openDateRequest) {
+        LaunchedEffect(openDateRequest, openWidgetEventRequest) {
             openDateRequest?.first?.let { date ->
                 if (date in KhmerCalendar.minDate..KhmerCalendar.maxDate) {
                     page = 0; jump = false; creating = false; editingId = null; detail = null
                     selectedText = date.toString(); monthText = YearMonth.from(date).toString(); dateDetailText = date.toString()
+                    val request = openWidgetEventRequest?.takeIf {
+                        it.date == date && it.nonce == openDateRequest?.second
+                    }
+                    if (request != null) {
+                        detail = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                            runCatching {
+                                com.rsgkh.calendar.widgets.WidgetNavigation.resolve(request, customEvents, displayZone)
+                            }.getOrNull()
+                        }
+                    }
                 }
             }
         }
@@ -348,7 +361,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
 
 @Composable
 private fun CalendarHeader(
-    month: YearMonth, selected: LocalDate, k: Boolean,
+    month: YearMonth, selected: LocalDate, today: LocalDate, k: Boolean,
     onJump: () -> Unit, onPrevious: () -> Unit, onNext: () -> Unit, onToday: () -> Unit
 ) {
     val config = LocalConfiguration.current
@@ -401,12 +414,16 @@ private fun CalendarHeader(
             )
             ArrowButton(true, month < YearMonth.of(2200, 12), L.text("ui.next_month.d2d40f", k)) { onNext() }
         }
+        val isTodaySelected = (selected == today)
         TextButton(
             onClick = onToday,
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .width(74.dp),
-            contentPadding = PaddingValues(0.dp)
+            contentPadding = PaddingValues(0.dp),
+            colors = ButtonDefaults.textButtonColors(
+                contentColor = if (isTodaySelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary
+            )
         ) {
             Text(L.text("ui.today.d71ac6", k), fontSize = 13.readableSp)
         }
@@ -465,8 +482,12 @@ private fun CalendarMonthCard(
                 MonthGrid(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext)
                 HorizontalDivider(Modifier.padding(horizontal = 8.dp, vertical = if (isLandscape) 3.dp else 5.dp), color = MaterialTheme.colorScheme.outlineVariant)
                 val hasCustom = gridEvents.any { it.kind == EventKind.CUSTOM }
-                val spacing = if (hasCustom && settings.showHolyDaysInCalendar) (if (isLandscape) 8.dp else 10.dp) else (if (isLandscape) 10.dp else 16.dp)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+                val spacing = if (hasCustom && settings.showHolyDaysInCalendar) (if (isLandscape) 6.dp else 8.dp) else (if (isLandscape) 10.dp else 14.dp)
+                FlowRow(
+                    Modifier.fillMaxWidth().padding(vertical = if (isLandscape) 2.dp else 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(spacing, Alignment.CenterHorizontally),
+                    verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+                ) {
                     Legend(EventKind.HOLIDAY, L.text("ui.holiday.253332", k), eventColor(EventKind.HOLIDAY))
                     if (settings.showHolyDaysInCalendar) {
                         Legend(EventKind.HOLY_DAY, L.text("ui.holy_day.28786d", k), eventColor(EventKind.HOLY_DAY))
@@ -476,8 +497,6 @@ private fun CalendarMonthCard(
                         Legend(EventKind.CUSTOM, L.text("ui.custom.917053", k), eventColor(EventKind.CUSTOM))
                     }
                 }
-                if (settings.showLunar && !k) Text(L.text("calendar.lunar_legend", k), Modifier.fillMaxWidth().padding(top = 0.dp), textAlign = TextAlign.Center,
-                    fontSize = 10.readableSp, lineHeight = 13.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -508,7 +527,7 @@ private fun CalendarScreen(
         val leftWeight = if (isTablet) 1.0f else 0.9f
         Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(leftWeight).fillMaxHeight().verticalScroll(rememberScrollState())) {
-                CalendarHeader(month, selected, k, onJump, onPrevious, onNext, onToday)
+                CalendarHeader(month, selected, today, k, onJump, onPrevious, onNext, onToday)
                 CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext)
                 if (isTablet) {
                     val selectedEvents = remember(selected, listEvents) { listEvents.filter { it.date == selected } }
@@ -574,7 +593,7 @@ private fun CalendarScreen(
         }
     } else {
         Column(Modifier.widthIn(max = 640.dp).fillMaxSize()) {
-            CalendarHeader(month, selected, k, onJump, onPrevious, onNext, onToday)
+            CalendarHeader(month, selected, today, k, onJump, onPrevious, onNext, onToday)
             LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag("calendar-scroll"), contentPadding = PaddingValues(10.dp, 0.dp, 10.dp, 24.dp)) {
                 item {
                     CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext)
@@ -888,6 +907,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
             }
         }
         item { NotificationSettingsCard(settings, onChange, access, onSystemSettings, onAllowExact) }
+        item { WidgetSettingsCard(settings, onChange) }
         item {
             SettingsCard(L.text("ui.for_everyone.b68901", k), spacedContent = true) {
                 Text(L.text("ui.free_ad_free_yours.885c91", k), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
@@ -912,6 +932,70 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
         Text(title, Modifier.padding(start = 10.dp), fontSize = 11.readableSp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Surface(shape = CardShape, color = MaterialTheme.colorScheme.surface) {
             Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(if (spacedContent) 12.dp else 0.dp), content = content)
+        }
+    }
+}
+
+@Composable
+internal fun WidgetSettingsCard(
+    settings: AppSettings,
+    onChange: (AppSettings) -> Unit,
+) {
+    val context = LocalContext.current
+    val k = settings.khmer
+    val cardTitle = if (k) "ធាតុក្រាហ្វិក (វីដជិត)" else "WIDGETS"
+    val title = if (k) "បើកដំណើរការវីដជិត" else "Enable widgets"
+    val subtitle = if (k) "នៅលើអេក្រង់ដើម" else "On home screen"
+
+    val personalTitle = if (k) "ព្រឹត្តិការណ៍ផ្ទាល់ខ្លួន" else "Personal events"
+    val personalSubtitle = if (k) "បង្ហាញព្រឹត្តិការណ៍ផ្ទាល់ខ្លួន" else "Show personal events"
+
+    val holidaysTitle = if (k) "ថ្ងៃឈប់សម្រាកផ្លូវការ" else "Public holidays"
+    val holidaysSubtitle = if (k) "បង្ហាញថ្ងៃឈប់សម្រាកផ្លូវការ" else "Show official public holidays"
+
+    val observancesTitle = if (k) "ទិវា និងពិធីបុណ្យ" else "Observances"
+    val observancesSubtitle = if (k) "បង្ហាញទិវា និងពិធីបុណ្យនានា" else "Show festivals and others"
+
+    val privacyTitle = if (k) "លាក់ព័ត៌មានលម្អិតនៃព្រឹត្តិការណ៍ផ្ទាល់ខ្លួន" else "Hide personal event details"
+    val privacySubtitle = if (k) "បង្ហាញតែចំនួន ដោយលាក់មាតិកា" else "Show count with hidden contents"
+
+    SettingsCard(cardTitle) {
+        SettingSwitch(
+            title = title,
+            subtitle = subtitle,
+            checked = settings.widgetsEnabled,
+        ) { enabled ->
+            val updated = settings.copy(widgetsEnabled = enabled)
+            onChange(updated)
+            WidgetUpdater.setWidgetsEnabled(context, enabled)
+        }
+
+        if (settings.widgetsEnabled) {
+            SettingSwitch(
+                title = personalTitle,
+                subtitle = personalSubtitle,
+                checked = settings.widgetShowPersonal,
+            ) { onChange(settings.copy(widgetShowPersonal = it)) }
+
+            SettingSwitch(
+                title = holidaysTitle,
+                subtitle = holidaysSubtitle,
+                checked = settings.widgetShowHolidays,
+            ) { onChange(settings.copy(widgetShowHolidays = it)) }
+
+            SettingSwitch(
+                title = observancesTitle,
+                subtitle = observancesSubtitle,
+                checked = settings.widgetShowObservances,
+            ) { onChange(settings.copy(widgetShowObservances = it)) }
+
+            if (settings.widgetShowPersonal) {
+                SettingSwitch(
+                    title = privacyTitle,
+                    subtitle = privacySubtitle,
+                    checked = settings.widgetHidePersonalDetails,
+                ) { onChange(settings.copy(widgetHidePersonalDetails = it)) }
+            }
         }
     }
 }
@@ -1581,7 +1665,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
 }
 @Composable private fun Dot(color: Color, small: Boolean = false) { Box(Modifier.size(if (small) 4.dp else 6.dp).background(color, CircleShape)) }
 @Composable private fun Legend(kind: EventKind, label: String, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) { EventMark(kind, color, small = false); Text(label, fontSize = 10.readableSp, lineHeight = 14.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) { EventMark(kind, color, small = false); Text(label, fontSize = 10.readableSp, lineHeight = 14.readableSp, maxLines = 1, color = MaterialTheme.colorScheme.onSurfaceVariant) }
 }
 
 /** Small original vector marks, with no icon font or image download. */

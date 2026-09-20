@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_surface">#FFFFFF</color>
+    <color name="widget_card">#F0F2F7</color>
+    <color name="widget_ink">#222632</color>
+    <color name="widget_muted">#6D7485</color>
+    <color name="widget_line">#E6E8F0</color>
+    <color name="widget_accent">#4564B5</color>
+    <color name="widget_gold">#99601D</color>
+    <color name="widget_gold_bg">#FFF3E4</color>
+</resources>

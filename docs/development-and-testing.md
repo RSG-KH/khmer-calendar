@@ -4,7 +4,7 @@
 
 - JDK 25, auto-provisioned by Gradle toolchain resolution if absent.
 - Android SDK Platform 37; the app targets API 37 and supports API 31+.
-- Gradle 9.6.0 through the wrapper, Android Gradle Plugin 9.4.0 and Kotlin 2.4.20.
+- Gradle 9.6.0 through the wrapper, Android Gradle Plugin 9.4.1 and Kotlin 2.4.20.
 
 AGP provides built-in Kotlin support. The root `build.gradle.kts` selects the Kotlin Gradle plugin version from `gradle/libs.versions.toml`, which also sets the Compose compiler version. Update that shared version to keep both compilers aligned. See Android's [built-in Kotlin configuration](https://developer.android.com/build/releases/agp-9-0-0-release-notes#runtime-dependency-on-kotlin-gradle-plugin).
 
@@ -42,6 +42,7 @@ Connected tests require a running emulator or device listed by `adb devices`.
 | Reminder planner and delivery | Category controls, appearance changes preserving alarms, permissions, saved event instants, clock/time-zone broadcasts without an activity, daylight saving and repeats |
 | Today refresh | Visible-only polling, immediate refresh on return, midnight, clock jumps and device time-zone changes |
 | Compose UI | Phone/tablet layouts, both languages, dialogs, font scaling and settings |
+| Home screen widgets | Date rollover and event-filter policies, tap navigation into date details, and hidden personal-event details |
 | System window behavior | Light/dark edge-to-edge configuration on API 31, 34 and 35 |
 | Translation tools | Catalog validation, export, backups and conflicting saves |
 

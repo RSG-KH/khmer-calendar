@@ -34,12 +34,12 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 ### 🏛️ Holidays & Cultural Observances
 
 - **Unified Moha Sangkran Arrival Time**: Displays verified official arrival times (TVK broadcasts and government decrees, 1997, 2009, 2010–2026 unbroken) and traditional astronomical estimates (2027+) directly in event titles with authentic Khmer 12-hour period descriptors (`ព្រឹក`, `រសៀល`, `ល្ងាច`, `យប់`, `រំលងអធ្រាត្រ`).
-- **Official Holiday Calendars (2020–2027)**: Bundled government calendars mark public holidays with their citing subdecree or ministry source, shown in event details.
+- **Official Holiday Calendars (2016–2027)**: Bundled government calendars mark public holidays with their citing subdecree or ministry source, shown in event details.
 - **On-Device Event Calculation (1800–2200)**: Observances, traditional Cambodian festivals, Chinese festivals and Buddhist holy days are calculated on the device from bundled rules for every supported year, with reviewed date corrections where captured records differ.
 - **Cambodian Holidays & Festivals**: Browse public holidays and traditional festivals, including Khmer New Year, Pchum Ben, Water Festival and Royal Ploughing.
 - **National & International Observances**: Includes commemorations and UN observances alongside Buddhist holy days.
 
-### ⏰ Custom Events & Precision Notifications
+### ⏰ Personal Events & Precision Notifications
 - **Local SQLite Persistence**: Create, edit, and delete personal events with titles, dates, times, and notes.
 - **Repeating Events**: Repeat every X days, weekly, monthly or yearly, with a required end date and a preview. Choose whether to skip missing month-end or leap-day dates or include the available date. Edit or delete the whole series together.
 - **Time Zone Intelligence**:
@@ -47,7 +47,15 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
   - **Repeating Event Time Zone**: Each series keeps its saved time zone and wall-clock time across daylight saving changes; occurrences are shown in the selected display zone.
 - **Local Alarms**: Android's `AlarmManager.setExactAndAllowWhileIdle` schedules reminders on-device, with notification and exact-alarm access enabled. No remote push server is used.
 - **Repeat Reminders**: Configure the daily reminder time and optional additional reminders every 2, 4, 6, 8 or 12 hours. These are separate from an event's repeat schedule.
-- **Event-Type Controls**: Choose reminders for custom events, holidays, observances, and Buddhist holy days independently.
+- **Event-Type Controls**: Choose reminders for personal events, holidays, observances, and Buddhist holy days independently.
+
+### 📱 Home Screen Widgets (Jetpack Glance)
+- **Month Widget (4×3)**: Full-month calendar grid with Gregorian and Khmer lunar dates, Buddhist holy days, traditional weekday heading colors, today cell highlight, event markers row (🔴 holiday, ▲ holy, ■ observance, ★ personal), legend footnote, and interactive date-cell tapping that launches the app directly into that day's date details.
+- **Productivity Widget (4×2)**: Date details card featuring a prominent day number, short weekday, short Gregorian month, Khmer lunar month and day, Buddhist Era year, Western Zodiac sign, and Today/Tomorrow event lists. Automatically adapts when resized horizontally by hiding detail rows on compact widths.
+- **Focus Widget (4×2)**: Daily events overview featuring full lunar date and BE year badges, a scrollable list of today's events, and preview sub-cards for yesterday and tomorrow.
+- **App Settings Integration**: Master **Enable widgets** toggle switch under Settings → Widgets. Toggling off uses `PackageManager.setComponentEnabledSetting` to disable widget receivers, hiding them from the system widget picker with zero background battery or memory overhead.
+- **Global Event Filtering**: Expandable switches in App Settings control Personal events, Public holidays, Observances, and Hide personal event details across all widgets. Buddhist holy days follow app-wide Calendar and Event settings.
+- **Dynamic Light & Dark Previews**: Embedded 8-bit PNG preview thumbnails (`res/drawable/` and `res/drawable-night/`) automatically reflect the system light/dark theme in the Android widget picker.
 
 ### 📱 Adaptive Multi-Form-Factor UI
 - **Phone Landscape Experience**: Navigation rail tabs dynamically expand across the entire vertical height (`weight(1f)`), delivering ergonomic tap targets without empty dead space.
@@ -75,13 +83,14 @@ KhmerCalendar/
 │   ├── src/main/
 │   │   ├── java/com/rsgkh/calendar/
 │   │   │   ├── MainActivity.kt          # Entry point
+│   │   │   ├── TodayRefresh.kt          # Visible-only today-date refresh polling
 │   │   │   ├── data/
-│   │   │   │   ├── AppPreferences.kt    # Settings (theme, accent, font scale, timezone)
-│   │   │   │   ├── CustomEventRepository.kt # Custom event CRUD (local persistence)
+│   │   │   │   ├── AppPreferences.kt    # Settings (theme, accent, font scale, timezone, widgets)
+│   │   │   │   ├── CustomEventRepository.kt # Personal event CRUD (local persistence)
 │   │   │   │   ├── EventRepository.kt   # Event models & bundled snapshot loading
 │   │   │   │   └── RecurringEvents.kt   # Built-in observance recurrence rules
 │   │   │   ├── domain/
-│   │   │   │   ├── EventRepeat.kt       # Custom repeat schedules, fallbacks & previews
+│   │   │   │   ├── EventRepeat.kt       # Personal event repeat schedules & fallbacks
 │   │   │   │   ├── KhmerCalendar.kt     # Shared-engine date adapter & lunar labels
 │   │   │   │   ├── KhmerDateDetails.kt  # Engine results & Android formatting
 │   │   │   │   ├── KhmerNewYear.kt      # Shared-engine festival date adapter
@@ -91,22 +100,40 @@ KhmerCalendar/
 │   │   │   │   └── L.kt                 # Offline localization dictionary access
 │   │   │   ├── notifications/
 │   │   │   │   ├── EventNotifications.kt # Exact alarm scheduling & grouping
-│   │   │   │   └── ReminderPlanner.kt   # Push time & repeat interval planning
+│   │   │   │   ├── ReminderPlanner.kt   # Push time & repeat interval planning
+│   │   │   │   └── ReminderWork.kt      # Background executor for reminder work
+│   │   │   ├── widgets/
+│   │   │   │   ├── CalendarHomeWidget.kt # Glance base class & Focus/Productivity/Month widgets
+│   │   │   │   ├── WidgetContent.kt     # Size-adaptive Glance composables
+│   │   │   │   ├── WidgetDataSource.kt  # IO snapshot loading & filtering
+│   │   │   │   ├── WidgetNavigation.kt  # Widget tap intents into app date details
+│   │   │   │   ├── WidgetPalette.kt     # Day/night widget color providers
+│   │   │   │   ├── WidgetPolicy.kt      # Pure date & event-filtering policies
+│   │   │   │   ├── WidgetRefreshWorker.kt # WorkManager periodic refresh worker
+│   │   │   │   ├── WidgetUpdater.kt     # WorkManager & AlarmManager scheduler
+│   │   │   │   ├── WidgetReceivers.kt   # Receiver components & system restores
+│   │   │   │   └── WidgetStrings.kt     # Localized string formatters & Khmer time
 │   │   │   └── ui/
-│   │   │       ├── CalendarApp.kt       # Main screens, responsive nav & month picker
-│   │   │       ├── CustomEventEditor.kt # Custom event editor with native date/time pickers
+│   │   │       ├── CalendarApp.kt       # Main screens, responsive nav & widget settings
+│   │   │       ├── CopyTextButton.kt    # Copy icon with copied confirmation feedback
+│   │   │       ├── CustomEventEditor.kt # Personal event editor with native pickers
 │   │   │       ├── EventRepeatEditor.kt # Repeat choices, end date, switches & preview
 │   │   │       ├── NotificationSettings.kt # Notification preference screens
 │   │   │       ├── Previews.kt          # Compose previews
+│   │   │       ├── RequiredFieldLabel.kt # Accent asterisk label for required fields
 │   │   │       ├── Scrollbars.kt        # Zero-recomposition dynamic scrollbar
+│   │   │       ├── SelectionChip.kt     # Shared filter-chip for filters & repeat choices
 │   │   │       ├── SettingsControls.kt  # Reusable settings rows & dropdowns
-│   │   │       └── Theme.kt             # Material 3 tokens, accents, & readableSp
+│   │   │       ├── Theme.kt             # Material 3 tokens, accents, & readableSp
+│   │   │       └── WeekdayColors.kt     # Traditional weekday colors for light & dark
 │   │   ├── resources/
 │   │   │   ├── khmer-calendar-data.json # Event catalog: rules, dated records, official calendars, overrides & sources
 │   │   │   └── translations.tsv         # Offline localization dictionary
 │   │   └── assets/
-│   │       ├── NOTICE.txt               # Engine & upstream attribution notices
-│   │       └── engine-LICENSE.txt       # Shared engine's Apache 2.0 license
+│   │       ├── NOTICE.txt               # App & data catalog attribution notices
+│   │       ├── app-LICENSE.txt          # App's Apache 2.0 license
+│   │       ├── engine-LICENSE.txt       # Shared engine's Apache 2.0 license
+│   │       └── engine-NOTICE.txt        # Engine's upstream attribution notices
 │   ├── src/test/
 │   │   └── java/com/rsgkh/calendar/     # Robolectric & JUnit unit test suites
 │   ├── src/sharedTest/
@@ -190,8 +217,8 @@ For detailed workflow instructions, consult the [Translation Tool Guide](tools/t
 For complete details on our data practices and user controls, read our [Privacy Policy](PRIVACY_POLICY.md).
 
 ### Credits & Attribution
-- Calculations use [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine). The bundled [notices](app/src/main/assets/NOTICE.txt) retain its upstream attribution.
+- Calculations use [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine). The bundled [engine notices](app/src/main/assets/engine-NOTICE.txt) retain its upstream attribution.
 - Dated events and government holiday sources are documented in [Bundled event data](docs/reference-event-database.md).
 
 ### License
-Released under the open-source [Apache 2.0 License](LICENSE). The engine's [license](app/src/main/assets/engine-LICENSE.txt) and [upstream notices](app/src/main/assets/NOTICE.txt) are bundled with the app.
+Released under the open-source [Apache 2.0 License](LICENSE). The app [license](app/src/main/assets/app-LICENSE.txt), the engine's [license](app/src/main/assets/engine-LICENSE.txt) and [upstream notices](app/src/main/assets/engine-NOTICE.txt), and the app & catalog [notices](app/src/main/assets/NOTICE.txt) are bundled with the app.

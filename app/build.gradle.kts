@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-// Release 0.1.0 depends only on Kotlin stdlib, supplied by AGP's Kotlin plugin.
+// The engine release depends only on Kotlin stdlib, supplied by AGP's Kotlin plugin.
 // GitHub release assets have no POM endpoint; resolve this one module as an artifact.
 val calendarEngineVerification = configurations.create("calendarEngineVerification") {
     isCanBeConsumed = false
@@ -67,6 +67,9 @@ tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
 }
 
 dependencies {
+    // Home screen widgets (Glance versions are not managed by the Compose BOM).
+    implementation("androidx.glance:glance-appwidget:1.2.0")
+    implementation("androidx.work:work-runtime-ktx:2.11.2")
     implementation(libs.calendar.engine)
     add(calendarEngineVerification.name, libs.calendar.engine)
     implementation(libs.androidx.core)

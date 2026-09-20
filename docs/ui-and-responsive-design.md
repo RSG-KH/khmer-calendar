@@ -276,3 +276,44 @@ The custom `.readableSp` extension automatically recalculates typographic tokens
 internal val Int.readableSp get() = (this * textScale(toFloat())).sp
 ```
 This ensures legibility for elderly users or small screens while preserving fixed grid proportions and calendar cell alignments.
+
+---
+
+## 4. Home Screen Widgets & Adaptive Glance Layouts
+
+### Widget Design & Responsive Layouts
+Khmer Calendar provides three home screen widgets built with Jetpack Glance (`1.2.0`):
+
+- **Month Widget (4×3 Target Size, Extendable to 4×4)**:
+  - **Header Badges & Quick Action**: Left-aligned solar month name badge (`📅 មេសា` / `📅 Apr`), traditional year & BE year chip (`🐎 ឆ្នាំមមី · អដ្ឋស័ក · ព.ស. ២៥៧០`), mini timezone badge (shows full text on wide displays, collapses to emoji only `🇰🇭` / `🌐` on compact/phone displays to eliminate truncation ellipses), and right-aligned quick refresh action button.
+  - **Full Calendar Table**: 7-column grid with traditional Khmer weekday colors (`អា`, `ច`, `អ`, `ពិ`, `ព្រ`, `សុ`, `ស`), Gregorian day numbers, holy-day lotus watermarks (`0.25f` opacity), and event markers (`●` holiday, `▲` holy day, `■` observance, `★` personal).
+  - **Year Animal Background**: Mirrors the in-app calendar with a centered animal watermark across standard months, and dual-animal transition watermarks (old animal at top-start, new animal at bottom-end) during April (Khmer New Year).
+  - **Footer Footnote Legend**: Centered footnote row (`● ថ្ងៃឈប់សម្រាក`, `▲ ថ្ងៃសីល`, `■ ពិធី និងទិវា`, `★ ផ្ទាល់ខ្លួន`). Automatically hides when available height is $< 195\,\text{dp}$ to preserve calendar grid legibility.
+  - **Aspect Ratio Constraint**: Width is capped at a maximum of $1.25\times$ height (`minOf(height * 1.25f, 456.dp)`), preventing extreme horizontal stretching in tablet landscape mode.
+  - **Height-Adaptive Layout**: Automatically detects compact landscape heights ($\le 250\,\text{dp}$) to tighten outer padding, dividers, header margins, and day number/marker offsets so numerals and markers never clip or overlap.
+  - **Dynamic Zoom Gap**: Starting from 110% font zoom, the vertical gap between the day number and event markers dynamically expands by $+10\%$ per 10% zoom step.
+  - **Resizability**: Horizontally resizable, and vertically extendable by +1 grid up to 4 rows (`android:resizeMode="horizontal|vertical"`).
+- **Productivity Widget (4×2 Target Size)**:
+  - **Left Card (Date Details)**: Prominent big day number, short weekday, short month, Khmer lunar month and day, Buddhist Era year, Western Zodiac sign, and holy day badge.
+  - **Right Card (Events Overview)**: Dual 2-block layout for Today's and Tomorrow's event lists.
+  - **Compact Width Adaptation**: When widget width is < 330dp, the right detail list (lunar month, zodiac, etc.) is hidden to cleanly display a centered weekday and big day number without text clipping.
+  - **Width Freezing on Expansion**: When widget width reaches $\ge 330\,\text{dp}$ (step 2, standard 4-column phone/tablet width), the date details card freezes at its ideal width ($\approx 152\,\text{dp} \times \text{scale}$), routing all further horizontal resizing width directly to the event lists to display longer event titles without truncation.
+- **Focus Widget (4×2 Target Size)**:
+  - **Header Badges**: Lunar date, month, and BE year chip, timezone badge, and a quick refresh action button.
+  - **Middle Content**: Scrollable `LazyColumn` for today's events with stable `itemId` keys for smooth list diffing and scroll position preservation on Android 12+.
+  - **Footer Sub-Cards**: Sub-cards for Yesterday and Tomorrow with event counts and previews.
+  - **Full Horizontal Expansion**: Width expands dynamically with user resizing handles across all launcher grid widths without arbitrary caps, providing full width for long event titles and yesterday/tomorrow sub-cards.
+
+### App Settings & System Integration
+- **Settings → Widgets**: Located directly after Notifications in the main app settings.
+- **Master Enablement**: "Enable widgets" switch (`widgetsEnabled`, OFF by default). When toggled off, `PackageManager.setComponentEnabledSetting` disables all three widget receivers (`COMPONENT_ENABLED_STATE_DISABLED`), completely hiding them from the system Widget Browser with zero background resource usage.
+- **Category & Privacy Controls**: 4 expandable toggles:
+  1. *Personal events*
+  2. *Public holidays*
+  3. *Observances*
+  4. *Hide personal event details* (shows event count only, suppressing titles and times)
+- **Font Zoom Clamping (`WidgetPolicy.MAX_WIDGET_FONT_SCALE`)**: Widget text scaling is capped at $130\%$ (`1.30f`) across all three widgets even when the in-app font scale is set to $140\%$ or $150\%$, preserving home screen layout integrity.
+
+### Preview Thumbnails
+- Static 8-bit PNG preview thumbnails (`widget_focus.png`, `widget_productivity.png`, and `widget_month.png`) placed in `res/drawable/` (Light) and `res/drawable-night/` (Dark) allow Android's system Widget Browser to display high-resolution, theme-matching previews on Android 12+.
+

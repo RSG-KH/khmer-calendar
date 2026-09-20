@@ -411,7 +411,7 @@ abstract class CalendarUiScenarios {
     @Test fun customEventsCanBeAddedInThePastEditedToTheFutureAndDeleted() {
         start()
         compose.onNodeWithText("Events").performClick()
-        compose.onNode(hasText("Custom") and hasClickAction()).assertIsDisplayed().performClick()
+        compose.onNode(hasText("Personal") and hasClickAction()).assertIsDisplayed().performClick()
         compose.onNodeWithText("No matching events. Try another filter or search.").assertIsDisplayed()
         compose.onNodeWithContentDescription("Add event").performClick()
         compose.onNodeWithTag("custom-title").performTextInput("Archive note")
@@ -431,7 +431,7 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithTag("custom-time").performTextReplacement("23:45")
         compose.onNodeWithText("Save").performScrollTo().performClick()
         compose.onNodeWithText("2099").assertIsDisplayed()
-        compose.onNode(hasText("Custom") and hasClickAction()).assertIsDisplayed().assertIsSelected()
+        compose.onNode(hasText("Personal") and hasClickAction()).assertIsDisplayed().assertIsSelected()
         screenshot("custom-events")
         compose.onNodeWithText("Archive note").performClick()
         compose.onNodeWithText("Delete").performClick()

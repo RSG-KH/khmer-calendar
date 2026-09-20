@@ -32,3 +32,4 @@ __pycache__/
 /tools/translation/backups/
 /tools/translation/config.json
 /tools/translation/logs/
+/.widget-backups/

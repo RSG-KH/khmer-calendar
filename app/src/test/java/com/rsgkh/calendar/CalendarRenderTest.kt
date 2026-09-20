@@ -603,7 +603,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
             notes = "Special dinner"
         )
         start(AppSettings(khmer = false), customEvents = listOf(customEvent))
-        compose.onNodeWithText("Custom").assertIsDisplayed()
+        compose.onNodeWithText("Personal").assertIsDisplayed()
         screenshot("custom-event-calendar-grid")
 
         // Click September 15 date cell
@@ -632,7 +632,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
             notes = "Special dinner"
         )
         start(AppSettings(khmer = false, theme = ThemeMode.DARK), customEvents = listOf(customEvent))
-        compose.onNodeWithText("Custom").assertIsDisplayed()
+        compose.onNodeWithText("Personal").assertIsDisplayed()
         screenshot("custom-event-calendar-dark")
         compose.onNode(hasContentDescription("Tuesday, 15 September", substring = true)).performClick()
         compose.onNodeWithText("Close").performClick()
@@ -668,9 +668,9 @@ class CalendarRenderTest : CalendarUiScenarios() {
         // Verify "No matching events. Try another filter or search." does NOT exist on Calendar tab
         compose.onNodeWithText(L.text("ui.no_matching_events_try_another_filter_or_search.57812b", false)).assertDoesNotExist()
 
-        // Switch to Events tab and filter by Custom (no custom events exist)
+        // Switch to Events tab and filter by Personal (no personal events exist)
         compose.onNodeWithText("Events").performClick()
-        compose.onNode(hasText("Custom") and hasClickAction()).performClick()
+        compose.onNode(hasText("Personal") and hasClickAction()).performClick()
 
         // Verify "No matching events. Try another filter or search." DOES exist on Events tab
         compose.onNodeWithText(L.text("ui.no_matching_events_try_another_filter_or_search.57812b", false)).assertIsDisplayed()

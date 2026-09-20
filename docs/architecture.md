@@ -99,6 +99,26 @@ The UI reads today's date immediately when the activity becomes visible and ever
 
 ---
 
+## Home Screen Widgets (Jetpack Glance)
+
+Khmer Calendar provides three home screen app widgets built with Jetpack Glance (`1.2.0`):
+
+- **Month Widget (`MonthWidget`)**: 4×3 full-month calendar grid with Gregorian and Khmer lunar dates, Buddhist holy days, traditional weekday colors, event markers, footnote legend, and interactive date-cell tapping. Features height-adaptive compact padding, a $1.25\times$ max width-to-height aspect ratio constraint, and dynamic zoom gap scaling.
+- **Productivity Widget (`ProductivityWidget`)**: 4×2 date details card showing the big day number, short weekday, short month, Khmer lunar date, Buddhist Era year, Western Zodiac sign, and today's/tomorrow's event lists. Automatically hides detail rows on narrow widths (< 330dp) for compact legibility.
+- **Focus Widget (`FocusWidget`)**: 4×2 daily events overview with full lunar date and BE year badges, scrollable today's events list, and preview sub-cards for yesterday and tomorrow.
+
+All widgets enforce a maximum font zoom of $130\%$ (`WidgetPolicy.MAX_WIDGET_FONT_SCALE = 1.30f`) to safeguard against home screen clipping at extreme system accessibility sizes.
+
+### Lifecycle & Background Refresh
+- **`WidgetUpdater`**: Manages WorkManager (`WidgetRefreshWorker`) periodic hourly updates, immediate background updates, and `AlarmManager`'s inexact midnight triggers (`RTC_WAKEUP`).
+- **`WidgetReceivers`**: Manifest-registered broadcast receivers (`FocusWidgetReceiver`, `ProductivityWidgetReceiver`, `MonthWidgetReceiver`, `WidgetRefreshReceiver`) react to system triggers (`BOOT_COMPLETED`, `TIME_CHANGED`, `TIMEZONE_CHANGED`, `DATE_CHANGED`, `LOCALE_CHANGED`, `MY_PACKAGE_REPLACED`).
+
+### Master Enable/Disable Control
+- **`PackageManager` State Management**: When **Enable widgets** is toggled off in App Settings, `WidgetUpdater.setWidgetsEnabled(context, false)` sets `COMPONENT_ENABLED_STATE_DISABLED` on all widget receivers. The Android OS launcher immediately hides the widgets from the system widget picker and stops all background work, background alarms, and broadcast processing.
+- **Global Event Filtering**: Expandable switches in App Settings control Personal events, Public holidays, Observances, and Hide personal event details across all widgets.
+
+---
+
 ## UI layer
 
 The UI is built exclusively using Jetpack Compose with Material 3 design tokens:
