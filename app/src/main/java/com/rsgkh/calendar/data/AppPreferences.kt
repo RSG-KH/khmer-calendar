@@ -18,7 +18,9 @@ enum class FontScale(val multiplier: Float, val label: String) {
     PERCENT_120(1.20f, "120%"),
     PERCENT_130(1.30f, "130%"),
     PERCENT_140(1.40f, "140%"),
-    PERCENT_150(1.50f, "150%")
+    PERCENT_150(1.50f, "150%"),
+    PERCENT_175(1.75f, "175%"),
+    PERCENT_200(2.00f, "200%")
 }
 enum class TodayTimeZone {
     LOCAL, CAMBODIA;
@@ -60,6 +62,7 @@ data class AppSettings(
     val repeatHours: Int = 0,
     val todayTimeZone: TodayTimeZone = TodayTimeZone.LOCAL,
     val fontScale: FontScale = FontScale.PERCENT_100,
+    val widgetFontScale: FontScale = FontScale.PERCENT_100,
     val showWesternZodiac: Boolean = true,
     val widgetsEnabled: Boolean = false,
     val widgetShowPersonal: Boolean = true,
@@ -108,6 +111,7 @@ class AppPreferences(context: Context) {
             repeatHours = prefs.getInt("repeatHours", 0).takeIf { it in listOf(0, 2, 4, 6, 8, 12) } ?: 0,
             todayTimeZone = TodayTimeZone.entries.firstOrNull { it.name == prefs.getString("todayTimeZone", "LOCAL") } ?: TodayTimeZone.LOCAL,
             fontScale = FontScale.entries.firstOrNull { it.name == prefs.getString("fontScale", "PERCENT_100") } ?: FontScale.PERCENT_100,
+            widgetFontScale = FontScale.entries.firstOrNull { it.name == prefs.getString("widgetFontScale", "PERCENT_100") } ?: FontScale.PERCENT_100,
             showWesternZodiac = showWesternZodiac,
             widgetsEnabled = prefs.getBoolean("widgetsEnabled", false),
             widgetShowPersonal = prefs.getBoolean("widgetShowPersonal", true),
@@ -140,6 +144,7 @@ class AppPreferences(context: Context) {
             putInt("repeatHours", settings.repeatHours)
             putString("todayTimeZone", settings.todayTimeZone.name)
             putString("fontScale", settings.fontScale.name)
+            putString("widgetFontScale", settings.widgetFontScale.name)
             putBoolean("showWesternZodiac", settings.showWesternZodiac)
             putBoolean("widgetsEnabled", settings.widgetsEnabled)
             putBoolean("widgetShowPersonal", settings.widgetShowPersonal)

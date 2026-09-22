@@ -107,7 +107,7 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
     val size = LocalSize.current
     val s = WidgetStrings(context, snapshot.settings.khmer)
     val p = WidgetPalette(snapshot.settings)
-    val scale = WidgetPolicy.effectiveFontScale(snapshot.settings.fontScale.multiplier)
+    val scale = snapshot.settings.widgetFontScale.multiplier
     val open = WidgetNavigation.openDate(context, id, snapshot.today)
     val date = snapshot.today
     val details = snapshot.details
@@ -395,7 +395,7 @@ internal fun FocusWidgetContent(snapshot: WidgetSnapshot, id: Int) {
     val size = LocalSize.current
     val s = WidgetStrings(context, snapshot.settings.khmer)
     val p = WidgetPalette(snapshot.settings)
-    val scale = WidgetPolicy.effectiveFontScale(snapshot.settings.fontScale.multiplier)
+    val scale = snapshot.settings.widgetFontScale.multiplier
     val effectiveScale = context.resources.configuration.fontScale * scale
     val plan = WidgetPolicy.layout(size.width.value, size.height.value, effectiveScale)
     val day = snapshot.current
@@ -624,7 +624,7 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
     val size = LocalSize.current
     val s = WidgetStrings(context, snapshot.settings.khmer)
     val p = WidgetPalette(snapshot.settings)
-    val scale = WidgetPolicy.effectiveFontScale(snapshot.settings.fontScale.multiplier)
+    val scale = snapshot.settings.widgetFontScale.multiplier
     val animalAlpha = resolveAnimalAlpha(context, snapshot)
     val open = WidgetNavigation.openDate(context, id, snapshot.today)
     val month = YearMonth.from(snapshot.today)
@@ -637,12 +637,9 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
     val isCompactHeight = size.height.value in 1f..250f
     val isVeryShort = size.height.value in 1f..195f
 
-    // Enforce aspect ratio: width can never be greater than 1.25x height for the Month Widget only.
-    val maxAllowedWidth = if (size.height.value > 0f) {
-        minOf(size.height.value * 1.25f, 456f)
-    } else {
-        456f
-    }
+    // Enforce aspect ratio: the card is never wider than 1.25x height, with no absolute
+    // width ceiling — tall portrait widgets widen proportionally just like landscape ones.
+    val maxAllowedWidth = WidgetPolicy.monthCardMaxWidth(size.height.value)
     val cardWidthModifier = if (size.width.value > maxAllowedWidth) {
         GlanceModifier.width(maxAllowedWidth.dp)
     } else {

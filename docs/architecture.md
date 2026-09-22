@@ -107,7 +107,7 @@ Khmer Calendar provides three home screen app widgets built with Jetpack Glance 
 - **Productivity Widget (`ProductivityWidget`)**: 4×2 date details card showing the big day number, short weekday, short month, Khmer lunar date, Buddhist Era year, Western Zodiac sign, and today's/tomorrow's event lists. Automatically hides detail rows on narrow widths (< 330dp) for compact legibility.
 - **Focus Widget (`FocusWidget`)**: 4×2 daily events overview with full lunar date and BE year badges, scrollable today's events list, and preview sub-cards for yesterday and tomorrow.
 
-All widgets enforce a maximum font zoom of $130\%$ (`WidgetPolicy.MAX_WIDGET_FONT_SCALE = 1.30f`) to safeguard against home screen clipping at extreme system accessibility sizes.
+All widgets follow the dedicated **Font size** setting in the Widgets section of app settings (`widgetFontScale`, 80%–200%), decoupled from the in-app font size. At large zoom levels the adaptive layouts drop optional detail rows and collapse non-essential text to safeguard against home screen clipping.
 
 ### Lifecycle & Background Refresh
 - **`WidgetUpdater`**: Manages WorkManager (`WidgetRefreshWorker`) periodic hourly updates, immediate background updates, and `AlarmManager`'s inexact midnight triggers (`RTC_WAKEUP`).

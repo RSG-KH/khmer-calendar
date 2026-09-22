@@ -136,7 +136,7 @@ NavigationRail(
 - **Phone Screens (`!isTablet`)**: Each `NavigationRailItem` receives `Modifier.weight(1f)`. The 3 tabs distribute evenly across the full vertical height, providing large, ergonomic thumb targets.
 - **Tablet Screens (`isTablet`)**: Items remain unweighted with standard compact height and a top spacer, preserving the conventional tablet desktop rail aesthetic.
 
-At tablet font settings of 130%, 140%, and 150%, navigation grows by 10%, 15%, and 20%, respectively. Landscape increases only the rail width (80 dp to 88/92/96 dp); portrait increases only the bottom bar height (64 dp to 70.4/73.6/76.8 dp). Phone navigation and tablet font settings of 120% or lower retain their existing dimensions. System insets are not scaled.
+At font settings of 130%, 140%, and 150%, navigation grows by 10%, 15%, and 20%, respectively, on phones and tablets alike. Landscape increases only the rail width (80 dp to 88/92/96 dp); portrait increases only the bottom bar height (64 dp to 70.4/73.6/76.8 dp). Font settings of 120% or lower retain their existing dimensions. System insets are not scaled.
 
 ---
 
@@ -269,14 +269,19 @@ The **Background accent** switch follows **Accent color** under **Settings → A
   - **Lime** (*បៃតងចាស់*)
 
 ### Dynamic Font Size Scaling
-Users can adjust the application's base text scaling in **Settings → Appearance → Font size** across five phone presets:
+Users can adjust the application's base text scaling in **Settings → Appearance → Font size** across eight presets available on all devices:
 - **80%** (Very Compact)
 - **90%** (Compact)
 - **100%** (Standard Default)
 - **110%** (Comfortable)
 - **120%** (Large)
+- **130%** (Extra Large)
+- **140%** (Huge)
+- **150%** (Maximum)
 
-Tablets (`smallestScreenWidthDp >= 600`) also offer **130%**, **140%**, and **150%**. The phone picker remains 80%–120%; rotating a device does not change its available range. Font choices are saved by enum name in the existing preferences.
+The picker is identical on phones and tablets; rotating a device does not change its available range. Font choices are saved by enum name in the existing preferences. The 175% and 200% entries exist only in the widget picker below.
+
+A second **Font size** row — same label and subtitle as the Appearance one — sits at the end of the **Widgets** settings card and controls only the home screen widgets (`widgetFontScale`, also saved by enum name). Widgets no longer follow the in-app font size; their picker spans **80%–200%** with no clamping — the adaptive widget layouts drop optional details at large zooms instead of truncating text.
 
 The custom `.readableSp` extension automatically recalculates typographic tokens:
 ```kotlin
@@ -296,9 +301,9 @@ Khmer Calendar provides three home screen widgets built with Jetpack Glance (`1.
   - **Full Calendar Table**: 7-column grid with traditional Khmer weekday colors (`អា`, `ច`, `អ`, `ពិ`, `ព្រ`, `សុ`, `ស`), Gregorian day numbers, holy-day lotus watermarks (`0.25f` opacity), and event markers (`●` holiday, `▲` holy day, `■` observance, `★` personal).
   - **Year Animal Background**: Mirrors the in-app calendar with a centered animal watermark across standard months, and dual-animal transition watermarks (old animal at top-start, new animal at bottom-end) during April (Khmer New Year).
   - **Footer Footnote Legend**: Centered footnote row (`● ថ្ងៃឈប់សម្រាក`, `▲ ថ្ងៃសីល`, `■ ពិធី និងទិវា`, `★ ផ្ទាល់ខ្លួន`). Automatically hides when available height is $< 195\,\text{dp}$ to preserve calendar grid legibility.
-  - **Aspect Ratio Constraint**: Width is capped at a maximum of $1.25\times$ height (`minOf(height * 1.25f, 456.dp)`), preventing extreme horizontal stretching in tablet landscape mode.
+  - **Aspect Ratio Constraint**: Width is capped at a maximum of $1.25\times$ height (`WidgetPolicy.monthCardMaxWidth`), preventing extreme horizontal stretching in tablet landscape mode. There is no absolute width ceiling — tall portrait widgets widen proportionally like landscape ones; a 456 dp default applies only when the launcher reports no usable height.
   - **Height-Adaptive Layout**: Automatically detects compact landscape heights ($\le 250\,\text{dp}$) to tighten outer padding, dividers, header margins, and day number/marker offsets so numerals and markers never clip or overlap.
-  - **Dynamic Zoom Gap**: Starting from 110% font zoom, the vertical gap between the day number and event markers dynamically expands by $+10\%$ per 10% zoom step.
+  - **Dynamic Zoom Gap**: Starting from 110% widget font size, the vertical gap between the day number and event markers dynamically expands by $+10\%$ per 10% zoom step.
   - **Resizability**: Horizontally resizable, and vertically extendable by +1 grid up to 4 rows (`android:resizeMode="horizontal|vertical"`).
 - **Productivity Widget (4×2 Target Size)**:
   - **Left Card (Date Details)**: Prominent big day number, short weekday, short month, Khmer lunar month and day, Buddhist Era year, Western Zodiac sign, and holy day badge.
@@ -319,7 +324,7 @@ Khmer Calendar provides three home screen widgets built with Jetpack Glance (`1.
   2. *Public holidays*
   3. *Observances*
   4. *Hide personal event details* (shows event count only, suppressing titles and times)
-- **Font Zoom Clamping (`WidgetPolicy.MAX_WIDGET_FONT_SCALE`)**: Widget text scaling is capped at $130\%$ (`1.30f`) across all three widgets even when the in-app font scale is set to $140\%$ or $150\%$, preserving home screen layout integrity.
+- **Dedicated Widget Font Size**: All three widgets follow the dedicated **Settings → Widgets → Font size** option (`widgetFontScale`, 100% by default, shown only while widgets are enabled), fully decoupled from the in-app font size. The picker offers the full **80%–200%** range with no clamping; `WidgetPolicy.layout` degrades content density (fewer event rows, tiny-mode fallback) as the zoom grows so text is never squeezed down.
 
 ### Preview Thumbnails
 - Static 8-bit PNG preview thumbnails (`widget_focus.png`, `widget_productivity.png`, and `widget_month.png`) placed in `res/drawable/` (Light) and `res/drawable-night/` (Dark) allow Android's system Widget Browser to display high-resolution, theme-matching previews on Android 12+.

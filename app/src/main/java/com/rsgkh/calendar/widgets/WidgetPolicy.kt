@@ -11,11 +11,13 @@ import kotlin.math.floor
 
 /** Pure policies; never approximate a civil day as 24 hours (DST can change its length). */
 object WidgetPolicy {
-    /** Widget font zoom is capped at 130% even if the app font scale is set to 140% or 150%. */
-    const val MAX_WIDGET_FONT_SCALE = 1.30f
 
-    fun effectiveFontScale(multiplier: Float): Float =
-        multiplier.coerceAtMost(MAX_WIDGET_FONT_SCALE)
+    /**
+     * Month widget card width ceiling: the calendar card never gets wider than 1.25x its height,
+     * in portrait and landscape alike. The 456dp fallback only applies when the launcher reports
+     * no usable height (0dp) and a default width is needed.
+     */
+    fun monthCardMaxWidth(heightDp: Float): Float = if (heightDp > 0f) heightDp * 1.25f else 456f
 
     /**
      * Formats timezone text for widget chips. When space is constrained, collapses to only emoji

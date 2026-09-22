@@ -243,12 +243,12 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
         val configuration = LocalConfiguration.current
         val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         val isTablet = configuration.smallestScreenWidthDp >= 600
-        val navigationScale = if (isTablet) when (settings.fontScale) {
+        val navigationScale = when (settings.fontScale) {
             FontScale.PERCENT_130 -> 1.10f
             FontScale.PERCENT_140 -> 1.15f
             FontScale.PERCENT_150 -> 1.20f
             else -> 1f
-        } else 1f
+        }
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             // Keep system-bar spacing without reserving a strip for the camera cutout.
@@ -875,8 +875,7 @@ private fun EventRow(event: CalendarEvent, k: Boolean, modifier: Modifier = Modi
 @Composable
 private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Unit, access: NotificationAccess, onSystemSettings: () -> Unit, onAllowExact: () -> Unit) {
     val k = settings.khmer
-    val isTablet = LocalConfiguration.current.smallestScreenWidthDp >= 600
-    val fontScales = FontScale.entries.filter { isTablet || it.multiplier <= 1.2f }
+    val fontScales = FontScale.entries.filter { it.multiplier <= 1.5f }
     var showSources by remember { mutableStateOf(false) }
     LazyColumn(Modifier.widthIn(max = 640.dp).fillMaxSize().testTag("settings-scroll"), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 20.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
         item {
@@ -1027,6 +1026,13 @@ internal fun WidgetSettingsCard(
                     subtitle = privacySubtitle,
                     checked = settings.widgetHidePersonalDetails,
                 ) { onChange(settings.copy(widgetHidePersonalDetails = it)) }
+            }
+
+            val fontSizeTitle = if (k) "ទំហំអក្សរ" else "Font size"
+            SettingsRow(fontSizeTitle, L.text("ui.font_size_subtitle", k)) {
+                SettingDropdown(settings.widgetFontScale, FontScale.entries,
+                    { it.label },
+                    "widget-font-scale", fontSizeTitle) { onChange(settings.copy(widgetFontScale = it)) }
             }
         }
     }

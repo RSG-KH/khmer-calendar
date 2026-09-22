@@ -398,7 +398,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("font-scale").assertTextContains("100%")
 
         compose.onNodeWithTag("font-scale").performClick()
-        listOf("130%", "140%", "150%").forEach { compose.onNodeWithText(it).assertDoesNotExist() }
+        listOf("130%", "140%", "150%").forEach { compose.onNodeWithText(it).assertExists() }
         compose.onNode(hasText("120%") and hasAnyAncestor(isPopup())).performClick()
         compose.onNodeWithTag("font-scale").assertTextContains("120%")
         val phoneNavigation = compose.onNodeWithTag("bottom-navigation").getUnclippedBoundsInRoot()
@@ -415,6 +415,40 @@ class CalendarRenderTest : CalendarUiScenarios() {
 
         org.junit.Assert.assertTrue("120% ($height120) should be > 100% ($height100)", height120 > height100)
         org.junit.Assert.assertTrue("80% ($height80) should be < 100% ($height100)", height80 < height100)
+
+        compose.onNodeWithText("Settings").performClick()
+        compose.onNodeWithTag("font-scale").performClick()
+        compose.onNode(hasText("150%") and hasAnyAncestor(isPopup())).performClick()
+        compose.onNodeWithTag("font-scale").assertTextContains("150%")
+        val scaledNavigation = compose.onNodeWithTag("bottom-navigation").getUnclippedBoundsInRoot()
+        assertEquals(76.8f, (scaledNavigation.bottom - scaledNavigation.top).value, .5f)
+    }
+
+    @Test fun widgetFontSizeInWidgetSectionIsSeparateFromAppFontSize() {
+        start(AppSettings(khmer = false, widgetsEnabled = true))
+        compose.onNodeWithText("Settings").performClick()
+
+        // The Appearance "Font size" stops at 150%.
+        compose.onNodeWithTag("font-scale").assertTextContains("100%")
+        compose.onNodeWithTag("font-scale").performClick()
+        listOf("175%", "200%").forEach { compose.onNode(hasText(it) and hasAnyAncestor(isPopup())).assertDoesNotExist() }
+        compose.onNode(hasText("80%") and hasAnyAncestor(isPopup())).performClick()
+        compose.onNodeWithTag("font-scale").assertTextContains("80%")
+
+        // The Widgets-section "Font size" row offers the full range up to 200%.
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasTestTag("widget-font-scale"))
+        compose.onNodeWithTag("widget-font-scale").assertTextContains("100%")
+        compose.onNodeWithTag("widget-font-scale").performClick()
+        listOf("140%", "150%", "175%", "200%").forEach { compose.onNode(hasText(it) and hasAnyAncestor(isPopup())).assertExists() }
+        compose.onNode(hasText("200%") and hasAnyAncestor(isPopup())).performClick()
+        compose.onNodeWithTag("widget-font-scale").assertTextContains("200%")
+
+        // The two settings persist independently.
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        AppPreferences(context).write(AppSettings(fontScale = FontScale.PERCENT_80, widgetFontScale = FontScale.PERCENT_200))
+        val persisted = AppPreferences(context).read()
+        assertEquals(FontScale.PERCENT_80, persisted.fontScale)
+        assertEquals(FontScale.PERCENT_200, persisted.widgetFontScale)
     }
 
     @Test fun holyDaysInCalendarOnlyShowsLotusAndDetailsWithoutListingInCalendarEventList() {

@@ -70,13 +70,13 @@ class WidgetPolicyTest {
         assertTrue(WidgetPolicy.layout(240f, 120f, 2f).tiny)
     }
 
-    @Test fun widgetFontScaleCapsAt130Percent() {
-        assertEquals(0.80f, WidgetPolicy.effectiveFontScale(0.80f), 0.001f)
-        assertEquals(1.00f, WidgetPolicy.effectiveFontScale(1.00f), 0.001f)
-        assertEquals(1.20f, WidgetPolicy.effectiveFontScale(1.20f), 0.001f)
-        assertEquals(1.30f, WidgetPolicy.effectiveFontScale(1.30f), 0.001f)
-        assertEquals(1.30f, WidgetPolicy.effectiveFontScale(1.40f), 0.001f)
-        assertEquals(1.30f, WidgetPolicy.effectiveFontScale(1.50f), 0.001f)
+    @Test fun monthCardWidthFollowsHeightWithoutAbsoluteCeiling() {
+        assertEquals(250f, WidgetPolicy.monthCardMaxWidth(200f), 0.001f)
+        // Tall portrait widgets keep widening past the former 456dp ceiling.
+        assertEquals(570f, WidgetPolicy.monthCardMaxWidth(456f), 0.001f)
+        assertEquals(750f, WidgetPolicy.monthCardMaxWidth(600f), 0.001f)
+        // Launchers that report no usable height fall back to the default card width.
+        assertEquals(456f, WidgetPolicy.monthCardMaxWidth(0f), 0.001f)
     }
 
     @Test fun timezoneLabelCollapsesToEmojiOnlyWhenConstrained() {
