@@ -891,5 +891,8 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithText(sep12Zodiac).assertDoesNotExist()
         compose.onNodeWithText(L.text("ui.thngai_sil_buddhist_holy_day.89de73", false)).assertDoesNotExist()
         compose.onNodeWithText(L.text("ui.thngai_kaor_before_a_holy_day.d02977", false)).assertDoesNotExist()
+        // The Ganzhi day pillar row stays visible regardless of the western zodiac setting.
+        val sep12 = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 12))
+        compose.onNodeWithText("${L.text("ui.ganzhi_day", false)}: ${sep12.ganzhiDayLabel(false)}").assertIsDisplayed()
     }
 }

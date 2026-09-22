@@ -87,4 +87,21 @@ class KhmerDateDetailsTest {
             date = date.plusDays(1)
         }
     }
+
+    @Test fun ganzhiDayPillarMatchesEngineReferenceDates() {
+        // The engine cites 1949-10-01 as a verified 甲子 (Jiazi) day.
+        val jiazi = KhmerDateDetails.fromGregorian(LocalDate.of(1949, 10, 1))
+        assertEquals("甲子", jiazi.ganzhiDay.nameZh)
+        assertEquals("Jiǎ Zǐ", jiazi.ganzhiDay.pinyin)
+        assertEquals("Rat", jiazi.ganzhiDay.animal)
+
+        val probe = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 22))
+        assertEquals("己亥 Jǐ Hài · Pig", probe.ganzhiDayLabel(false))
+        // The Khmer label drops the engine's romanization suffix, e.g. "កុរ (Kor)" → "កុរ".
+        assertEquals("己亥 · កុរ", probe.ganzhiDayLabel(true))
+
+        // The day pillar advances by exactly one step per civil day.
+        val next = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 23))
+        assertEquals("庚子 Gēng Zǐ · Rat", next.ganzhiDayLabel(false))
+    }
 }

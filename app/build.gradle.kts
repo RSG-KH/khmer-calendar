@@ -13,7 +13,7 @@ val calendarEngineVerification = configurations.create("calendarEngineVerificati
 }
 val verifyCalendarEngine = tasks.register("verifyCalendarEngine") {
     val archive = objects.fileCollection().from(calendarEngineVerification)
-    val expectedSha256 = "c626a2fd4e181ce971f98e82858987db08c31ab4cee95746ff84378827bf256f"
+    val expectedSha256 = "ffa5f1155313e911765d6d6cb4c0cbccc6666b369ddff4ed50ce00fd2969459e"
     inputs.files(archive)
     inputs.property("sha256", expectedSha256)
     doLast {

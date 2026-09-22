@@ -2,6 +2,8 @@
 package com.rsgkh.calendar.domain
 
 import java.time.LocalDate
+import com.rsgkh.calendar.engine.ChineseZodiacCalculator
+import com.rsgkh.calendar.engine.GanzhiPillar
 import com.rsgkh.calendar.i18n.L
 import com.rsgkh.calendar.i18n.CalendarWords
 
@@ -12,6 +14,7 @@ import com.rsgkh.calendar.i18n.CalendarWords
 data class KhmerDateDetails(
     val date: LocalDate, val lunar: LunarDate, val animalYear: Int, val sak: Int,
     val animalYearChangesToday: Boolean,
+    val ganzhiDay: GanzhiPillar,
 ) {
     fun lunarSummary(khmer: Boolean): String {
         return if (khmer) {
@@ -24,6 +27,14 @@ data class KhmerDateDetails(
         val current = L.text("calendar.animal.$animalYear", khmer)
         return if (animalYearChangesToday) "${L.text("calendar.animal.${Math.floorMod(animalYear - 1, 12)}", khmer)} → $current" else current
     }
+
+    /** Day pillar labels from the engine, e.g. "己亥 Jǐ Hài · Pig" / "己亥 · កុរ".
+     *  The engine's Khmer animal carries a romanization suffix for non-Khmer readers; drop it. */
+    fun ganzhiDayLabel(khmer: Boolean): String {
+        val animal = if (khmer) ganzhiDay.khmerAnimal.substringBefore(" (") else ganzhiDay.animal
+        return if (khmer) "${ganzhiDay.nameZh} · $animal" else "${ganzhiDay.nameZh} ${ganzhiDay.pinyin} · $animal"
+    }
+
     private fun fullDate(khmer: Boolean): String {
         val month = CalendarWords.month(date.monthValue, khmer)
         // A reviewed month name may include ខែ; don't repeat it when the sentence supplies it.
@@ -46,7 +57,8 @@ data class KhmerDateDetails(
         fun fromGregorian(date: LocalDate): KhmerDateDetails {
             val result = KhmerCalendar.details(date)
             return KhmerDateDetails(date, LunarDate(result.lunar), result.animalYear, result.sak,
-                result.animalYearChangesToday)
+                result.animalYearChangesToday,
+                ChineseZodiacCalculator.getDayPillar(date.year, date.monthValue, date.dayOfMonth))
         }
     }
 }

@@ -35609,6 +35609,22 @@
       }
     },
     {
+      "id": "ui.ganzhi_day",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Ganzhi day pillar",
+      "km": "ថ្ងៃគានជី",
+      "original": {
+        "en": "Ganzhi day pillar",
+        "km": "ថ្ងៃគានជី"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
       "id": "ui.theme_subtitle",
       "section": "interface",
       "context": "CalendarApp.kt",

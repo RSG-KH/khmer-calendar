@@ -1181,42 +1181,42 @@ internal fun WidgetSettingsCard(
                                 firstLineHeight = 32.readableSp)
                         }
                         val hasHolyDay = showHolyDaysInCalendar && (info.lunar.isHolyDay || info.lunar.isShavingDay)
-                        if (hasHolyDay || showWesternZodiac) {
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                if (hasHolyDay) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        if (info.lunar.isHolyDay) {
-                                            Image(
-                                                painter = painterResource(holyDayLotusDrawable(info.lunar)),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(24.dp),
-                                                contentScale = ContentScale.Fit
-                                            )
-                                        } else {
-                                            Box(
-                                                modifier = Modifier.size(24.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text("🙏", fontSize = 18.readableSp)
-                                            }
-                                        }
-                                        Text(
-                                            if (info.lunar.isHolyDay) L.text("ui.thngai_sil_buddhist_holy_day.89de73", k)
-                                            else L.text("ui.thngai_kaor_before_a_holy_day.d02977", k),
-                                            color = MaterialTheme.colorScheme.secondary,
-                                            fontWeight = FontWeight.Medium,
-                                            fontSize = 14.readableSp
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            if (hasHolyDay) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    if (info.lunar.isHolyDay) {
+                                        Image(
+                                            painter = painterResource(holyDayLotusDrawable(info.lunar)),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(24.dp),
+                                            contentScale = ContentScale.Fit
                                         )
+                                    } else {
+                                        Box(
+                                            modifier = Modifier.size(24.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text("🙏", fontSize = 18.readableSp)
+                                        }
                                     }
-                                }
-                                if (showWesternZodiac) {
-                                    Text(info.zodiac.label, fontSize = 14.readableSp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
+                                    Text(
+                                        if (info.lunar.isHolyDay) L.text("ui.thngai_sil_buddhist_holy_day.89de73", k)
+                                        else L.text("ui.thngai_kaor_before_a_holy_day.d02977", k),
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 14.readableSp
+                                    )
                                 }
                             }
+                            if (showWesternZodiac) {
+                                Text(info.zodiac.label, fontSize = 14.readableSp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
+                            }
+                            Text("${L.text("ui.ganzhi_day", k)}: ${info.ganzhiDayLabel(k)}",
+                                fontSize = 14.readableSp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
                         }
                         if (events.isNotEmpty()) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
