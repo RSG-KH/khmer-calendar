@@ -21,6 +21,13 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,6 +59,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalContext
+import androidx.browser.customtabs.CustomTabsIntent
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import androidx.core.net.toUri
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.TextLinkStyles
@@ -726,6 +739,10 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
     var showYearPicker by rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = showYearPicker) { showYearPicker = false }
     val filterScroll = rememberScrollState()
+    val eventsListState = rememberLazyListState()
+    val searchFocus = remember { FocusRequester() }
+    val scope = rememberCoroutineScope()
+    val searchScrolledPast by remember { derivedStateOf { eventsListState.firstVisibleItemIndex >= 2 } }
     LaunchedEffect(filter) { if (filter == 4) filterScroll.scrollTo(0) }
     LaunchedEffect(settings.showHolyDaysInEvents) { if (!settings.showHolyDaysInEvents && filter == 3) filter = 0 }
     val events = remember(year, query, filter, settings.showHolyDaysInEvents, custom) {
@@ -752,10 +769,10 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
                     textAlign = TextAlign.Center, fontSize = 23.sp, fontWeight = FontWeight.SemiBold)
                 ArrowButton(true, year < 2200, L.text("ui.next_year.1f632d", k)) { onYear(year + 1) }
             }
-            LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag("events-scroll"), contentPadding = PaddingValues(10.dp, 0.dp, 10.dp, 112.dp)) {
+            LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag("events-scroll"), state = eventsListState, contentPadding = PaddingValues(10.dp, 0.dp, 10.dp, 112.dp)) {
                 item {
                     MaterialTheme(typography = MaterialTheme.typography.copy(bodyLarge = MaterialTheme.typography.bodyLarge.copy(fontSize = 14.readableSp, lineHeight = 16.readableSp))) {
-                        OutlinedTextField(value = query, onValueChange = { query = it }, modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), singleLine = true,
+                        OutlinedTextField(value = query, onValueChange = { query = it }, modifier = Modifier.fillMaxWidth().testTag("event-search").focusRequester(searchFocus).padding(bottom = 16.dp), singleLine = true,
                             textStyle = LocalTextStyle.current.copy(fontSize = 14.readableSp, lineHeight = 16.readableSp),
                             label = { Text(L.text("ui.search_events.08c608", k)) }, shape = RoundedCornerShape(16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -793,6 +810,21 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
                     items(monthEvents, key = { it.key }) { EventRow(it, k, Modifier.padding(bottom = 8.dp)) { onEvent(it) } }
                 }
             }
+        }
+        AnimatedVisibility(visible = searchScrolledPast, modifier = Modifier.align(Alignment.BottomEnd), enter = fadeIn(), exit = fadeOut()) {
+            FloatingActionButton(
+                onClick = {
+                    scope.launch {
+                        eventsListState.animateScrollToItem(0)
+                        searchFocus.requestFocus()
+                    }
+                },
+                modifier = Modifier.padding(end = 32.dp, bottom = 96.dp).size(48.dp).testTag("search-events-fab")
+                    .semantics { contentDescription = L.text("ui.search_events.08c608", k) },
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            ) { SearchIcon(Modifier.size(24.dp)) }
         }
         FloatingActionButton(onClick = onAdd, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 32.dp, bottom = 32.dp)
             .size(48.dp).testTag("add-event").semantics { contentDescription = L.text("ui.add_event.bf2f10", k) },
@@ -1239,6 +1271,11 @@ internal fun WidgetSettingsCard(
     val info = remember(event.date) { KhmerDateDetails.fromGregorian(event.date) }
     val lunar = info.lunar
     var deletePrompt by rememberSaveable(event.id) { mutableStateOf(false) }
+    var showLearnMore by rememberSaveable(event.id) { mutableStateOf(false) }
+    if (showLearnMore) {
+        LearnMoreDialog(event, k) { showLearnMore = false }
+        return
+    }
     var deleteError by remember(event.id) { mutableStateOf(false) }
     if (deletePrompt && event.kind == EventKind.CUSTOM) {
         val scrollState = rememberScrollState()
@@ -1279,6 +1316,7 @@ internal fun WidgetSettingsCard(
                         Text(
                             event.title(k),
                             modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 18.readableSp,
                             lineHeight = 26.readableSp,
                             onTextLayout = { isSingleLine = it.lineCount == 1 }
@@ -1300,23 +1338,47 @@ internal fun WidgetSettingsCard(
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(if (event.kind == EventKind.CUSTOM) 14.dp else 4.dp)) {
                             Text("${dateLabel(event.date, k)} ${number(event.date.year, k)}", fontWeight = FontWeight.Medium)
-                            event.time?.let { Text("$it · $zoneLabel", fontWeight = FontWeight.Medium) }
-                            event.repeat?.let { repeat ->
-                                Text("${L.text("repeat.${repeat.frequency.key}", k)} · ${L.text("repeat.end", k)} ${repeatDateLabel(repeat.until, k)}",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            if (event.notes.isNotBlank()) Text(event.notes)
                             Text(
                                 "${info.lunarSummary(k)}\n${L.text("ui.buddhist_era.ea617c", k)} ${number(lunar.buddhistYear, k)}",
                                 lineHeight = 22.readableSp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            event.time?.let {
+                                Text(
+                                    "$it · $zoneLabel",
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (event.kind == EventKind.CUSTOM) eventColor(event.kind) else LocalContentColor.current
+                                )
+                            }
+                            if (event.notes.isNotBlank()) Text(event.notes)
+                            event.repeat?.let { repeat ->
+                                val frequencyLabel = if (repeat.frequency == RepeatFrequency.DAYS) {
+                                    val count = CalendarWords.number(repeat.interval.toInt(), k)
+                                    if (k) "រៀងរាល់ $count ថ្ងៃ" else "Every $count day${if (repeat.interval > 1) "s" else ""}"
+                                } else {
+                                    L.text("repeat.${repeat.frequency.key}", k)
+                                }
+                                Text(
+                                    "$frequencyLabel · ${L.text("repeat.end", k)} ${repeatDateLabel(repeat.until, k)}",
+                                    fontSize = 14.readableSp,
+                                    lineHeight = 20.readableSp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                         HorizontalDivider()
                         Text(if (event.basis == DateBasis.CALCULATED) L.text("rules.calculated_label", k) else kindLabel(event.kind, k),
                             color = eventColor(event.kind), fontWeight = FontWeight.SemiBold)
                         if (event.kind != EventKind.CUSTOM) {
-                            Text(if (k) event.titleEn else event.titleKm, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.readableSp)
+                            val translatedTitle = if (k) event.titleEn else event.titleKm
+                            val titleWithOriginYear = event.anniversaryBase
+                                ?.let { "$translatedTitle (${number(it, !k)})" } ?: translatedTitle
+                            Text(
+                                titleWithOriginYear,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 14.readableSp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                         val (description, isEngine) = when {
                             event.kind == EventKind.CUSTOM ->
@@ -1360,7 +1422,12 @@ internal fun WidgetSettingsCard(
                             }
                         }
                     } else {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(onClick = { showLearnMore = true }) {
+                                LightBulbIcon(Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(L.text("ui.learn_more", k))
+                            }
                             TextButton(onClick = onDismiss) { Text(L.text("ui.close.7df7dc", k)) }
                         }
                     }
@@ -1666,6 +1733,146 @@ internal fun WidgetSettingsCard(
 @Composable private fun Dot(color: Color, small: Boolean = false) { Box(Modifier.size(if (small) 4.dp else 6.dp).background(color, CircleShape)) }
 @Composable private fun Legend(kind: EventKind, label: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) { EventMark(kind, color, small = false); Text(label, fontSize = 10.readableSp, lineHeight = 14.readableSp, maxLines = 1, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+}
+
+@Composable
+private fun LearnMoreDialog(event: CalendarEvent, k: Boolean, onDismiss: () -> Unit) {
+    val entry = remember(event.id) { RecurringEvents.knowledgeById[event.id] }
+    val context = LocalContext.current
+    CalendarBasicAlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.padding(horizontal = 20.dp).widthIn(max = 520.dp).fillMaxWidth(),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
+            Column(Modifier.fillMaxWidth().padding(24.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LightBulbIcon(Modifier.size(18.dp), color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        L.text("ui.learn_more", k),
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 18.readableSp,
+                        lineHeight = 26.readableSp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+                Spacer(Modifier.height(14.dp))
+                Text(event.title(k), fontSize = 16.readableSp, lineHeight = 22.readableSp, fontWeight = FontWeight.Medium)
+                if (entry != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(if (k) entry.summaryKm else entry.summaryEn, fontSize = 14.readableSp, lineHeight = 23.readableSp)
+                    Spacer(Modifier.height(12.dp))
+                    Text(if (k) entry.summaryEn else entry.summaryKm, fontSize = 14.readableSp, lineHeight = 23.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Spacer(Modifier.height(24.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = { launchOnlineSearch(context, event, k) }) {
+                        SearchIcon(Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(L.text("ui.search_online", k))
+                        Spacer(Modifier.width(5.dp))
+                        OpenInNewIcon(Modifier.size(14.dp), contentDescription = L.text("ui.opens_in_external_browser", k))
+                    }
+                    TextButton(onClick = onDismiss) { Text(L.text("ui.close.7df7dc", k)) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LightBulbIcon(modifier: Modifier = Modifier, color: Color = LocalContentColor.current) {
+    Canvas(modifier) {
+        val s = size.width / 24
+        drawCircle(color, radius = 5.4f * s, center = Offset(12f * s, 9f * s), style = Stroke(width = 1.9f * s, cap = StrokeCap.Round))
+        drawLine(color, Offset(9.9f * s, 15.4f * s), Offset(9.9f * s, 17f * s), 1.9f * s, StrokeCap.Round)
+        drawLine(color, Offset(14.1f * s, 15.4f * s), Offset(14.1f * s, 17f * s), 1.9f * s, StrokeCap.Round)
+        drawLine(color, Offset(10.3f * s, 19.2f * s), Offset(13.7f * s, 19.2f * s), 1.9f * s, StrokeCap.Round)
+        drawLine(color, Offset(11f * s, 9f * s), Offset(13f * s, 9f * s), 1.5f * s, StrokeCap.Round)
+    }
+}
+
+/** Opens the search in a full-screen browser Custom Tab forced to Google AI (Gemini) mode; never opens a network connection inside this app. */
+private fun launchOnlineSearch(context: Context, event: CalendarEvent, k: Boolean) {
+    // Semantic, category-aware query: no raw dates (they steer AI mode toward dated posts), and
+    // Cambodia-specific English searches append "Cambodia" so generic titles (Independence Day,
+    // Constitution Day) do not collide with US or other countries' events.
+    val category = RecurringEvents.knowledgeById[event.id]?.category
+    val normalize: (String) -> String = { it.replace(Regex("\\s+"), " ").trim() }
+    val query = if (k) {
+        val title = normalize(event.titleKm)
+        val suffix = when (category) {
+            "unesco" -> "បេតិកភណ្ឌយូណេស្កូ ប្រវត្តិ"
+            "national_history", "milestone" -> "ប្រវត្តិ សារៈសំខាន់"
+            "royal" -> "ព្រះរាជពិធី ប្រវត្តិ"
+            "lunar_buddhist", "cultural" -> "ប្រវត្តិ និងទំនៀមទម្លាប់"
+            else -> "ប្រវត្តិ និងអត្ថន័យ"
+        }
+        if (title.isEmpty()) return else "$title $suffix"
+    } else {
+        val title = normalize(event.titleEn)
+        if (title.isEmpty()) return
+        val cambodiaSpecific = category in setOf("national_history", "royal", "unesco", "cultural", "lunar_buddhist", "milestone")
+        val anchor = if (cambodiaSpecific) "Cambodia" else ""
+        val suffix = when (category) {
+            "unesco" -> "UNESCO heritage history"
+            "national_history", "milestone" -> "history and significance"
+            "royal" -> "royal ceremony history"
+            "lunar_buddhist", "cultural" -> "tradition and history"
+            else -> "history and significance"
+        }
+        listOf(title, anchor, suffix).filter { it.isNotBlank() }.joinToString(" ")
+    }
+    val searchUri = "https://www.google.com/search".toUri()
+        .buildUpon()
+        .appendQueryParameter("q", query)
+        .appendQueryParameter("hl", if (k) "km" else "en") // Enforce the app's selected language for the UI and the AI summary.
+        .appendQueryParameter("udm", "50")
+        .build()
+    val customTabsIntent = CustomTabsIntent.Builder()
+        .setShowTitle(true)
+        .setShareState(CustomTabsIntent.SHARE_STATE_ON)
+        .build()
+    if (context !is android.app.Activity) {
+        customTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    try {
+        customTabsIntent.launchUrl(context, searchUri)
+    } catch (e: Exception) {
+        try {
+            val fallbackIntent = Intent(Intent.ACTION_VIEW, searchUri).apply {
+                if (context !is android.app.Activity) {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+            }
+            context.startActivity(fallbackIntent)
+        } catch (ex: Exception) {
+            Toast.makeText(context, L.text("ui.no_browser_or_search_app", k), Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
+@Composable
+private fun OpenInNewIcon(modifier: Modifier = Modifier, color: Color = LocalContentColor.current, contentDescription: String? = null) {
+    Canvas(modifier.semantics { contentDescription?.let { this.contentDescription = it } }) {
+        val s = size.width / 24
+        fun line(x1: Float, y1: Float, x2: Float, y2: Float) = drawLine(color, Offset(x1 * s, y1 * s), Offset(x2 * s, y2 * s), 1.9f * s, StrokeCap.Round)
+        line(4f, 11f, 4f, 20f)
+        line(4f, 20f, 13f, 20f)
+        line(10.5f, 13.5f, 19.2f, 4.8f)
+        line(13.6f, 4.8f, 19.2f, 4.8f)
+        line(19.2f, 4.8f, 19.2f, 10.4f)
+    }
+}
+
+@Composable
+private fun SearchIcon(modifier: Modifier = Modifier, color: Color = LocalContentColor.current) {
+    Canvas(modifier) {
+        val scale = size.width / 24
+        drawCircle(color, radius = 6.2f * scale, center = Offset(13.8f * scale, 10.2f * scale), style = Stroke(width = 1.9f * scale, cap = StrokeCap.Round))
+        drawLine(color, Offset(9.42f * scale, 14.58f * scale), Offset(4.5f * scale, 19.5f * scale), strokeWidth = 1.9f * scale, cap = StrokeCap.Round)
+    }
 }
 
 /** Small original vector marks, with no icon font or image download. */

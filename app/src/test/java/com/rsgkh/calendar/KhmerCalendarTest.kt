@@ -98,8 +98,10 @@ class KhmerCalendarTest {
         val holidays = EventRepository.forYear(2026).filter { it.kind == EventKind.HOLIDAY }
         assertEquals(22, holidays.size)
         assertEquals(21, holidays.map { it.date }.distinct().size)
-        assertEquals(setOf("International Labor Day", "Visak Bochea"), holidays.filter { it.date == LocalDate.of(2026, 5, 1) }.map { it.titleEn }.toSet())
-        assertEquals(listOf(10, 11, 12), holidays.filter { it.titleEn == "Pchum Ben Festival" }.map { it.date.dayOfMonth })
+        assertEquals(setOf("International Labor Day · 140th", "Visak Bochea"), holidays.filter { it.date == LocalDate.of(2026, 5, 1) }.map { it.titleEn }.toSet())
+        assertEquals("Ben 14", holidays.single { it.date == LocalDate.of(2026, 10, 10) }.titleEn)
+        assertEquals("Pchum Ben Festival", holidays.single { it.date == LocalDate.of(2026, 10, 11) }.titleEn)
+        assertEquals("Post Pchum Ben Festival", holidays.single { it.date == LocalDate.of(2026, 10, 12) }.titleEn)
         assertEquals(listOf(23, 24, 25), holidays.filter { it.titleEn == "Water Festival" }.map { it.date.dayOfMonth })
         assertEquals(22, EventRepository.forYear(2027).count { it.kind == EventKind.HOLIDAY })
         assertTrue(EventRepository.forYear(2028).none { it.kind == EventKind.HOLIDAY })

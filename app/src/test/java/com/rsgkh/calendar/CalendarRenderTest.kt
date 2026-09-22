@@ -21,6 +21,10 @@ import com.rsgkh.calendar.ui.NotificationAccess
 import java.time.LocalDate
 import java.time.LocalTime
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import android.app.Application
+import android.content.Intent
+import org.robolectric.Shadows
 import org.junit.Test
 
 @RunWith(RobolectricTestRunner::class)
@@ -60,6 +64,65 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithText(L.text("repeat.edit_series", true)).assertIsDisplayed()
         compose.onNodeWithText(L.text("repeat.delete_series", true)).assertIsDisplayed()
         screenshot("repeat-$name-details-khmer")
+    }
+
+    @Test fun customEventDetailsDialogShowsAccentColorTimeAndEveryXDaysRepeat() {
+        start(AppSettings(khmer = false, theme = ThemeMode.LIGHT))
+        compose.onNodeWithText("Events").performClick()
+        compose.onNodeWithContentDescription(L.text("ui.add_event.bf2f10", false)).performClick()
+        compose.onNodeWithTag("custom-title").performTextInput("Every 14-day Event")
+        compose.onNodeWithTag("custom-date").performTextReplacement("2026-09-19")
+        compose.onNodeWithTag("custom-time").performTextReplacement("09:00")
+        compose.onNodeWithTag("custom-repeat").performScrollTo()
+        compose.onNodeWithTag("repeat-days").performScrollTo().performClick()
+        compose.onNodeWithTag("repeat-interval").performScrollTo().performTextReplacement("14")
+        compose.onNodeWithTag("repeat-end").performScrollTo().performTextReplacement("2026-12-31")
+        compose.onNodeWithText(L.text("ui.save.1b0623", false)).performScrollTo().performClick()
+        compose.onAllNodesWithText("Every 14-day Event").onFirst().performClick()
+        compose.onNode(hasText("Every 14-day Event") and hasAnyAncestor(isDialog())).assertIsDisplayed()
+        compose.onNodeWithText("09:00 · Local time", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Every 14 days · End by Dec 31, 2026", substring = true).assertIsDisplayed()
+    }
+
+    @Test fun eventDialogSearchOnlineOpensTheResultsUrlDirectlyWithTheEventNameAndDate() {
+        start()
+        compose.onNodeWithText("Events").performClick()
+        compose.onNodeWithText("Search events").performTextInput("Constitution")
+        compose.onNodeWithText("Constitution Day · 33rd").performClick()
+        compose.onNodeWithText("Learn more").performClick()
+        compose.onNodeWithText("Search online").performClick()
+        val intent = Shadows.shadowOf(ApplicationProvider.getApplicationContext<Application>()).nextStartedActivity
+        assertEquals(Intent.ACTION_VIEW, intent.action)
+        val query = intent.data!!.getQueryParameter("q")!!
+        assertEquals("Constitution Day · 33rd Cambodia history and significance", query)
+        assertEquals("50", intent.data!!.getQueryParameter("udm"))
+        assertEquals("en", intent.data!!.getQueryParameter("hl"))
+    }
+
+    @Test fun learnMorePopupStacksBothSummariesWithTheAppLanguageFirst() {
+        start()
+        compose.onNodeWithText("Events").performClick()
+        compose.onNodeWithText("Search events").performTextInput("Constitution")
+        compose.onNodeWithText("Constitution Day · 33rd").performClick()
+        compose.onNodeWithText("Learn more").performClick()
+        compose.onNode(hasText("Learn more") and hasAnyAncestor(isDialog())).assertIsDisplayed()
+        compose.onNode(hasText("Constitution Day · 33rd") and hasAnyAncestor(isDialog())).assertIsDisplayed()
+        val entry = RecurringEvents.knowledgeById.getValue("constitution_day")
+        val en = compose.onNodeWithText(entry.summaryEn, substring = true).assertIsDisplayed()
+        val km = compose.onNodeWithText(entry.summaryKm, substring = true).assertIsDisplayed()
+        assertTrue("English summary should lead when the app is English", en.fetchSemanticsNode().positionInRoot.y < km.fetchSemanticsNode().positionInRoot.y)
+    }
+
+    @Test fun floatingSearchButtonAppearsAfterScrollingPastSearchAndRefocusesIt() {
+        start()
+        compose.onNodeWithText("Events").performClick()
+        compose.onNodeWithTag("event-search").assertIsDisplayed()
+        compose.onNodeWithTag("search-events-fab").assertDoesNotExist()
+        compose.onNodeWithTag("events-scroll").performTouchInput { swipeUp() }
+        compose.onNodeWithTag("search-events-fab").assertIsDisplayed()
+        compose.onNodeWithTag("search-events-fab").performClick()
+        compose.onNodeWithTag("event-search").assertIsDisplayed().assertIsFocused()
+        compose.onNodeWithTag("search-events-fab").assertDoesNotExist()
     }
 
     @Test fun preferencesSurviveRepositoryRecreation() {
@@ -222,7 +285,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
             compose.onNodeWithText("Date details").assertIsDisplayed()
         }
         fun openEvent() {
-            compose.onNode(hasText("Constitution Day") and hasAnyAncestor(isDialog())).performClick()
+            compose.onNode(hasText("Constitution Day · 33rd") and hasAnyAncestor(isDialog())).performClick()
         }
         fun toggleCopyButtons(enabled: Boolean) {
             compose.onNodeWithText("Settings").performClick()
@@ -251,7 +314,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         assertCopyConfirmation("Copy full date description", "Date description copied", "date-copy-buttons-english", retry = true)
         openEvent()
         pressCopyButton("Copy event title", "event-copy-buttons-english")
-        assertClipboardText("Constitution Day")
+        assertClipboardText("Constitution Day · 33rd")
         assertCopyConfirmation("Copy event title", "Event title copied", "event-copy-buttons-english")
         compose.onNodeWithText("Close").performClick()
         compose.onNodeWithText("Close").performClick()

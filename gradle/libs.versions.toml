@@ -8,11 +8,13 @@ kotlin = "2.4.20"
 calendarEngine = "0.3.0"
 composeBom = "2026.09.00"
 activityCompose = "1.13.0"
+browser = "1.8.0"
 robolectric = "4.17"
 
 [libraries]
 calendar-engine = { module = "com.rsgkh:khmer-calendar-engine-jvm", version.ref = "calendarEngine" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-browser = { module = "androidx.browser:browser", version.ref = "browser" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }

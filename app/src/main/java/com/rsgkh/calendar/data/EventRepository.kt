@@ -38,6 +38,7 @@ data class CalendarEvent(
     val sourceIds: List<String> = emptyList(),
     val customSeriesId: String? = null,
     val repeat: EventRepeat? = null,
+    val anniversaryBase: Int? = null,
 ) {
     fun title(khmer: Boolean) = if (khmer) titleKm else titleEn
     val key get() = "$id:$date"
@@ -94,7 +95,7 @@ object EventRepository {
             if (base != null) {
                 val anniversary = year - base
                 km = km.replace("{anniversary}", khmerNumber(anniversary))
-                en = en.replace("{anniversary}", anniversary.toString())
+                en = en.replace("{anniversary}", "$anniversary${ordinalSuffix(anniversary)}")
             }
         }
         if (h.eventId == "khmer_new_year_1" || h.id == "khmer_new_year_1") {
@@ -139,6 +140,7 @@ object EventRepository {
                         titleEn = event.names.en,
                         kind = EventKind.OBSERVANCE,
                         basis = DateBasis.RECORDED,
+                        anniversaryBase = event.anniversaryBase,
                         sourceIds = event.sourceIds,
                     )
                 )
@@ -189,6 +191,7 @@ object EventRepository {
                         titleEn = names.en,
                         kind = EventKind.OBSERVANCE,
                         basis = if (isCorrected) DateBasis.CORRECTED else DateBasis.CALCULATED,
+                        anniversaryBase = event.anniversaryBase,
                         sourceIds = sourceIds,
                     )
                 )
@@ -214,6 +217,7 @@ object EventRepository {
                             basis = DateBasis.OFFICIAL,
                             titleKm = holidayNames.km.ifBlank { existing.titleKm },
                             titleEn = holidayNames.en.ifBlank { existing.titleEn },
+                            anniversaryBase = existing.anniversaryBase ?: eventsMap[h.eventId ?: h.id]?.anniversaryBase,
                             sourceIds = (existing.sourceIds + h.sourceIds).distinct(),
                             officialSourceUrl = url ?: existing.officialSourceUrl,
                             citation = citationEn ?: existing.citation,
@@ -228,6 +232,7 @@ object EventRepository {
                                 titleKm = holidayNames.km,
                                 titleEn = holidayNames.en,
                                 kind = EventKind.HOLIDAY,
+                                anniversaryBase = eventsMap[h.eventId ?: h.id]?.anniversaryBase,
                                 basis = DateBasis.OFFICIAL,
                                 officialSourceUrl = url,
                                 citation = citationEn,

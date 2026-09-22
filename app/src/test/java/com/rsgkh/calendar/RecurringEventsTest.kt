@@ -20,7 +20,7 @@ class RecurringEventsTest {
                 fields[0] to LocalDate.parse(fields[1])
             }.toList().groupBy({ it.first }, { it.second })
         }
-        val baseRules = RecurringEvents.rules.filter { !it.id.startsWith("chinese_") && it.id != "international_peace_day_ga_opening" }
+        val baseRules = RecurringEvents.rules.filter { !it.id.startsWith("chinese_") && it.id != "international_peace_day_ga_opening" && it.id != "ben_14" && it.id != "post_pchum_ben_festival" }
         assertEquals(reference.keys, baseRules.map { it.id }.toSet())
         assertEquals(9, RecurringEvents.rules.count { it.id.startsWith("chinese_") })
         val differences = mutableListOf<String>()
@@ -33,9 +33,19 @@ class RecurringEventsTest {
             }
         }
         val expectedDifferences = mutableListOf<String>()
-        for (year in 2005..2019) {
-            // Document pre-2020 3-day official holiday block for King Sihamoni's Birthday (reduced to 1 day on May 14 from 2020 onward)
-            expectedDifferences.add("$year king_sihamoni_birthday: source=[$year-05-13, $year-05-14, $year-05-15], calculated=[$year-05-14]")
+        val capturedPchum = javaClass.getResourceAsStream("/recurrence-reference.tsv")!!.bufferedReader().useLines { lines ->
+            lines.filter { it.startsWith("pchum_ben_festival\t") }.map { LocalDate.parse(it.substringAfter('\t')) }.toList()
+        }
+        for (year in 2000..2030) {
+            if (year in 2005..2019) {
+                // Document pre-2020 3-day official holiday block for King Sihamoni's Birthday (reduced to 1 day on May 14 from 2020 onward)
+                expectedDifferences.add("$year king_sihamoni_birthday: source=[$year-05-13, $year-05-14, $year-05-15], calculated=[$year-05-14]")
+            }
+            // The captured archive printed one 3-day Pchum Ben block from 14 រោច; since v0.4.3 the catalog models
+            // the traditional series — Ben 14 as its own day and the festival as the single 15 រោច climax —
+            // which is the middle day of the captured block.
+            val block = capturedPchum.filter { it.year == year }
+            expectedDifferences.add("$year pchum_ben_festival: source=${block.toSet()}, calculated=[${block.sorted()[1]}]")
         }
         assertEquals(expectedDifferences, differences)
 
@@ -55,11 +65,18 @@ class RecurringEventsTest {
         }
     }
 
+    @Test fun bundledKnowledgeCoversEveryCatalogEventWithCompleteEntries() {
+        assertEquals(RecurringEvents.catalog.events.map { it.id }.toSet(), RecurringEvents.knowledgeById.keys)
+        assertTrue(RecurringEvents.knowledgeById.values.all { it.category.isNotBlank() && it.nameKm.isNotBlank() && it.nameEn.isNotBlank() && it.summaryKm.isNotBlank() && it.summaryEn.isNotBlank() })
+    }
+
     @Test fun secondAsadhAndPchumBenDurationAreHandledExplicitly() {
         val dates = RecurringEvents.dates(2026).mapKeys { it.key.id }
         assertEquals(listOf(LocalDate.of(2026, 7, 30)), dates["beginning_buddhist_lent"])
         assertEquals(13, KhmerCalendar.fromGregorian(dates.getValue("beginning_buddhist_lent").single()).month)
-        assertEquals((10..12).map { LocalDate.of(2026, 10, it) }, dates["pchum_ben_festival"])
+        assertEquals(listOf(LocalDate.of(2026, 10, 10)), dates["ben_14"])
+        assertEquals(listOf(LocalDate.of(2026, 10, 11)), dates["pchum_ben_festival"])
+        assertEquals(listOf(LocalDate.of(2026, 10, 12)), dates["post_pchum_ben_festival"])
         assertEquals((23..25).map { LocalDate.of(2026, 11, it) }, dates["water_festival"])
         val ordinary = RecurringEvents.dates(2025).entries.single { it.key.id == "beginning_buddhist_lent" }.value.single()
         assertEquals(LocalDate.of(2025, 7, 11), ordinary)

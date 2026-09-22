@@ -9,9 +9,9 @@ The Android app packages its event catalog in [`khmer-calendar-data.json`](../ap
 | Top-level field | Contents |
 | --- | --- |
 | `schemaVersion` | Catalog schema major version; the current bundle is `3` |
-| `dataVersion` | Data revision of this bundle (`0.4.0`) |
+| `dataVersion` | Data revision of this bundle (`0.4.4`) |
 | `sources` | Provenance records referenced by `sourceIds` elsewhere |
-| `events` | 137 event definitions: rules and recorded dates |
+| `events` | 139 event definitions: rules and recorded dates |
 | `holidayCalendars` | Official public-holiday calendars, one per year (2016–2027) |
 | `overrides` | Reviewed per-year date replacements for specific events |
 | `newYearArrivals` | 19 verified traditional Moha Sangkran arrival records (1997, 2009, 2010–2026 unbroken) |
@@ -25,7 +25,7 @@ Each source records `id`, `kind` (`government`, `calendar`, `other` or `historic
 
 Each event has `id`, `kind` (`observance`, `traditional` or `historical`), bilingual `names` (plus optional `description`), `sourceIds`, and one of two date carriers:
 
-- **`rule`** (111 events): engine `RecurrenceRule` fields — 73 `solar`, 23 `khmer_lunar`, 3 `solar_nth_weekday`, the 3 Khmer New Year stages, and 9 traditional Chinese festivals (`chinese_festival` with `monthPolicy: "cn-reference-utc8"` across 1900–2100). Optional `anniversaryBase` inserts `year − anniversaryBase` into the `{anniversary}` title placeholder. `historical` events may set `originalDate`, before which occurrences are suppressed.
+- **`rule`** (113 events): engine `RecurrenceRule` fields — 73 `solar`, 25 `khmer_lunar`, 3 `solar_nth_weekday`, the 3 Khmer New Year stages, and 9 traditional Chinese festivals (`chinese_festival` with `monthPolicy: "cn-reference-utc8"` across 1900–2100). Optional `anniversaryBase` inserts `year − anniversaryBase` into the `{anniversary}` title placeholder (English renders an ordinal suffix, e.g. `· 47th`; Khmer renders Khmer numerals, e.g. `ខួបលើកទី៤៧`). `historical` events may set `originalDate`, before which occurrences are suppressed.
 - **`dates`** (26 events): explicit ISO date lists for fixed heritage milestones such as the UNESCO inscription anniversaries. These are emitted as `DateBasis.RECORDED` without calculation.
 
 ### New Year arrival records
@@ -39,6 +39,10 @@ At runtime the repository prefers a bundled record — tagged official, `ម៉�
 Each `holidayCalendars` year carries `coverage` (`complete` for all bundled years) and `holidays` with `id`, bilingual `names`, explicit `dates`, `status` (`cancelled` entries are skipped), `sourceIds` and an optional `eventId` linking a catalog event — used to resolve `{anniversary}` counts. Years 2016–2027 are bundled; 283 official days in total (110 days for 2016–2019 and 173 days for 2020–2027), each carrying a subdecree or ministry citation.
 
 `overrides` pin a specific `eventId`/`year` to explicit `dates`, with a mandatory `sourceId` and `reason`. They preserve reviewed differences between captured records and the calculation — the 2005–2019 three-day King Sihamoni birthday holiday blocks (where the rule yields only May 14) and 3 Chinese festival parity overrides (Qingming 2009 & 2029, Zongzi 2013). Overridden occurrences use `DateBasis.CORRECTED`.
+
+### Event knowledge companion
+
+The companion `event-knowledge.json` resource bundles the manager's curated knowledge dataset — one bilingual name and summary per catalog event, keyed by event id, with a `provenance` block crediting its research models. `RecurringEvents.knowledgeById` loads it lazily, the Learn more popup renders it, and a unit test enforces one-to-one coverage with the catalog.
 
 ## Runtime loading and precedence
 

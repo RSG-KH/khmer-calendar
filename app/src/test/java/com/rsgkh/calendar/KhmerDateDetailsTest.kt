@@ -4,6 +4,7 @@ package com.rsgkh.calendar
 import com.rsgkh.calendar.domain.KhmerCalendar
 import com.rsgkh.calendar.domain.KhmerDateDetails
 import com.rsgkh.calendar.domain.KhmerNewYear
+import com.rsgkh.calendar.i18n.CalendarWords
 import org.junit.Assert.*
 import org.junit.Test
 import java.time.LocalDate
@@ -20,6 +21,11 @@ class KhmerDateDetailsTest {
         assertEquals(before.sak, first.sak)
         assertEquals((before.sak + 1) % 10, last.sak)
         assertEquals(before.lunar.buddhistYear, last.lunar.buddhistYear)
+    }
+
+    @Test fun khmerDateLabelIncludesTiPrefixForDayNumber() {
+        val date = LocalDate.of(2026, 9, 8) // Tuesday, 8 September 2026
+        assertEquals("ថ្ងៃអង្គារ ទី៨ ខែកញ្ញា", CalendarWords.date(date, true))
     }
 
     @Test fun suppliedScreenshotDateMatchesTraditionalLabels() {

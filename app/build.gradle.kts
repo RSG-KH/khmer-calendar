@@ -74,6 +74,7 @@ dependencies {
     add(calendarEngineVerification.name, libs.calendar.engine)
     implementation(libs.androidx.core)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.browser)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.material3)
     implementation(libs.compose.ui.tooling.preview)

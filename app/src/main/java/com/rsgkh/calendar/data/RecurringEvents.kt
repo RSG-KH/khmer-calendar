@@ -25,6 +25,15 @@ data class CatalogSource(
     val notes: String? = null,
 )
 
+data class KnowledgeEntry(
+    val id: String,
+    val category: String,
+    val nameKm: String,
+    val nameEn: String,
+    val summaryKm: String,
+    val summaryEn: String,
+)
+
 data class CatalogEvent(
     val id: String,
     val kind: String,
@@ -173,12 +182,24 @@ fun resolveNewYearArrival(year: Int): NewYearArrivalDisplay {
     }
 }
 
+internal fun ordinalSuffix(n: Int): String {
+    val hundredRem = n % 100
+    val tenRem = n % 10
+    if (hundredRem in 11..13) return "th"
+    return when (tenRem) {
+        1 -> "st"
+        2 -> "nd"
+        3 -> "rd"
+        else -> "th"
+    }
+}
+
 fun eventNames(event: CatalogEvent, year: Int): CatalogNames {
     val base = event.anniversaryBase
     var names = if (base != null) {
         val anniversary = year - base
         CatalogNames(
-            en = event.names.en.replace("{anniversary}", anniversary.toString()),
+            en = event.names.en.replace("{anniversary}", "$anniversary${ordinalSuffix(anniversary)}"),
             km = event.names.km.replace("{anniversary}", khmerNumber(anniversary)),
         )
     } else {
@@ -202,6 +223,7 @@ internal object RecurringEvents {
     }
     val recurrenceEvents: List<CatalogEvent> by lazy { catalog.events.filter { it.rule != null } }
     val rules: List<RecurrenceRule> by lazy { recurrenceEvents.mapNotNull { it.rule } }
+    val knowledgeById: Map<String, KnowledgeEntry> by lazy { parseKnowledge() }
 
     private fun parseNames(obj: JSONObject): CatalogNames =
         CatalogNames(en = obj.getString("en"), km = obj.getString("km"))
@@ -248,6 +270,26 @@ internal object RecurringEvents {
         eventId = if (obj.has("eventId") && !obj.isNull("eventId")) obj.getString("eventId") else null,
         note = if (obj.has("note") && !obj.isNull("note")) obj.getString("note") else null,
     )
+
+    private fun parseKnowledge(): Map<String, KnowledgeEntry> {
+        val stream = checkNotNull(RecurringEvents::class.java.getResourceAsStream("/event-knowledge.json")) {
+            "event-knowledge.json is missing from the bundled resources"
+        }
+        stream.bufferedReader().use { reader ->
+            val entries = JSONObject(reader.readText()).getJSONArray("entries")
+            return (0 until entries.length()).map { index ->
+                val obj = entries.getJSONObject(index)
+                KnowledgeEntry(
+                    id = obj.getString("id"),
+                    category = obj.getString("category"),
+                    nameKm = obj.getString("name_km"),
+                    nameEn = obj.getString("name_en"),
+                    summaryKm = obj.getString("summary_km"),
+                    summaryEn = obj.getString("summary_en"),
+                )
+            }.associateBy { it.id }
+        }
+    }
 
     private fun parseCatalog(): CalendarCatalog {
         val stream = checkNotNull(RecurringEvents::class.java.getResourceAsStream("/khmer-calendar-data.json")) {
@@ -380,6 +422,7 @@ internal object RecurringEvents {
                     kind = EventKind.OBSERVANCE,
                     basis = DateBasis.CALCULATED,
                     sourceIds = sourceIds,
+                    anniversaryBase = event.anniversaryBase,
                 )
             }
         }

@@ -10,9 +10,11 @@ We strongly believe in personal privacy and digital sovereignty. The Application
 ---
 
 ## 1. Zero Network Access & Internet Permissions
-The Application does **not** declare or request the `android.permission.INTERNET` permission in its Android Manifest. 
+The Application does **not** declare or request the `android.permission.INTERNET` permission in its Android Manifest. Any non-essential permissions merged automatically from third-party libraries (such as `ACCESS_NETWORK_STATE` and `FOREGROUND_SERVICE`) are explicitly stripped using manifest removal rules (`tools:node="remove"`).
 * It is technically impossible for the Application to send data, logs, or telemetry from your device to any external server.
 * The Application functions 100% offline at all times.
+
+* **User-initiated external search:** The event details screen offers a "Search online" action on built-in events. Tapping it opens your web browser directly on an AI-mode search for the event title and its history — as a Custom Tab or an external browser — through Android's standard intent system, an action you explicitly initiate. The Application itself never opens a network connection, and nothing beyond that query is transmitted.
 
 ## 2. Information Handling and Storage
 * **Personal Data:** We do not collect, store, or transmit your name, email address, phone number, location, IP address, or hardware identifiers.

@@ -28,6 +28,30 @@ class EventRepositoryTest {
         }
     }
 
+    @Test fun anniversaryCountsRenderWithEnglishOrdinalInEventAndHolidayNames() {
+        // Holiday layer (2026 sub-decree): English placeholder resolves to an ordinal, Khmer keeps the printed count.
+        val jan7 = EventRepository.forDate(LocalDate.of(2026, 1, 7)).single { it.id == "victory_over_genocide" }
+        assertEquals("Victory Over Genocide Day · 47th", jan7.titleEn)
+        assertTrue(jan7.titleKm.contains("ខួបលើកទី៤៧"))
+        // Holiday layer with placeholder on both sides (2016): 2016 − 1948 = 68th.
+        val rights2016 = EventRepository.forDate(LocalDate.of(2016, 12, 10)).single { it.id == "international_human_rights_day" }
+        assertEquals("International Human Rights Day · 68th", rights2016.titleEn)
+        assertTrue(rights2016.titleKm.contains("ខួបលើកទី៦៨"))
+        // Rule layer outside official calendars (2028): 2028 − 1953 = 75th.
+        val nov9 = EventRepository.forDate(LocalDate.of(2028, 11, 9)).single { it.id == "independence_day" }
+        assertEquals("Independence Day · 75th", nov9.titleEn)
+        assertTrue(nov9.titleKm.contains("ខួបលើកទី៧៥"))
+        assertEquals(1979, jan7.anniversaryBase)
+        assertEquals(1948, rights2016.anniversaryBase)
+        assertEquals(1953, nov9.anniversaryBase)
+    }
+
+    @Test fun ordinalSuffixFollowsEnglishConvention() {
+        val expected = listOf(1 to "1st", 2 to "2nd", 3 to "3rd", 4 to "4th", 11 to "11th", 12 to "12th",
+            13 to "13th", 21 to "21st", 22 to "22nd", 23 to "23rd", 47 to "47th", 101 to "101st", 111 to "111th")
+        for ((n, label) in expected) assertEquals(label, "$n${ordinalSuffix(n)}")
+    }
+
     @Test fun holyDaysAndCalculatedEventsMatchEngineAcrossYears() {
         for (year in listOf(1800, 1980, 2024, 2026, 2031, 2200)) {
             val events = EventRepository.forYear(year)
@@ -52,7 +76,7 @@ class EventRepositoryTest {
     }
 
     @Test fun officialHolidayCalendarsStandardizeOffDaysWithSubDecreeCitationsAcrossTwelveYears() {
-        assertEquals("0.4.0", RecurringEvents.catalog.dataVersion)
+        assertEquals("0.4.4", RecurringEvents.catalog.dataVersion)
         assertEquals(3, RecurringEvents.catalog.schemaVersion)
         // 12 official holiday calendars (2016–2027) totaling 283 off-days
         var totalOfficialDays = 0
@@ -138,7 +162,7 @@ class EventRepositoryTest {
 
     @Test fun newYearArrivalCatalogAndUnifiedTitleDisplay() {
         assertEquals(3, RecurringEvents.catalog.schemaVersion)
-        assertEquals("0.4.0", RecurringEvents.catalog.dataVersion)
+        assertEquals("0.4.4", RecurringEvents.catalog.dataVersion)
         val arrivals = RecurringEvents.catalog.newYearArrivals
         assertEquals(19, arrivals.size)
         val expectedYears = listOf(1997, 2009) + (2010..2026).toList()

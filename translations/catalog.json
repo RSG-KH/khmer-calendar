@@ -89,7 +89,7 @@
       "id": "ui.custom.917053",
       "section": "interface",
       "context": "CalendarApp.kt",
-      "en": "Custom",
+      "en": "Personal",
       "km": "ផ្ទាល់ខ្លួន",
       "original": {
         "en": "Custom",
@@ -1165,7 +1165,7 @@
       "id": "ui.a_custom_event_saved_on_your_device.96d6e7",
       "section": "interface",
       "context": "CalendarApp.kt",
-      "en": "A custom event saved on your device.",
+      "en": "A personal event saved on your device.",
       "km": "ព្រឹត្តិការណ៍ផ្ទាល់ខ្លួនដែលរក្សាទុកក្នុងឧបករណ៍របស់អ្នក។",
       "original": {
         "en": "A custom event saved on your device.",
@@ -1669,7 +1669,7 @@
       "id": "notifications.push_custom",
       "section": "notifications",
       "context": "NotificationSettings.kt",
-      "en": "Push custom",
+      "en": "Push personal events",
       "km": "ជូនដំណឹងព្រឹត្តិការណ៍ផ្ទាល់ខ្លួន",
       "original": {
         "en": "Push custom",
@@ -1734,7 +1734,7 @@
       "section": "notifications",
       "context": "NotificationSettings.kt",
       "en": "Push observances",
-      "km": "ជូនដំណឹងពិធី និងទិវា",
+      "km": "ជូនដំណឹងទិវា និងពិធីបុណ្យ",
       "original": {
         "en": "Push observances",
         "km": "ជូនដំណឹងពិធី និងទិវា"
@@ -1750,7 +1750,7 @@
       "section": "notifications",
       "context": "NotificationSettings.kt",
       "en": "Festivals and others",
-      "km": "ពិធីបុណ្យ និងផ្សេងៗ",
+      "km": "ទិវា និងពិធីបុណ្យនានា",
       "original": {
         "en": "Festivals, anniversaries and special days",
         "km": "ពិធីបុណ្យ ខួប និងទិវាពិសេស"
@@ -1845,8 +1845,8 @@
       "id": "ui.time_to_deliver_daily_reminders.7806df",
       "section": "notifications",
       "context": "NotificationSettings.kt",
-      "en": "Time to deliver daily reminders",
-      "km": "ម៉ោងសម្រាប់ផ្ញើការរំលឹកប្រចាំថ្ងៃ",
+      "en": "For events with no times",
+      "km": "សម្រាប់ព្រឹត្តិការណ៍គ្មានម៉ោងកំណត់",
       "original": {
         "en": "Time to deliver daily reminders",
         "km": "ម៉ោងសម្រាប់ផ្ញើការរំលឹកប្រចាំថ្ងៃ"
@@ -35086,7 +35086,7 @@
       "section": "calendar",
       "context": "Date wording / keep named placeholders",
       "en": "{weekday}, {day} {month}",
-      "km": "{weekday} {day} {month}",
+      "km": "{weekday} ទី{day} {month}",
       "original": {
         "en": "{weekday}, {day} {month}",
         "km": "{weekday} {day} {month}"
@@ -36401,6 +36401,70 @@
       "original": {
         "en": "Date",
         "km": "កាលបរិច្ឆេទ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.search_online",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Search online",
+      "km": "ស្វែងរកលើអ៊ីនធឺណិត",
+      "original": {
+        "en": "Search online",
+        "km": "ស្វែងរកលើអ៊ីនធឺណិត"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.no_browser_or_search_app",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "No browser or search app available",
+      "km": "គ្មានកម្មវិធីរុករក ឬកម្មវិធីស្វែងរក",
+      "original": {
+        "en": "No browser or search app available",
+        "km": "គ្មានកម្មវិធីរុករក ឬកម្មវិធីស្វែងរក"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.opens_in_external_browser",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Opens in external browser",
+      "km": "បើកនៅក្នុងកម្មវិធីរុករកខាងក្រៅ",
+      "original": {
+        "en": "Opens in external browser",
+        "km": "បើកនៅក្នុងកម្មវិធីរុករកខាងក្រៅ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.learn_more",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Learn more",
+      "km": "ស្វែងយល់បន្ថែម",
+      "original": {
+        "en": "Learn more",
+        "km": "ស្វែងយល់បន្ថែម"
       },
       "reviewed": true,
       "required": {

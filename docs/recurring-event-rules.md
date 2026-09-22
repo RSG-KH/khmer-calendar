@@ -25,7 +25,7 @@ Each event's `rule` object maps directly to the engine's validated `RecurrenceRu
 | `new_year_first`, `new_year_middle`, `new_year_last` | Engine festival stages |
 | `chinese_festival` | Traditional Chinese festival evaluated dynamically by `ChineseLunisolarEngine` (1900–2100) |
 | `fromYear`, `throughYear` | Inclusive years in which the rule applies |
-| `anniversaryBase` | Android inserts `year - anniversaryBase` into the localized `{anniversary}` title |
+| `anniversaryBase` | Android inserts `year - anniversaryBase` into the localized `{anniversary}` title (English ordinal suffix, Khmer numerals) |
 
 The engine [API documentation](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.3.0/docs/api.md) defines month numbering, weekday numbering, offsets and festival behavior. Keep those calculation rules in the engine. Android currently requires every applicable rule to return at least one date within its requested year; review this constraint before adding rules that cross a year boundary.
 

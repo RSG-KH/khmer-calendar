@@ -35,6 +35,8 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 
 - **Unified Moha Sangkran Arrival Time**: Displays verified official arrival times (TVK broadcasts and government decrees, 1997, 2009, 2010–2026 unbroken) and traditional astronomical estimates (2027+) directly in event titles with authentic Khmer 12-hour period descriptors (`ព្រឹក`, `រសៀល`, `ល្ងាច`, `យប់`, `រំលងអធ្រាត្រ`).
 - **Official Holiday Calendars (2016–2027)**: Bundled government calendars mark public holidays with their citing subdecree or ministry source, shown in event details.
+- **Anniversary Counts**: Commemorations display their anniversary count in both languages, rendered per year from the catalog — ខួបលើកទី៤៧ in Khmer and · 47th with English ordinal suffixes (1st, 2nd, 3rd … 11th–13th, 21st) — alongside official holiday titles from the citing subdecree.
+- **Learn More Knowledge**: Every built-in event carries a curated bilingual knowledge summary (bundled from the Khmer Calendar Manager dataset), shown in a Learn more popup that stacks both languages — the app language first.
 - **On-Device Event Calculation (1800–2200)**: Observances, traditional Cambodian festivals, Chinese festivals and Buddhist holy days are calculated on the device from bundled rules for every supported year, with reviewed date corrections where captured records differ.
 - **Cambodian Holidays & Festivals**: Browse public holidays and traditional festivals, including Khmer New Year, Pchum Ben, Water Festival and Royal Ploughing.
 - **National & International Observances**: Includes commemorations and UN observances alongside Buddhist holy days.
@@ -210,7 +212,7 @@ For detailed workflow instructions, consult the [Translation Tool Guide](tools/t
 
 ## Privacy & Open Source Philosophy
 
-- **Zero Network Permissions**: The application does not request the Android `INTERNET` permission.
+- **Zero Network Permissions**: The application does not request the Android `INTERNET` permission. Library permissions merged from dependencies (`ACCESS_NETWORK_STATE`, `FOREGROUND_SERVICE`) are explicitly stripped in the manifest. The event details "Search online" action is strictly user-initiated: it opens the browser directly in Google AI mode (Custom Tab) for the event title and its history via Android's intent system — the app itself holds no network permission and sends nothing.
 - **Zero Advertising or Telemetry**: No third-party SDKs, analytics, or tracking services are bundled.
 - **Local Data Ownership**: Personal events and repeat schedules are stored on-device in SQLite; settings use Android SharedPreferences.
 
