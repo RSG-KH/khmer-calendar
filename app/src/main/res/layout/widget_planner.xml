@@ -17,12 +17,11 @@
         android:gravity="center_vertical">
         <TextView
             android:id="@+id/planner_period"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:background="@drawable/widget_planner_badge"
-            android:paddingHorizontal="5dp"
-            android:paddingVertical="5dp"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="3dp"
             android:singleLine="true"
             android:ellipsize="end"
             android:textSize="10sp" />
@@ -30,18 +29,23 @@
             android:id="@+id/planner_timezone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="5dp"
             android:background="@drawable/widget_planner_badge"
-            android:paddingHorizontal="5dp"
-            android:paddingVertical="5dp"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="3dp"
             android:singleLine="true"
-            android:textSize="10sp" />
+            android:textSize="12.5sp" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1"
+            android:text="" />
         <ImageView
             android:id="@+id/planner_refresh"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:layout_marginStart="4dp"
-            android:background="@drawable/widget_planner_badge"
+            android:layout_marginStart="5dp"
+            android:background="@drawable/widget_planner_action"
             android:padding="7dp"
             android:src="@drawable/widget_ic_refresh"
             android:contentDescription="@string/widget_refresh" />

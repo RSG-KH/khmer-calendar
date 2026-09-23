@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.text.TextPaint
 import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
@@ -40,15 +41,32 @@ internal object PlannerWidgetRenderer {
         listOf(R.id.planner_period, R.id.planner_timezone, R.id.planner_refresh).forEach {
             views.setColorStateList(it, "setBackgroundTintList", badgeTint)
         }
-        views.setTextViewText(R.id.planner_period,
-            "${strings.plannerDate(days.first().date)} - ${strings.plannerDate(days.last().date)}")
+        val period = "${strings.plannerDate(days.first().date)} - ${strings.plannerDate(days.last().date)}"
+        val periodSize = (if (width < 335 * scale) 9.5f else 10.5f) * scale
+        val emojiOnly = width / scale < 340f
+        val timezone = WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer, emojiOnly)
+        val tzPadding = if (emojiOnly) 6f else 8f
+        val density = context.resources.displayMetrics.density
+        fun textWidthDp(value: String, sizeSp: Float) =
+            TextPaint().apply {
+                textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sizeSp,
+                    context.resources.displayMetrics)
+            }.measureText(value) / density
+        val timezoneWidth = textWidthDp(timezone, 12.5f * scale) + 2 * tzPadding
+        val availablePeriodWidth = (width - 22f - 30f - 10f - timezoneWidth).coerceAtLeast(40f)
+        val periodWidth = (textWidthDp(period, periodSize) + 16f).coerceAtMost(availablePeriodWidth)
+        views.setViewLayoutWidth(R.id.planner_period, periodWidth, TypedValue.COMPLEX_UNIT_DIP)
+        views.setTextViewText(R.id.planner_period, period)
         views.setTextColor(R.id.planner_period, palette.text.getColor(context).toArgb())
-        views.setTextViewTextSize(R.id.planner_period, TypedValue.COMPLEX_UNIT_SP, (if (width < 335 * scale) 9.5f else 10.5f) * scale)
+        views.setTextViewTextSize(R.id.planner_period, TypedValue.COMPLEX_UNIT_SP, periodSize)
 
-        views.setTextViewText(R.id.planner_timezone,
-            WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer, emojiOnly = width < 360 * scale))
+        views.setTextViewText(R.id.planner_timezone, timezone)
+        val tzHorizontalPadding = (tzPadding * density).toInt()
+        val tzVerticalPadding = (3f * density).toInt()
+        views.setViewPadding(R.id.planner_timezone, tzHorizontalPadding, tzVerticalPadding,
+            tzHorizontalPadding, tzVerticalPadding)
         views.setTextColor(R.id.planner_timezone, palette.secondary.getColor(context).toArgb())
-        views.setTextViewTextSize(R.id.planner_timezone, TypedValue.COMPLEX_UNIT_SP, 10.5f * scale)
+        views.setTextViewTextSize(R.id.planner_timezone, TypedValue.COMPLEX_UNIT_SP, 12.5f * scale)
         views.setInt(R.id.planner_refresh, "setColorFilter", palette.secondary.getColor(context).toArgb())
         views.setContentDescription(R.id.planner_refresh, strings(R.string.widget_refresh))
 
