@@ -57,8 +57,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_marginTop="5dp"
-        android:divider="@drawable/widget_planner_divider"
-        android:dividerHeight="1dp"
+        android:divider="@null"
         android:cacheColorHint="@android:color/transparent"
         android:scrollbars="none" />
 </LinearLayout>

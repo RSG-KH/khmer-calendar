@@ -98,6 +98,10 @@ internal object PlannerWidgetRenderer {
                 row.setTextViewText(R.id.planner_date,
                     if (groupIndex == 0) strings.plannerListDate(day.date) else "")
                 row.setViewLayoutWidth(R.id.planner_date, dateWidth, TypedValue.COMPLEX_UNIT_DIP)
+                row.setViewLayoutWidth(R.id.planner_divider_spacer, dateWidth, TypedValue.COMPLEX_UNIT_DIP)
+                if (day.date == days.last().date && groupIndex == groups.lastIndex) {
+                    row.setViewVisibility(R.id.planner_divider_row, View.GONE)
+                }
                 row.setTextColor(R.id.planner_date, palette.text.getColor(context).toArgb())
                 row.setTextViewTextSize(R.id.planner_date, TypedValue.COMPLEX_UNIT_SP, 10.5f * scale)
                 row.setOnClickFillInIntent(R.id.planner_row, dayIntent)

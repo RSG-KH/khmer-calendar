@@ -55,12 +55,24 @@
         android:textSize="10.5sp" />
     <TextView
         android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="42dp"
+        android:background="@drawable/widget_planner_divider"
+        android:text="" />
+    <TextView
+        android:layout_width="match_parent"
         android:layout_height="27dp"
         android:gravity="center_vertical"
-        android:background="#806542A0"
+        android:background="#1A6542A0"
         android:text="01/15     7:15 Breakf..."
         android:textColor="#222632"
         android:textSize="10.5sp" />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="42dp"
+        android:background="@drawable/widget_planner_divider"
+        android:text="" />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="27dp"

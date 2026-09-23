@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/planner_row"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="27dp"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:paddingHorizontal="4dp"
-    android:paddingVertical="1dp">
+    android:minHeight="27dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="27dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="4dp"
+        android:paddingVertical="1dp">
     <TextView
         android:id="@+id/planner_date"
         android:layout_width="42dp"
@@ -64,4 +68,25 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:text="" />
-</LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/planner_divider_row"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
+        <TextView
+            android:id="@+id/planner_divider_spacer"
+            android:layout_width="42dp"
+            android:layout_height="1dp"
+            android:text="" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1"
+            android:background="@drawable/widget_planner_divider"
+            android:text="" />
+    </LinearLayout>
+</FrameLayout>
