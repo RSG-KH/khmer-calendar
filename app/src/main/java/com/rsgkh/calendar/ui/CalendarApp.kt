@@ -938,7 +938,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
             SettingsCard(L.text("ui.timezone.72f68d", k)) {
                 SettingsRow(L.text("ui.today_follows.b52168", k), L.text("ui.set_timezone.cdea40", k)) {
                     SettingDropdown(settings.todayTimeZone, TodayTimeZone.entries,
-                        { if (it == TodayTimeZone.LOCAL) "${L.text("ui.local_time.541b44", k)} (${it.offsetLabel()})" else L.text("ui.cambodia_utc_7.458037", k) },
+                        { if (it == TodayTimeZone.LOCAL) "${L.text("ui.local_time.541b44", k)} (${it.offsetLabel()})" else L.text("ui.cambodia_time_utc_7.6b9f2d", k) },
                         "today-time-zone", L.text("ui.today_follows.b52168", k)) { onChange(settings.copy(todayTimeZone = it)) }
                 }
             }
