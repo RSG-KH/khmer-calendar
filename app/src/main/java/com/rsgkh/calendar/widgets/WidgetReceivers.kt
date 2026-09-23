@@ -2,6 +2,7 @@
 package com.rsgkh.calendar.widgets
 
 import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProvider
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -50,6 +51,25 @@ class MonthWidgetReceiver : CalendarWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = MonthWidget()
 }
 
+class PlannerWidgetReceiver : AppWidgetProvider() {
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        WidgetUpdater.requestUpdate(context)
+    }
+
+    override fun onAppWidgetOptionsChanged(context: Context, appWidgetManager: AppWidgetManager,
+        appWidgetId: Int, newOptions: Bundle) {
+        WidgetUpdater.requestUpdate(context)
+    }
+
+    override fun onDisabled(context: Context) {
+        WidgetUpdater.stopIfUnused(context)
+    }
+
+    override fun onRestored(context: Context, oldWidgetIds: IntArray, newWidgetIds: IntArray) {
+        WidgetUpdater.requestUpdate(context)
+    }
+}
+
 /** Not direct-boot aware: the SQLite database and preferences require an unlocked user. */
 class WidgetRefreshReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -80,6 +100,7 @@ class WidgetRefreshReceiver : BroadcastReceiver() {
 
     companion object {
         private val ACTIONS = setOf(
+            "com.rsgkh.calendar.widgets.MANUAL_REFRESH",
             WidgetUpdater.ACTION_MIDNIGHT,
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_MY_PACKAGE_REPLACED,

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/planner_row"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="38dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="4dp"
+    android:paddingVertical="2dp">
+    <TextView
+        android:id="@+id/planner_date"
+        android:layout_width="90dp"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:textSize="10sp" />
+    <TextView
+        android:id="@+id/planner_event_1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/widget_planner_chip"
+        android:paddingHorizontal="5dp"
+        android:paddingVertical="4dp"
+        android:singleLine="true"
+        android:textSize="10sp"
+        android:visibility="gone" />
+    <TextView
+        android:id="@+id/planner_event_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/widget_planner_chip"
+        android:paddingHorizontal="5dp"
+        android:paddingVertical="4dp"
+        android:singleLine="true"
+        android:textSize="10sp"
+        android:visibility="gone" />
+    <TextView
+        android:id="@+id/planner_event_3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/widget_planner_chip"
+        android:paddingHorizontal="5dp"
+        android:paddingVertical="4dp"
+        android:singleLine="true"
+        android:textSize="10sp"
+        android:visibility="gone" />
+    <TextView
+        android:id="@+id/planner_event_4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/widget_planner_chip"
+        android:paddingHorizontal="5dp"
+        android:paddingVertical="4dp"
+        android:singleLine="true"
+        android:textSize="10sp"
+        android:visibility="gone" />
+    <TextView
+        android:id="@+id/planner_blank"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:text="" />
+</LinearLayout>

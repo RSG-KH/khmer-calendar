@@ -13,6 +13,7 @@ import com.rsgkh.calendar.data.EventRepository
 import com.rsgkh.calendar.domain.KhmerDateDetails
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.YearMonth
 
 internal data class WidgetItem(
@@ -53,16 +54,17 @@ internal data class WidgetSnapshot(
     val tomorrow: WidgetDay,
     val holidayTitle: String?,
     val monthDays: List<MonthDayInfo> = emptyList(),
+    val plannerDays: List<WidgetDay> = emptyList(),
 )
 
 /** Blocking reads; callers MUST run this on Dispatchers.IO, never in a composable body. */
 internal object WidgetDataSource {
-    fun load(context: Context, widgetId: Int = 0, now: Instant = Instant.now()): WidgetSnapshot {
+    fun load(context: Context, widgetId: Int = 0, now: Instant = Instant.now(), includePlanner: Boolean = false): WidgetSnapshot {
         val settings = AppPreferences(context).read()
         val strings = WidgetStrings(context, settings.khmer)
         val zone = settings.todayTimeZone.zone()
         val today = settings.todayTimeZone.today(now)
-        val dates = WidgetPolicy.window(today)
+        val dates = if (includePlanner) WidgetPolicy.plannerWindow(today) else WidgetPolicy.window(today)
         var personalUnavailable = false
         val personal = if (!settings.widgetShowPersonal) emptyList() else try {
             CustomEventRepository(context).use { it.all() }.flatMap { event ->
@@ -91,8 +93,7 @@ internal object WidgetDataSource {
                 Log.w("CalendarWidgets", "Built-in events could not be read: ${error.javaClass.simpleName}")
                 emptyList()
             }
-            val events = WidgetPolicy.sorted(
-                (builtIn + personal.filter { it.date == date })
+            val visibleEvents = (builtIn + personal.filter { it.date == date })
                     .filter { event ->
                         when (event.kind) {
                             EventKind.CUSTOM -> settings.widgetShowPersonal
@@ -100,15 +101,16 @@ internal object WidgetDataSource {
                             EventKind.OBSERVANCE -> settings.showObservances && settings.widgetShowObservances
                             EventKind.HOLY_DAY -> settings.showHolyDaysInEvents
                         }
-                    },
-                settings.khmer,
-            )
+                    }
+            val events = if (includePlanner) WidgetPolicy.plannerSorted(visibleEvents, settings.khmer)
+                else WidgetPolicy.sorted(visibleEvents, settings.khmer)
             if (date == today) {
                 todayHoliday = events.firstOrNull { it.kind == EventKind.HOLIDAY }?.title(settings.khmer)
             }
             WidgetDay(
                 date = date,
-                items = displayItems(events, settings.widgetHidePersonalDetails, strings),
+                items = displayItems(events, settings.widgetHidePersonalDetails, strings,
+                    if (includePlanner) strings::plannerTime else strings::time),
                 eventCount = events.size,
                 unavailable = personalUnavailable || builtInsUnavailable,
                 supported = supported,
@@ -163,14 +165,17 @@ internal object WidgetDataSource {
             )
         }
 
-        return WidgetSnapshot(settings, today, details, days[0], days[1], days[2], todayHoliday, monthDays)
+        val center = if (includePlanner) 14 else 1
+        return WidgetSnapshot(settings, today, details, days[center - 1], days[center], days[center + 1],
+            todayHoliday, monthDays, if (includePlanner) days else emptyList())
     }
 
     internal fun displayItems(
         events: List<CalendarEvent>, private: Boolean, strings: WidgetStrings,
+        timeFormatter: (LocalTime) -> String = strings::time,
     ): List<WidgetItem> {
         val visible = events.filterNot { private && it.kind == EventKind.CUSTOM }.map {
-            WidgetItem(it.title(strings.khmer), it.time?.let(strings::time), it.kind, it.id)
+            WidgetItem(it.title(strings.khmer), it.time?.let(timeFormatter), it.kind, it.id)
         }
         val privateCount = if (private) events.count { it.kind == EventKind.CUSTOM } else 0
         return if (privateCount == 0) visible else visible + WidgetItem(

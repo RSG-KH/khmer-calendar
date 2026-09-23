@@ -34,6 +34,16 @@ internal class WidgetStrings(private val context: Context, val khmer: Boolean) {
 
     fun number(value: Int): String = CalendarWords.number(value, khmer)
 
+    fun plannerDate(date: java.time.LocalDate): String {
+        val zero = if (khmer) '០' else '0'
+        return "${number(date.monthValue).padStart(2, zero)}/${number(date.dayOfMonth).padStart(2, zero)}/${number(date.year)}"
+    }
+
+    fun plannerTime(time: LocalTime): String {
+        val zero = if (khmer) '០' else '0'
+        return "${number(time.hour)}:${number(time.minute).padStart(2, zero)}"
+    }
+
     fun zodiac(sign: ZodiacSign): String =
         "${if (khmer) sign.signNameKm else sign.signName} ${sign.emoji.trim()}"
 

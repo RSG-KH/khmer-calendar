@@ -51,10 +51,11 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 - **Repeat Reminders**: Configure the daily reminder time and optional additional reminders every 2, 4, 6, 8 or 12 hours. These are separate from an event's repeat schedule.
 - **Event-Type Controls**: Choose reminders for personal events, holidays, observances, and Buddhist holy days independently.
 
-### 📱 Home Screen Widgets (Jetpack Glance)
+### 📱 Home Screen Widgets
 - **Month Widget (4×3)**: Full-month calendar grid with Gregorian and Khmer lunar dates, Buddhist holy days, traditional weekday heading colors, today cell highlight, event markers row (● holiday, ▲ holy, ■ observance, ★ personal), legend footnote, and interactive date-cell tapping that launches the app directly into that day's date details.
 - **Productivity Widget (4×2)**: Date details card featuring a prominent day number, short weekday, short Gregorian month, Khmer lunar month and day, Buddhist Era year, Western Zodiac sign, and Today/Tomorrow event lists. Automatically adapts when resized horizontally by hiding detail rows on compact widths.
 - **Focus Widget (4×2)**: Daily events overview featuring full lunar date and BE year badges, a scrollable list of today's events, and preview sub-cards for yesterday and tomorrow.
+- **Planner Widget (4×2)**: Resizable 29-day agenda centered on today, with a date-range header, timezone and refresh badges, a scrollable day list, and color-coded event chips. Timed events come first; tapping a chip opens its event, while tapping the rest of a row opens date details.
 - **App Settings Integration**: Master **Enable widgets** toggle switch under Settings → Widgets. Toggling off uses `PackageManager.setComponentEnabledSetting` to disable widget receivers, hiding them from the system widget picker with zero background battery or memory overhead, and cancels queued, periodic and midnight refreshes.
 - **Shared Appearance**: Widgets follow the app's language, theme, accent color, selected time zone and widget font size; changing any setting refreshes installed widgets immediately while the app is open.
 - **Global Event Filtering**: Expandable switches in App Settings control Personal events, Public holidays, Observances, and Hide personal event details across all widgets. Buddhist holy days follow app-wide Calendar and Event settings.
@@ -108,6 +109,7 @@ KhmerCalendar/
 │   │   │   │   └── ReminderWork.kt      # Background executor for reminder work
 │   │   │   ├── widgets/
 │   │   │   │   ├── CalendarHomeWidget.kt # Glance base class & Focus/Productivity/Month widgets
+│   │   │   │   ├── PlannerWidgetRenderer.kt # Native 29-day agenda widget
 │   │   │   │   ├── WidgetContent.kt     # Size-adaptive Glance composables
 │   │   │   │   ├── WidgetDataSource.kt  # IO snapshot loading & filtering
 │   │   │   │   ├── WidgetNavigation.kt  # Widget tap intents into app date details

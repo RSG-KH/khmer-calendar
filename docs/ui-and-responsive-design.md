@@ -299,10 +299,10 @@ This ensures legibility for elderly users or small screens while preserving fixe
 
 ---
 
-## 4. Home Screen Widgets & Adaptive Glance Layouts
+## 4. Home Screen Widgets & Adaptive Layouts
 
 ### Widget Design & Responsive Layouts
-Khmer Calendar provides three home screen widgets built with Jetpack Glance (`1.2.0`):
+Khmer Calendar provides four home screen widgets. Month, Productivity, and Focus use Jetpack Glance (`1.2.0`); Planner uses Android RemoteViews:
 
 - **Month Widget (4×3 Target Size, Extendable to 4×4)**:
   - **Header Badges & Quick Action**: Left-aligned solar month name badge (`📅 មេសា` / `📅 Apr`), traditional year & BE year chip (`🐎 ឆ្នាំមមី · អដ្ឋស័ក · ព.ស. ២៥៧០`), mini timezone badge (shows full text on wide displays, collapses to emoji only `🇰🇭` / `🌐` on compact/phone displays to eliminate truncation ellipses), and right-aligned quick refresh action button.
@@ -323,17 +323,21 @@ Khmer Calendar provides three home screen widgets built with Jetpack Glance (`1.
   - **Middle Content**: Scrollable `LazyColumn` for today's events with stable `itemId` keys for smooth list diffing and scroll position preservation on Android 12+.
   - **Footer Sub-Cards**: Sub-cards for Yesterday and Tomorrow with event counts and previews.
   - **Full Horizontal Expansion**: Width expands dynamically with user resizing handles across all launcher grid widths without arbitrary caps, providing full width for long event titles and yesterday/tomorrow sub-cards.
+- **Planner Widget (4×2 Target Size)**:
+  - **Header**: The 29-day solar date range, selected timezone, and refresh action.
+  - **Day List**: A vertically scrollable agenda with fourteen days before and after today. Today uses a 50% accent highlight; days without events stay empty. Event chips use category colors, show 24-hour times when available, and truncate titles after six characters. Timed events precede untimed events.
+  - **Interactions and Resizing**: Event chips open event details; other day-row areas open date details. The widget resizes horizontally and vertically, and additional event chips flow to continuation rows as width changes.
 
 ### App Settings & System Integration
 - **Settings → Widgets**: Located directly after Notifications in the main app settings.
-- **Master Enablement**: "Enable widgets" switch (`widgetsEnabled`, OFF by default). When toggled off, `PackageManager.setComponentEnabledSetting` disables all three widget receivers (`COMPONENT_ENABLED_STATE_DISABLED`), completely hiding them from the system Widget Browser with zero background resource usage.
+- **Master Enablement**: "Enable widgets" switch (`widgetsEnabled`, OFF by default). When toggled off, `PackageManager.setComponentEnabledSetting` disables all four widget receivers (`COMPONENT_ENABLED_STATE_DISABLED`), completely hiding them from the system Widget Browser with zero background resource usage.
 - **Category & Privacy Controls**: 4 expandable toggles:
   1. *Personal events*
   2. *Public holidays*
   3. *Observances*
   4. *Hide personal event details* (shows event count only, suppressing titles and times)
-- **Dedicated Widget Font Size**: All three widgets follow the dedicated **Settings → Widgets → Font size** option (`widgetFontScale`, 100% by default, shown only while widgets are enabled), fully decoupled from the in-app font size. The picker offers the full **80%–200%** range with no clamping; `WidgetPolicy.layout` degrades content density (fewer event rows, tiny-mode fallback) as the zoom grows so text is never squeezed down.
-- **Shared Appearance and Content**: Focus, Today Details, and Month widgets reload the app's language, theme, accent color, and selected time zone. The Widgets category and privacy switches filter event lists, badges, and month markers consistently; the Today Details zodiac name uses the chosen language. Changing any setting refreshes installed widgets immediately while the app is open. Turning off widgets also cancels queued, periodic, and midnight refreshes.
+- **Dedicated Widget Font Size**: All four widgets follow the dedicated **Settings → Widgets → Font size** option (`widgetFontScale`, 100% by default, shown only while widgets are enabled), fully decoupled from the in-app font size. The picker offers the full **80%–200%** range with no clamping; `WidgetPolicy.layout` degrades Glance content density as the zoom grows, while Planner changes its chip density.
+- **Shared Appearance and Content**: Focus, Productivity, Month, and Planner reload the app's language, theme, accent color, and selected time zone. The Widgets category and privacy switches filter event lists, badges, and month markers consistently; the Productivity zodiac name uses the chosen language. Changing any setting refreshes installed widgets immediately while the app is open. Turning off widgets also cancels queued, periodic, and midnight refreshes.
 
 ### Preview Thumbnails
 - Static 8-bit PNG preview thumbnails (`widget_focus.png`, `widget_productivity.png`, and `widget_month.png`) placed in `res/drawable/` (Light) and `res/drawable-night/` (Dark) allow Android's system Widget Browser to display high-resolution, theme-matching previews on Android 12+.

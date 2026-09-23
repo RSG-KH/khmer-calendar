@@ -7,6 +7,8 @@ import com.rsgkh.calendar.R
 import com.rsgkh.calendar.data.Accent
 import com.rsgkh.calendar.data.AppPreferences
 import com.rsgkh.calendar.data.AppSettings
+import com.rsgkh.calendar.data.CustomEvent
+import com.rsgkh.calendar.data.CustomEventRepository
 import com.rsgkh.calendar.data.EventKind
 import com.rsgkh.calendar.data.FontScale
 import com.rsgkh.calendar.data.ThemeMode
@@ -15,6 +17,7 @@ import com.rsgkh.calendar.domain.ZodiacSign
 import com.rsgkh.calendar.ui.accentColor
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -122,6 +125,42 @@ class WidgetSettingsTest {
             assertEquals("Today", WidgetStrings(context, english.settings.khmer)(R.string.widget_today_heading))
             assertEquals("ថ្ងៃនេះ", WidgetStrings(context, khmer.settings.khmer)(R.string.widget_today_heading))
         } finally {
+            preferences.write(original)
+        }
+    }
+
+    @Test fun plannerReadsTwentyNineDaysAndRespectsTimezonePrivacyAndWidgetFilters() {
+        val preferences = AppPreferences(context)
+        val original = preferences.read()
+        val event = CustomEvent(id = "planner-widget-test", title = "Breakfast meeting",
+            date = LocalDate.of(2026, 1, 15), time = LocalTime.of(7, 15))
+        CustomEventRepository(context).use { it.save(event) }
+        val now = Instant.parse("2026-01-14T17:30:00Z") // 00:30 on Jan 15 in Cambodia.
+        try {
+            val settings = original.copy(khmer = false, todayTimeZone = TodayTimeZone.CAMBODIA,
+                widgetShowPersonal = true, widgetHidePersonalDetails = false,
+                widgetShowHolidays = false, widgetShowObservances = false,
+                showHolyDaysInEvents = false)
+            preferences.write(settings)
+            val visible = WidgetDataSource.load(context, now = now, includePlanner = true)
+            assertEquals(LocalDate.of(2026, 1, 15), visible.today)
+            assertEquals(29, visible.plannerDays.size)
+            assertEquals(LocalDate.of(2026, 1, 1), visible.plannerDays.first().date)
+            assertEquals(LocalDate.of(2026, 1, 29), visible.plannerDays.last().date)
+            val item = visible.plannerDays[14].items.single { it.eventId == "custom:planner-widget-test" }
+            assertEquals("7:15", item.time)
+            assertEquals("Breakfast meeting", item.title)
+
+            preferences.write(settings.copy(widgetHidePersonalDetails = true))
+            val private = WidgetDataSource.load(context, now = now, includePlanner = true)
+            assertTrue(private.plannerDays[14].items.none { it.title.contains("Breakfast") || it.time == "7:15" })
+            assertTrue(private.plannerDays[14].items.any { it.kind == EventKind.CUSTOM && it.eventId == null })
+
+            preferences.write(settings.copy(widgetShowPersonal = false))
+            val hidden = WidgetDataSource.load(context, now = now, includePlanner = true)
+            assertTrue(hidden.plannerDays.all { it.items.none { item -> item.kind == EventKind.CUSTOM } })
+        } finally {
+            CustomEventRepository(context).use { it.delete(event.id) }
             preferences.write(original)
         }
     }

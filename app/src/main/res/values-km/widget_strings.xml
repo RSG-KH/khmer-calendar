@@ -3,9 +3,11 @@
     <string name="widget_focus_name">ប្រតិទិនខ្មែរ · Focus</string>
     <string name="widget_productivity_name">ប្រតិទិនខ្មែរ · Productivity</string>
     <string name="widget_month_name">ប្រតិទិនខ្មែរ · Month</string>
+    <string name="widget_planner_name">ប្រតិទិនខ្មែរ · Planner</string>
     <string name="widget_focus_description">ព្រឹត្តិការណ៍ថ្ងៃនេះ រួមជាមួយការមើលជាមុននៃម្សិលមិញ និងថ្ងៃស្អែក។</string>
     <string name="widget_productivity_description">កាលបរិច្ឆេទសុរិយគតិ ចន្ទគតិខ្មែរ ពុទ្ធសករាជ និងព័ត៌មានឆ្នាំប្រពៃណី។</string>
     <string name="widget_month_description">ក្រឡាចត្រង្គប្រតិទិនពេញមួយខែ ជាមួយកាលបរិច្ឆេទសុរិយគតិ និងចន្ទគតិខ្មែរ ថ្ងៃសីល និងសញ្ញាសម្គាល់ព្រឹត្តិការណ៍។</string>
+    <string name="widget_planner_description">ផែនការ ២៩ ថ្ងៃជុំវិញថ្ងៃនេះ ជាមួយព្រឹត្តិការណ៍ដែលអាចអូសមើលបាន។</string>
     <string name="widget_holiday_legend">ថ្ងៃឈប់សម្រាក</string>
     <string name="widget_holy_legend">ថ្ងៃសីល</string>
     <string name="widget_observance_legend">ពិធី និងទិវា</string>

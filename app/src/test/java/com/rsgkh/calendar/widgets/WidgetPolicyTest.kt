@@ -43,6 +43,14 @@ class WidgetPolicyTest {
         assertEquals(LocalDate.of(2028, 2, 29), WidgetPolicy.window(LocalDate.of(2028, 3, 1)).first())
     }
 
+    @Test fun plannerWindowHasFourteenDaysOnEachSideOfToday() {
+        val dates = WidgetPolicy.plannerWindow(LocalDate.of(2026, 1, 15))
+        assertEquals(29, dates.size)
+        assertEquals(LocalDate.of(2026, 1, 1), dates.first())
+        assertEquals(LocalDate.of(2026, 1, 15), dates[14])
+        assertEquals(LocalDate.of(2026, 1, 29), dates.last())
+    }
+
     @Test fun allDayEventsPrecedeChronologicalTimedEvents() {
         val early = event("early", LocalTime.of(9, 0))
         val late = event("late", LocalTime.of(15, 0))
@@ -54,6 +62,19 @@ class WidgetPolicyTest {
         val first = event("series", LocalTime.NOON)
         val next = first.copy(date = first.date.plusDays(1))
         assertEquals(2, WidgetPolicy.sorted(listOf(first, first, next), false).size)
+    }
+
+    @Test fun plannerSortsTimedEventsBeforeUntimedEvents() {
+        val early = event("early", LocalTime.of(7, 15))
+        val late = event("late", LocalTime.of(15, 0))
+        val allDay = event("holiday", null, EventKind.HOLIDAY)
+        assertEquals(listOf("early", "late", "holiday"),
+            WidgetPolicy.plannerSorted(listOf(allDay, late, early), false).map { it.id })
+    }
+
+    @Test fun plannerTitleUsesSixCharactersAndThreeDots() {
+        assertEquals("Breakf...", WidgetPolicy.plannerTitle("Breakfast", false))
+        assertEquals("Lunch", WidgetPolicy.plannerTitle("Lunch", false))
     }
 
     @Test fun expandedSizeAllowsMoreContent() {

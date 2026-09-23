@@ -50,6 +50,13 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_month_info" />
         </receiver>
+        <receiver android:name=".widgets.PlannerWidgetReceiver"
+            android:label="@string/widget_planner_name" android:enabled="false" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_planner_info" />
+        </receiver>
         <receiver android:name=".widgets.WidgetRefreshReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

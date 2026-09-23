@@ -99,19 +99,20 @@ The UI reads today's date immediately when the activity becomes visible and ever
 
 ---
 
-## Home Screen Widgets (Jetpack Glance)
+## Home Screen Widgets
 
-Khmer Calendar provides three home screen app widgets built with Jetpack Glance (`1.2.0`):
+Khmer Calendar provides four home screen app widgets. Month, Productivity, and Focus use Jetpack Glance (`1.2.0`); Planner uses Android RemoteViews for a list that opens near today:
 
 - **Month Widget (`MonthWidget`)**: 4×3 full-month calendar grid with Gregorian and Khmer lunar dates, Buddhist holy days, traditional weekday colors, event markers, footnote legend, and interactive date-cell tapping. Features height-adaptive compact padding, a $1.25\times$ max width-to-height aspect ratio constraint, and dynamic zoom gap scaling.
 - **Productivity Widget (`ProductivityWidget`)**: 4×2 date details card showing the big day number, short weekday, short month, Khmer lunar date, Buddhist Era year, Western Zodiac sign, and today's/tomorrow's event lists. Automatically hides detail rows on narrow widths (< 330dp) for compact legibility.
 - **Focus Widget (`FocusWidget`)**: 4×2 daily events overview with full lunar date and BE year badges, scrollable today's events list, and preview sub-cards for yesterday and tomorrow.
+- **Planner Widget (`PlannerWidgetReceiver`)**: 4×2, resizable in both directions, with 29 dates centered on today. Its native list scrolls through past and future dates, displays timed events before untimed events, and opens either an event or date details based on the tapped area.
 
 All widgets follow the dedicated **Font size** setting in the Widgets section of app settings (`widgetFontScale`, 80%–200%), decoupled from the in-app font size. At large zoom levels the adaptive layouts drop optional detail rows and collapse non-essential text to safeguard against home screen clipping.
 
 ### Lifecycle & Background Refresh
 - **`WidgetUpdater`**: Manages WorkManager (`WidgetRefreshWorker`) periodic hourly updates, immediate background updates, and `AlarmManager`'s inexact midnight triggers (`RTC_WAKEUP`). Every refresh path re-reads the **Enable widgets** setting and skips work while it is off; turning it off cancels the queued, periodic and midnight refreshes. A refresh failure on one widget does not stop the remaining widgets.
-- **`WidgetReceivers`**: Manifest-registered broadcast receivers (`FocusWidgetReceiver`, `ProductivityWidgetReceiver`, `MonthWidgetReceiver`, `WidgetRefreshReceiver`) react to system triggers (`BOOT_COMPLETED`, `TIME_CHANGED`, `TIMEZONE_CHANGED`, `DATE_CHANGED`, `LOCALE_CHANGED`, `MY_PACKAGE_REPLACED`). The midnight receiver refreshes widgets inline within its broadcast window — with the queued WorkManager job kept as a fallback for OEMs that interrupt background receivers — and reschedules the next selected-zone midnight.
+- **`WidgetReceivers`**: Manifest-registered broadcast receivers (`FocusWidgetReceiver`, `ProductivityWidgetReceiver`, `MonthWidgetReceiver`, `PlannerWidgetReceiver`, `WidgetRefreshReceiver`) react to system triggers (`BOOT_COMPLETED`, `TIME_CHANGED`, `TIMEZONE_CHANGED`, `DATE_CHANGED`, `LOCALE_CHANGED`, `MY_PACKAGE_REPLACED`). The midnight receiver refreshes widgets inline within its broadcast window — with the queued WorkManager job kept as a fallback for OEMs that interrupt background receivers — and reschedules the next selected-zone midnight.
 - **In-app refresh**: Changing any setting while the app is open refreshes installed widgets immediately, so language or appearance changes are visible as soon as the user returns home; the queued worker remains as a fallback.
 
 ### Master Enable/Disable Control

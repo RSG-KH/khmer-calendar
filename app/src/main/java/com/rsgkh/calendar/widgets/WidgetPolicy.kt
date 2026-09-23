@@ -5,6 +5,7 @@ import com.rsgkh.calendar.data.CalendarEvent
 import com.rsgkh.calendar.data.TodayTimeZone
 import java.time.Instant
 import java.time.LocalDate
+import java.text.BreakIterator
 import java.time.ZoneId
 import java.util.Locale
 import kotlin.math.floor
@@ -33,6 +34,27 @@ object WidgetPolicy {
 
     fun window(today: LocalDate): List<LocalDate> =
         listOf(today.minusDays(1), today, today.plusDays(1))
+
+    fun plannerWindow(today: LocalDate): List<LocalDate> =
+        (-14L..14L).map(today::plusDays)
+
+    /** Planner puts appointments first, then untimed events. */
+    fun plannerSorted(events: List<CalendarEvent>, khmer: Boolean): List<CalendarEvent> =
+        events.distinctBy { it.key }.sortedWith(
+            compareBy<CalendarEvent> { it.time == null }
+                .thenBy { it.time }
+                .thenBy { it.kind.ordinal }
+                .thenBy { it.title(khmer).lowercase(Locale.ROOT) }
+                .thenBy { it.id },
+        )
+
+    fun plannerTitle(title: String, khmer: Boolean): String {
+        val breaks = BreakIterator.getCharacterInstance(Locale.forLanguageTag(if (khmer) "km" else "en"))
+        breaks.setText(title)
+        var end = breaks.first()
+        repeat(6) { end = breaks.next().takeIf { it != BreakIterator.DONE } ?: return title }
+        return if (breaks.next() == BreakIterator.DONE) title else title.substring(0, end) + "..."
+    }
 
     fun sorted(events: List<CalendarEvent>, khmer: Boolean): List<CalendarEvent> =
         events.distinctBy { it.key }.sortedWith(

@@ -58,6 +58,11 @@ object WidgetUpdater {
                 state,
                 PackageManager.DONT_KILL_APP,
             )
+            pm.setComponentEnabledSetting(
+                ComponentName(appContext, PlannerWidgetReceiver::class.java),
+                state,
+                PackageManager.DONT_KILL_APP,
+            )
         } catch (error: Exception) {
             Log.w("CalendarWidgets", "Could not update widget component enabled state: ${error.javaClass.simpleName}")
         }
@@ -89,7 +94,8 @@ object WidgetUpdater {
 
     internal fun installedIds(context: Context): List<Int> {
         val manager = AppWidgetManager.getInstance(context)
-        return listOf(FocusWidgetReceiver::class.java, ProductivityWidgetReceiver::class.java, MonthWidgetReceiver::class.java)
+        return listOf(FocusWidgetReceiver::class.java, ProductivityWidgetReceiver::class.java,
+            MonthWidgetReceiver::class.java, PlannerWidgetReceiver::class.java)
             .flatMap { manager.getAppWidgetIds(ComponentName(context, it)).toList() }
     }
 
@@ -105,6 +111,11 @@ object WidgetUpdater {
 
     internal suspend fun refreshOne(context: Context, id: Int) = renderLock.withLock {
         if (!AppPreferences(context).read().widgetsEnabled) return@withLock
+        val provider = AppWidgetManager.getInstance(context).getAppWidgetInfo(id)?.provider ?: return@withLock
+        if (provider == ComponentName(context, PlannerWidgetReceiver::class.java)) {
+            PlannerWidgetRenderer.update(context, id)
+            return@withLock
+        }
         val widget = widgetForId(context, id) ?: return@withLock
         val manager = GlanceAppWidgetManager(context)
         val glanceId = try {
