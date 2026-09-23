@@ -48,24 +48,24 @@
     </LinearLayout>
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="38dp"
+        android:layout_height="27dp"
         android:gravity="center_vertical"
-        android:text="01/14/2026"
+        android:text="01/14"
         android:textColor="#222632"
         android:textSize="10.5sp" />
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="38dp"
+        android:layout_height="27dp"
         android:gravity="center_vertical"
         android:background="#806542A0"
-        android:text="01/15/2026     7:15 Breakf..."
+        android:text="01/15     7:15 Breakf..."
         android:textColor="#222632"
         android:textSize="10.5sp" />
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="38dp"
+        android:layout_height="27dp"
         android:gravity="center_vertical"
-        android:text="01/16/2026"
+        android:text="01/16"
         android:textColor="#222632"
         android:textSize="10.5sp" />
 </LinearLayout>

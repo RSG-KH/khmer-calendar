@@ -35,8 +35,12 @@ internal class WidgetStrings(private val context: Context, val khmer: Boolean) {
     fun number(value: Int): String = CalendarWords.number(value, khmer)
 
     fun plannerDate(date: java.time.LocalDate): String {
+        return "${plannerListDate(date)}/${number(date.year)}"
+    }
+
+    fun plannerListDate(date: java.time.LocalDate): String {
         val zero = if (khmer) '០' else '0'
-        return "${number(date.monthValue).padStart(2, zero)}/${number(date.dayOfMonth).padStart(2, zero)}/${number(date.year)}"
+        return "${number(date.monthValue).padStart(2, zero)}/${number(date.dayOfMonth).padStart(2, zero)}"
     }
 
     fun plannerTime(time: LocalTime): String {

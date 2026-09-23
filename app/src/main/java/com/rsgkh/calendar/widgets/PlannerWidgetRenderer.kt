@@ -29,7 +29,7 @@ internal object PlannerWidgetRenderer {
         val scale = snapshot.settings.widgetFontScale.multiplier
         val manager = AppWidgetManager.getInstance(context)
         val width = manager.getAppWidgetOptions(id).getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 280)
-        val dateWidth = 90f * scale
+        val dateWidth = 52f * scale
         val chipsPerLine = floor(((width - 22f - dateWidth - 6f).coerceAtLeast(70f) + 4f) / (84f * scale + 4f))
             .toInt().coerceIn(1, 4)
         val packageName = context.packageName
@@ -95,7 +95,7 @@ internal object PlannerWidgetRenderer {
                 row.setInt(R.id.planner_row, "setBackgroundColor",
                     if (day.date == snapshot.today) palette.plannerToday.getColor(context).toArgb() else Color.TRANSPARENT)
                 row.setTextViewText(R.id.planner_date,
-                    if (groupIndex == 0) strings.plannerDate(day.date) else "")
+                    if (groupIndex == 0) strings.plannerListDate(day.date) else "")
                 row.setViewLayoutWidth(R.id.planner_date, dateWidth, TypedValue.COMPLEX_UNIT_DIP)
                 row.setTextColor(R.id.planner_date, palette.text.getColor(context).toArgb())
                 row.setTextViewTextSize(R.id.planner_date, TypedValue.COMPLEX_UNIT_SP, 10.5f * scale)
