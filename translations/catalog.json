@@ -36153,6 +36153,38 @@
       }
     },
     {
+      "id": "ui.show_observances",
+      "section": "interface",
+      "context": "Calendar settings toggle; show observances throughout the app, on by default",
+      "en": "Show observances",
+      "km": "ទិវា និងពិធីបុណ្យ (ឥតឈប់សម្រាក)",
+      "original": {
+        "en": "Show observances",
+        "km": "បង្ហាញទិវា និងពិធីបុណ្យ"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.show_observances_subtitle",
+      "section": "interface",
+      "context": "Calendar settings subtitle",
+      "en": "In calendar and event list",
+      "km": "បង្ហាញក្នុងប្រតិទិន និងបញ្ជីព្រឹត្តិការណ៍",
+      "original": {
+        "en": "In calendar and event list",
+        "km": "ក្នុងប្រតិទិន និងបញ្ជីព្រឹត្តិការណ៍"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
       "id": "ui.highlight_weekday_names",
       "section": "interface",
       "context": "Calendar settings: traditional weekday heading colors; off by default",

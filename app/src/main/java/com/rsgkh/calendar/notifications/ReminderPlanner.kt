@@ -26,7 +26,7 @@ object ReminderPlanner {
             val enabled = when (event.kind) {
                 EventKind.CUSTOM -> settings.pushCustomEvents
                 EventKind.HOLIDAY -> settings.pushHolidays
-                EventKind.OBSERVANCE -> settings.pushObservances
+                EventKind.OBSERVANCE -> settings.showObservances && settings.pushObservances
                 // The saved push choice is preserved while holy days are hidden.
                 EventKind.HOLY_DAY -> settings.showHolyDaysInEvents && settings.pushHolyDays
             }

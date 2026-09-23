@@ -21,6 +21,11 @@ class ReminderPlannerTest {
     private fun next(now: Instant, config: AppSettings = settings, custom: List<CustomEvent> = emptyList()) =
         ReminderPlanner.next(now, config, custom) { year -> if (year == 2026) listOf(event) else emptyList() }
 
+    @Test fun hiddenObservancesDoNotScheduleReminders() {
+        assertNotNull(next(at(hour = 4), settings.copy(showObservances = true)))
+        assertNull(next(at(hour = 4), settings.copy(showObservances = false)))
+    }
+
     @Test fun websiteEventsUseTheSameNotificationPlannerOutsideOfficialSnapshotYears() {
         val date = LocalDate.of(2027, 2, 5)
         val next = ReminderPlanner.next(at(date, 4, 59), settings.copy(repeatHours = 0), emptyList())!!

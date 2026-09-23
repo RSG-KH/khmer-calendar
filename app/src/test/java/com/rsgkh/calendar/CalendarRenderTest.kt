@@ -130,22 +130,60 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Test fun preferencesSurviveRepositoryRecreation() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val defaults = AppSettings(ThemeMode.SYSTEM, Accent.BLUE, khmer = true, mondayFirst = false, showLongerWeekdayNames = false, showCopyButtons = false, showLunar = true,
-            highlightWeekdayNames = true, showHolyDaysInCalendar = true, showHolyDaysInEvents = false,
+            highlightWeekdayNames = true, showObservances = true, showHolyDaysInCalendar = true, showHolyDaysInEvents = false,
             highlightSunday = true, notificationsEnabled = false, pushCustomEvents = true, pushHolidays = true,
             pushObservances = true, pushHolyDays = false, pushMinutes = 300, repeatHours = 0, todayTimeZone = TodayTimeZone.LOCAL,
             fontScale = FontScale.PERCENT_100, backgroundAccent = true, showWesternZodiac = true)
         assertEquals(defaults, AppSettings())
         assertEquals(defaults, AppPreferences(context).read())
+        org.junit.Assert.assertFalse(defaults.useEmojiForGanzhiAnimals)
         val expected = AppSettings(ThemeMode.DARK, Accent.LIME, khmer = false, mondayFirst = true, showLongerWeekdayNames = true, showCopyButtons = true, showLunar = false,
-            highlightWeekdayNames = true, showHolyDaysInCalendar = false, showHolyDaysInEvents = true,
+            highlightWeekdayNames = true, showObservances = false, showHolyDaysInCalendar = false, showHolyDaysInEvents = true,
             highlightSunday = false, pushCustomEvents = false, pushHolidays = false, pushObservances = false, pushHolyDays = false,
             repeatHours = 6, todayTimeZone = TodayTimeZone.CAMBODIA,
             fontScale = FontScale.PERCENT_110, backgroundAccent = false, showWesternZodiac = false,
-            useEmojiForGanzhiAnimals = false)
+            useEmojiForGanzhiAnimals = true)
         AppPreferences(context).write(expected)
         assertEquals(expected, AppPreferences(context).read())
         AppPreferences(context).write(expected.copy(showCopyButtons = false, showLongerWeekdayNames = false, highlightWeekdayNames = false, backgroundAccent = true, showWesternZodiac = true))
         assertEquals(expected.copy(showCopyButtons = false, showLongerWeekdayNames = false, highlightWeekdayNames = false, backgroundAccent = true, showWesternZodiac = true), AppPreferences(context).read())
+    }
+
+    @Test fun observanceSettingHidesCalendarDetailsAndEventsFilterAndRestoresThem() {
+        val observance = (1..30).asSequence()
+            .flatMap { day -> EventRepository.forDate(LocalDate.of(2026, 9, day)).asSequence() }
+            .first { it.kind == EventKind.OBSERVANCE }
+        val eventTitle = observance.title(false)
+        val dateLabel = "${CalendarWords.weekday(observance.date.dayOfWeek.value, false)}, ${observance.date.dayOfMonth} September"
+        start(AppSettings(khmer = false))
+        compose.onNode(hasContentDescription(dateLabel, substring = true)).performClick()
+        compose.onNode(hasText(eventTitle) and hasAnyAncestor(isDialog())).assertIsDisplayed()
+        compose.onNodeWithText("Close").performClick()
+        compose.onNodeWithText("Events").performClick()
+        compose.onNodeWithText("Observances").performClick()
+        compose.onNodeWithText("Settings").performClick()
+        val title = L.text("ui.show_observances", false)
+        assertEquals("Show observances", title)
+        assertEquals("In calendar and event list", L.text("ui.show_observances_subtitle", false))
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasContentDescription(title))
+        compose.onNodeWithContentDescription(title).assertIsOn().performClick().assertIsOff()
+        compose.onNodeWithText("Events").performClick()
+        compose.onNodeWithText("Observances").assertDoesNotExist()
+        compose.onNodeWithText("Search events").performTextInput(eventTitle)
+        compose.onNodeWithText("No matching events. Try another filter or search.").assertIsDisplayed()
+        compose.onNodeWithTag("event-search").performTextReplacement("")
+        compose.onNodeWithText("Calendar").performClick()
+        compose.onNode(hasContentDescription(dateLabel, substring = true))
+            .assert(hasContentDescription(eventTitle, substring = true).not())
+            .performClick()
+        compose.onNodeWithText(eventTitle).assertDoesNotExist()
+        compose.onNodeWithText("Close").performClick()
+        compose.onNodeWithText("Settings").performClick()
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasContentDescription(title))
+        compose.onNodeWithContentDescription(title).performClick().assertIsOn()
+        compose.onNodeWithText("Calendar").performClick()
+        compose.onNode(hasContentDescription(dateLabel, substring = true)).performClick()
+        compose.onNode(hasText(eventTitle) and hasAnyAncestor(isDialog())).assertIsDisplayed()
     }
 
     @Test fun systemThemeFollowsDeviceUntilAChipIsChosen() {
@@ -925,7 +963,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
     }
 
     @Test fun ganzhiTableUsesCurrentHourOnlyTodayAndRespectsEmojiSetting() {
-        start()
+        start(AppSettings(khmer = false, useEmojiForGanzhiAnimals = true))
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
         compose.onNodeWithTag("ganzhi-table").assertIsDisplayed()
         compose.onNodeWithTag("ganzhi-header-year").assertExists()
@@ -986,7 +1024,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
 
     @Test @Config(qualifiers = "w320dp-h568dp-xhdpi")
     fun ganzhiEmojiColumnsFitNarrowPhoneWithoutScrolling() {
-        start()
+        start(AppSettings(khmer = false, useEmojiForGanzhiAnimals = true))
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
         val columns = compose.onNodeWithTag("ganzhi-columns").getUnclippedBoundsInRoot()
         val hour = compose.onNodeWithTag("ganzhi-header-hour").getUnclippedBoundsInRoot()

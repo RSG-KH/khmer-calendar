@@ -13,7 +13,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class CalendarUiTest : CalendarUiScenarios() {
     @Test fun ganzhiTableUsesEmojiAndEnglishAnimalNamesOnDevice() {
-        start()
+        start(com.rsgkh.calendar.data.AppSettings(khmer = false, useEmojiForGanzhiAnimals = true))
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
         compose.onNodeWithTag("ganzhi-sign-day").assertTextEquals("🐮")
         compose.onNodeWithTag("ganzhi-clash-day").assertTextEquals("🐐")

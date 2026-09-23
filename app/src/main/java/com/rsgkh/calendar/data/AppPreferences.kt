@@ -50,6 +50,7 @@ data class AppSettings(
     val khmer: Boolean = true,
     val mondayFirst: Boolean = false,
     val showLongerWeekdayNames: Boolean = false,
+    val showObservances: Boolean = true,
     val showCopyButtons: Boolean = false,
     val highlightWeekdayNames: Boolean = true,
     val showLunar: Boolean = true,
@@ -68,7 +69,7 @@ data class AppSettings(
     val widgetFontScale: FontScale = FontScale.PERCENT_100,
     val showWesternZodiac: Boolean = true,
     val showGanzhi: Boolean = true,
-    val useEmojiForGanzhiAnimals: Boolean = true,
+    val useEmojiForGanzhiAnimals: Boolean = false,
     val widgetsEnabled: Boolean = false,
     val widgetShowPersonal: Boolean = true,
     val widgetShowHolidays: Boolean = true,
@@ -80,7 +81,7 @@ data class AppSettings(
 internal fun AppSettings.remindersDifferFrom(other: AppSettings): Boolean =
     notificationsEnabled != other.notificationsEnabled ||
         pushCustomEvents != other.pushCustomEvents || pushHolidays != other.pushHolidays ||
-        pushObservances != other.pushObservances || pushHolyDays != other.pushHolyDays ||
+        pushObservances != other.pushObservances || showObservances != other.showObservances || pushHolyDays != other.pushHolyDays ||
         showHolyDaysInEvents != other.showHolyDaysInEvents || pushMinutes != other.pushMinutes ||
         repeatHours != other.repeatHours || todayTimeZone != other.todayTimeZone
 
@@ -101,6 +102,7 @@ class AppPreferences(context: Context) {
             khmer = prefs.getBoolean("khmer", true),
             mondayFirst = prefs.getBoolean("mondayFirst", false),
             showLongerWeekdayNames = prefs.getBoolean("showLongerWeekdayNames", false),
+            showObservances = prefs.getBoolean("showObservances", true),
             showCopyButtons = prefs.getBoolean("showCopyButtons", false),
             highlightWeekdayNames = prefs.getBoolean("highlightWeekdayNames", true),
             showLunar = prefs.getBoolean("showLunar", true),
@@ -119,7 +121,7 @@ class AppPreferences(context: Context) {
             widgetFontScale = FontScale.entries.firstOrNull { it.name == prefs.getString("widgetFontScale", "PERCENT_100") } ?: FontScale.PERCENT_100,
             showWesternZodiac = showWesternZodiac,
             showGanzhi = prefs.getBoolean("showGanzhi", true),
-            useEmojiForGanzhiAnimals = prefs.getBoolean("useEmojiForGanzhiAnimals", true),
+            useEmojiForGanzhiAnimals = prefs.getBoolean("useEmojiForGanzhiAnimals", false),
             widgetsEnabled = prefs.getBoolean("widgetsEnabled", false),
             widgetShowPersonal = prefs.getBoolean("widgetShowPersonal", true),
             widgetShowHolidays = prefs.getBoolean("widgetShowHolidays", true),
@@ -135,6 +137,7 @@ class AppPreferences(context: Context) {
             putBoolean("khmer", settings.khmer)
             putBoolean("mondayFirst", settings.mondayFirst)
             putBoolean("showLongerWeekdayNames", settings.showLongerWeekdayNames)
+            putBoolean("showObservances", settings.showObservances)
             putBoolean("showCopyButtons", settings.showCopyButtons)
             putBoolean("highlightWeekdayNames", settings.highlightWeekdayNames)
             putBoolean("showLunar", settings.showLunar)

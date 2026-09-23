@@ -988,7 +988,7 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                                 WText(L.text("ui.holy_day.28786d", s.khmer), p.secondary, legendTextSize, scale, bold = false, lines = 1)
                             }
                         }
-                        if (snapshot.settings.widgetShowObservances) {
+                        if (snapshot.settings.showObservances && snapshot.settings.widgetShowObservances) {
                             Spacer(GlanceModifier.width(legendItemGap))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 WText("■", p.accent, legendOtherMarker, scale)

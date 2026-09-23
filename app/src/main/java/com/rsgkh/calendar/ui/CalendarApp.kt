@@ -236,7 +236,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                             runCatching {
                                 com.rsgkh.calendar.widgets.WidgetNavigation.resolve(request, customEvents, displayZone)
                             }.getOrNull()
-                        }
+                        }?.takeIf { settings.showObservances || it.kind != EventKind.OBSERVANCE }
                     }
                 }
             }
@@ -359,6 +359,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                 k = k,
                 custom = allCustom,
                 showHolyDays = settings.showHolyDaysInEvents,
+                showObservances = settings.showObservances,
                 showHolyDaysInCalendar = settings.showHolyDaysInCalendar,
                 showCopyButtons = settings.showCopyButtons,
                 showWesternZodiac = settings.showWesternZodiac,
@@ -517,7 +518,9 @@ private fun CalendarMonthCard(
                     if (settings.showHolyDaysInCalendar) {
                         Legend(EventKind.HOLY_DAY, L.text("ui.holy_day.28786d", k), eventColor(EventKind.HOLY_DAY))
                     }
-                    Legend(EventKind.OBSERVANCE, L.text("ui.observance.5b9a87", k), eventColor(EventKind.OBSERVANCE))
+                    if (settings.showObservances) {
+                        Legend(EventKind.OBSERVANCE, L.text("ui.observance.5b9a87", k), eventColor(EventKind.OBSERVANCE))
+                    }
                     if (hasCustom) {
                         Legend(EventKind.CUSTOM, L.text("ui.custom.917053", k), eventColor(EventKind.CUSTOM))
                     }
@@ -542,11 +545,17 @@ private fun CalendarScreen(
         (EventRepository.forMonth(month) + custom.filter { YearMonth.from(it.date) == month })
             .sortedWith(compareBy({ it.date }, { it.time ?: LocalTime.MIN }, { it.id }))
     }
-    val gridEvents = remember(allMonthEvents, settings.showHolyDaysInCalendar) {
-        allMonthEvents.filter { settings.showHolyDaysInCalendar || it.kind != EventKind.HOLY_DAY }
+    val gridEvents = remember(allMonthEvents, settings.showHolyDaysInCalendar, settings.showObservances) {
+        allMonthEvents.filter {
+            (settings.showHolyDaysInCalendar || it.kind != EventKind.HOLY_DAY) &&
+                (settings.showObservances || it.kind != EventKind.OBSERVANCE)
+        }
     }
-    val listEvents = remember(allMonthEvents, settings.showHolyDaysInEvents) {
-        allMonthEvents.filter { settings.showHolyDaysInEvents || it.kind != EventKind.HOLY_DAY }
+    val listEvents = remember(allMonthEvents, settings.showHolyDaysInEvents, settings.showObservances) {
+        allMonthEvents.filter {
+            (settings.showHolyDaysInEvents || it.kind != EventKind.HOLY_DAY) &&
+                (settings.showObservances || it.kind != EventKind.OBSERVANCE)
+        }
     }
     if (isLandscape) {
         val leftWeight = if (isTablet) 1.0f else 0.9f
@@ -757,9 +766,11 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
     val searchScrolledPast by remember { derivedStateOf { eventsListState.firstVisibleItemIndex >= 2 } }
     LaunchedEffect(filter) { if (filter == 4) filterScroll.scrollTo(0) }
     LaunchedEffect(settings.showHolyDaysInEvents) { if (!settings.showHolyDaysInEvents && filter == 3) filter = 0 }
-    val events = remember(year, query, filter, settings.showHolyDaysInEvents, custom) {
+    LaunchedEffect(settings.showObservances) { if (!settings.showObservances && filter == 2) filter = 0 }
+    val events = remember(year, query, filter, settings.showHolyDaysInEvents, settings.showObservances, custom) {
         (EventRepository.forYear(year) + custom.filter { it.date.year == year }).filter { event ->
             (settings.showHolyDaysInEvents || event.kind != EventKind.HOLY_DAY) &&
+                (settings.showObservances || event.kind != EventKind.OBSERVANCE) &&
                 (filter == 0 || (filter == 1 && event.kind == EventKind.HOLIDAY) || (filter == 2 && event.kind == EventKind.OBSERVANCE) || (filter == 3 && event.kind == EventKind.HOLY_DAY) || (filter == 4 && event.kind == EventKind.CUSTOM)) &&
                 (query.isBlank() || searchText("${event.titleEn} ${event.titleKm} ${event.date} ${event.notes}").contains(searchText(query)))
         }.sortedWith(compareBy({ it.date }, { it.time ?: LocalTime.MIN }, { it.id }))
@@ -799,7 +810,7 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
                     Row(Modifier.padding(bottom = 16.dp).testTag("event-filters").horizontalScroll(filterScroll), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         val filters = listOf(0 to L.text("ui.all.c10205", k), 4 to L.text("ui.custom.917053", k), 1 to L.text("ui.holidays.8a894c", k), 2 to L.text("ui.observances.e4454c", k), 3 to L.text("ui.holy_days.9569a6", k))
                         filters.forEach { (id, text) ->
-                            if (settings.showHolyDaysInEvents || id != 3) SelectionChip(
+                            if ((settings.showHolyDaysInEvents || id != 3) && (settings.showObservances || id != 2)) SelectionChip(
                                 selected = filter == id,
                                 onClick = { filter = id },
                                 label = { Text(text) },
@@ -936,6 +947,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
             SettingsCard(L.text("ui.calendar.beb873", k)) {
                 SettingSwitch(L.text("ui.show_copy_buttons", k), L.text("ui.show_copy_buttons_subtitle", k), settings.showCopyButtons) { onChange(settings.copy(showCopyButtons = it)) }
                 SettingSwitch(L.text("ui.show_longer_weekday_names", k), L.text("ui.show_longer_weekday_names_subtitle", k), settings.showLongerWeekdayNames) { onChange(settings.copy(showLongerWeekdayNames = it)) }
+                SettingSwitch(L.text("ui.show_observances", k), L.text("ui.show_observances_subtitle", k), settings.showObservances) { onChange(settings.copy(showObservances = it)) }
                 SettingSwitch(L.text("ui.highlight_weekday_names", k), L.text("ui.highlight_weekday_names_subtitle", k), settings.highlightWeekdayNames) { onChange(settings.copy(highlightWeekdayNames = it)) }
                 SettingSwitch(L.text("ui.highlight_sunday_column.549462", k), L.text("ui.show_sundays_in_red_like_holidays.245681", k), settings.highlightSunday) { onChange(settings.copy(highlightSunday = it)) }
                 SettingSwitch(L.text("ui.lunar_dates_in_calendar.4dffed", k), L.text("ui.koeut_and_roach_under_each_date.f23bd7", k), settings.showLunar) { onChange(settings.copy(showLunar = it)) }
@@ -1035,11 +1047,13 @@ internal fun WidgetSettingsCard(
                 checked = settings.widgetShowHolidays,
             ) { onChange(settings.copy(widgetShowHolidays = it)) }
 
-            SettingSwitch(
-                title = observancesTitle,
-                subtitle = observancesSubtitle,
-                checked = settings.widgetShowObservances,
-            ) { onChange(settings.copy(widgetShowObservances = it)) }
+            if (settings.showObservances) {
+                SettingSwitch(
+                    title = observancesTitle,
+                    subtitle = observancesSubtitle,
+                    checked = settings.widgetShowObservances,
+                ) { onChange(settings.copy(widgetShowObservances = it)) }
+            }
 
             if (settings.widgetShowPersonal) {
                 SettingSwitch(
@@ -1141,16 +1155,16 @@ internal fun WidgetSettingsCard(
 
 @Composable private fun DateDetailsDialog(
     date: LocalDate, today: LocalDate, k: Boolean, custom: List<CalendarEvent>,
-    showHolyDays: Boolean, showHolyDaysInCalendar: Boolean, showCopyButtons: Boolean, showWesternZodiac: Boolean = true,
-    showGanzhi: Boolean = true, useEmojiForGanzhiAnimals: Boolean = true,
+    showHolyDays: Boolean, showObservances: Boolean, showHolyDaysInCalendar: Boolean, showCopyButtons: Boolean, showWesternZodiac: Boolean = true,
+    showGanzhi: Boolean = true, useEmojiForGanzhiAnimals: Boolean = false,
     todayTimeZone: TodayTimeZone,
     onEvent: (CalendarEvent) -> Unit, onAddEvent: () -> Unit, onDismiss: () -> Unit
 ) {
     val info = remember(date) { KhmerDateDetails.fromGregorian(date) }
     val title = if (k) info.gregorianLabel else "${CalendarWords.weekday(date.dayOfWeek.value, false)}, ${info.gregorianLabel}"
-    val events = remember(date, custom, showHolyDays) {
+    val events = remember(date, custom, showHolyDays, showObservances) {
         (EventRepository.forDate(date) + custom.filter { it.date == date })
-            .filter { showHolyDays || it.kind != EventKind.HOLY_DAY }
+            .filter { (showHolyDays || it.kind != EventKind.HOLY_DAY) && (showObservances || it.kind != EventKind.OBSERVANCE) }
             .sortedWith(compareBy({ it.time ?: LocalTime.MIN }, { it.id }))
     }
     CalendarBasicAlertDialog(

@@ -31,6 +31,31 @@ import org.robolectric.annotation.Config
 class WidgetSettingsTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
 
+    @Test fun globalObservanceChoiceOverridesWidgetChoiceAndRestoresIt() {
+        val preferences = AppPreferences(context)
+        val original = preferences.read()
+        val observanceDate = (1..30).map { LocalDate.of(2026, 9, it) }
+            .first { date -> com.rsgkh.calendar.data.EventRepository.forDate(date).any { it.kind == EventKind.OBSERVANCE } }
+        val now = observanceDate.atTime(15, 0).atZone(com.rsgkh.calendar.data.CAMBODIA_ZONE).toInstant()
+        try {
+            val enabled = original.copy(khmer = false, todayTimeZone = TodayTimeZone.CAMBODIA,
+                widgetShowObservances = true, showObservances = true)
+            preferences.write(enabled)
+            val visible = WidgetDataSource.load(context, now = now)
+            assertTrue(visible.current.items.any { it.kind == EventKind.OBSERVANCE })
+            assertTrue(visible.monthDays.first { it.date == observanceDate }.hasObservance)
+            preferences.write(enabled.copy(showObservances = false))
+            val hidden = WidgetDataSource.load(context, now = now)
+            assertFalse(hidden.current.items.any { it.kind == EventKind.OBSERVANCE })
+            assertFalse(hidden.monthDays.any { it.hasObservance })
+            assertTrue(preferences.read().widgetShowObservances)
+            preferences.write(enabled)
+            assertTrue(WidgetDataSource.load(context, now = now).current.items.any { it.kind == EventKind.OBSERVANCE })
+        } finally {
+            preferences.write(original)
+        }
+    }
+
     @Test fun savedWidgetChoicesControlSnapshotAndHolidayVisibility() {
         val preferences = AppPreferences(context)
         val original = preferences.read()

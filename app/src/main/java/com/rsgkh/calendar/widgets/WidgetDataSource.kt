@@ -97,7 +97,7 @@ internal object WidgetDataSource {
                         when (event.kind) {
                             EventKind.CUSTOM -> settings.widgetShowPersonal
                             EventKind.HOLIDAY -> settings.widgetShowHolidays
-                            EventKind.OBSERVANCE -> settings.widgetShowObservances
+                            EventKind.OBSERVANCE -> settings.showObservances && settings.widgetShowObservances
                             EventKind.HOLY_DAY -> settings.showHolyDaysInEvents
                         }
                     },
@@ -144,7 +144,7 @@ internal object WidgetDataSource {
             val isShaving = settings.showHolyDaysInCalendar && (lunar?.isShavingDay == true)
             val builtIn = if (date.year in EventRepository.coveredYears) try { EventRepository.forDate(date) } catch (_: Exception) { emptyList() } else emptyList()
             val hasHoliday = settings.widgetShowHolidays && builtIn.any { it.kind == EventKind.HOLIDAY }
-            val hasObservance = settings.widgetShowObservances && builtIn.any { it.kind == EventKind.OBSERVANCE }
+            val hasObservance = settings.showObservances && settings.widgetShowObservances && builtIn.any { it.kind == EventKind.OBSERVANCE }
             val hasPersonal = settings.widgetShowPersonal && monthPersonal.any { it.date == date }
 
             MonthDayInfo(

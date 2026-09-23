@@ -72,8 +72,10 @@ data class NotificationAccess(val canPost: Boolean = true, val exact: Boolean = 
             SettingSwitch(L.text("notifications.push_holidays", k), L.text("notifications.push_holidays_subtitle", k), checked = settings.pushHolidays) {
                 onChange(settings.copy(pushHolidays = it))
             }
-            SettingSwitch(L.text("notifications.push_observances", k), L.text("notifications.push_observances_subtitle", k), checked = settings.pushObservances) {
-                onChange(settings.copy(pushObservances = it))
+            if (settings.showObservances) {
+                SettingSwitch(L.text("notifications.push_observances", k), L.text("notifications.push_observances_subtitle", k), checked = settings.pushObservances) {
+                    onChange(settings.copy(pushObservances = it))
+                }
             }
             if (settings.showHolyDaysInEvents) {
                 SettingSwitch(L.text("notifications.push_holy_days", k), L.text("notifications.push_holy_days_subtitle", k), checked = settings.pushHolyDays) {
