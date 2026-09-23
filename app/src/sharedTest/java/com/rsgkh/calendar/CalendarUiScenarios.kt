@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
@@ -36,7 +37,7 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithTag("custom-title").performTextInput("Monthly series")
         compose.onNodeWithTag("custom-date").performTextReplacement("2026-01-31")
         compose.onNodeWithTag("repeat-preview").assertDoesNotExist()
-        compose.onNodeWithTag("repeat-monthly").performScrollTo().performClick()
+        compose.onNodeWithTag("repeat-monthly").performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
         compose.onNodeWithText("Save").performScrollTo().assertIsNotEnabled()
         compose.onNodeWithTag("repeat-end").performScrollTo().performTextReplacement("2026-12-31")
         compose.onNodeWithTag("repeat-count").assertTextContains("7 occurrences · Last: Dec 31, 2026")
@@ -71,7 +72,7 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithTag("custom-title").performTextInput("Repeat validation")
         compose.onNodeWithTag("custom-date").performTextReplacement("2026-01-01")
         for (frequency in listOf("days", "weekly", "monthly", "yearly")) {
-            compose.onNodeWithTag("repeat-$frequency").performScrollTo().performClick()
+            compose.onNodeWithTag("repeat-$frequency").performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
             compose.onNodeWithText("Save").performScrollTo().assertIsNotEnabled()
         }
         compose.onNodeWithTag("repeat-days").performScrollTo().performClick()

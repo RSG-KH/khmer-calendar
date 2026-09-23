@@ -1754,7 +1754,7 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
                                 fontSize = 11.readableSp,
                                 lineHeight = 16.readableSp,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.padding(14.dp)
+                                modifier = Modifier.padding(14.dp).testTag("app-license-text")
                             )
                         }
                     }
@@ -1779,7 +1779,7 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
                                 fontSize = 11.readableSp,
                                 lineHeight = 16.readableSp,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.padding(14.dp)
+                                modifier = Modifier.padding(14.dp).testTag("engine-license-text")
                             )
                         }
                     }
