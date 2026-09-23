@@ -60,6 +60,18 @@ class WidgetPolicyTest {
         assertTrue(WidgetPolicy.plannerWeekBoundaryAfter(sunday, mondayFirst = true))
     }
 
+    @Test fun plannerChipsShareRowsWhenTheirActualWidthsFit() {
+        val chips = listOf(70f, 75f, 80f, 70f)
+        assertEquals(listOf(listOf(70f, 75f), listOf(80f, 70f)),
+            WidgetPolicy.plannerChipRows(chips, 160f) { it })
+        assertEquals(chips.map(::listOf), WidgetPolicy.plannerChipRows(chips, 120f) { it })
+    }
+
+    @Test fun plannerOversizedChipGetsItsOwnRowWithoutDroppingLaterChips() {
+        assertEquals(listOf(listOf(200f), listOf(60f, 60f)),
+            WidgetPolicy.plannerChipRows(listOf(200f, 60f, 60f), 140f) { it })
+    }
+
     @Test fun plannerScrollTargetKeepsTodayNearTopAsListGetsTaller() {
         val rows = List(29) { 27f }
         assertEquals(16, WidgetPolicy.plannerScrollTarget(14, rows, 103f)) // 4×2

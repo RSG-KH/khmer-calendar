@@ -15,7 +15,6 @@ import android.widget.RemoteViews
 import androidx.compose.ui.graphics.toArgb
 import com.rsgkh.calendar.MainActivity
 import com.rsgkh.calendar.R
-import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
@@ -54,8 +53,12 @@ internal object PlannerWidgetRenderer {
         val eventsStartWidth = weekdayWidth + dateWidth + eventGapWidth
         val weekDividerColor = palette.secondary.getColor(context).copy(alpha = 0.38f).toArgb()
         val regularDividerColor = Color.argb(0x22, 0x6d, 0x74, 0x85)
-        val chipsPerLine = floor(((width - 22f - eventsStartWidth - 6f).coerceAtLeast(70f) + 4f) / (84f * scale + 4f))
-            .toInt().coerceIn(1, 4)
+        // Outer and row padding consume 22dp and 8dp. TextViews add 10dp
+        // horizontal padding and a 4dp end margin to every visible chip.
+        val eventSpaceWidth = (width - 30f - eventsStartWidth).coerceAtLeast(0f)
+        fun eventLabel(item: WidgetItem) = listOfNotNull(item.time,
+            WidgetPolicy.plannerTitle(item.title, strings.khmer)).joinToString(" ")
+        fun eventWidthDp(item: WidgetItem) = textWidthDp(eventLabel(item), rowTextSize) + 14f
         val packageName = context.packageName
         val views = RemoteViews(packageName, R.layout.widget_planner)
 
@@ -106,7 +109,7 @@ internal object PlannerWidgetRenderer {
         days.forEach { day ->
             val dayIntent = WidgetNavigation.dateIntent(context, id, day.date)
             if (day.date == snapshot.today) todayPosition = rowPosition
-            val groups = day.items.chunked(chipsPerLine).ifEmpty { listOf(emptyList()) }
+            val groups = WidgetPolicy.plannerChipRows(day.items, eventSpaceWidth, ::eventWidthDp)
             groups.forEachIndexed { groupIndex, group ->
                 // Each row is at least 27dp. A text chip adds 8dp vertical padding and
                 // the row adds 2dp; larger fonts can therefore make event rows taller.
@@ -157,8 +160,7 @@ internal object PlannerWidgetRenderer {
                 }
                 group.forEachIndexed { itemIndex, item ->
                     val slot = slots[itemIndex]
-                    val title = WidgetPolicy.plannerTitle(item.title, strings.khmer)
-                    row.setTextViewText(slot, listOfNotNull(item.time, title).joinToString(" "))
+                    row.setTextViewText(slot, eventLabel(item))
                     row.setTextColor(slot, palette.event(item.kind).getColor(context).toArgb())
                     row.setTextViewTextSize(slot, TypedValue.COMPLEX_UNIT_SP, rowTextSize)
                     row.setColorStateList(slot, "setBackgroundTintList",

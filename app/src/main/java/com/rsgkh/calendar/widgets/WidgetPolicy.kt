@@ -44,6 +44,26 @@ object WidgetPolicy {
     fun plannerWeekBoundaryAfter(date: LocalDate, mondayFirst: Boolean): Boolean =
         date.plusDays(1).dayOfWeek == if (mondayFirst) DayOfWeek.MONDAY else DayOfWeek.SUNDAY
 
+    /** Pack planner chips by their rendered widths, with at most four slots per row. */
+    internal fun <T> plannerChipRows(items: List<T>, availableWidthDp: Float, widthDp: (T) -> Float): List<List<T>> {
+        if (items.isEmpty()) return listOf(emptyList())
+        val rows = mutableListOf<List<T>>()
+        var row = mutableListOf<T>()
+        var usedWidth = 0f
+        items.forEach { item ->
+            val itemWidth = widthDp(item)
+            if (row.isNotEmpty() && (row.size == 4 || usedWidth + itemWidth > availableWidthDp)) {
+                rows += row
+                row = mutableListOf()
+                usedWidth = 0f
+            }
+            row += item
+            usedWidth += itemWidth
+        }
+        rows += row
+        return rows
+    }
+
     /** ListView places the requested row at the bottom; keep today near the top. */
     fun plannerScrollTarget(todayPosition: Int, rowHeightsDp: List<Float>, listHeightDp: Float): Int {
         if (rowHeightsDp.isEmpty()) return 0
