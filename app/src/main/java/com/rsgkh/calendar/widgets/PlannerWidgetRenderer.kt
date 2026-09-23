@@ -76,10 +76,6 @@ internal object PlannerWidgetRenderer {
         val emojiOnly = width / scale < 340f
         val timezone = WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer, emojiOnly)
         val tzPadding = if (emojiOnly) 6f else 8f
-        val timezoneWidth = textWidthDp(timezone, 12.5f * scale) + 2 * tzPadding
-        val availablePeriodWidth = (width - 22f - 30f - 10f - timezoneWidth).coerceAtLeast(40f)
-        val periodWidth = (textWidthDp(period, periodSize) + 16f).coerceAtMost(availablePeriodWidth)
-        views.setViewLayoutWidth(R.id.planner_period, periodWidth, TypedValue.COMPLEX_UNIT_DIP)
         views.setTextViewText(R.id.planner_period, period)
         views.setTextColor(R.id.planner_period, palette.text.getColor(context).toArgb())
         views.setTextViewTextSize(R.id.planner_period, TypedValue.COMPLEX_UNIT_SP, periodSize)
