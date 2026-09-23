@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
@@ -264,7 +265,7 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
 
                                 // 5. Western Zodiac [emoji]
                                 val z = details?.zodiac ?: Zodiac.forDate(date)
-                                WText("${z.signName} ${z.emoji.trim()}", p.text, 11.5f, scale, bold = false, lines = 1)
+                                WText(s.zodiac(z), p.text, 11.5f, scale, bold = false, lines = 1)
                             }
                         }
                     }
@@ -881,7 +882,9 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                                         .fillMaxHeight()
                                         .then(
                                             if (isToday) GlanceModifier.background(p.accent).cornerRadius(10.dp)
-                                            else GlanceModifier
+                                            // Launcher hosts can reapply RemoteViews to an existing cell. Explicitly
+                                            // clear yesterday's accent instead of omitting the background action.
+                                            else GlanceModifier.background(Color.Transparent)
                                         )
                                         .clickable(WidgetNavigation.openDate(context, id, cellDate)),
                                     contentAlignment = Alignment.Center,

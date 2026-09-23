@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 abstract class CalendarWidgetReceiver : GlanceAppWidgetReceiver() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
@@ -57,10 +58,20 @@ class WidgetRefreshReceiver : BroadcastReceiver() {
         val appContext = context.applicationContext
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Hold the receiver only until work is persisted, not while widgets render.
-                WidgetUpdater.enqueue(appContext)?.result?.get(8, TimeUnit.SECONDS)
+                // Keep a queued fallback for OEMs that interrupt background receivers.
+                WidgetUpdater.enqueue(appContext)?.result?.get(1, TimeUnit.SECONDS)
             } catch (error: Exception) {
                 Log.w("CalendarWidgets", "System refresh could not be queued: ${error.javaClass.simpleName}")
+            }
+            try {
+                // A deferred WorkManager job can leave yesterday visible for hours. Refresh
+                // within the broadcast window and schedule the next selected-zone midnight.
+                withTimeout(7_000) {
+                    WidgetUpdater.ensureScheduled(appContext)
+                    WidgetUpdater.refreshAll(appContext)
+                }
+            } catch (error: Exception) {
+                Log.w("CalendarWidgets", "System refresh could not finish: ${error.javaClass.simpleName}")
             } finally {
                 pending.finish()
             }

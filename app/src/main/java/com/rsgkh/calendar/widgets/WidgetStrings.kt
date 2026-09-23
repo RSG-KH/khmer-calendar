@@ -8,6 +8,7 @@ import android.text.format.DateFormat
 import androidx.annotation.StringRes
 import com.rsgkh.calendar.R
 import com.rsgkh.calendar.data.getKhmerPeriod
+import com.rsgkh.calendar.domain.ZodiacSign
 import com.rsgkh.calendar.i18n.CalendarWords
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -32,6 +33,9 @@ internal class WidgetStrings(private val context: Context, val khmer: Boolean) {
     }
 
     fun number(value: Int): String = CalendarWords.number(value, khmer)
+
+    fun zodiac(sign: ZodiacSign): String =
+        "${if (khmer) sign.signNameKm else sign.signName} ${sign.emoji.trim()}"
 
     fun time(time: LocalTime): String {
         if (!khmer) return time.format(clock)

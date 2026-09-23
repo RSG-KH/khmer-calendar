@@ -6,10 +6,10 @@ import android.util.Log
 import androidx.annotation.Keep
 import androidx.glance.GlanceId
 import androidx.glance.action.ActionParameters
-import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.rsgkh.calendar.data.AppPreferences
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,7 +18,9 @@ import kotlinx.coroutines.withContext
 class WidgetRefreshWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result = try {
         withContext(Dispatchers.IO) {
-            if (WidgetUpdater.installedIds(applicationContext).isEmpty()) {
+            if (!AppPreferences(applicationContext).read().widgetsEnabled) {
+                WidgetUpdater.stopScheduled(applicationContext)
+            } else if (WidgetUpdater.installedIds(applicationContext).isEmpty()) {
                 WidgetUpdater.stopIfUnused(applicationContext)
             } else {
                 WidgetUpdater.ensureScheduled(applicationContext)
@@ -39,8 +41,15 @@ class WidgetRefreshWorker(context: Context, parameters: WorkerParameters) : Coro
 class RefreshWidgetAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         withContext(Dispatchers.IO) {
-            WidgetUpdater.ensureScheduled(context)
-            WidgetUpdater.refreshOne(context, GlanceAppWidgetManager(context).getAppWidgetId(glanceId))
+            WidgetUpdater.requestUpdate(context)
+            try {
+                WidgetUpdater.ensureScheduled(context)
+                WidgetUpdater.refreshAll(context)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                Log.w("CalendarWidgets", "Button refresh failed: ${error.javaClass.simpleName}")
+            }
         }
     }
 }

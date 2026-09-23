@@ -28,6 +28,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -69,6 +70,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.platform.testTag
@@ -92,15 +94,22 @@ import com.rsgkh.calendar.BuildConfig
 import com.rsgkh.calendar.R
 import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.domain.*
+import com.rsgkh.calendar.engine.ChineseZodiacCalculator
+import com.rsgkh.calendar.engine.GanzhiPillar
 import com.rsgkh.calendar.widgets.WidgetUpdater
 import java.time.DayOfWeek
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 import kotlin.math.abs
 
 private val CardShape = RoundedCornerShape(24.dp)
+private val DetailSymbolSlot = 24.dp
+private val DetailSymbolGap = 6.dp
 internal fun timeZoneLabel(choice: TodayTimeZone, k: Boolean) = if (choice == TodayTimeZone.LOCAL)
     L.text("ui.local_time.541b44", k) else L.text("ui.cambodia_time_utc_7.6b9f2d", k)
 internal fun timeSelectionZoneLabel(choice: TodayTimeZone, k: Boolean) = if (choice == TodayTimeZone.LOCAL)
@@ -353,6 +362,9 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                 showHolyDaysInCalendar = settings.showHolyDaysInCalendar,
                 showCopyButtons = settings.showCopyButtons,
                 showWesternZodiac = settings.showWesternZodiac,
+                showGanzhi = settings.showGanzhi,
+                useEmojiForGanzhiAnimals = settings.useEmojiForGanzhiAnimals,
+                todayTimeZone = settings.todayTimeZone,
                 onEvent = { detail = it },
                 onAddEvent = {
                     selectedText = date.toString()
@@ -931,10 +943,22 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                 SettingSwitch(L.text("ui.buddhist_holy_days_in_events.53e502", k), L.text("ui.show_in_the_events_list_and_filters.425758", k), settings.showHolyDaysInEvents) {
                     onChange(settings.copy(showHolyDaysInEvents = it))
                 }
+                SettingSwitch(L.text("ui.start_week_on_monday.5578c3", k), L.text("ui.sunday_when_turned_off.e40816", k), settings.mondayFirst) { onChange(settings.copy(mondayFirst = it)) }
+            }
+        }
+        item {
+            SettingsCard(L.text("ui.astrology_zodiac", k)) {
                 SettingSwitch(L.text("ui.show_western_zodiac", k), L.text("ui.show_western_zodiac_subtitle", k), settings.showWesternZodiac) {
                     onChange(settings.copy(showWesternZodiac = it))
                 }
-                SettingSwitch(L.text("ui.start_week_on_monday.5578c3", k), L.text("ui.sunday_when_turned_off.e40816", k), settings.mondayFirst) { onChange(settings.copy(mondayFirst = it)) }
+                SettingSwitch(L.text("ui.show_chinese_ganzhi", k), L.text("ui.show_chinese_ganzhi_subtitle", k), settings.showGanzhi) {
+                    onChange(settings.copy(showGanzhi = it))
+                }
+                if (settings.showGanzhi) {
+                    SettingSwitch(L.text("ui.ganzhi_emoji_toggle", k), L.text("ui.ganzhi_emoji_subtitle", k), settings.useEmojiForGanzhiAnimals) {
+                        onChange(settings.copy(useEmojiForGanzhiAnimals = it))
+                    }
+                }
             }
         }
         item { NotificationSettingsCard(settings, onChange, access, onSystemSettings, onAllowExact) }
@@ -972,7 +996,6 @@ internal fun WidgetSettingsCard(
     settings: AppSettings,
     onChange: (AppSettings) -> Unit,
 ) {
-    val context = LocalContext.current
     val k = settings.khmer
     val cardTitle = if (k) "ធាតុក្រាហ្វិក (វីដជិត)" else "WIDGETS"
     val title = if (k) "បើកដំណើរការវីដជិត" else "Enable widgets"
@@ -996,9 +1019,7 @@ internal fun WidgetSettingsCard(
             subtitle = subtitle,
             checked = settings.widgetsEnabled,
         ) { enabled ->
-            val updated = settings.copy(widgetsEnabled = enabled)
-            onChange(updated)
-            WidgetUpdater.setWidgetsEnabled(context, enabled)
+            onChange(settings.copy(widgetsEnabled = enabled))
         }
 
         if (settings.widgetsEnabled) {
@@ -1121,9 +1142,12 @@ internal fun WidgetSettingsCard(
 @Composable private fun DateDetailsDialog(
     date: LocalDate, today: LocalDate, k: Boolean, custom: List<CalendarEvent>,
     showHolyDays: Boolean, showHolyDaysInCalendar: Boolean, showCopyButtons: Boolean, showWesternZodiac: Boolean = true,
+    showGanzhi: Boolean = true, useEmojiForGanzhiAnimals: Boolean = true,
+    todayTimeZone: TodayTimeZone,
     onEvent: (CalendarEvent) -> Unit, onAddEvent: () -> Unit, onDismiss: () -> Unit
 ) {
     val info = remember(date) { KhmerDateDetails.fromGregorian(date) }
+    val title = if (k) info.gregorianLabel else "${CalendarWords.weekday(date.dayOfWeek.value, false)}, ${info.gregorianLabel}"
     val events = remember(date, custom, showHolyDays) {
         (EventRepository.forDate(date) + custom.filter { it.date == date })
             .filter { showHolyDays || it.kind != EventKind.HOLY_DAY }
@@ -1148,10 +1172,11 @@ internal fun WidgetSettingsCard(
                 ) {
                     Row(Modifier.padding(end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            L.text("ui.date_details.e26d78", k),
-                            Modifier.weight(1f),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.readableSp,
+                            title,
+                            Modifier.weight(1f).testTag("date-details-title"),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 14.readableSp,
                             lineHeight = 22.readableSp,
                         )
                         if (date == today) Text(
@@ -1172,8 +1197,6 @@ internal fun WidgetSettingsCard(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        val gregorianDate = if (!k) "${CalendarWords.weekday(date.dayOfWeek.value, false)}, ${info.gregorianLabel}" else info.gregorianLabel
-                        Text(gregorianDate, fontSize = 16.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         val fullDate = if (k) info.fullKhmerDate() else info.fullEnglishDate()
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(fullDate, modifier = Modifier.weight(1f), fontSize = 18.readableSp, lineHeight = 32.readableSp, color = MaterialTheme.colorScheme.onSurface)
@@ -1181,42 +1204,55 @@ internal fun WidgetSettingsCard(
                                 firstLineHeight = 32.readableSp)
                         }
                         val hasHolyDay = showHolyDaysInCalendar && (info.lunar.isHolyDay || info.lunar.isShavingDay)
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            if (hasHolyDay) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    if (info.lunar.isHolyDay) {
-                                        Image(
-                                            painter = painterResource(holyDayLotusDrawable(info.lunar)),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(24.dp),
-                                            contentScale = ContentScale.Fit
-                                        )
-                                    } else {
-                                        Box(
-                                            modifier = Modifier.size(24.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text("🙏", fontSize = 18.readableSp)
+                        if (hasHolyDay || showWesternZodiac || showGanzhi) {
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                if (hasHolyDay) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(DetailSymbolGap)
+                                    ) {
+                                        if (info.lunar.isHolyDay) {
+                                            Image(
+                                                painter = painterResource(holyDayLotusDrawable(info.lunar)),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(DetailSymbolSlot).padding(2.dp),
+                                                contentScale = ContentScale.Fit
+                                            )
+                                        } else {
+                                            Box(
+                                                modifier = Modifier.size(DetailSymbolSlot),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text("🙏", fontSize = 15.readableSp)
+                                            }
                                         }
+                                        Text(
+                                            if (info.lunar.isHolyDay) L.text("ui.thngai_sil_buddhist_holy_day.89de73", k)
+                                            else L.text("ui.thngai_kaor_before_a_holy_day.d02977", k),
+                                            modifier = Modifier.testTag("date-details-holy-label"),
+                                            color = MaterialTheme.colorScheme.secondary,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 13.readableSp
+                                        )
                                     }
-                                    Text(
-                                        if (info.lunar.isHolyDay) L.text("ui.thngai_sil_buddhist_holy_day.89de73", k)
-                                        else L.text("ui.thngai_kaor_before_a_holy_day.d02977", k),
-                                        color = MaterialTheme.colorScheme.secondary,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 14.readableSp
-                                    )
+                                }
+                                if (showWesternZodiac) {
+                                    Row(verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(DetailSymbolGap)) {
+                                        Box(Modifier.size(DetailSymbolSlot), contentAlignment = Alignment.Center) {
+                                            Text(info.zodiac.emoji, fontSize = 15.readableSp)
+                                        }
+                                        Text(info.zodiac.label.removePrefix("${info.zodiac.emoji} "),
+                                            Modifier.testTag("date-details-zodiac-label"),
+                                            fontSize = 13.readableSp, color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Medium)
+                                    }
+                                }
+                                if (showGanzhi) {
+                                    GanzhiTable(info, date == today, todayTimeZone, k, useEmojiForGanzhiAnimals)
                                 }
                             }
-                            if (showWesternZodiac) {
-                                Text(info.zodiac.label, fontSize = 14.readableSp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
-                            }
-                            Text("${L.text("ui.ganzhi_day", k)}: ${info.ganzhiDayLabel(k)}",
-                                fontSize = 14.readableSp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
                         }
                         if (events.isNotEmpty()) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -1260,6 +1296,121 @@ internal fun WidgetSettingsCard(
                     }
                 }
             }
+        }
+    }
+}
+
+private data class GanzhiColumn(val key: String, val label: String, val pillar: GanzhiPillar?)
+
+@Composable private fun GanzhiTable(
+    info: KhmerDateDetails, isToday: Boolean, timeZone: TodayTimeZone, khmer: Boolean, useEmoji: Boolean
+) {
+    val zone = timeZone.zone()
+    val currentHour by produceState(timeZone.hour(localZone = zone), isToday, zone) {
+        while (isToday) {
+            val now = ZonedDateTime.now(zone)
+            value = timeZone.hour(now.toInstant(), zone)
+            val nextHour = now.truncatedTo(ChronoUnit.HOURS).plusHours(1)
+            delay(Duration.between(now.toInstant(), nextHour.toInstant()).toMillis().coerceAtLeast(1_000))
+        }
+    }
+    val date = info.date
+    val solarSupported = date.year in 1900..2100
+    val columns = listOf(
+        GanzhiColumn("year", L.text("ui.ganzhi_year", khmer),
+            if (solarSupported) ChineseZodiacCalculator.getYearPillar(date.year, date.monthValue, date.dayOfMonth) else null),
+        GanzhiColumn("month", L.text("ui.ganzhi_month", khmer),
+            if (solarSupported) ChineseZodiacCalculator.getMonthPillar(date.year, date.monthValue, date.dayOfMonth) else null),
+        GanzhiColumn("day", L.text("ui.ganzhi_day_column", khmer), info.ganzhiDay),
+    ) + if (isToday) listOf(GanzhiColumn("hour", L.text("ui.ganzhi_hour_column", khmer),
+        ChineseZodiacCalculator.getHourPillarForDate(date.year, date.monthValue, date.dayOfMonth, currentHour))) else emptyList()
+    val heading = "干支"
+    val signLabel = L.text("ui.ganzhi_sign", khmer)
+    val clashLabel = L.text("ui.ganzhi_clash", khmer)
+    val animals = columns.map { column ->
+        (column.pillar?.branch?.ganzhiAnimalLabel(khmer, useEmoji) ?: "—") to
+            (column.pillar?.clashBranch?.ganzhiAnimalLabel(khmer, useEmoji) ?: "—")
+    }
+    val headingStyle = LocalTextStyle.current.copy(fontSize = 12.readableSp, fontWeight = FontWeight.Medium)
+    val labelStyle = LocalTextStyle.current.copy(fontSize = 11.readableSp)
+    val headerStyle = labelStyle.copy(fontWeight = FontWeight.Medium)
+    val animalStyle = LocalTextStyle.current.copy(fontSize = (if (useEmoji) 19 else 12).readableSp)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    fun textSize(value: String, style: TextStyle) =
+        measurer.measure(value, style, maxLines = 1, softWrap = false).size
+    val labelWidth = with(density) {
+        maxOf(DetailSymbolSlot + DetailSymbolGap + textSize(heading, headingStyle).width.toDp(),
+            textSize(signLabel, labelStyle).width.toDp(),
+            textSize(clashLabel, labelStyle).width.toDp()) + 4.dp
+    }
+    val columnWidthFactor = if (khmer) 1.2f else 1f
+    val columnWidths = columns.indices.map { index ->
+        with(density) {
+            maxOf(textSize(columns[index].label, headerStyle).width,
+                textSize(animals[index].first, animalStyle).width,
+                textSize(animals[index].second, animalStyle).width).toDp() + 8.dp
+        } * columnWidthFactor
+    }
+    val headerHeight = with(density) {
+        maxOf(textSize("☯️", LocalTextStyle.current.copy(fontSize = 15.readableSp)).height,
+            textSize(heading, headingStyle).height,
+            columns.maxOf { textSize(it.label, headerStyle).height }).toDp() + 8.dp
+    }.coerceAtLeast(28.dp)
+    val animalRowHeight = with(density) {
+        maxOf(textSize(signLabel, labelStyle).height, textSize(clashLabel, labelStyle).height,
+            animals.maxOf { maxOf(textSize(it.first, animalStyle).height,
+                textSize(it.second, animalStyle).height) }).toDp() + 8.dp
+    }.coerceAtLeast(34.dp)
+    Column(Modifier.fillMaxWidth().testTag("ganzhi-table"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth()) {
+            Column(Modifier.width(labelWidth).testTag("ganzhi-row-labels")) {
+                Row(Modifier.fillMaxWidth().height(headerHeight),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(DetailSymbolGap)) {
+                    Box(Modifier.size(DetailSymbolSlot), contentAlignment = Alignment.Center) {
+                        Text("☯️", fontSize = 15.readableSp)
+                    }
+                    Text(heading, Modifier.testTag("ganzhi-heading-label"),
+                        fontSize = 12.readableSp, maxLines = 1, softWrap = false,
+                        color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Text(signLabel, Modifier.fillMaxWidth().height(animalRowHeight).wrapContentHeight(),
+                    fontSize = 11.readableSp, maxLines = 1, softWrap = false,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(clashLabel, Modifier.fillMaxWidth().height(animalRowHeight).wrapContentHeight(),
+                    fontSize = 11.readableSp, maxLines = 1, softWrap = false,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()).testTag("ganzhi-columns")) {
+                columns.forEachIndexed { index, column ->
+                    Column(Modifier.width(columnWidths[index])) {
+                        Text(column.label, Modifier.fillMaxWidth().height(headerHeight)
+                            .wrapContentHeight().testTag("ganzhi-header-${column.key}"),
+                            fontSize = 11.readableSp, maxLines = 1, softWrap = false,
+                            textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium)
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Text(animals[index].first, Modifier.fillMaxWidth().height(animalRowHeight)
+                            .wrapContentHeight().testTag("ganzhi-sign-${column.key}"),
+                            fontSize = (if (useEmoji) 19 else 12).readableSp,
+                            maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurface)
+                        Text(animals[index].second, Modifier.fillMaxWidth().height(animalRowHeight)
+                            .wrapContentHeight().testTag("ganzhi-clash-${column.key}"),
+                            fontSize = (if (useEmoji) 19 else 12).readableSp,
+                            maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+            }
+        }
+        if (!solarSupported) {
+            Text(L.text("ui.ganzhi_solar_range", khmer), fontSize = 10.readableSp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

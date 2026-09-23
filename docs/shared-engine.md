@@ -1,16 +1,17 @@
 # Shared calendar engine
 
-Android uses the JVM package from [Khmer Calendar Engine v0.4.0](https://github.com/RSG-KH/khmer-calendar-engine/releases/tag/v0.4.0). It supplies lunar conversion, Buddhist Era, animal year, Sak, holy days, New Year dates and traditional arrival estimate, Ganzhi (sexagenary) day and hour pillars, Chinese festival recurrence calculation and recurrence evaluation for 1800–2200. Android keeps date conversion to `java.time.LocalDate`, labels, event records, UI and reminders.
+Android uses the JVM package from [Khmer Calendar Engine v0.5.0](https://github.com/RSG-KH/khmer-calendar-engine/releases/tag/v0.5.0). It supplies lunar conversion, Buddhist Era, animal year, Sak, holy days, New Year dates and traditional arrival estimate, Ganzhi (sexagenary) pillars, Chinese festival recurrence calculation and recurrence evaluation for 1800–2200. Android keeps date conversion to `java.time.LocalDate`, labels, event records, UI and reminders.
 
 ## Ownership and API
 
-The engine's [API contract](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.4.0/docs/api.md) defines supported inputs and calculation behavior. Its [reference evidence](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.4.0/docs/references.md) records algorithm provenance, reviewed corrections and validation limits. Calculation fixes belong in that project, followed by an Android dependency update.
+The engine's [API contract](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.5.0/docs/api.md) defines supported inputs and calculation behavior. Its [reference evidence](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.5.0/docs/references.md) records algorithm provenance, reviewed corrections and validation limits. Calculation fixes belong in that project, followed by an Android dependency update.
 
 | Android component | Responsibility |
 | --- | --- |
 | `domain/KhmerCalendar.kt` | Reuses one engine instance, converts civil dates and supplies localized lunar labels |
 | `domain/KhmerNewYear.kt` | Converts the engine's New Year dates to `LocalDate` and exposes traditional arrival estimate |
-| `domain/KhmerDateDetails.kt` | Formats lunar, traditional year and Ganzhi day pillar results for the UI |
+| `domain/KhmerDateDetails.kt` | Formats lunar and traditional year labels, and localizes Ganzhi animal names |
+| `ui/CalendarApp.kt` | Presents the engine's Ganzhi sign and clash branches for the selected date, adding Hour for Today |
 | `data/RecurringEvents.kt` | Parses the bundled event catalog, translates rule definitions into engine rules, and formats arrival time |
 | `data/EventRepository.kt` | Layers catalog rules, recorded dates, official holiday calendars and date overrides over engine results for each requested year |
 
@@ -18,17 +19,17 @@ The engine operates on civil dates without a time zone. Android chooses the date
 
 ## Build dependency
 
-Gradle downloads `khmer-calendar-engine-jvm-0.4.0.jar` directly from the GitHub release. The version is pinned in `gradle/libs.versions.toml`; `settings.gradle.kts` limits the release repository to that module. No engine checkout or manual download is needed.
+Gradle downloads `khmer-calendar-engine-jvm-0.5.0.jar` directly from the GitHub release. The version is pinned in `gradle/libs.versions.toml`; `settings.gradle.kts` limits the release repository to that module. No engine checkout or manual download is needed.
 
 Before building, `:app:verifyCalendarEngine` checks the downloaded JAR against the release's SHA-256:
 
 ```text
-ffa5f1155313e911765d6d6cb4c0cbccc6666b369ddff4ed50ce00fd2969459e
+ba87b2b1a2b7d1d75adfbb171cc925fdcfce1df9a4df7ebbd45905d9ac902d08
 ```
 
 The first build needs network access. Gradle caches the dependency for later builds, including `--offline` builds once all dependencies are cached. The installed app remains offline and has no Internet permission.
 
-The release is resolved as an artifact without Maven metadata. Version 0.4.0's only runtime dependency is Kotlin stdlib, which the app already supplies through AGP's built-in Kotlin support. Both the app and engine produce Java 11 bytecode; the Android build uses JDK 25 and Kotlin 2.4.20.
+The release is resolved as an artifact without Maven metadata. Version 0.5.0's only runtime dependency is Kotlin stdlib, which the app already supplies through AGP's built-in Kotlin support. Both the app and engine produce Java 11 bytecode; the Android build uses JDK 25 and Kotlin 2.4.20.
 
 ## Updating the engine
 
@@ -50,7 +51,9 @@ Version 0.2.0 introduces the zero-dependency `ChineseLunisolarEngine` in `common
 
 Version 0.3.0 exposes the traditional Moha Sangkran `arrivalEstimate` on `NewYearCelebration`. Event catalog v0.4.0 (Schema v3) pairs this with 19 verified broadcast and proclamation records in `newYearArrivals` (1997, 2009, 2010–2026 unbroken), displayed via authentic Khmer 12-hour period descriptors and official/estimated tags directly in the unified Moha Sangkran title without separate detail rows.
 
-Version 0.4.0 adds the standalone `ChineseZodiacCalculator` with Ganzhi (干支, sexagenary) day and hour pillars over the proleptic Gregorian range 1..9999. Android surfaces the day pillar — carrying the engine's Chinese name, pinyin and animal labels — as an always-visible row in date details; existing lunar, holy-day and recurrence results are unchanged.
+Version 0.4.0 adds the standalone `ChineseZodiacCalculator` with Ganzhi (干支, sexagenary) day and hour pillars over the proleptic Gregorian range 1..9999. Android first presented the day pillar as a row in date details. The current **Show Chinese Ganzhi (干支)** setting controls the table described below; existing lunar, holy-day and recurrence results are unchanged.
+
+Version 0.5.0 adds Lichun-based year pillars, solar-term month pillars, Four Pillars (BaZi) and clash branches to `ChineseZodiacCalculator`. These solar-calendar calculations cover 1900–2100 under the engine's UTC+8 civil-date convention. Android displays the Year, Month and Day animal and clash branches in date details, plus Hour for Today using the app's selected clock time zone. For dates outside 1900–2100, Year and Month are marked unavailable; Day remains available.
 
 Supported date coverage and passing regression tests are not a claim of independent historical validation for every date. Official public holidays require year-specific government records; a calculated festival date alone does not establish a day off.
 

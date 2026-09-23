@@ -22,9 +22,9 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 
 ### 📅 Shared Khmer Calendar Engine (1800–2200)
 
-- Gregorian and Khmer lunar dates, Buddhist Era, animal year, Sak, New Year dates, traditional Moha Sangkran arrival estimates, and traditional Chinese festivals are provided by [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine).
+- Gregorian and Khmer lunar dates, Buddhist Era, animal year, Sak, New Year dates, traditional Moha Sangkran arrival estimates, traditional Chinese festivals, and Ganzhi (干支) year/month/day/hour pillars are provided by [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine).
 - Calendar algorithms, source references and validation are documented in the [engine project](https://github.com/RSG-KH/khmer-calendar-engine#verification-and-accuracy). Android supplies the interface, translations, personal events and reminders.
-- Date details also show Western zodiac signs, elements and ruling bodies.
+- Date details also show Western zodiac signs, elements and ruling bodies, plus a Chinese Ganzhi (干支) table with the Year, Month and Day sign and clash animals — and the Hour pillar for Today — displayed as emoji or animal names.
 
 ### 🌸 Buddhist Holy Days (*Thngai Seil*)
 
@@ -52,10 +52,11 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 - **Event-Type Controls**: Choose reminders for personal events, holidays, observances, and Buddhist holy days independently.
 
 ### 📱 Home Screen Widgets (Jetpack Glance)
-- **Month Widget (4×3)**: Full-month calendar grid with Gregorian and Khmer lunar dates, Buddhist holy days, traditional weekday heading colors, today cell highlight, event markers row (🔴 holiday, ▲ holy, ■ observance, ★ personal), legend footnote, and interactive date-cell tapping that launches the app directly into that day's date details.
+- **Month Widget (4×3)**: Full-month calendar grid with Gregorian and Khmer lunar dates, Buddhist holy days, traditional weekday heading colors, today cell highlight, event markers row (● holiday, ▲ holy, ■ observance, ★ personal), legend footnote, and interactive date-cell tapping that launches the app directly into that day's date details.
 - **Productivity Widget (4×2)**: Date details card featuring a prominent day number, short weekday, short Gregorian month, Khmer lunar month and day, Buddhist Era year, Western Zodiac sign, and Today/Tomorrow event lists. Automatically adapts when resized horizontally by hiding detail rows on compact widths.
 - **Focus Widget (4×2)**: Daily events overview featuring full lunar date and BE year badges, a scrollable list of today's events, and preview sub-cards for yesterday and tomorrow.
-- **App Settings Integration**: Master **Enable widgets** toggle switch under Settings → Widgets. Toggling off uses `PackageManager.setComponentEnabledSetting` to disable widget receivers, hiding them from the system widget picker with zero background battery or memory overhead.
+- **App Settings Integration**: Master **Enable widgets** toggle switch under Settings → Widgets. Toggling off uses `PackageManager.setComponentEnabledSetting` to disable widget receivers, hiding them from the system widget picker with zero background battery or memory overhead, and cancels queued, periodic and midnight refreshes.
+- **Shared Appearance**: Widgets follow the app's language, theme, accent color, selected time zone and widget font size; changing any setting refreshes installed widgets immediately while the app is open.
 - **Global Event Filtering**: Expandable switches in App Settings control Personal events, Public holidays, Observances, and Hide personal event details across all widgets. Buddhist holy days follow app-wide Calendar and Event settings.
 - **Dynamic Light & Dark Previews**: Embedded 8-bit PNG preview thumbnails (`res/drawable/` and `res/drawable-night/`) automatically reflect the system light/dark theme in the Android widget picker.
 
@@ -69,10 +70,11 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 ### 🎨 Personalization & Accessibility
 - **Longer Weekday Names**: Optional calendar headings show Sun–Sat in English and full weekday names in Khmer. Off by default under Settings → Calendar.
 - **Weekday Colors**: Traditional weekday heading colors, with shades adapted for light and dark themes. On by default under Settings → Calendar; existing saved choices are preserved.
-- **Western Zodiac Signs**: The selected-date card, date details and event details show the Western zodiac sign, element and ruling body. On by default under Settings → Calendar.
+- **Western Zodiac Signs**: The selected-date card, date details and event details show the Western zodiac sign, element and ruling body. On by default under Settings → Astrology & Zodiac.
+- **Chinese Ganzhi (干支) Table**: Date details show the Year, Month and Day sign and clash animals, plus the Hour pillar for Today in the selected time zone, with an emoji/name toggle. On by default under Settings → Astrology & Zodiac.
 - **Curated Theme Accents**: Choose from **Blue** (Default), **Lavender**, **Rose**, **Amber**, and **Lime** (*បៃតងចាស់*).
 - **Theme Modes**: Initially follows the system theme; choosing Light or Dark saves that preference. Background accent is on by default, tinting pages and navigation with the chosen accent; turning it off restores neutral backgrounds.
-- **Dynamic Font Scaling**: Choose 80%, 90%, 100%, 110%, or 120% on phones, with additional 130%, 140%, and 150% options on tablets.
+- **Dynamic Font Scaling**: Choose 80%–150% on all devices. Home screen widgets have their own separate 80%–200% font size setting.
 - **Bilingual Experience**: Instant switching between Khmer and English with full localization.
 
 ---

@@ -21,7 +21,7 @@ flowchart TD
 
 ## Calendar integration
 
-The [shared engine integration guide](shared-engine.md) describes the pinned dependency, API boundary, Android adapters and upgrade checks. The engine owns lunar conversion, traditional year transitions, holy days, New Year dates, Ganzhi (sexagenary) day pillars and recurrence evaluation for **1800–2200**. Android owns `LocalDate` conversion, localized labels and Western zodiac presentation.
+The [shared engine integration guide](shared-engine.md) describes the pinned dependency, API boundary, Android adapters and upgrade checks. The engine owns lunar conversion, traditional year transitions, holy days, New Year dates, Ganzhi (sexagenary) year/month/day/hour pillars and recurrence evaluation for **1800–2200**. Android owns `LocalDate` conversion, localized labels and Western zodiac presentation.
 
 Calculation algorithms and supporting evidence are maintained in the engine project. Android tests verify that the app continues to consume its results correctly when the dependency changes.
 
@@ -110,8 +110,9 @@ Khmer Calendar provides three home screen app widgets built with Jetpack Glance 
 All widgets follow the dedicated **Font size** setting in the Widgets section of app settings (`widgetFontScale`, 80%–200%), decoupled from the in-app font size. At large zoom levels the adaptive layouts drop optional detail rows and collapse non-essential text to safeguard against home screen clipping.
 
 ### Lifecycle & Background Refresh
-- **`WidgetUpdater`**: Manages WorkManager (`WidgetRefreshWorker`) periodic hourly updates, immediate background updates, and `AlarmManager`'s inexact midnight triggers (`RTC_WAKEUP`).
-- **`WidgetReceivers`**: Manifest-registered broadcast receivers (`FocusWidgetReceiver`, `ProductivityWidgetReceiver`, `MonthWidgetReceiver`, `WidgetRefreshReceiver`) react to system triggers (`BOOT_COMPLETED`, `TIME_CHANGED`, `TIMEZONE_CHANGED`, `DATE_CHANGED`, `LOCALE_CHANGED`, `MY_PACKAGE_REPLACED`).
+- **`WidgetUpdater`**: Manages WorkManager (`WidgetRefreshWorker`) periodic hourly updates, immediate background updates, and `AlarmManager`'s inexact midnight triggers (`RTC_WAKEUP`). Every refresh path re-reads the **Enable widgets** setting and skips work while it is off; turning it off cancels the queued, periodic and midnight refreshes. A refresh failure on one widget does not stop the remaining widgets.
+- **`WidgetReceivers`**: Manifest-registered broadcast receivers (`FocusWidgetReceiver`, `ProductivityWidgetReceiver`, `MonthWidgetReceiver`, `WidgetRefreshReceiver`) react to system triggers (`BOOT_COMPLETED`, `TIME_CHANGED`, `TIMEZONE_CHANGED`, `DATE_CHANGED`, `LOCALE_CHANGED`, `MY_PACKAGE_REPLACED`). The midnight receiver refreshes widgets inline within its broadcast window — with the queued WorkManager job kept as a fallback for OEMs that interrupt background receivers — and reschedules the next selected-zone midnight.
+- **In-app refresh**: Changing any setting while the app is open refreshes installed widgets immediately, so language or appearance changes are visible as soon as the user returns home; the queued worker remains as a fallback.
 
 ### Master Enable/Disable Control
 - **`PackageManager` State Management**: When **Enable widgets** is toggled off in App Settings, `WidgetUpdater.setWidgetsEnabled(context, false)` sets `COMPONENT_ENABLED_STATE_DISABLED` on all widget receivers. The Android OS launcher immediately hides the widgets from the system widget picker and stops all background work, background alarms, and broadcast processing.

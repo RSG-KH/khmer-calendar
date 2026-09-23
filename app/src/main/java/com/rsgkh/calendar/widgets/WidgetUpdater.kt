@@ -22,6 +22,7 @@ import com.rsgkh.calendar.data.AppPreferences
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -63,7 +64,7 @@ object WidgetUpdater {
         if (enabled) {
             requestUpdate(appContext)
         } else {
-            stopIfUnused(appContext)
+            stopScheduled(appContext)
         }
     }
 
@@ -77,6 +78,7 @@ object WidgetUpdater {
     }
 
     internal fun enqueue(context: Context): Operation? {
+        if (!AppPreferences(context).read().widgetsEnabled) return null
         if (installedIds(context).isEmpty()) return null
         return runCatching {
             WorkManager.getInstance(context).enqueueUniqueWork(
@@ -102,6 +104,7 @@ object WidgetUpdater {
     }
 
     internal suspend fun refreshOne(context: Context, id: Int) = renderLock.withLock {
+        if (!AppPreferences(context).read().widgetsEnabled) return@withLock
         val widget = widgetForId(context, id) ?: return@withLock
         val manager = GlanceAppWidgetManager(context)
         val glanceId = try {
@@ -114,11 +117,24 @@ object WidgetUpdater {
     }
 
     internal suspend fun refreshAll(context: Context) {
-        installedIds(context).forEach { refreshOne(context, it) }
+        var firstFailure: Exception? = null
+        installedIds(context).forEach { id ->
+            try {
+                refreshOne(context, id)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                Log.w("CalendarWidgets", "Widget $id refresh failed: ${error.javaClass.simpleName}")
+                if (firstFailure == null) firstFailure = error
+            }
+        }
+        firstFailure?.let { throw it }
     }
 
     /** Separate from notification alarms. Does NOT require notification or exact-alarm access. */
     internal fun ensureScheduled(context: Context) {
+        val settings = AppPreferences(context).read()
+        if (!settings.widgetsEnabled) return
         if (installedIds(context).isEmpty()) return
         runCatching {
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
@@ -126,15 +142,23 @@ object WidgetUpdater {
                 PeriodicWorkRequestBuilder<WidgetRefreshWorker>(1, TimeUnit.HOURS).build(),
             )
         }
-        val next = WidgetPolicy.nextMidnight(Instant.now(), AppPreferences(context).read().todayTimeZone.zone())
+        val next = WidgetPolicy.nextMidnight(Instant.now(), settings.todayTimeZone.zone())
         val alarm = context.getSystemService(AlarmManager::class.java) ?: return
         // Intentionally inexact; Android may defer this under Doze/battery restrictions.
         // Reusing one PendingIntent replaces the previous boundary after a zone/clock change.
-        alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.toEpochMilli(), midnightIntent(context))
+        runCatching {
+            alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.toEpochMilli(), midnightIntent(context))
+        }.onFailure { error ->
+            Log.w("CalendarWidgets", "Midnight refresh could not be scheduled: ${error.javaClass.simpleName}")
+        }
     }
 
     internal fun stopIfUnused(context: Context) {
         if (installedIds(context).isNotEmpty()) return
+        stopScheduled(context)
+    }
+
+    internal fun stopScheduled(context: Context) {
         runCatching {
             val work = WorkManager.getInstance(context)
             work.cancelUniqueWork(PERIODIC)

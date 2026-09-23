@@ -21,9 +21,15 @@ Swiping, using the month arrows, or choosing a month and year selects day 1 of t
 
 When Show copy buttons is enabled, date and event details display a copy icon aligned with the first text line near the right edge. The button retains a 48 dp tap area. After copying, an accent-colored checkmark appears for two seconds, then returns to the copy icon. Copying again restarts the timer. The confirmation is also exposed to accessibility services using the translated copied message.
 
-### Western zodiac visibility
+### Astrology & Zodiac visibility
 
-**Settings → Calendar → Show Western zodiac signs** is on by default and saved on the device. Turning it off removes the Western zodiac line from the selected-date card and from date details — the divider above that block also disappears unless a Buddhist holy day or shaving day is shown — and omits the zodiac glyph from event-detail backgrounds while keeping the animal-year artwork. Month-grid cells never show zodiac signs. An inverted `hideWesternZodiac` choice saved by an earlier build carries over when the setting is next written.
+The **Settings → Astrology & Zodiac** card (after Calendar) holds three switches, all on by default and saved on the device:
+
+- **Show Western zodiac signs** — turning it off removes the Western zodiac line from the selected-date card and from date details, and omits the zodiac glyph from event-detail backgrounds while keeping the animal-year artwork. Month-grid cells never show zodiac signs. An inverted `hideWesternZodiac` choice saved by an earlier build carries over when the setting is next written.
+- **Show Chinese Ganzhi (干支)** (`showGanzhi`) — shows the engine-supplied Year, Month and Day sign/clash table in date details. Today also includes an Hour column using the current hour in the selected Local or Cambodia time zone. Year and Month are available for 1900–2100; outside that range the table marks them unavailable while preserving Day.
+- **Use emoji for Ganzhi animals** (`useEmojiForGanzhiAnimals`) — appears only while Chinese Ganzhi is enabled. It switches the table between the twelve animal emoji and English or Khmer animal names. The choice is independent: turning Chinese Ganzhi off and back on never resets it.
+
+The divider above that date-details block disappears when no Buddhist holy day or shaving day is shown and both toggles are off.
 
 ### Custom event repeats
 
@@ -176,6 +182,8 @@ Phone landscape calendar rows use a 44 dp base height. Tablet rows remain 52 dp 
 
 All event details share the date-details zodiac background: the animal illustration occupies 60% of the width at bottom-right; the Western zodiac occupies approximately 20% at bottom-left with a 20 dp inset. Both use the accent tint at 5% opacity in light mode and 3% in dark mode.
 
+The Date details popup uses the selected Gregorian date as its accent-colored title: English shows the full weekday and date (for example, “Thursday, September 24, 2026”), while Khmer mode shows “September 24, 2026” without the weekday. The full traditional date remains in the body, without a repeated Gregorian date line.
+
 Event detail popups (`EventDialog`) format information in a clear vertical structure:
 - **Title**: Styled in the selected app Accent color (`MaterialTheme.colorScheme.primary`).
 - **Date & Lunar Block**: The Gregorian date line (with Khmer day number prefix `ទី`, e.g., `ថ្ងៃអង្គារ ទី៨ ខែកញ្ញា ២០២៦`) is followed immediately by the traditional Khmer lunar details block (lunar phase, month, animal year, sak, and Buddhist Era).
@@ -325,7 +333,7 @@ Khmer Calendar provides three home screen widgets built with Jetpack Glance (`1.
   3. *Observances*
   4. *Hide personal event details* (shows event count only, suppressing titles and times)
 - **Dedicated Widget Font Size**: All three widgets follow the dedicated **Settings → Widgets → Font size** option (`widgetFontScale`, 100% by default, shown only while widgets are enabled), fully decoupled from the in-app font size. The picker offers the full **80%–200%** range with no clamping; `WidgetPolicy.layout` degrades content density (fewer event rows, tiny-mode fallback) as the zoom grows so text is never squeezed down.
+- **Shared Appearance and Content**: Focus, Today Details, and Month widgets reload the app's language, theme, accent color, and selected time zone. The Widgets category and privacy switches filter event lists, badges, and month markers consistently; the Today Details zodiac name uses the chosen language. Changing any setting refreshes installed widgets immediately while the app is open. Turning off widgets also cancels queued, periodic, and midnight refreshes.
 
 ### Preview Thumbnails
 - Static 8-bit PNG preview thumbnails (`widget_focus.png`, `widget_productivity.png`, and `widget_month.png`) placed in `res/drawable/` (Light) and `res/drawable-night/` (Dark) allow Android's system Widget Browser to display high-resolution, theme-matching previews on Android 12+.
-

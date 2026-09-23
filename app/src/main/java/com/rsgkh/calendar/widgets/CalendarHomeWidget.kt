@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -20,14 +19,15 @@ import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
 import androidx.glance.currentState
+import androidx.glance.background
 import androidx.glance.layout.Column
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
 import androidx.glance.state.PreferencesGlanceStateDefinition
-import androidx.glance.text.Text
-import androidx.glance.text.TextStyle
 import com.rsgkh.calendar.MainActivity
 import com.rsgkh.calendar.R
+import com.rsgkh.calendar.data.AppPreferences
+import com.rsgkh.calendar.data.AppSettings
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -41,6 +41,7 @@ abstract class CalendarHomeWidget : GlanceAppWidget(errorUiLayout = R.layout.wid
     final override suspend fun provideGlance(context: Context, id: GlanceId) {
         val appId = GlanceAppWidgetManager(context).getAppWidgetId(id)
         val initial = readSnapshot(context, appId)
+        val initialSettings = initial?.settings ?: readSettings(context)
         withContext(Dispatchers.IO) { WidgetUpdater.ensureScheduled(context) }
         provideContent {
             val revision = currentState<Preferences>()[WidgetUpdater.REVISION] ?: "initial"
@@ -49,12 +50,18 @@ abstract class CalendarHomeWidget : GlanceAppWidget(errorUiLayout = R.layout.wid
             val snapshot by produceState(initialValue = initial, key1 = revision) {
                 value = readSnapshot(context, appId)
             }
+            val fallbackSettings by produceState(initialValue = initialSettings, key1 = revision) {
+                value = readSettings(context)
+            }
+            val fallbackPalette = WidgetPalette(fallbackSettings)
             snapshot?.let { Content(it, appId) } ?: Column(
-                GlanceModifier.fillMaxSize().padding(16.dp).clickable(
+                GlanceModifier.fillMaxSize().background(fallbackPalette.background)
+                    .padding(16.dp).clickable(
                     actionStartActivity(Intent(context, MainActivity::class.java)),
                 ),
             ) {
-                Text(context.getString(R.string.widget_load_failed), style = TextStyle(fontSize = 15.sp))
+                WText(WidgetStrings(context, fallbackSettings.khmer)(R.string.widget_load_failed),
+                    fallbackPalette.accent, 15f, fallbackSettings.widgetFontScale.multiplier)
             }
         }
     }
@@ -69,6 +76,10 @@ abstract class CalendarHomeWidget : GlanceAppWidget(errorUiLayout = R.layout.wid
     } catch (error: Exception) {
         Log.w("CalendarWidgets", "Widget snapshot unavailable: ${error.javaClass.simpleName}")
         null
+    }
+
+    private suspend fun readSettings(context: Context): AppSettings = withContext(Dispatchers.IO) {
+        runCatching { AppPreferences(context).read() }.getOrDefault(AppSettings())
     }
 }
 

@@ -3,9 +3,18 @@ package com.rsgkh.calendar.domain
 
 import java.time.LocalDate
 import com.rsgkh.calendar.engine.ChineseZodiacCalculator
+import com.rsgkh.calendar.engine.EarthlyBranch
 import com.rsgkh.calendar.engine.GanzhiPillar
 import com.rsgkh.calendar.i18n.L
 import com.rsgkh.calendar.i18n.CalendarWords
+
+private val ganzhiAnimalEmojis = listOf("🐭", "🐮", "🐯", "🐰", "🐲", "🐍", "🐴", "🐐", "🐵", "🐔", "🐶", "🐷")
+
+fun EarthlyBranch.ganzhiAnimalLabel(khmer: Boolean, useEmoji: Boolean): String = when {
+    useEmoji -> ganzhiAnimalEmojis[index]
+    khmer -> khmerAnimal.substringBefore(" (")
+    else -> animal
+}
 
 /** Date-level traditional year labels; the animal year can change during New Year's first day.
  * Sak changes on Lerng Sak (the last festival day), separately from Buddhist Era rollover.
@@ -31,7 +40,7 @@ data class KhmerDateDetails(
     /** Day pillar labels from the engine, e.g. "己亥 Jǐ Hài · Pig" / "己亥 · កុរ".
      *  The engine's Khmer animal carries a romanization suffix for non-Khmer readers; drop it. */
     fun ganzhiDayLabel(khmer: Boolean): String {
-        val animal = if (khmer) ganzhiDay.khmerAnimal.substringBefore(" (") else ganzhiDay.animal
+        val animal = ganzhiDay.branch.ganzhiAnimalLabel(khmer, false)
         return if (khmer) "${ganzhiDay.nameZh} · $animal" else "${ganzhiDay.nameZh} ${ganzhiDay.pinyin} · $animal"
     }
 

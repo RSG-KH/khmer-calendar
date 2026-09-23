@@ -42,7 +42,7 @@ Connected tests require a running emulator or device listed by `adb devices`.
 | Reminder planner and delivery | Category controls, appearance changes preserving alarms, permissions, saved event instants, clock/time-zone broadcasts without an activity, daylight saving and repeats |
 | Today refresh | Visible-only polling, immediate refresh on return, midnight, clock jumps and device time-zone changes |
 | Compose UI | Phone/tablet layouts, both languages, dialogs, font scaling and settings |
-| Home screen widgets | Date rollover and event-filter policies, tap navigation into date details, and hidden personal-event details |
+| Home screen widgets | Date rollover and event-filter policies, tap navigation into date details, hidden personal-event details, snapshots following saved widget choices, appearance-following palettes and language-following zodiac names |
 | System window behavior | Light/dark edge-to-edge configuration on API 31, 34 and 35 |
 | Translation tools | Catalog validation, export, backups and conflicting saves |
 

@@ -33,4 +33,11 @@ class TodayTimeZoneTest {
         assertEquals("UTC+5:30", TodayTimeZone.LOCAL.offsetLabel(winter, ZoneId.of("Asia/Kolkata")))
         assertEquals("UTC+0", TodayTimeZone.LOCAL.offsetLabel(winter, ZoneId.of("UTC")))
     }
+
+    @Test fun ganzhiHourUsesTheSelectedTodayTimeZone() {
+        val moment = Instant.parse("2026-09-10T00:30:00Z")
+        val brussels = ZoneId.of("Europe/Brussels")
+        assertEquals(2, TodayTimeZone.LOCAL.hour(moment, brussels))
+        assertEquals(7, TodayTimeZone.CAMBODIA.hour(moment, brussels))
+    }
 }

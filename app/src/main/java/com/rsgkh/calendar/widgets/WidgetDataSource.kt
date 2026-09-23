@@ -91,9 +91,6 @@ internal object WidgetDataSource {
                 Log.w("CalendarWidgets", "Built-in events could not be read: ${error.javaClass.simpleName}")
                 emptyList()
             }
-            if (date == today) {
-                todayHoliday = builtIn.firstOrNull { it.kind == EventKind.HOLIDAY }?.title(settings.khmer)
-            }
             val events = WidgetPolicy.sorted(
                 (builtIn + personal.filter { it.date == date })
                     .filter { event ->
@@ -106,6 +103,9 @@ internal object WidgetDataSource {
                     },
                 settings.khmer,
             )
+            if (date == today) {
+                todayHoliday = events.firstOrNull { it.kind == EventKind.HOLIDAY }?.title(settings.khmer)
+            }
             WidgetDay(
                 date = date,
                 items = displayItems(events, settings.widgetHidePersonalDetails, strings),

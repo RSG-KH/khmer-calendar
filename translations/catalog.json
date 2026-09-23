@@ -1069,10 +1069,10 @@
       "id": "ui.thngai_kaor_before_a_holy_day.d02977",
       "section": "interface",
       "context": "CalendarApp.kt",
-      "en": "Shaving Day · Eve of Buddhist Holy Day",
+      "en": "Shaving Day",
       "km": "ថ្ងៃកោរ",
       "original": {
-        "en": "Shaving Day · Eve of Buddhist Holy Day",
+        "en": "Shaving Day",
         "km": "ថ្ងៃកោរ"
       },
       "reviewed": true,
@@ -35747,6 +35747,198 @@
         "km": "ក្នុងកាលបរិច្ឆេទសង្ខេប និងលម្អិត"
       },
       "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.astrology_zodiac",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Astrology & Zodiac",
+      "km": "ហោរាសាស្ត្រ និងរាសីចក្រ",
+      "original": {
+        "en": "Astrology & Zodiac",
+        "km": "ហោរាសាស្ត្រ និងរាសីចក្រ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.show_chinese_ganzhi",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Show Chinese Ganzhi (干支)",
+      "km": "បង្ហាញហោរាសាស្ត្រចិន (干支)",
+      "original": {
+        "en": "Show Chinese Ganzhi (干支)",
+        "km": "បង្ហាញហោរាសាស្ត្រចិន (干支)"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.show_chinese_ganzhi_subtitle",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "In date summary and details",
+      "km": "ក្នុងកាលបរិច្ឆេទសង្ខេប និងលម្អិត",
+      "original": {
+        "en": "In date summary and details",
+        "km": "ក្នុងកាលបរិច្ឆេទសង្ខេប និងលម្អិត"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.ganzhi_emoji_toggle",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Use emoji for Ganzhi animals",
+      "km": "ប្រើ Emoji សម្រាប់សត្វ 干支",
+      "original": {
+        "en": "Use emoji for Ganzhi animals",
+        "km": "ប្រើ Emoji សម្រាប់សត្វ Ganzhi"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.ganzhi_emoji_subtitle",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Choose between Emoji and name",
+      "km": "ជ្រើសរើសរវាង Emoji និងឈ្មោះ",
+      "original": {
+        "en": "Choose between Emoji and name",
+        "km": "ជ្រើសរើសរវាង Emoji និងឈ្មោះ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.ganzhi_year",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Year",
+      "km": "ឆ្នាំ",
+      "original": {
+        "en": "Year",
+        "km": "ឆ្នាំ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.ganzhi_month",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Month",
+      "km": "ខែ",
+      "original": {
+        "en": "Month",
+        "km": "ខែ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.ganzhi_day_column",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Day",
+      "km": "ថ្ងៃ",
+      "original": {
+        "en": "Day",
+        "km": "ថ្ងៃ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.ganzhi_hour_column",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Hour",
+      "km": "ម៉ោង",
+      "original": {
+        "en": "Hour",
+        "km": "ម៉ោង"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.ganzhi_sign",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Sign",
+      "km": "សត្វរាសី",
+      "original": {
+        "en": "Sign",
+        "km": "សត្វរាសី"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.ganzhi_clash",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Clash",
+      "km": "សត្វឆុង",
+      "original": {
+        "en": "Clash",
+        "km": "សត្វឆុង"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.ganzhi_solar_range",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Year and month signs are available for 1900–2100.",
+      "km": "សត្វរាសីឆ្នាំ និងខែ មានសម្រាប់ឆ្នាំ ១៩០០–២១០០។",
+      "original": {
+        "en": "Year and month signs are available for 1900–2100.",
+        "km": "សត្វរាសីឆ្នាំ និងខែ មានសម្រាប់ឆ្នាំ ១៩០០–២១០០។"
+      },
+      "reviewed": true,
       "required": {
         "en": [],
         "km": []

@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,12 +18,16 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.lifecycleScope
 import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.notifications.EventNotifications
 import com.rsgkh.calendar.ui.CalendarApp
 import com.rsgkh.calendar.ui.NotificationAccess
 import com.rsgkh.calendar.widgets.WidgetUpdater
 import java.time.LocalDate
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val preferences by lazy { AppPreferences(this) }
@@ -97,9 +102,22 @@ class MainActivity : ComponentActivity() {
         val previous = preferences.read()
         preferences.write(next)
         revision++
-        com.rsgkh.calendar.widgets.WidgetUpdater.requestUpdate(this)
+        WidgetUpdater.requestUpdate(this)
         if (next.widgetsEnabled != previous.widgetsEnabled) {
             WidgetUpdater.setWidgetsEnabled(this, next.widgetsEnabled)
+        }
+        if (next != previous && next.widgetsEnabled) {
+            // WorkManager can defer its one-time job. Update installed widgets while the app is
+            // open so a language or appearance change is visible as soon as the user goes home.
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    WidgetUpdater.refreshAll(applicationContext)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled // The queued worker remains as a fallback if this activity closes.
+                } catch (error: Exception) {
+                    Log.w("CalendarWidgets", "Settings refresh failed: ${error.javaClass.simpleName}")
+                }
+            }
         }
         if (next.remindersDifferFrom(previous)) EventNotifications.rescheduleAsync(this)
         // Delivery reads the current language; updating channel labels needs no new alarm.

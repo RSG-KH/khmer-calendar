@@ -30,6 +30,9 @@ enum class TodayTimeZone {
     fun today(now: Instant = Instant.now(), localZone: ZoneId = ZoneId.systemDefault()): LocalDate =
         now.atZone(zone(localZone)).toLocalDate()
 
+    fun hour(now: Instant = Instant.now(), localZone: ZoneId = ZoneId.systemDefault()): Int =
+        now.atZone(zone(localZone)).hour
+
     fun offsetLabel(now: Instant = Instant.now(), localZone: ZoneId = ZoneId.systemDefault()): String {
         val offset = zone(localZone).rules.getOffset(now)
         val totalSeconds = offset.totalSeconds
@@ -64,6 +67,8 @@ data class AppSettings(
     val fontScale: FontScale = FontScale.PERCENT_100,
     val widgetFontScale: FontScale = FontScale.PERCENT_100,
     val showWesternZodiac: Boolean = true,
+    val showGanzhi: Boolean = true,
+    val useEmojiForGanzhiAnimals: Boolean = true,
     val widgetsEnabled: Boolean = false,
     val widgetShowPersonal: Boolean = true,
     val widgetShowHolidays: Boolean = true,
@@ -113,6 +118,8 @@ class AppPreferences(context: Context) {
             fontScale = FontScale.entries.firstOrNull { it.name == prefs.getString("fontScale", "PERCENT_100") } ?: FontScale.PERCENT_100,
             widgetFontScale = FontScale.entries.firstOrNull { it.name == prefs.getString("widgetFontScale", "PERCENT_100") } ?: FontScale.PERCENT_100,
             showWesternZodiac = showWesternZodiac,
+            showGanzhi = prefs.getBoolean("showGanzhi", true),
+            useEmojiForGanzhiAnimals = prefs.getBoolean("useEmojiForGanzhiAnimals", true),
             widgetsEnabled = prefs.getBoolean("widgetsEnabled", false),
             widgetShowPersonal = prefs.getBoolean("widgetShowPersonal", true),
             widgetShowHolidays = prefs.getBoolean("widgetShowHolidays", true),
@@ -146,6 +153,8 @@ class AppPreferences(context: Context) {
             putString("fontScale", settings.fontScale.name)
             putString("widgetFontScale", settings.widgetFontScale.name)
             putBoolean("showWesternZodiac", settings.showWesternZodiac)
+            putBoolean("showGanzhi", settings.showGanzhi)
+            putBoolean("useEmojiForGanzhiAnimals", settings.useEmojiForGanzhiAnimals)
             putBoolean("widgetsEnabled", settings.widgetsEnabled)
             putBoolean("widgetShowPersonal", settings.widgetShowPersonal)
             putBoolean("widgetShowHolidays", settings.widgetShowHolidays)

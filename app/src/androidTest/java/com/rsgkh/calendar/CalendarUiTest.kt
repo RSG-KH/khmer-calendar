@@ -12,6 +12,26 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class CalendarUiTest : CalendarUiScenarios() {
+    @Test fun ganzhiTableUsesEmojiAndEnglishAnimalNamesOnDevice() {
+        start()
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
+        compose.onNodeWithTag("ganzhi-sign-day").assertTextEquals("🐮")
+        compose.onNodeWithTag("ganzhi-clash-day").assertTextEquals("🐐")
+        compose.onNodeWithTag("ganzhi-header-hour").assertDoesNotExist()
+        screenshot("ganzhi-device-emoji")
+        compose.onNodeWithText("Close").performClick()
+
+        compose.onNodeWithText("Settings").performClick()
+        val emojiToggle = L.text("ui.ganzhi_emoji_toggle", false)
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasContentDescription(emojiToggle))
+        compose.onNodeWithContentDescription(emojiToggle).assertIsOn().performClick().assertIsOff()
+        compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
+        compose.onNodeWithTag("ganzhi-sign-day").assertTextEquals("Ox")
+        compose.onNodeWithTag("ganzhi-clash-day").assertTextEquals("Goat")
+        screenshot("ganzhi-device-english-names")
+    }
+
     // Device coverage for inline source links and packaged license assets.
     @Test fun aboutLinksAndEngineSourcesWorkInBothLanguages() {
         val openedUrls = mutableListOf<String>()

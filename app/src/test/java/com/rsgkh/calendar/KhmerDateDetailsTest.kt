@@ -4,6 +4,8 @@ package com.rsgkh.calendar
 import com.rsgkh.calendar.domain.KhmerCalendar
 import com.rsgkh.calendar.domain.KhmerDateDetails
 import com.rsgkh.calendar.domain.KhmerNewYear
+import com.rsgkh.calendar.domain.ganzhiAnimalLabel
+import com.rsgkh.calendar.engine.EarthlyBranch
 import com.rsgkh.calendar.i18n.CalendarWords
 import org.junit.Assert.*
 import org.junit.Test
@@ -103,5 +105,19 @@ class KhmerDateDetailsTest {
         // The day pillar advances by exactly one step per civil day.
         val next = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 23))
         assertEquals("庚子 Gēng Zǐ · Rat", next.ganzhiDayLabel(false))
+    }
+
+    @Test fun ganzhiAnimalsUseTheRequestedEmojiOrderAndLocalizedNames() {
+        val emoji = listOf("🐭", "🐮", "🐯", "🐰", "🐲", "🐍", "🐴", "🐐", "🐵", "🐔", "🐶", "🐷")
+        EarthlyBranch.entries.forEachIndexed { index, branch ->
+            assertEquals(emoji[index], branch.ganzhiAnimalLabel(false, true))
+            assertEquals(branch.animal, branch.ganzhiAnimalLabel(false, false))
+            assertEquals(branch.khmerAnimal.substringBefore(" ("), branch.ganzhiAnimalLabel(true, false))
+            assertEquals(emoji[(index + 6) % 12], branch.clashBranch.ganzhiAnimalLabel(true, true))
+        }
+        assertEquals("Ox", EarthlyBranch.CHOU.ganzhiAnimalLabel(false, false))
+        assertEquals("ឆ្លូវ", EarthlyBranch.CHOU.ganzhiAnimalLabel(true, false))
+        assertEquals("Goat", EarthlyBranch.CHOU.clashBranch.ganzhiAnimalLabel(false, false))
+        assertEquals("មមែ", EarthlyBranch.CHOU.clashBranch.ganzhiAnimalLabel(true, false))
     }
 }
