@@ -17,10 +17,11 @@ import com.rsgkh.calendar.MainActivity
 import com.rsgkh.calendar.R
 import kotlin.math.floor
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
 
 /** A native ListView can open at today's position; Glance's LazyColumn always opens at the top. */
 internal object PlannerWidgetRenderer {
-    fun update(context: Context, id: Int) {
+    suspend fun update(context: Context, id: Int) {
         val snapshot = WidgetDataSource.load(context, id, includePlanner = true)
         val days = snapshot.plannerDays
         if (days.isEmpty()) return
@@ -177,8 +178,12 @@ internal object PlannerWidgetRenderer {
         val scrollPosition = WidgetPolicy.plannerScrollTarget(todayPosition, rowHeightsDp, listHeightDp)
         views.setScrollPosition(R.id.planner_list, scrollPosition)
         manager.updateAppWidget(id, views)
+        // The target after today positions it near the top when starting above it.
+        // From the bottom that target may already be visible, making the first scroll
+        // a no-op. Once the collection settles, ensure today's own row is visible.
+        delay(400)
         manager.partiallyUpdateAppWidget(id, RemoteViews(packageName, R.layout.widget_planner).apply {
-            setScrollPosition(R.id.planner_list, scrollPosition)
+            setScrollPosition(R.id.planner_list, todayPosition)
         })
     }
 }
