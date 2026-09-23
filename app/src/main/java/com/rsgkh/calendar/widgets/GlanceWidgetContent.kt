@@ -34,7 +34,7 @@ import com.rsgkh.calendar.engine.ChineseZodiacCalculator
 import com.rsgkh.calendar.i18n.CalendarWords
 import com.rsgkh.calendar.i18n.L
 
-/** A single launcher row: date tile, three concise detail lines, and one refresh control. */
+/** A compact date tile and three detail lines that can fill one or two launcher rows. */
 @Composable
 internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
     val context = LocalContext.current
@@ -43,6 +43,7 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
     val palette = WidgetPalette(snapshot.settings)
     val date = snapshot.today
     val compact = size.width.value < 220f
+    val tall = size.height.value >= 112f
     // Three lines and a refresh button must fit in one launcher row even at 200% widget zoom.
     val scale = snapshot.settings.widgetFontScale.multiplier.coerceAtMost(if (compact) 1.1f else 1.35f)
     val dateScale = snapshot.settings.widgetFontScale.multiplier.coerceAtMost(if (compact) 1.25f else 1.5f)
@@ -80,12 +81,18 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                         if (compact) 12f else 13f, scale, bold = true)
                     WText(strings.number(date.dayOfMonth), palette.accent,
                         if (compact) 22f else 30f, dateScale, bold = true)
+                    if (tall) {
+                        WText(WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer,
+                            emojiOnly = true), palette.secondary, 11f, scale)
+                    }
                 }
-                // Keep the timezone visible without taking height from the date number.
-                Box(GlanceModifier.fillMaxSize().padding(top = 3.dp, end = 3.dp),
-                    contentAlignment = Alignment.TopEnd) {
-                    WText(WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer,
-                        emojiOnly = true), palette.secondary, 11f, scale)
+                if (!tall) {
+                    // In a single row the timezone cannot take a third line below the date.
+                    Box(GlanceModifier.fillMaxSize().padding(top = 3.dp, end = 3.dp),
+                        contentAlignment = Alignment.TopEnd) {
+                        WText(WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer,
+                            emojiOnly = true), palette.secondary, 11f, scale)
+                    }
                 }
             }
             Spacer(GlanceModifier.width(if (compact) 7.5.dp else 8.dp))
