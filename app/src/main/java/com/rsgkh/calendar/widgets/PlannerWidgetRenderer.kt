@@ -29,7 +29,14 @@ internal object PlannerWidgetRenderer {
         val scale = snapshot.settings.widgetFontScale.multiplier
         val manager = AppWidgetManager.getInstance(context)
         val width = manager.getAppWidgetOptions(id).getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 280)
-        val dateWidth = 52f * scale
+        val density = context.resources.displayMetrics.density
+        fun textWidthDp(value: String, sizeSp: Float) =
+            TextPaint().apply {
+                textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sizeSp,
+                    context.resources.displayMetrics)
+            }.measureText(value) / density
+        val dateTextWidth = days.maxOf { textWidthDp(strings.plannerListDate(it.date), 10.5f * scale) }
+        val dateWidth = dateTextWidth + ((52f * scale - dateTextWidth).coerceAtLeast(0f) / 2f)
         val chipsPerLine = floor(((width - 22f - dateWidth - 6f).coerceAtLeast(70f) + 4f) / (84f * scale + 4f))
             .toInt().coerceIn(1, 4)
         val packageName = context.packageName
@@ -46,12 +53,6 @@ internal object PlannerWidgetRenderer {
         val emojiOnly = width / scale < 340f
         val timezone = WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer, emojiOnly)
         val tzPadding = if (emojiOnly) 6f else 8f
-        val density = context.resources.displayMetrics.density
-        fun textWidthDp(value: String, sizeSp: Float) =
-            TextPaint().apply {
-                textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sizeSp,
-                    context.resources.displayMetrics)
-            }.measureText(value) / density
         val timezoneWidth = textWidthDp(timezone, 12.5f * scale) + 2 * tzPadding
         val availablePeriodWidth = (width - 22f - 30f - 10f - timezoneWidth).coerceAtLeast(40f)
         val periodWidth = (textWidthDp(period, periodSize) + 16f).coerceAtMost(availablePeriodWidth)
