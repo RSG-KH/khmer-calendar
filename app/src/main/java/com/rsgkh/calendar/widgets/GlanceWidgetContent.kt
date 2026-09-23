@@ -43,10 +43,7 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
     val palette = WidgetPalette(snapshot.settings)
     val date = snapshot.today
     val compact = size.width.value < 220f
-    // Three lines and a refresh button must fit in one launcher row even at 200% widget zoom.
-    val scale = snapshot.settings.widgetFontScale.multiplier.coerceAtMost(if (compact) 1.1f else 1.35f)
-    val tileScale = glanceDateTileScale(size.height.value,
-        snapshot.settings.widgetFontScale.multiplier, context.resources.configuration.fontScale)
+    val scale = snapshot.settings.widgetFontScale.multiplier
     val labels = glanceLabels(snapshot, strings, compact)
     val open = WidgetNavigation.openDate(context, id, date)
     val animalSide = (minOf(size.width.value, size.height.value) - 16f).coerceAtLeast(0f) * 0.6f
@@ -78,11 +75,11 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 WText(strings.plannerWeekday(date), palette.weekdayLabelColor(date.dayOfWeek),
-                    TILE_WEEKDAY_SP, tileScale, bold = true)
+                    TILE_WEEKDAY_SP, scale, bold = true)
                 WText(strings.number(date.dayOfMonth), palette.accent,
-                    TILE_DAY_SP, tileScale, bold = true)
+                    TILE_DAY_SP, scale, bold = true)
                 WText(WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer,
-                    emojiOnly = true), palette.secondary, TILE_TIMEZONE_SP, tileScale)
+                    emojiOnly = true), palette.secondary, TILE_TIMEZONE_SP, scale)
             }
             Spacer(GlanceModifier.width(if (compact) 7.5.dp else 8.dp))
             Column(
@@ -139,14 +136,6 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
 private const val TILE_WEEKDAY_SP = 11f
 private const val TILE_DAY_SP = 20f
 private const val TILE_TIMEZONE_SP = 10f
-
-/** Preserve the selected size until the three text lines reach the tile's height. */
-internal fun glanceDateTileScale(heightDp: Float, widgetScale: Float, systemFontScale: Float): Float {
-    val tileHeight = (heightDp.takeIf { it > 0f } ?: 60f) - 8f // 4dp above and below.
-    val lineHeight = (TILE_WEEKDAY_SP + TILE_DAY_SP + TILE_TIMEZONE_SP) * 1.25f
-    return widgetScale.coerceAtMost(tileHeight.coerceAtLeast(0f) /
-        (lineHeight * systemFontScale.coerceAtLeast(1f)))
-}
 
 @Composable
 private fun GlanceBadge(text: String, color: ColorProvider, background: ColorProvider,

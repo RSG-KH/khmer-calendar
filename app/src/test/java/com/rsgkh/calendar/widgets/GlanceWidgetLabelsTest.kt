@@ -24,17 +24,6 @@ import org.robolectric.annotation.Config
 class GlanceWidgetLabelsTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
 
-    @Test fun threeDateTileLinesFitAndFollowFontSizeAtBothHeights() {
-        assertEquals(0.8f, glanceDateTileScale(60f, 0.8f, 1f), 0.001f)
-        assertEquals(0.9f, glanceDateTileScale(60f, 0.9f, 1f), 0.001f)
-        assertEquals(1f, glanceDateTileScale(60f, 1f, 1f), 0.001f)
-        val shortLarge = glanceDateTileScale(60f, 2f, 1f)
-        assertTrue(shortLarge * 41f * 1.25f <= 52.001f)
-        assertEquals(2f, glanceDateTileScale(140f, 2f, 1f), 0.001f)
-        val largeSystemText = glanceDateTileScale(60f, 2f, 1.3f)
-        assertTrue(largeSystemText * 1.3f * 41f * 1.25f <= 52.001f)
-    }
-
     @Test fun versionFallbackUsesAppLanguage() {
         assertEquals("Khmer Calendar ${BuildConfig.VERSION_NAME}", glanceAppVersionLabel(false))
         assertEquals("ប្រតិទិនខ្មែរ ${BuildConfig.VERSION_NAME}", glanceAppVersionLabel(true))
