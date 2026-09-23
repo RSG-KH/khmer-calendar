@@ -24,7 +24,7 @@
             android:paddingVertical="3dp"
             android:singleLine="true"
             android:ellipsize="end"
-            android:textSize="10sp" />
+            android:textSize="12.5sp" />
         <TextView
             android:id="@+id/planner_timezone"
             android:layout_width="wrap_content"

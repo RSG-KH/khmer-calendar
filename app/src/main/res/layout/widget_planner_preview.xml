@@ -20,7 +20,7 @@
             android:singleLine="true"
             android:text="01/01/2026 - 01/29/2026"
             android:textColor="#222632"
-            android:textSize="10sp" />
+            android:textSize="12.5sp" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

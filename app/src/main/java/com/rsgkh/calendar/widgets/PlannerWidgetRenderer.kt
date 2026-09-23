@@ -42,7 +42,7 @@ internal object PlannerWidgetRenderer {
             views.setColorStateList(it, "setBackgroundTintList", badgeTint)
         }
         val period = "${strings.plannerDate(days.first().date)} - ${strings.plannerDate(days.last().date)}"
-        val periodSize = (if (width < 335 * scale) 9.5f else 10.5f) * scale
+        val periodSize = 12.5f * scale
         val emojiOnly = width / scale < 340f
         val timezone = WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer, emojiOnly)
         val tzPadding = if (emojiOnly) 6f else 8f
