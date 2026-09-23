@@ -4,10 +4,12 @@ package com.rsgkh.calendar.widgets
 import com.rsgkh.calendar.data.CalendarEvent
 import com.rsgkh.calendar.data.TodayTimeZone
 import java.time.Instant
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.text.BreakIterator
 import java.time.ZoneId
 import java.util.Locale
+import kotlin.math.abs
 import kotlin.math.floor
 
 /** Pure policies; never approximate a civil day as 24 hours (DST can change its length). */
@@ -37,6 +39,30 @@ object WidgetPolicy {
 
     fun plannerWindow(today: LocalDate): List<LocalDate> =
         (-14L..14L).map(today::plusDays)
+
+    /** A full-width planner divider belongs after the final day of the selected week. */
+    fun plannerWeekBoundaryAfter(date: LocalDate, mondayFirst: Boolean): Boolean =
+        date.plusDays(1).dayOfWeek == if (mondayFirst) DayOfWeek.MONDAY else DayOfWeek.SUNDAY
+
+    /** ListView places the requested row at the bottom; keep today near the top. */
+    fun plannerScrollTarget(todayPosition: Int, rowHeightsDp: List<Float>, listHeightDp: Float): Int {
+        if (rowHeightsDp.isEmpty()) return 0
+        val today = todayPosition.coerceIn(rowHeightsDp.indices)
+        val desiredSpan = (listHeightDp - rowHeightsDp[today] / 2f).coerceAtLeast(0f)
+        var span = 0f
+        var target = today
+        var bestDifference = Float.POSITIVE_INFINITY
+        for (position in today..rowHeightsDp.lastIndex) {
+            span += rowHeightsDp[position].coerceAtLeast(1f)
+            val difference = abs(span - desiredSpan)
+            if (difference < bestDifference) {
+                bestDifference = difference
+                target = position
+            }
+            if (span >= desiredSpan) break
+        }
+        return target
+    }
 
     /** Planner puts appointments first, then untimed events. */
     fun plannerSorted(events: List<CalendarEvent>, khmer: Boolean): List<CalendarEvent> =

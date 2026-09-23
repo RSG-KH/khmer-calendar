@@ -1,14 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/planner_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@drawable/widget_planner_card"
-    android:paddingStart="11dp"
-    android:paddingTop="8dp"
-    android:paddingEnd="11dp"
-    android:paddingBottom="8dp">
+    android:background="@drawable/widget_planner_card">
+
+    <!-- Weights use the host's measured size, so the whole animal stays inside a
+         60% × 60% area after resizing without depending on widget option estimates. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="8dp">
+        <TextView
+            android:layout_width="1dp"
+            android:layout_height="0dp"
+            android:layout_weight="2" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="3"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="2" />
+            <ImageView
+                android:id="@+id/planner_animal"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:scaleType="fitEnd"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="11dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="11dp"
+        android:paddingBottom="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -46,6 +80,8 @@
             android:layout_height="30dp"
             android:layout_marginStart="5dp"
             android:background="@drawable/widget_planner_action"
+            android:clickable="true"
+            android:foreground="@drawable/widget_planner_action_ripple"
             android:padding="7dp"
             android:src="@drawable/widget_ic_refresh"
             android:contentDescription="@string/widget_refresh" />
@@ -60,4 +96,5 @@
         android:divider="@null"
         android:cacheColorHint="@android:color/transparent"
         android:scrollbars="none" />
-</LinearLayout>
+    </LinearLayout>
+</FrameLayout>

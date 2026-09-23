@@ -227,16 +227,21 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
             openDateRequest?.first?.let { date ->
                 if (date in KhmerCalendar.minDate..KhmerCalendar.maxDate) {
                     page = 0; jump = false; creating = false; editingId = null; detail = null
-                    selectedText = date.toString(); monthText = YearMonth.from(date).toString(); dateDetailText = date.toString()
+                    selectedText = date.toString(); monthText = YearMonth.from(date).toString(); dateDetailText = null
                     val request = openWidgetEventRequest?.takeIf {
-                        it.date == date && it.nonce == openDateRequest?.second
+                        it.date == date && it.nonce == openDateRequest.second
                     }
                     if (request != null) {
-                        detail = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                        val event = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
                             runCatching {
                                 com.rsgkh.calendar.widgets.WidgetNavigation.resolve(request, customEvents, displayZone)
                             }.getOrNull()
                         }?.takeIf { settings.showObservances || it.kind != EventKind.OBSERVANCE }
+                        // An event tap opens only Event details. If the event was removed
+                        // since the widget refreshed, show its day as a useful fallback.
+                        if (event != null) detail = event else dateDetailText = date.toString()
+                    } else {
+                        dateDetailText = date.toString()
                     }
                 }
             }

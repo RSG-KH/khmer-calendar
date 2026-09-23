@@ -9,6 +9,7 @@
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/widget_planner"
+    android:previewImage="@drawable/widget_planner"
     android:previewLayout="@layout/widget_planner_preview"
     android:description="@string/widget_planner_description"
     android:widgetCategory="home_screen" />

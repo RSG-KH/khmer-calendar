@@ -16,7 +16,7 @@ import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.Action
 import androidx.glance.action.clickable
-import androidx.glance.appwidget.action.actionRunCallback
+import androidx.glance.appwidget.AndroidRemoteViews
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
@@ -39,7 +39,7 @@ import java.time.DayOfWeek
 import java.time.YearMonth
 
 @DrawableRes
-private fun zodiacDrawable(animalYear: Int, compact: Boolean = true): Int = when (Math.floorMod(animalYear, 12)) {
+internal fun zodiacDrawable(animalYear: Int, compact: Boolean = true): Int = when (Math.floorMod(animalYear, 12)) {
     0 -> if (compact) R.drawable.zodiac_rat_400 else R.drawable.zodiac_rat
     1 -> if (compact) R.drawable.zodiac_ox_400 else R.drawable.zodiac_ox
     2 -> if (compact) R.drawable.zodiac_tiger_400 else R.drawable.zodiac_tiger
@@ -55,7 +55,7 @@ private fun zodiacDrawable(animalYear: Int, compact: Boolean = true): Int = when
     else -> if (compact) R.drawable.zodiac_rat_400 else R.drawable.zodiac_rat
 }
 
-private fun resolveAnimalAlpha(context: Context, snapshot: WidgetSnapshot): Float {
+internal fun resolveAnimalAlpha(context: Context, snapshot: WidgetSnapshot): Float {
     val isNight = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
     val isDark = if (snapshot.settings.theme == ThemeMode.SYSTEM) isNight else snapshot.settings.theme == ThemeMode.DARK
     return if (isDark) 0.08f else 0.09f
@@ -188,7 +188,7 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
 
                 // Quick Action Buttons
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    WidgetIcon(R.drawable.widget_ic_refresh, s(R.string.widget_refresh), actionRunCallback<RefreshWidgetAction>(), p.secondary, p.surfaceVariant)
+                    WidgetRefreshIcon(context, id, s(R.string.widget_refresh), p)
                 }
             }
 
@@ -238,16 +238,15 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                                 val rawMonth = CalendarWords.month(date.monthValue, s.khmer, short = true)
                                 val monthClean = if (s.khmer) rawMonth.removePrefix("ខែ") else rawMonth
                                 WText(monthClean, p.text, 12f, scale, bold = false, lines = 1)
-                                Spacer(GlanceModifier.height(2.dp))
 
                                 details?.lunar?.let { l ->
                                     // 2. Lunar month
+                                    Spacer(GlanceModifier.height(2.dp))
                                     WText(L.text("calendar.lunar_month.${l.month}", s.khmer), p.secondary, 11.5f, scale, bold = false, lines = 1)
                                     Spacer(GlanceModifier.height(2.dp))
 
                                     // 3. Lunar day [emoji]
                                     WText("${l.shortLabel(s.khmer)} ${moonEmoji(l).trim()}", p.accent, 11.5f, scale, bold = false, lines = 1)
-                                    Spacer(GlanceModifier.height(2.dp))
                                 }
 
                                 val holy = when {
@@ -259,13 +258,16 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                                 if (badgeText != null) {
                                     val isHoly = details?.lunar?.isHolyDay == true || details?.lunar?.isShavingDay == true
                                     // 4. Holy day [emoji]
-                                    WText(badgeText, if (isHoly) p.holy else p.holiday, 11.5f, scale, bold = false, lines = 1)
                                     Spacer(GlanceModifier.height(2.dp))
+                                    WText(badgeText, if (isHoly) p.holy else p.holiday, 11.5f, scale, bold = false, lines = 1)
                                 }
 
-                                // 5. Western Zodiac [emoji]
-                                val z = details?.zodiac ?: Zodiac.forDate(date)
-                                WText(s.zodiac(z), p.text, 11.5f, scale, bold = false, lines = 1)
+                                if (snapshot.settings.showWesternZodiac) {
+                                    // 5. Western Zodiac [emoji], matching the Date details setting.
+                                    Spacer(GlanceModifier.height(2.dp))
+                                    val z = details?.zodiac ?: Zodiac.forDate(date)
+                                    WText(s.zodiac(z), p.text, 11.5f, scale, bold = false, lines = 1)
+                                }
                             }
                         }
                     }
@@ -478,7 +480,7 @@ internal fun FocusWidgetContent(snapshot: WidgetSnapshot, id: Int) {
 
                 // Action Buttons
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    WidgetIcon(R.drawable.widget_ic_refresh, s(R.string.widget_refresh), actionRunCallback<RefreshWidgetAction>(), p.secondary, p.surfaceVariant)
+                    WidgetRefreshIcon(context, id, s(R.string.widget_refresh), p)
                 }
             }
 
@@ -589,23 +591,9 @@ private fun AdjacentDayCard(
 }
 
 @Composable
-private fun WidgetIcon(resource: Int, description: String, action: Action, tint: ColorProvider, bg: ColorProvider) {
-    Box(
-        GlanceModifier.size(30.dp).clickable(action),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            GlanceModifier.size(30.dp).background(bg).cornerRadius(15.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Image(
-                ImageProvider(resource),
-                contentDescription = description,
-                colorFilter = ColorFilter.tint(tint),
-                modifier = GlanceModifier.size(16.dp),
-            )
-        }
-    }
+private fun WidgetRefreshIcon(context: Context, id: Int, description: String, palette: WidgetPalette) {
+    AndroidRemoteViews(WidgetRefreshControl.views(context, id, description, palette),
+        modifier = GlanceModifier.size(30.dp))
 }
 
 /**
@@ -796,7 +784,7 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
 
                 // Quick Action Buttons
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    WidgetIcon(R.drawable.widget_ic_refresh, s(R.string.widget_refresh), actionRunCallback<RefreshWidgetAction>(), p.secondary, p.surfaceVariant)
+                    WidgetRefreshIcon(context, id, s(R.string.widget_refresh), p)
                 }
             }
 
@@ -828,13 +816,7 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                 orderedDays.forEach { dayOfWeek ->
                     val style = if (snapshot.settings.showLongerWeekdayNames) "grid_long" else "grid"
                     val headerText = CalendarWords.weekday(dayOfWeek.value, s.khmer, style = style)
-                    val color = if (snapshot.settings.highlightWeekdayNames) {
-                        p.weekdayColor(dayOfWeek)
-                    } else if (snapshot.settings.highlightSunday && dayOfWeek == DayOfWeek.SUNDAY) {
-                        p.holiday
-                    } else {
-                        p.secondary
-                    }
+                    val color = p.weekdayLabelColor(dayOfWeek)
 
                     Box(
                         GlanceModifier.defaultWeight(),

@@ -19,6 +19,7 @@ import com.rsgkh.calendar.i18n.L
 import com.rsgkh.calendar.i18n.CalendarWords
 import com.rsgkh.calendar.ui.CalendarApp
 import com.rsgkh.calendar.ui.NotificationAccess
+import com.rsgkh.calendar.widgets.WidgetEventRequest
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.Instant
@@ -841,6 +842,27 @@ class CalendarRenderTest : CalendarUiScenarios() {
         // Clicking the same selected date again re-opens Date details popup
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
+    }
+
+    @Test fun widgetEventOpensOnlyEventDetails() {
+        val date = LocalDate.of(2026, 9, 24)
+        val event = EventRepository.forDate(date).first { it.kind == EventKind.HOLIDAY }
+        val nonce = 1L
+        compose.setContent {
+            CalendarApp(AppSettings(khmer = false, theme = ThemeMode.LIGHT), date,
+                openDateRequest = date to nonce,
+                openWidgetEventRequest = WidgetEventRequest(date, event.id, nonce)) { }
+        }
+        val eventDialog = hasText(event.title(false)) and hasAnyAncestor(isDialog())
+        // Resolving a widget event runs off the UI thread, so wait for its dialog to arrive.
+        compose.waitUntil(timeoutMillis = 5_000) {
+            compose.onAllNodes(eventDialog).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNode(eventDialog).assertIsDisplayed()
+        compose.onNodeWithTag("date-details-title").assertDoesNotExist()
+        compose.onNode(hasText("Close") and hasAnyAncestor(isDialog())).performClick()
+        // Dismissing an event opened from a widget must not reveal Date details underneath.
+        compose.onNodeWithTag("date-details-title").assertDoesNotExist()
     }
 
     @Test

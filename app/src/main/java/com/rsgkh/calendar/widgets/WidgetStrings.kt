@@ -43,9 +43,9 @@ internal class WidgetStrings(private val context: Context, val khmer: Boolean) {
         return "${number(date.monthValue).padStart(2, zero)}/${number(date.dayOfMonth).padStart(2, zero)}"
     }
 
-    fun plannerDayLabel(date: java.time.LocalDate): String {
+    fun plannerWeekday(date: java.time.LocalDate): String {
         val weekday = CalendarWords.weekday(date.dayOfWeek.value, khmer, style = "short")
-        return "${if (khmer) weekday.removePrefix("ថ្ងៃ") else weekday} ${plannerListDate(date)}"
+        return if (khmer) weekday.removePrefix("ថ្ងៃ") else weekday
     }
 
     fun plannerTime(time: LocalTime): String {
@@ -53,8 +53,9 @@ internal class WidgetStrings(private val context: Context, val khmer: Boolean) {
         return "${number(time.hour)}:${number(time.minute).padStart(2, zero)}"
     }
 
-    fun zodiac(sign: ZodiacSign): String =
-        "${if (khmer) sign.signNameKm else sign.signName} ${sign.emoji.trim()}"
+    // Match Date details: Western zodiac proper names remain English even in Khmer mode.
+    // Never replace Libra with a Khmer month-like name such as តុលា.
+    fun zodiac(sign: ZodiacSign): String = "${sign.signName} ${sign.emoji.trim()}"
 
     fun time(time: LocalTime): String {
         if (!khmer) return time.format(clock)

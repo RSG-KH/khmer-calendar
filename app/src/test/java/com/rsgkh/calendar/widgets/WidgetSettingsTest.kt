@@ -15,6 +15,8 @@ import com.rsgkh.calendar.data.ThemeMode
 import com.rsgkh.calendar.data.TodayTimeZone
 import com.rsgkh.calendar.domain.ZodiacSign
 import com.rsgkh.calendar.ui.accentColor
+import com.rsgkh.calendar.ui.weekdayNameColor
+import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -44,11 +46,11 @@ class WidgetSettingsTest {
             val enabled = original.copy(khmer = false, todayTimeZone = TodayTimeZone.CAMBODIA,
                 widgetShowObservances = true, showObservances = true)
             preferences.write(enabled)
-            val visible = WidgetDataSource.load(context, now = now)
+            val visible = WidgetDataSource.load(context, now = now, includeMonth = true)
             assertTrue(visible.current.items.any { it.kind == EventKind.OBSERVANCE })
             assertTrue(visible.monthDays.first { it.date == observanceDate }.hasObservance)
             preferences.write(enabled.copy(showObservances = false))
-            val hidden = WidgetDataSource.load(context, now = now)
+            val hidden = WidgetDataSource.load(context, now = now, includeMonth = true)
             assertFalse(hidden.current.items.any { it.kind == EventKind.OBSERVANCE })
             assertFalse(hidden.monthDays.any { it.hasObservance })
             assertTrue(preferences.read().widgetShowObservances)
@@ -72,7 +74,7 @@ class WidgetSettingsTest {
                 widgetShowObservances = false, showHolyDaysInEvents = false,
             )
             preferences.write(hiddenSettings)
-            val hidden = WidgetDataSource.load(context, now = now)
+            val hidden = WidgetDataSource.load(context, now = now, includeMonth = true)
             assertEquals(hiddenSettings, hidden.settings)
             assertEquals(LocalDate.of(2026, 9, 24), hidden.today)
             assertNull(hidden.holidayTitle)
@@ -80,7 +82,7 @@ class WidgetSettingsTest {
             assertFalse(hidden.monthDays.any { it.hasHoliday || it.hasObservance || it.hasPersonal })
 
             preferences.write(hiddenSettings.copy(widgetShowHolidays = true))
-            val visible = WidgetDataSource.load(context, now = now)
+            val visible = WidgetDataSource.load(context, now = now, includeMonth = true)
             assertNotNull(visible.holidayTitle)
             assertTrue(visible.current.items.any { it.kind == EventKind.HOLIDAY })
             assertTrue(visible.monthDays.first { it.dayNumber == 24 }.hasHoliday)
@@ -97,9 +99,31 @@ class WidgetSettingsTest {
         assertFalse(light.background.getColor(context) == dark.background.getColor(context))
     }
 
-    @Test fun zodiacNameUsesTheAppLanguage() {
+    @Test fun widgetWeekdayLabelsFollowCalendarColorSettings() {
+        val colored = WidgetPalette(AppSettings(theme = ThemeMode.LIGHT,
+            highlightWeekdayNames = true, highlightSunday = false))
+        assertEquals(weekdayNameColor(DayOfWeek.MONDAY, false),
+            colored.weekdayLabelColor(DayOfWeek.MONDAY).getColor(context))
+        assertEquals(weekdayNameColor(DayOfWeek.SUNDAY, false),
+            colored.weekdayLabelColor(DayOfWeek.SUNDAY).getColor(context))
+
+        val sundayOnly = WidgetPalette(AppSettings(theme = ThemeMode.DARK,
+            highlightWeekdayNames = false, highlightSunday = true))
+        assertEquals(sundayOnly.secondary.getColor(context),
+            sundayOnly.weekdayLabelColor(DayOfWeek.MONDAY).getColor(context))
+        assertEquals(sundayOnly.holiday.getColor(context),
+            sundayOnly.weekdayLabelColor(DayOfWeek.SUNDAY).getColor(context))
+
+        val plain = WidgetPalette(AppSettings(theme = ThemeMode.LIGHT,
+            highlightWeekdayNames = false, highlightSunday = false))
+        assertEquals(plain.secondary.getColor(context),
+            plain.weekdayLabelColor(DayOfWeek.SUNDAY).getColor(context))
+    }
+
+    @Test fun westernZodiacNameStaysEnglishInKhmerMode() {
         assertEquals("Virgo ♍️", WidgetStrings(context, false).zodiac(ZodiacSign.VIRGO))
-        assertEquals("កញ្ញា ♍️", WidgetStrings(context, true).zodiac(ZodiacSign.VIRGO))
+        assertEquals("Virgo ♍️", WidgetStrings(context, true).zodiac(ZodiacSign.VIRGO))
+        assertEquals("Libra ♎️", WidgetStrings(context, true).zodiac(ZodiacSign.LIBRA))
     }
 
     @Test fun languageChangeIsReadForAFreshProductivitySnapshot() {

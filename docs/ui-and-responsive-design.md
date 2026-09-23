@@ -25,9 +25,9 @@ When Show copy buttons is enabled, date and event details display a copy icon al
 
 The **Settings → Astrology & Zodiac** card (after Calendar) holds three switches, all on by default and saved on the device:
 
-- **Show Western zodiac signs** — turning it off removes the Western zodiac line from the selected-date card and from date details, and omits the zodiac glyph from event-detail backgrounds while keeping the animal-year artwork. Month-grid cells never show zodiac signs. An inverted `hideWesternZodiac` choice saved by an earlier build carries over when the setting is next written.
-- **Show Chinese Ganzhi (干支)** (`showGanzhi`) — shows the engine-supplied Year, Month and Day sign/clash table in date details. Today also includes an Hour column using the current hour in the selected Local or Cambodia time zone. Year and Month are available for 1900–2100; outside that range the table marks them unavailable while preserving Day.
-- **Use emoji for Ganzhi animals** (`useEmojiForGanzhiAnimals`) — appears only while Chinese Ganzhi is enabled. It switches the table between the twelve animal emoji and English or Khmer animal names. The choice is independent: turning Chinese Ganzhi off and back on never resets it.
+- **Show Western zodiac signs** — turning it off removes the Western zodiac line from the selected-date card, date details, and the Productivity widget, hides the Glance widget's zodiac badge, and omits the zodiac glyph from event-detail backgrounds while keeping the animal-year artwork. Month-grid cells never show zodiac signs. An inverted `hideWesternZodiac` choice saved by an earlier build carries over when the setting is next written.
+- **Show Chinese Ganzhi (干支)** (`showGanzhi`) — shows the engine-supplied Year, Month and Day sign/clash table in date details and the animal/clash badges in the Glance widget. Today also includes an Hour column in date details using the current hour in the selected Local or Cambodia time zone. Year and Month are available for 1900–2100; outside that range the table marks them unavailable while preserving Day.
+- **Use emoji for Ganzhi animals** (`useEmojiForGanzhiAnimals`) — appears only while Chinese Ganzhi is enabled. It switches the date-details table between the twelve animal emoji and English or Khmer animal names; Glance's Ganzhi badges always use emoji when visible. The choice is independent: turning Chinese Ganzhi off and back on never resets it.
 
 The divider above that date-details block disappears when no Buddhist holy day or shaving day is shown and both toggles are off.
 
@@ -302,7 +302,7 @@ This ensures legibility for elderly users or small screens while preserving fixe
 ## 4. Home Screen Widgets & Adaptive Layouts
 
 ### Widget Design & Responsive Layouts
-Khmer Calendar provides four home screen widgets. Month, Productivity, and Focus use Jetpack Glance (`1.2.0`); Planner uses Android RemoteViews:
+Khmer Calendar provides five home screen widgets. Month, Productivity, Focus, and Glance use Jetpack Glance (`1.2.0`); Planner uses Android RemoteViews:
 
 - **Month Widget (4×3 Target Size, Extendable to 4×4)**:
   - **Header Badges & Quick Action**: Left-aligned solar month name badge (`📅 មេសា` / `📅 Apr`), traditional year & BE year chip (`🐎 ឆ្នាំមមី · អដ្ឋស័ក · ព.ស. ២៥៧០`), mini timezone badge (shows full text on wide displays, collapses to emoji only `🇰🇭` / `🌐` on compact/phone displays to eliminate truncation ellipses), and right-aligned quick refresh action button.
@@ -314,7 +314,7 @@ Khmer Calendar provides four home screen widgets. Month, Productivity, and Focus
   - **Dynamic Zoom Gap**: Starting from 110% widget font size, the vertical gap between the day number and event markers dynamically expands by $+10\%$ per 10% zoom step.
   - **Resizability**: Horizontally resizable, and vertically extendable by +1 grid up to 4 rows (`android:resizeMode="horizontal|vertical"`).
 - **Productivity Widget (4×2 Target Size)**:
-  - **Left Card (Date Details)**: Prominent big day number, short weekday, short month, Khmer lunar month and day, Buddhist Era year, Western Zodiac sign, and holy day badge.
+  - **Left Card (Date Details)**: Prominent big day number, short weekday, short month, Khmer lunar month and day, Buddhist Era year, optional Western zodiac sign, and holy day badge.
   - **Right Card (Events Overview)**: Dual 2-block layout for Today's and Tomorrow's event lists.
   - **Compact Width Adaptation**: When widget width is < 330dp, the right detail list (lunar month, zodiac, etc.) is hidden to cleanly display a centered weekday and big day number without text clipping.
   - **Width Freezing on Expansion**: When widget width reaches $\ge 330\,\text{dp}$ (step 2, standard 4-column phone/tablet width), the date details card freezes at its ideal width ($\approx 152\,\text{dp} \times \text{scale}$), routing all further horizontal resizing width directly to the event lists to display longer event titles without truncation.
@@ -325,19 +325,23 @@ Khmer Calendar provides four home screen widgets. Month, Productivity, and Focus
   - **Full Horizontal Expansion**: Width expands dynamically with user resizing handles across all launcher grid widths without arbitrary caps, providing full width for long event titles and yesterday/tomorrow sub-cards.
 - **Planner Widget (4×2 Target Size)**:
   - **Header**: The 29-day solar date range, selected timezone, and refresh action.
-  - **Day List**: A vertically scrollable agenda with fourteen days before and after today. Today uses a 50% accent highlight; days without events stay empty. Event chips use category colors, show 24-hour times when available, and truncate titles after six characters. Timed events precede untimed events.
-  - **Interactions and Resizing**: Event chips open event details; other day-row areas open date details. The widget resizes horizontally and vertically, and additional event chips flow to continuation rows as width changes.
+  - **Day List**: A vertically scrollable agenda with fourteen days before and after today. A faint yearly animal watermark sits at the bottom right with an 8dp inset and scales to 60% of the smaller available widget dimension, so resizing keeps the whole animal visible. Weekday and numeric date occupy separate centered columns; the weekday follows the calendar's color setting, including its Sunday-only fallback, while the numeric date uses the normal text color. A stronger, full-width divider separates weeks after Saturday or Sunday according to **Start week on Monday**. Today's accent highlight has the same rounded corners as event badges; days without events stay empty. Event chips use category colors, show 24-hour times when available, and truncate titles after six characters. Timed events precede untimed events.
+  - **Interactions and Resizing**: Event chips open event details; other day-row areas open date details. The widget resizes horizontally and vertically, and additional event chips flow to continuation rows as width changes. Its initial scroll position uses the current orientation's height and estimated row heights to keep today near the top across grid sizes; a resize refreshes that position immediately.
+- **Glance Widget (4×1 Target Size, 2×1 Minimum)**:
+  - **Today at a Glance**: A compact date tile shows a short weekday above the large Gregorian day number and the selected timezone emoji below it at every widget width. At 4×1, the lines beside it show solar month/year with Buddhist Era year, lunar day/month with traditional animal year and Sak, and optional badges. A faint yearly animal watermark uses 60% of the smaller available dimension at the bottom right, with an inset from the card edges. The refresh button sits at the upper right like the other widgets.
+  - **Badges**: A lotus appears on Buddhist holy days when either holy-day setting is on; the Western zodiac glyph follows **Show Western zodiac signs**; the Year, Month, and Day animal emojis and their three clash animals follow **Show Chinese Ganzhi** for dates in the supported 1900–2100 year/month range. The two Ganzhi badges read `[year month day] × [clash year month day]`, with × outside both badges. Whenever the third row would otherwise be empty, it shows the localized app name and current version.
+  - **Width and Height**: The widget can shrink horizontally to two launcher columns. At 2×1, the solar line uses a short month, omits the Gregorian year and Buddhist Era prefix, the lunar line shows day and month, and the third line shows traditional animal year and Sak. Western zodiac and Ganzhi badges are hidden at this width; the holy-day lotus remains available. `android:resizeMode="horizontal"` keeps it one row tall.
 
 ### App Settings & System Integration
 - **Settings → Widgets**: Located directly after Notifications in the main app settings.
-- **Master Enablement**: "Enable widgets" switch (`widgetsEnabled`, OFF by default). When toggled off, `PackageManager.setComponentEnabledSetting` disables all four widget receivers (`COMPONENT_ENABLED_STATE_DISABLED`), completely hiding them from the system Widget Browser with zero background resource usage.
+- **Master Enablement**: "Enable widgets" switch (`widgetsEnabled`, OFF by default). When toggled off, `PackageManager.setComponentEnabledSetting` disables all five widget receivers (`COMPONENT_ENABLED_STATE_DISABLED`) and cancels their queued, periodic and midnight refreshes.
 - **Category & Privacy Controls**: 4 expandable toggles:
   1. *Personal events*
   2. *Public holidays*
   3. *Observances*
   4. *Hide personal event details* (shows event count only, suppressing titles and times)
-- **Dedicated Widget Font Size**: All four widgets follow the dedicated **Settings → Widgets → Font size** option (`widgetFontScale`, 100% by default, shown only while widgets are enabled), fully decoupled from the in-app font size. The picker offers the full **80%–200%** range with no clamping; `WidgetPolicy.layout` degrades Glance content density as the zoom grows, while Planner changes its chip density.
-- **Shared Appearance and Content**: Focus, Productivity, Month, and Planner reload the app's language, theme, accent color, and selected time zone. The Widgets category and privacy switches filter event lists, badges, and month markers consistently; the Productivity zodiac name uses the chosen language. Changing any setting refreshes installed widgets immediately while the app is open. Turning off widgets also cancels queued, periodic, and midnight refreshes.
+- **Dedicated Widget Font Size**: All five widgets follow the dedicated **Settings → Widgets → Font size** option (`widgetFontScale`, 100% by default, shown only while widgets are enabled), fully decoupled from the in-app font size. The picker offers the full **80%–200%** range. `WidgetPolicy.layout` degrades Glance content density as the zoom grows, Planner changes its chip density, and the one-row Glance widget caps rendered text size to keep its three lines visible.
+- **Shared Appearance and Content**: Focus, Productivity, Month, Planner, and Glance reload the app's language, theme, accent color, and selected time zone. The Widgets category and privacy switches filter event lists, badges, and month markers consistently; when enabled, the Productivity widget keeps Western zodiac names in English in both language modes, matching Date details. Changing any setting refreshes installed widgets immediately while the app is open. Turning off widgets also cancels queued, periodic, and midnight refreshes.
 
 ### Preview Thumbnails
-- Static 8-bit PNG preview thumbnails (`widget_focus.png`, `widget_productivity.png`, and `widget_month.png`) placed in `res/drawable/` (Light) and `res/drawable-night/` (Dark) allow Android's system Widget Browser to display high-resolution, theme-matching previews on Android 12+.
+- Static PNG preview thumbnails for Focus, Productivity, Month, Planner, and Glance are placed in `res/drawable/` (Light) and `res/drawable-night/` (Dark). Planner and Glance also declare XML preview layouts that display those supplied images on Android 12 and newer, while `previewImage` remains available as a fallback.

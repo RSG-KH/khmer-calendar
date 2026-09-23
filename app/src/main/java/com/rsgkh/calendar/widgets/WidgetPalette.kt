@@ -14,6 +14,8 @@ import java.time.DayOfWeek
 /** Day/night providers using translucent matte foreground containers so the background animal is visible. */
 internal class WidgetPalette(settings: AppSettings) {
     private val mode = settings.theme
+    private val highlightWeekdayNames = settings.highlightWeekdayNames
+    private val highlightSunday = settings.highlightSunday
     private val lightAccent = accentColor(settings.accent, false)
     private val darkAccent = accentColor(settings.accent, true)
 
@@ -70,6 +72,12 @@ internal class WidgetPalette(settings: AppSettings) {
 
     fun weekdayColor(day: DayOfWeek): ColorProvider =
         token(weekdayNameColor(day, false), weekdayNameColor(day, true))
+
+    fun weekdayLabelColor(day: DayOfWeek): ColorProvider = when {
+        highlightWeekdayNames -> weekdayColor(day)
+        highlightSunday && day == DayOfWeek.SUNDAY -> holiday
+        else -> secondary
+    }
 
     fun event(kind: EventKind): ColorProvider = when (kind) {
         EventKind.HOLIDAY -> holiday

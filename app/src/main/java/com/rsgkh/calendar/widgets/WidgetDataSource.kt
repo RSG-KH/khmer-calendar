@@ -59,7 +59,8 @@ internal data class WidgetSnapshot(
 
 /** Blocking reads; callers MUST run this on Dispatchers.IO, never in a composable body. */
 internal object WidgetDataSource {
-    fun load(context: Context, widgetId: Int = 0, now: Instant = Instant.now(), includePlanner: Boolean = false): WidgetSnapshot {
+    fun load(context: Context, widgetId: Int = 0, now: Instant = Instant.now(),
+        includePlanner: Boolean = false, includeMonth: Boolean = false): WidgetSnapshot {
         val settings = AppPreferences(context).read()
         val strings = WidgetStrings(context, settings.khmer)
         val zone = settings.todayTimeZone.zone()
@@ -123,47 +124,50 @@ internal object WidgetDataSource {
             null
         }
 
-        val month = YearMonth.from(today)
-        val monthStart = month.atDay(1)
-        val monthEnd = month.atEndOfMonth()
-        val monthPersonal = if (!settings.widgetShowPersonal) emptyList() else try {
-            CustomEventRepository(context).use { it.all() }.flatMap { event ->
-                try {
-                    event.occurrences(monthStart, monthEnd, zone)
-                } catch (_: Exception) {
-                    emptyList()
+        // Only the Month widget needs this grid. Other widgets refresh frequently enough that
+        // building 28–31 lunar dates and reopening the personal-event store wastes CPU and battery.
+        val monthDays = if (includeMonth) {
+            val month = YearMonth.from(today)
+            val monthStart = month.atDay(1)
+            val monthEnd = month.atEndOfMonth()
+            val monthPersonal = if (!settings.widgetShowPersonal) emptyList() else try {
+                CustomEventRepository(context).use { it.all() }.flatMap { event ->
+                    try {
+                        event.occurrences(monthStart, monthEnd, zone)
+                    } catch (_: Exception) {
+                        emptyList()
+                    }
                 }
+            } catch (_: Exception) {
+                emptyList()
             }
-        } catch (_: Exception) {
-            emptyList()
-        }
+            (1..month.lengthOfMonth()).map { dayNum ->
+                val date = month.atDay(dayNum)
+                val d = if (date.year in EventRepository.coveredYears) try { KhmerDateDetails.fromGregorian(date) } catch (_: Exception) { null } else null
+                val lunar = d?.lunar
+                val isHoly = settings.showHolyDaysInCalendar && (lunar?.isHolyDay == true)
+                val isShaving = settings.showHolyDaysInCalendar && (lunar?.isShavingDay == true)
+                val builtIn = if (date.year in EventRepository.coveredYears) try { EventRepository.forDate(date) } catch (_: Exception) { emptyList() } else emptyList()
+                val hasHoliday = settings.widgetShowHolidays && builtIn.any { it.kind == EventKind.HOLIDAY }
+                val hasObservance = settings.showObservances && settings.widgetShowObservances && builtIn.any { it.kind == EventKind.OBSERVANCE }
+                val hasPersonal = settings.widgetShowPersonal && monthPersonal.any { it.date == date }
 
-        val monthDays = (1..month.lengthOfMonth()).map { dayNum ->
-            val date = month.atDay(dayNum)
-            val d = if (date.year in EventRepository.coveredYears) try { KhmerDateDetails.fromGregorian(date) } catch (_: Exception) { null } else null
-            val lunar = d?.lunar
-            val isHoly = settings.showHolyDaysInCalendar && (lunar?.isHolyDay == true)
-            val isShaving = settings.showHolyDaysInCalendar && (lunar?.isShavingDay == true)
-            val builtIn = if (date.year in EventRepository.coveredYears) try { EventRepository.forDate(date) } catch (_: Exception) { emptyList() } else emptyList()
-            val hasHoliday = settings.widgetShowHolidays && builtIn.any { it.kind == EventKind.HOLIDAY }
-            val hasObservance = settings.showObservances && settings.widgetShowObservances && builtIn.any { it.kind == EventKind.OBSERVANCE }
-            val hasPersonal = settings.widgetShowPersonal && monthPersonal.any { it.date == date }
-
-            MonthDayInfo(
-                date = date,
-                dayNumber = dayNum,
-                lunarLabel = lunar?.shortLabel(settings.khmer) ?: "",
-                isHolyDay = isHoly,
-                isShavingDay = isShaving,
-                hasHoliday = hasHoliday,
-                hasObservance = hasObservance,
-                hasPersonal = hasPersonal,
-                lotusRes = if (isHoly) {
-                    // Day 8 and its shaving day use the bud; phase-end holy days use the blossom.
-                    if ((lunar?.day ?: 0) <= 8) R.drawable.holy_day_lotus else R.drawable.holy_day_lotus_blossom
-                } else null,
-            )
-        }
+                MonthDayInfo(
+                    date = date,
+                    dayNumber = dayNum,
+                    lunarLabel = lunar?.shortLabel(settings.khmer) ?: "",
+                    isHolyDay = isHoly,
+                    isShavingDay = isShaving,
+                    hasHoliday = hasHoliday,
+                    hasObservance = hasObservance,
+                    hasPersonal = hasPersonal,
+                    lotusRes = if (isHoly) {
+                        // Day 8 and its shaving day use the bud; phase-end holy days use the blossom.
+                        if ((lunar?.day ?: 0) <= 8) R.drawable.holy_day_lotus else R.drawable.holy_day_lotus_blossom
+                    } else null,
+                )
+            }
+        } else emptyList()
 
         val center = if (includePlanner) 14 else 1
         return WidgetSnapshot(settings, today, details, days[center - 1], days[center], days[center + 1],

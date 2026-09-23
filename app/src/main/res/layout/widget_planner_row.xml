@@ -3,6 +3,7 @@
     android:id="@+id/planner_row"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@drawable/widget_planner_today"
     android:minHeight="27dp">
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,11 +14,24 @@
         android:paddingHorizontal="4dp"
         android:paddingVertical="1dp">
     <TextView
-        android:id="@+id/planner_date"
-        android:layout_width="42dp"
+        android:id="@+id/planner_weekday"
+        android:layout_width="31dp"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:singleLine="true"
         android:textSize="11.5sp" />
+    <TextView
+        android:id="@+id/planner_date"
+        android:layout_width="41dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:singleLine="true"
+        android:textSize="11.5sp" />
+    <TextView
+        android:id="@+id/planner_event_gap"
+        android:layout_width="2dp"
+        android:layout_height="1dp"
+        android:text="" />
     <TextView
         android:id="@+id/planner_event_1"
         android:layout_width="wrap_content"
@@ -79,10 +93,11 @@
         android:paddingEnd="4dp">
         <TextView
             android:id="@+id/planner_divider_spacer"
-            android:layout_width="42dp"
+            android:layout_width="74dp"
             android:layout_height="1dp"
             android:text="" />
         <TextView
+            android:id="@+id/planner_divider_line"
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_weight="1"

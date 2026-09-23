@@ -4,10 +4,12 @@
     <string name="widget_productivity_name">Khmer Calendar · Productivity</string>
     <string name="widget_month_name">Khmer Calendar · Month</string>
     <string name="widget_planner_name">Khmer Calendar · Planner</string>
+    <string name="widget_glance_name">Khmer Calendar · Glance</string>
     <string name="widget_focus_description">Today’s events with a small preview of yesterday and tomorrow.</string>
     <string name="widget_productivity_description">Gregorian and Khmer lunar date, Buddhist Era and traditional year details.</string>
     <string name="widget_month_description">Full-month calendar grid with Gregorian and Khmer lunar dates, Buddhist holy days, and event markers.</string>
     <string name="widget_planner_description">A scrollable 29-day plan centered on today, with event chips.</string>
+    <string name="widget_glance_description">A compact view of today’s Gregorian and lunar dates, holy day, zodiac, and Ganzhi signs.</string>
     <string name="widget_holiday_legend">Holiday</string>
     <string name="widget_holy_legend">Buddhist holy day</string>
     <string name="widget_observance_legend">Observance</string>

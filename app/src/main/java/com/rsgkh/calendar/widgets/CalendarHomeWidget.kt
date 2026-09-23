@@ -37,6 +37,7 @@ abstract class CalendarHomeWidget : GlanceAppWidget(errorUiLayout = R.layout.wid
     // have the same dp dimensions. The content budget switches compact/expanded sections.
     override val sizeMode: SizeMode = SizeMode.Exact
     override val stateDefinition = PreferencesGlanceStateDefinition
+    protected open val includeMonthData: Boolean = false
 
     final override suspend fun provideGlance(context: Context, id: GlanceId) {
         val appId = GlanceAppWidgetManager(context).getAppWidgetId(id)
@@ -70,7 +71,7 @@ abstract class CalendarHomeWidget : GlanceAppWidget(errorUiLayout = R.layout.wid
     internal abstract fun Content(snapshot: WidgetSnapshot, id: Int)
 
     private suspend fun readSnapshot(context: Context, id: Int): WidgetSnapshot? = try {
-        withContext(Dispatchers.IO) { WidgetDataSource.load(context, id) }
+        withContext(Dispatchers.IO) { WidgetDataSource.load(context, id, includeMonth = includeMonthData) }
     } catch (cancelled: CancellationException) {
         throw cancelled
     } catch (error: Exception) {
@@ -97,6 +98,13 @@ class ProductivityWidget : CalendarHomeWidget() {
 
 @Keep
 class MonthWidget : CalendarHomeWidget() {
+    override val includeMonthData: Boolean = true
     @Composable
     override fun Content(snapshot: WidgetSnapshot, id: Int) = MonthWidgetContent(snapshot, id)
+}
+
+@Keep
+class GlanceWidget : CalendarHomeWidget() {
+    @Composable
+    override fun Content(snapshot: WidgetSnapshot, id: Int) = GlanceWidgetContent(snapshot, id)
 }

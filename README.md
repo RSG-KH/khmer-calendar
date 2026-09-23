@@ -53,10 +53,11 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 
 ### 📱 Home Screen Widgets
 - **Month Widget (4×3)**: Full-month calendar grid with Gregorian and Khmer lunar dates, Buddhist holy days, traditional weekday heading colors, today cell highlight, event markers row (● holiday, ▲ holy, ■ observance, ★ personal), legend footnote, and interactive date-cell tapping that launches the app directly into that day's date details.
-- **Productivity Widget (4×2)**: Date details card featuring a prominent day number, short weekday, short Gregorian month, Khmer lunar month and day, Buddhist Era year, Western Zodiac sign, and Today/Tomorrow event lists. Automatically adapts when resized horizontally by hiding detail rows on compact widths.
+- **Productivity Widget (4×2)**: Date details card featuring a prominent day number, short weekday, short Gregorian month, Khmer lunar month and day, Buddhist Era year, optional Western zodiac sign, and Today/Tomorrow event lists. Zodiac names remain in English in either app language. The card adapts to compact widths by hiding detail rows.
 - **Focus Widget (4×2)**: Daily events overview featuring full lunar date and BE year badges, a scrollable list of today's events, and preview sub-cards for yesterday and tomorrow.
-- **Planner Widget (4×2)**: Resizable 29-day agenda centered on today, with a date-range header, timezone and refresh badges, a scrollable day list, and color-coded event chips. Timed events come first; tapping a chip opens its event, while tapping the rest of a row opens date details.
-- **App Settings Integration**: Master **Enable widgets** toggle switch under Settings → Widgets. Toggling off uses `PackageManager.setComponentEnabledSetting` to disable widget receivers, hiding them from the system widget picker with zero background battery or memory overhead, and cancels queued, periodic and midnight refreshes.
+- **Planner Widget (4×2)**: Resizable 29-day agenda centered on today, with a date-range header, timezone and refresh badges, a scrollable day list, weekday-aware week dividers, and color-coded event chips. Timed events come first; tapping a chip opens its event, while tapping the rest of a row opens date details.
+- **Glance Widget (4×1, down to 2×1)**: One-row view of today's Gregorian and lunar dates, traditional animal year and Sak, timezone, and optional holy-day, Western zodiac and Ganzhi badges. It has one refresh button and a yearly animal watermark; compact width keeps the date and traditional year details.
+- **App Settings Integration**: Master **Enable widgets** toggle switch under Settings → Widgets. Toggling off uses `PackageManager.setComponentEnabledSetting` to disable all five widget receivers and removes them from the widget picker; it also cancels queued, periodic and midnight widget refreshes.
 - **Shared Appearance**: Widgets follow the app's language, theme, accent color, selected time zone and widget font size; changing any setting refreshes installed widgets immediately while the app is open.
 - **Global Event Filtering**: Expandable switches in App Settings control Personal events, Public holidays, Observances, and Hide personal event details across all widgets. Buddhist holy days follow app-wide Calendar and Event settings.
 - **Dynamic Light & Dark Previews**: Embedded 8-bit PNG preview thumbnails (`res/drawable/` and `res/drawable-night/`) automatically reflect the system light/dark theme in the Android widget picker.
@@ -108,14 +109,16 @@ KhmerCalendar/
 │   │   │   │   ├── ReminderPlanner.kt   # Push time & repeat interval planning
 │   │   │   │   └── ReminderWork.kt      # Background executor for reminder work
 │   │   │   ├── widgets/
-│   │   │   │   ├── CalendarHomeWidget.kt # Glance base class & Focus/Productivity/Month widgets
+│   │   │   │   ├── CalendarHomeWidget.kt # Glance base class & Focus/Productivity/Month/Glance widgets
+│   │   │   │   ├── GlanceWidgetContent.kt # One-row Glance widget and badges
 │   │   │   │   ├── PlannerWidgetRenderer.kt # Native 29-day agenda widget
 │   │   │   │   ├── WidgetContent.kt     # Size-adaptive Glance composables
 │   │   │   │   ├── WidgetDataSource.kt  # IO snapshot loading & filtering
-│   │   │   │   ├── WidgetNavigation.kt  # Widget tap intents into app date details
+│   │   │   │   ├── WidgetNavigation.kt  # Widget tap intents into app date/event details
 │   │   │   │   ├── WidgetPalette.kt     # Day/night widget color providers
 │   │   │   │   ├── WidgetPolicy.kt      # Pure date & event-filtering policies
-│   │   │   │   ├── WidgetRefreshWorker.kt # WorkManager periodic refresh worker
+│   │   │   │   ├── WidgetRefreshControl.kt # Shared refresh button and press feedback
+│   │   │   │   ├── WidgetRefreshWorker.kt # WorkManager scheduled refresh worker
 │   │   │   │   ├── WidgetUpdater.kt     # WorkManager & AlarmManager scheduler
 │   │   │   │   ├── WidgetReceivers.kt   # Receiver components & system restores
 │   │   │   │   └── WidgetStrings.kt     # Localized string formatters & Khmer time

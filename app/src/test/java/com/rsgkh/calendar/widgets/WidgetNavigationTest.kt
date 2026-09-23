@@ -58,7 +58,7 @@ class WidgetNavigationTest {
     }
 
     @Test fun monthDaysIncludeLunarLabelsAndLotusWatermarks() {
-        val snapshot = WidgetDataSource.load(context, 0, Instant.parse("2026-05-15T10:00:00Z"))
+        val snapshot = WidgetDataSource.load(context, 0, Instant.parse("2026-05-15T10:00:00Z"), includeMonth = true)
         assertNotNull(snapshot)
         assertTrue(snapshot.monthDays.isNotEmpty())
         val holyDays = snapshot.monthDays.filter { it.isHolyDay }

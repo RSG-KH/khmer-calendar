@@ -11,8 +11,10 @@ import android.util.Log
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
@@ -51,6 +53,10 @@ class MonthWidgetReceiver : CalendarWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = MonthWidget()
 }
 
+class GlanceWidgetReceiver : CalendarWidgetReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = GlanceWidget()
+}
+
 class PlannerWidgetReceiver : AppWidgetProvider() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         WidgetUpdater.requestUpdate(context)
@@ -58,7 +64,24 @@ class PlannerWidgetReceiver : AppWidgetProvider() {
 
     override fun onAppWidgetOptionsChanged(context: Context, appWidgetManager: AppWidgetManager,
         appWidgetId: Int, newOptions: Bundle) {
-        WidgetUpdater.requestUpdate(context)
+        val pending = goAsync()
+        val appContext = context.applicationContext
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // A size change needs its new scroll target immediately; WorkManager may defer it.
+                withTimeout(7_000) { WidgetUpdater.refreshOne(appContext, appWidgetId) }
+            } catch (timeout: TimeoutCancellationException) {
+                Log.w("CalendarWidgets", "Planner resize refresh timed out")
+                WidgetUpdater.requestUpdate(appContext)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                Log.w("CalendarWidgets", "Planner resize refresh failed: ${error.javaClass.simpleName}")
+                WidgetUpdater.requestUpdate(appContext)
+            } finally {
+                pending.finish()
+            }
+        }
     }
 
     override fun onDisabled(context: Context) {
@@ -100,7 +123,7 @@ class WidgetRefreshReceiver : BroadcastReceiver() {
 
     companion object {
         private val ACTIONS = setOf(
-            "com.rsgkh.calendar.widgets.MANUAL_REFRESH",
+            WidgetRefreshControl.ACTION_MANUAL_REFRESH,
             WidgetUpdater.ACTION_MIDNIGHT,
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_MY_PACKAGE_REPLACED,

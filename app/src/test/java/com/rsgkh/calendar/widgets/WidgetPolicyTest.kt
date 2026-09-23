@@ -51,6 +51,27 @@ class WidgetPolicyTest {
         assertEquals(LocalDate.of(2026, 1, 29), dates.last())
     }
 
+    @Test fun plannerWeekDividerFollowsStartWeekOnMondaySetting() {
+        val saturday = LocalDate.of(2026, 9, 26)
+        val sunday = saturday.plusDays(1)
+        assertTrue(WidgetPolicy.plannerWeekBoundaryAfter(saturday, mondayFirst = false))
+        assertFalse(WidgetPolicy.plannerWeekBoundaryAfter(saturday, mondayFirst = true))
+        assertFalse(WidgetPolicy.plannerWeekBoundaryAfter(sunday, mondayFirst = false))
+        assertTrue(WidgetPolicy.plannerWeekBoundaryAfter(sunday, mondayFirst = true))
+    }
+
+    @Test fun plannerScrollTargetKeepsTodayNearTopAsListGetsTaller() {
+        val rows = List(29) { 27f }
+        assertEquals(16, WidgetPolicy.plannerScrollTarget(14, rows, 103f)) // 4×2
+        assertEquals(22, WidgetPolicy.plannerScrollTarget(14, rows, 260f)) // 4×3
+        assertEquals(27, WidgetPolicy.plannerScrollTarget(14, rows, 400f)) // larger grid
+    }
+
+    @Test fun plannerScrollTargetAccountsForTallerEventRows() {
+        val rows = List(29) { if (it == 14 || it == 15) 38f else 27f }
+        assertEquals(15, WidgetPolicy.plannerScrollTarget(14, rows, 103f))
+    }
+
     @Test fun allDayEventsPrecedeChronologicalTimedEvents() {
         val early = event("early", LocalTime.of(9, 0))
         val late = event("late", LocalTime.of(15, 0))

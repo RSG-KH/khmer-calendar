@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_refresh_button"
+    android:layout_width="30dp"
+    android:layout_height="30dp"
+    android:background="@drawable/widget_planner_action"
+    android:clickable="true"
+    android:foreground="@drawable/widget_planner_action_ripple"
+    android:padding="7dp"
+    android:src="@drawable/widget_ic_refresh"
+    android:contentDescription="@string/widget_refresh" />

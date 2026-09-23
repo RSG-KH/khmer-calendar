@@ -63,6 +63,11 @@ object WidgetUpdater {
                 state,
                 PackageManager.DONT_KILL_APP,
             )
+            pm.setComponentEnabledSetting(
+                ComponentName(appContext, GlanceWidgetReceiver::class.java),
+                state,
+                PackageManager.DONT_KILL_APP,
+            )
         } catch (error: Exception) {
             Log.w("CalendarWidgets", "Could not update widget component enabled state: ${error.javaClass.simpleName}")
         }
@@ -95,7 +100,8 @@ object WidgetUpdater {
     internal fun installedIds(context: Context): List<Int> {
         val manager = AppWidgetManager.getInstance(context)
         return listOf(FocusWidgetReceiver::class.java, ProductivityWidgetReceiver::class.java,
-            MonthWidgetReceiver::class.java, PlannerWidgetReceiver::class.java)
+            MonthWidgetReceiver::class.java, PlannerWidgetReceiver::class.java,
+            GlanceWidgetReceiver::class.java)
             .flatMap { manager.getAppWidgetIds(ComponentName(context, it)).toList() }
     }
 
@@ -105,6 +111,7 @@ object WidgetUpdater {
             ComponentName(context, FocusWidgetReceiver::class.java) -> FocusWidget()
             ComponentName(context, ProductivityWidgetReceiver::class.java) -> ProductivityWidget()
             ComponentName(context, MonthWidgetReceiver::class.java) -> MonthWidget()
+            ComponentName(context, GlanceWidgetReceiver::class.java) -> GlanceWidget()
             else -> null
         }
     }

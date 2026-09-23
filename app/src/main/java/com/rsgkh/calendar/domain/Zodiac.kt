@@ -3,27 +3,29 @@ package com.rsgkh.calendar.domain
 
 import java.time.LocalDate
 
+/**
+ * Western zodiac names are proper sign names and stay in English in every app language.
+ * Do not substitute Khmer month-like labels (for example, តុលា for Libra): that produced
+ * incorrect Productivity widget text. Date details also display these English names.
+ */
 enum class ZodiacSign(
     val emoji: String,
     val signName: String,
     val element: String,
     val planet: String,
-    val signNameKm: String = "",
-    val elementKm: String = "",
-    val planetKm: String = "",
 ) {
-    ARIES("♈️", "Aries", "Fire", "Mars", "មេស", "ភ្លើង", "ព្រះអង្គារ"),
-    TAURUS("♉️", "Taurus", "Earth", "Venus", "ឧសភ", "ដី", "ព្រះសុក្រ"),
-    GEMINI("♊️", "Gemini", "Air", "Mercury", "មិថុន", "ខ្យល់", "ព្រះពុធ"),
-    CANCER("♋️", "Cancer", "Water", "Moon", "កក្កដា", "ទឹក", "ព្រះច័ន្ទ"),
-    LEO("♌️", "Leo", "Fire", "Sun", "សីហា", "ភ្លើង", "ព្រះអាទិត្យ"),
-    VIRGO("♍️", "Virgo", "Earth", "Mercury", "កញ្ញា", "ដី", "ព្រះពុធ"),
-    LIBRA("♎️", "Libra", "Air", "Venus", "តុលា", "ខ្យល់", "ព្រះសុក្រ"),
-    SCORPIO("♏️", "Scorpio", "Water", "Pluto", "វិច្ឆិកា", "ទឹក", "ភ្លុយតូ"),
-    SAGITTARIUS("♐️", "Sagittarius", "Fire", "Jupiter", "ធ្នូ", "ភ្លើង", "ព្រះព្រហស្បតិ៍"),
-    CAPRICORN("♑️", "Capricorn", "Earth", "Saturn", "មករា", "ដី", "ព្រះសៅរ៍"),
-    AQUARIUS("♒️", "Aquarius", "Air", "Uranus", "កុម្ភៈ", "ខ្យល់", "អ៊ុយរ៉ានុស"),
-    PISCES("♓️", "Pisces", "Water", "Neptune", "មីនា", "ទឹក", "ណិបទូន");
+    ARIES("♈️", "Aries", "Fire", "Mars"),
+    TAURUS("♉️", "Taurus", "Earth", "Venus"),
+    GEMINI("♊️", "Gemini", "Air", "Mercury"),
+    CANCER("♋️", "Cancer", "Water", "Moon"),
+    LEO("♌️", "Leo", "Fire", "Sun"),
+    VIRGO("♍️", "Virgo", "Earth", "Mercury"),
+    LIBRA("♎️", "Libra", "Air", "Venus"),
+    SCORPIO("♏️", "Scorpio", "Water", "Pluto"),
+    SAGITTARIUS("♐️", "Sagittarius", "Fire", "Jupiter"),
+    CAPRICORN("♑️", "Capricorn", "Earth", "Saturn"),
+    AQUARIUS("♒️", "Aquarius", "Air", "Uranus"),
+    PISCES("♓️", "Pisces", "Water", "Neptune");
 
     val symbol: String get() = emoji
     val label: String get() = "$emoji $signName ($element · $planet)"
