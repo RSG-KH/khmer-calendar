@@ -44,6 +44,25 @@ data class KhmerDateDetails(
         return if (khmer) "${ganzhiDay.nameZh} · $animal" else "${ganzhiDay.nameZh} ${ganzhiDay.pinyin} · $animal"
     }
 
+    /**
+     * Calendar summary Ganzhi in year–month–day order: signs, then their clashes.
+     * The summary always uses emoji, independently of the Date details animal setting.
+     * Solar year and month pillars are unavailable outside 1900–2100.
+     */
+    fun ganzhiEmojiSummary(): String? {
+        if (date.year !in 1900..2100) return null
+        return runCatching {
+            val pillars = listOf(
+                ChineseZodiacCalculator.getYearPillar(date.year, date.monthValue, date.dayOfMonth),
+                ChineseZodiacCalculator.getMonthPillar(date.year, date.monthValue, date.dayOfMonth),
+                ganzhiDay,
+            )
+            val animals = pillars.joinToString("") { it.branch.ganzhiAnimalLabel(false, useEmoji = true) }
+            val clashes = pillars.joinToString("") { it.clashBranch.ganzhiAnimalLabel(false, useEmoji = true) }
+            "☯️ 干支 ($animals x $clashes)"
+        }.getOrNull()
+    }
+
     private fun fullDate(khmer: Boolean): String {
         val month = CalendarWords.month(date.monthValue, khmer)
         // A reviewed month name may include ខែ; don't repeat it when the sentence supplies it.

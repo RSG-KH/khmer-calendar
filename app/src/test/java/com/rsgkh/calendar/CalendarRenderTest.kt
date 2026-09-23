@@ -692,12 +692,26 @@ class CalendarRenderTest : CalendarUiScenarios() {
 
     @Test
     @Config(qualifiers = "sw800dp-w1280dp-h800dp-land-xhdpi")
-    fun tabletLandscapeDateInfoBlockDisplaysGregorianAndZodiacBesideLunarDate() {
+    fun tabletLandscapeDateInfoBlockDisplaysGregorianZodiacAndGanzhiBesideLunarDate() {
         start(AppSettings(khmer = false))
         compose.onNode(hasContentDescription("Saturday, 5 September", substring = true)).performClick()
         compose.onNodeWithText("September 5, 2026").assertIsDisplayed()
         compose.onNode(hasText("Virgo (Earth · Mercury)", substring = true)).assertIsDisplayed()
         compose.onNodeWithText("8 Roach (Waning) · Srapon\nYear of the Horse · Atthasak\nBuddhist Era 2570").assertIsDisplayed()
+
+        compose.onNode(hasContentDescription("Friday, 11 September", substring = true)).performClick()
+        val ganzhi = compose.onNodeWithTag("date-summary-ganzhi", useUnmergedTree = true)
+            .performScrollTo().assertIsDisplayed().assertTextEquals("☯️ 干支 (🐴🐔🐭 x 🐭🐰🐴)")
+        val zodiac = compose.onNode(hasText("Virgo (Earth · Mercury)", substring = true), useUnmergedTree = true).assertIsDisplayed()
+        assertTrue(ganzhi.getUnclippedBoundsInRoot().top >= zodiac.getUnclippedBoundsInRoot().bottom)
+        screenshot("tablet-landscape-summary-ganzhi")
+
+        compose.onNodeWithText("Settings").performClick()
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasContentDescription(L.text("ui.show_chinese_ganzhi", false)))
+        compose.onNodeWithContentDescription(L.text("ui.show_chinese_ganzhi", false)).performClick().assertIsOff()
+        compose.onNodeWithText("Calendar").performClick()
+        compose.onNodeWithTag("date-summary-ganzhi", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNode(hasText("Virgo (Earth · Mercury)", substring = true)).assertIsDisplayed()
     }
 
     @Test

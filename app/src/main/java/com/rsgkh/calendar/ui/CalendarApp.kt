@@ -610,6 +610,19 @@ private fun CalendarScreen(
                                         textAlign = TextAlign.End
                                     )
                                 }
+                                if (settings.showGanzhi) {
+                                    selectedInfo.ganzhiEmojiSummary()?.let { summary ->
+                                        Text(
+                                            summary,
+                                            modifier = Modifier.testTag("date-summary-ganzhi"),
+                                            fontSize = 11.readableSp,
+                                            lineHeight = 20.readableSp,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Medium,
+                                            textAlign = TextAlign.End
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
