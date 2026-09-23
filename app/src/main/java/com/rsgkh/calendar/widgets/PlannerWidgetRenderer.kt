@@ -35,8 +35,9 @@ internal object PlannerWidgetRenderer {
                 textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sizeSp,
                     context.resources.displayMetrics)
             }.measureText(value) / density
-        val dateTextWidth = days.maxOf { textWidthDp(strings.plannerListDate(it.date), 10.5f * scale) }
-        val dateWidth = dateTextWidth + ((52f * scale - dateTextWidth).coerceAtLeast(0f) / 2f)
+        val rowTextSize = 11.5f * scale
+        val dateTextWidth = days.maxOf { textWidthDp(strings.plannerDayLabel(it.date), rowTextSize) }
+        val dateWidth = dateTextWidth + 5f * scale
         val chipsPerLine = floor(((width - 22f - dateWidth - 6f).coerceAtLeast(70f) + 4f) / (84f * scale + 4f))
             .toInt().coerceIn(1, 4)
         val packageName = context.packageName
@@ -96,14 +97,14 @@ internal object PlannerWidgetRenderer {
                 row.setInt(R.id.planner_row, "setBackgroundColor",
                     if (day.date == snapshot.today) palette.plannerToday.getColor(context).toArgb() else Color.TRANSPARENT)
                 row.setTextViewText(R.id.planner_date,
-                    if (groupIndex == 0) strings.plannerListDate(day.date) else "")
+                    if (groupIndex == 0) strings.plannerDayLabel(day.date) else "")
                 row.setViewLayoutWidth(R.id.planner_date, dateWidth, TypedValue.COMPLEX_UNIT_DIP)
                 row.setViewLayoutWidth(R.id.planner_divider_spacer, dateWidth, TypedValue.COMPLEX_UNIT_DIP)
                 if (day.date == days.last().date && groupIndex == groups.lastIndex) {
                     row.setViewVisibility(R.id.planner_divider_row, View.GONE)
                 }
                 row.setTextColor(R.id.planner_date, palette.text.getColor(context).toArgb())
-                row.setTextViewTextSize(R.id.planner_date, TypedValue.COMPLEX_UNIT_SP, 10.5f * scale)
+                row.setTextViewTextSize(R.id.planner_date, TypedValue.COMPLEX_UNIT_SP, rowTextSize)
                 row.setOnClickFillInIntent(R.id.planner_row, dayIntent)
                 row.setOnClickFillInIntent(R.id.planner_date, dayIntent)
                 row.setOnClickFillInIntent(R.id.planner_blank, dayIntent)
@@ -113,7 +114,7 @@ internal object PlannerWidgetRenderer {
                     row.setViewVisibility(slot, View.VISIBLE)
                     row.setTextViewText(slot, listOfNotNull(item.time, title).joinToString(" "))
                     row.setTextColor(slot, palette.event(item.kind).getColor(context).toArgb())
-                    row.setTextViewTextSize(slot, TypedValue.COMPLEX_UNIT_SP, 10f * scale)
+                    row.setTextViewTextSize(slot, TypedValue.COMPLEX_UNIT_SP, rowTextSize)
                     row.setColorStateList(slot, "setBackgroundTintList",
                         ColorStateList.valueOf(palette.eventBackground(item.kind).getColor(context).toArgb()))
                     val eventIntent = WidgetNavigation.dateIntent(context, id, day.date, item.eventId)

@@ -50,9 +50,9 @@
         android:layout_width="match_parent"
         android:layout_height="27dp"
         android:gravity="center_vertical"
-        android:text="01/14"
+        android:text="Wed 01/14"
         android:textColor="#222632"
-        android:textSize="10.5sp" />
+        android:textSize="11.5sp" />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="1dp"
@@ -64,9 +64,9 @@
         android:layout_height="27dp"
         android:gravity="center_vertical"
         android:background="#1A6542A0"
-        android:text="01/15     7:15 Breakf..."
+        android:text="Thu 01/15     7:15 Breakf..."
         android:textColor="#222632"
-        android:textSize="10.5sp" />
+        android:textSize="11.5sp" />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="1dp"
@@ -77,7 +77,7 @@
         android:layout_width="match_parent"
         android:layout_height="27dp"
         android:gravity="center_vertical"
-        android:text="01/16"
+        android:text="Fri 01/16"
         android:textColor="#222632"
-        android:textSize="10.5sp" />
+        android:textSize="11.5sp" />
 </LinearLayout>

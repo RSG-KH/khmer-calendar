@@ -43,6 +43,11 @@ internal class WidgetStrings(private val context: Context, val khmer: Boolean) {
         return "${number(date.monthValue).padStart(2, zero)}/${number(date.dayOfMonth).padStart(2, zero)}"
     }
 
+    fun plannerDayLabel(date: java.time.LocalDate): String {
+        val weekday = CalendarWords.weekday(date.dayOfWeek.value, khmer, style = "short")
+        return "${if (khmer) weekday.removePrefix("ថ្ងៃ") else weekday} ${plannerListDate(date)}"
+    }
+
     fun plannerTime(time: LocalTime): String {
         val zero = if (khmer) '០' else '0'
         return "${number(time.hour)}:${number(time.minute).padStart(2, zero)}"

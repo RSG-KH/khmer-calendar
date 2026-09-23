@@ -17,7 +17,7 @@
         android:layout_width="42dp"
         android:layout_height="wrap_content"
         android:singleLine="true"
-        android:textSize="10sp" />
+        android:textSize="11.5sp" />
     <TextView
         android:id="@+id/planner_event_1"
         android:layout_width="wrap_content"
@@ -27,7 +27,7 @@
         android:paddingHorizontal="5dp"
         android:paddingVertical="4dp"
         android:singleLine="true"
-        android:textSize="10sp"
+        android:textSize="11.5sp"
         android:visibility="gone" />
     <TextView
         android:id="@+id/planner_event_2"
@@ -38,7 +38,7 @@
         android:paddingHorizontal="5dp"
         android:paddingVertical="4dp"
         android:singleLine="true"
-        android:textSize="10sp"
+        android:textSize="11.5sp"
         android:visibility="gone" />
     <TextView
         android:id="@+id/planner_event_3"
@@ -49,7 +49,7 @@
         android:paddingHorizontal="5dp"
         android:paddingVertical="4dp"
         android:singleLine="true"
-        android:textSize="10sp"
+        android:textSize="11.5sp"
         android:visibility="gone" />
     <TextView
         android:id="@+id/planner_event_4"
@@ -60,7 +60,7 @@
         android:paddingHorizontal="5dp"
         android:paddingVertical="4dp"
         android:singleLine="true"
-        android:textSize="10sp"
+        android:textSize="11.5sp"
         android:visibility="gone" />
     <TextView
         android:id="@+id/planner_blank"
