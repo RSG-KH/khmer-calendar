@@ -52,6 +52,7 @@ internal object PlannerWidgetRenderer {
         val eventGapWidth = 2f * scale
         val eventsStartWidth = weekdayWidth + dateWidth + eventGapWidth
         val weekDividerColor = palette.secondary.getColor(context).copy(alpha = 0.38f).toArgb()
+        val regularDividerColor = Color.argb(0x22, 0x6d, 0x74, 0x85)
         val chipsPerLine = floor(((width - 22f - eventsStartWidth - 6f).coerceAtLeast(70f) + 4f) / (84f * scale + 4f))
             .toInt().coerceIn(1, 4)
         val packageName = context.packageName
@@ -125,14 +126,23 @@ internal object PlannerWidgetRenderer {
                 row.setViewLayoutWidth(R.id.planner_event_gap, eventGapWidth, TypedValue.COMPLEX_UNIT_DIP)
                 row.setViewLayoutWidth(R.id.planner_divider_spacer, eventsStartWidth, TypedValue.COMPLEX_UNIT_DIP)
                 val lastRowForDay = groupIndex == groups.lastIndex
+                val weekBoundary = lastRowForDay &&
+                    WidgetPolicy.plannerWeekBoundaryAfter(day.date, snapshot.settings.mondayFirst)
                 if (day.date == days.last().date && lastRowForDay) {
                     row.setViewVisibility(R.id.planner_divider_row, View.GONE)
-                } else if (lastRowForDay && WidgetPolicy.plannerWeekBoundaryAfter(day.date, snapshot.settings.mondayFirst)) {
+                } else if (weekBoundary) {
+                    row.setViewVisibility(R.id.planner_divider_row, View.VISIBLE)
                     row.setViewVisibility(R.id.planner_divider_spacer, View.GONE)
                     row.setViewLayoutHeight(R.id.planner_divider_row, 2f, TypedValue.COMPLEX_UNIT_DIP)
                     row.setViewLayoutHeight(R.id.planner_divider_line, 2f, TypedValue.COMPLEX_UNIT_DIP)
-                    row.setInt(R.id.planner_divider_line, "setBackgroundColor", weekDividerColor)
+                } else {
+                    row.setViewVisibility(R.id.planner_divider_row, View.VISIBLE)
+                    row.setViewVisibility(R.id.planner_divider_spacer, View.VISIBLE)
+                    row.setViewLayoutHeight(R.id.planner_divider_row, 1f, TypedValue.COMPLEX_UNIT_DIP)
+                    row.setViewLayoutHeight(R.id.planner_divider_line, 1f, TypedValue.COMPLEX_UNIT_DIP)
                 }
+                row.setInt(R.id.planner_divider_line, "setBackgroundColor",
+                    if (weekBoundary) weekDividerColor else regularDividerColor)
                 row.setTextColor(R.id.planner_weekday,
                     palette.weekdayLabelColor(day.date.dayOfWeek).getColor(context).toArgb())
                 row.setTextColor(R.id.planner_date, palette.text.getColor(context).toArgb())
@@ -143,10 +153,14 @@ internal object PlannerWidgetRenderer {
                 row.setOnClickFillInIntent(R.id.planner_date, dayIntent)
                 row.setOnClickFillInIntent(R.id.planner_event_gap, dayIntent)
                 row.setOnClickFillInIntent(R.id.planner_blank, dayIntent)
+                // ListView can reapply this RemoteViews to a row from another date.
+                // Hide every unused slot so old chips and font sizes cannot survive.
+                slots.forEachIndexed { index, slot ->
+                    row.setViewVisibility(slot, if (index < group.size) View.VISIBLE else View.GONE)
+                }
                 group.forEachIndexed { itemIndex, item ->
                     val slot = slots[itemIndex]
                     val title = WidgetPolicy.plannerTitle(item.title, strings.khmer)
-                    row.setViewVisibility(slot, View.VISIBLE)
                     row.setTextViewText(slot, listOfNotNull(item.time, title).joinToString(" "))
                     row.setTextColor(slot, palette.event(item.kind).getColor(context).toArgb())
                     row.setTextViewTextSize(slot, TypedValue.COMPLEX_UNIT_SP, rowTextSize)

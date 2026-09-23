@@ -45,7 +45,9 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
     val compact = size.width.value < 220f
     // Three lines and a refresh button must fit in one launcher row even at 200% widget zoom.
     val scale = snapshot.settings.widgetFontScale.multiplier.coerceAtMost(if (compact) 1.1f else 1.35f)
-    val dateScale = snapshot.settings.widgetFontScale.multiplier.coerceAtMost(if (compact) 1.25f else 1.5f)
+    val tilePadding = if (compact) 4f else 5f
+    val tileScale = glanceDateTileScale(size.height.value,
+        snapshot.settings.widgetFontScale.multiplier, context.resources.configuration.fontScale, compact)
     val labels = glanceLabels(snapshot, strings, compact)
     val open = WidgetNavigation.openDate(context, id, date)
     val animalSide = (minOf(size.width.value, size.height.value) - 16f).coerceAtLeast(0f) * 0.6f
@@ -66,7 +68,8 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
             }
         }
         Row(
-            GlanceModifier.fillMaxSize().padding(if (compact) 6.dp else 8.dp),
+            GlanceModifier.fillMaxSize().padding(
+                horizontal = if (compact) 6.dp else 8.dp, vertical = tilePadding.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
@@ -76,11 +79,11 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 WText(strings.plannerWeekday(date), palette.weekdayLabelColor(date.dayOfWeek),
-                    if (compact) 12f else 13f, scale, bold = true)
+                    if (compact) 10.5f else 11f, tileScale, bold = true)
                 WText(strings.number(date.dayOfMonth), palette.accent,
-                    if (compact) 22f else 30f, dateScale, bold = true)
+                    if (compact) 22f else 24f, tileScale, bold = true)
                 WText(WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer,
-                    emojiOnly = true), palette.secondary, 11f, scale)
+                    emojiOnly = true), palette.secondary, 10f, tileScale)
             }
             Spacer(GlanceModifier.width(if (compact) 7.5.dp else 8.dp))
             Column(
@@ -132,6 +135,16 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
             )
         }
     }
+}
+
+/** Keep all three tile lines inside the shortest supported launcher height. */
+internal fun glanceDateTileScale(heightDp: Float, widgetScale: Float, systemFontScale: Float,
+    compact: Boolean): Float {
+    val padding = if (compact) 4f else 5f
+    val fontSizes = if (compact) 42.5f else 45f // Weekday + day + timezone, in sp.
+    val available = (heightDp - 2f * padding).coerceAtLeast(0f)
+    val maxScale = available / (fontSizes * 1.25f * systemFontScale.coerceAtLeast(1f))
+    return widgetScale.coerceAtMost(maxScale)
 }
 
 @Composable
