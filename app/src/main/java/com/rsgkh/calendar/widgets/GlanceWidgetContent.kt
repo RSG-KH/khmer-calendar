@@ -43,10 +43,10 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
     val palette = WidgetPalette(snapshot.settings)
     val date = snapshot.today
     val compact = size.width.value < 220f
-    val tall = size.height.value >= 112f
     // Three lines and a refresh button must fit in one launcher row even at 200% widget zoom.
     val scale = snapshot.settings.widgetFontScale.multiplier.coerceAtMost(if (compact) 1.1f else 1.35f)
-    val dateScale = snapshot.settings.widgetFontScale.multiplier.coerceAtMost(if (compact) 1.25f else 1.5f)
+    val tileScale = glanceDateTileScale(size.height.value,
+        snapshot.settings.widgetFontScale.multiplier, context.resources.configuration.fontScale)
     val labels = glanceLabels(snapshot, strings, compact)
     val open = WidgetNavigation.openDate(context, id, date)
     val animalSide = (minOf(size.width.value, size.height.value) - 16f).coerceAtLeast(0f) * 0.6f
@@ -67,33 +67,22 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
             }
         }
         Row(
-            GlanceModifier.fillMaxSize().padding(if (compact) 6.dp else 8.dp),
+            GlanceModifier.fillMaxSize().padding(
+                horizontal = if (compact) 6.dp else 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
+            Column(
                 GlanceModifier.width((size.width.value * 0.24f).coerceIn(48f, 96f).dp).fillMaxHeight()
                     .background(palette.surfaceVariant).cornerRadius(14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(GlanceModifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalAlignment = Alignment.CenterVertically) {
-                    WText(strings.plannerWeekday(date), palette.weekdayLabelColor(date.dayOfWeek),
-                        if (compact) 12f else 13f, scale, bold = true)
-                    WText(strings.number(date.dayOfMonth), palette.accent,
-                        if (compact) 22f else 30f, dateScale, bold = true)
-                    if (tall) {
-                        WText(WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer,
-                            emojiOnly = true), palette.secondary, 11f, scale)
-                    }
-                }
-                if (!tall) {
-                    // In a single row the timezone cannot take a third line below the date.
-                    Box(GlanceModifier.fillMaxSize().padding(top = 3.dp, end = 3.dp),
-                        contentAlignment = Alignment.TopEnd) {
-                        WText(WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer,
-                            emojiOnly = true), palette.secondary, 11f, scale)
-                    }
-                }
+                WText(strings.plannerWeekday(date), palette.weekdayLabelColor(date.dayOfWeek),
+                    TILE_WEEKDAY_SP, tileScale, bold = true)
+                WText(strings.number(date.dayOfMonth), palette.accent,
+                    TILE_DAY_SP, tileScale, bold = true)
+                WText(WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer,
+                    emojiOnly = true), palette.secondary, TILE_TIMEZONE_SP, tileScale)
             }
             Spacer(GlanceModifier.width(if (compact) 7.5.dp else 8.dp))
             Column(
@@ -145,6 +134,18 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
             )
         }
     }
+}
+
+private const val TILE_WEEKDAY_SP = 11f
+private const val TILE_DAY_SP = 20f
+private const val TILE_TIMEZONE_SP = 10f
+
+/** Preserve the selected size until the three text lines reach the tile's height. */
+internal fun glanceDateTileScale(heightDp: Float, widgetScale: Float, systemFontScale: Float): Float {
+    val tileHeight = (heightDp.takeIf { it > 0f } ?: 60f) - 8f // 4dp above and below.
+    val lineHeight = (TILE_WEEKDAY_SP + TILE_DAY_SP + TILE_TIMEZONE_SP) * 1.25f
+    return widgetScale.coerceAtMost(tileHeight.coerceAtLeast(0f) /
+        (lineHeight * systemFontScale.coerceAtLeast(1f)))
 }
 
 @Composable
