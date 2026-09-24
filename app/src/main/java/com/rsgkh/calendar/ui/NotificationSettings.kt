@@ -59,8 +59,7 @@ data class NotificationAccess(val canPost: Boolean = true, val exact: Boolean = 
             val warningColor = if (MaterialTheme.colorScheme.surface.luminance() > .5f) Color(0xFFB45309) else Color(0xFFFFB36B)
             Text(L.text("ui.the_app_won_t_guarantee_to_fire_notifications_correctly.b4cad2", k),
                 modifier = Modifier.padding(top = 8.dp), fontSize = 12.readableSp, fontWeight = FontWeight.Bold, color = warningColor)
-            Button(onClick = onAllowExact, modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)) {
+            Button(onClick = onAllowExact, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
                 Text(L.text("ui.allow_precise_reminders.733d9d", k), fontSize = 14.readableSp,
                     fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
             }
