@@ -10,6 +10,11 @@
     <string name="widget_month_description">ក្រឡាចត្រង្គប្រតិទិនពេញមួយខែ ជាមួយកាលបរិច្ឆេទសុរិយគតិ និងចន្ទគតិខ្មែរ ថ្ងៃសីល និងសញ្ញាសម្គាល់ព្រឹត្តិការណ៍។</string>
     <string name="widget_planner_description">ផែនការ ២៩ ថ្ងៃជុំវិញថ្ងៃនេះ ជាមួយព្រឹត្តិការណ៍ដែលអាចអូសមើលបាន។</string>
     <string name="widget_glance_description">មើលថ្ងៃនេះយ៉ាងសង្ខេប៖ សុរិយគតិ ចន្ទគតិ ថ្ងៃសីល រាសី និងគន់ជី។</string>
+    <string name="widget_add_title">បន្ថែមវីដជិត</string>
+    <string name="widget_add_unsupported">អេក្រង់ដើមរបស់អ្នកមិនគាំទ្រការបន្ថែមវីដជិតពីកម្មវិធីទេ។ ចុចឱ្យជាប់លើកន្លែងទំនេរនៃអេក្រង់ដើម បើក វីដជិត រួចស្វែងរក ប្រតិទិនខ្មែរ។</string>
+    <string name="widget_add_button">បន្ថែម</string>
+    <string name="widget_add_failed">មិនអាចបើកផ្ទាំងបន្ថែមវីដជិតនៅលើអេក្រង់ដើមបានទេ។</string>
+    <string name="widget_add_close">បិទ</string>
     <string name="widget_holiday_legend">ថ្ងៃឈប់សម្រាក</string>
     <string name="widget_holy_legend">ថ្ងៃសីល</string>
     <string name="widget_observance_legend">ពិធី និងទិវា</string>

@@ -19,7 +19,8 @@ internal class WidgetStrings(private val context: Context, val khmer: Boolean) {
     private val locale = Locale.forLanguageTag(if (khmer) "km" else "en")
     private val localized = context.createConfigurationContext(
         Configuration(context.resources.configuration).apply {
-            setLocales(LocaleList(locale))
+            // Configuration.locale would otherwise shadow the requested app language.
+            setLocales(LocaleList(this@WidgetStrings.locale))
         },
     )
     private val clock = DateTimeFormatter.ofPattern(

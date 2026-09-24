@@ -10,6 +10,11 @@
     <string name="widget_month_description">Full-month calendar grid with Gregorian and Khmer lunar dates, Buddhist holy days, and event markers.</string>
     <string name="widget_planner_description">A scrollable 29-day plan centered on today, with event chips.</string>
     <string name="widget_glance_description">A compact view of today’s Gregorian and lunar dates, holy day, zodiac, and Ganzhi signs.</string>
+    <string name="widget_add_title">Add a widget</string>
+    <string name="widget_add_unsupported">Your home screen does not support adding widgets from apps. Long-press an empty area of the home screen, open Widgets, then find Khmer Calendar.</string>
+    <string name="widget_add_button">Add</string>
+    <string name="widget_add_failed">Could not open the home screen’s add-widget prompt.</string>
+    <string name="widget_add_close">Close</string>
     <string name="widget_holiday_legend">Holiday</string>
     <string name="widget_holy_legend">Buddhist holy day</string>
     <string name="widget_observance_legend">Observance</string>

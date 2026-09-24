@@ -1027,6 +1027,7 @@ internal fun WidgetSettingsCard(
     onChange: (AppSettings) -> Unit,
 ) {
     val k = settings.khmer
+    var showWidgetChooser by remember { mutableStateOf(false) }
     val cardTitle = if (k) "ធាតុក្រាហ្វិក (វីដជិត)" else "WIDGETS"
     val title = if (k) "បើកដំណើរការវីដជិត" else "Enable widgets"
     val subtitle = if (k) "នៅលើអេក្រង់ដើម" else "On home screen"
@@ -1087,7 +1088,16 @@ internal fun WidgetSettingsCard(
                     { it.label },
                     "widget-font-scale", fontSizeTitle) { onChange(settings.copy(widgetFontScale = it)) }
             }
+            OutlinedButton(
+                onClick = { showWidgetChooser = true },
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp).testTag("browse-widgets"),
+            ) {
+                Text(if (k) "បន្ថែមវីដជិត" else "Add widgets")
+            }
         }
+    }
+    if (showWidgetChooser) {
+        WidgetAddDialog(k) { showWidgetChooser = false }
     }
 }
 
