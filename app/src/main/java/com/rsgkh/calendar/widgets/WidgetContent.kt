@@ -254,12 +254,10 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                                     snapshot.settings.showHolyDaysInCalendar && details?.lunar?.isShavingDay == true -> "${s(R.string.widget_shaving_day)} 🪒"
                                     else -> null
                                 }
-                                val badgeText = holy ?: snapshot.holidayTitle?.let { "$it 🎉" }
-                                if (badgeText != null) {
-                                    val isHoly = details?.lunar?.isHolyDay == true || details?.lunar?.isShavingDay == true
+                                if (holy != null) {
                                     // 4. Holy day [emoji]
                                     Spacer(GlanceModifier.height(2.dp))
-                                    WText(badgeText, if (isHoly) p.holy else p.holiday, 11.5f, scale, bold = false, lines = 1)
+                                    WText(holy, p.holy, 11.5f, scale, bold = false, lines = 1)
                                 }
 
                                 if (snapshot.settings.showWesternZodiac) {
