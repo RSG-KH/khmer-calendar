@@ -7,7 +7,7 @@
 [![Android](https://img.shields.io/badge/Android-12%2B%20(API%2031%E2%80%9337)-3DDC84?logo=android&logoColor=white)](https://developer.android.com/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.4.20-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
-[![Offline](https://img.shields.io/badge/Network-100%25%20Offline-success)](docs/architecture.md)
+[![Offline](https://img.shields.io/badge/Core%20Calendar-Offline-success)](docs/architecture.md)
 [![Privacy](https://img.shields.io/badge/Privacy-0%20Ads%20%7C%200%20Trackers-blue)](PRIVACY_POLICY.md)
 
 A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose. Browse Khmer lunar dates, Buddhist holy days, holidays and observances, and manage personal events with local reminders.
@@ -53,14 +53,14 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 
 ### 📱 Home Screen Widgets
 - **Month Widget (4×3)**: Full-month calendar grid with Gregorian and Khmer lunar dates, Buddhist holy days, traditional weekday heading colors, today cell highlight, event markers row (● holiday, ▲ holy, ■ observance, ★ personal), legend footnote, and interactive date-cell tapping that launches the app directly into that day's date details.
-- **Productivity Widget (4×2)**: Date details card featuring a prominent day number, short weekday, short Gregorian month, Khmer lunar month and day, Buddhist Era year, optional Western zodiac sign, and Today/Tomorrow event lists. Zodiac names remain in English in either app language. The card adapts to compact widths by hiding detail rows.
+- **Productivity Widget (4×2)**: Date details card featuring a prominent day number, short weekday, short Gregorian month, Khmer lunar month and day, Buddhist Era year, optional Western zodiac sign, and a Holy Day or Shaving Day label when applicable. Today/Tomorrow event lists sit beside the date card. Zodiac names remain in English in either app language. The card adapts to compact widths by hiding detail rows.
 - **Focus Widget (4×2)**: Daily events overview featuring full lunar date and BE year badges, a scrollable list of today's events, and preview sub-cards for yesterday and tomorrow.
 - **Planner Widget (4×2)**: Resizable 29-day agenda centered on today, with a date-range header, timezone and refresh badges, a scrollable day list, weekday-aware week dividers, and color-coded event chips. Timed events come first; tapping a chip opens its event, while tapping the rest of a row opens date details.
-- **Glance Widget (4×1, down to 2×1)**: One-row view of today's Gregorian and lunar dates, traditional animal year and Sak, timezone, and optional holy-day, Western zodiac and Ganzhi badges. It has one refresh button and a yearly animal watermark; compact width keeps the date and traditional year details.
-- **App Settings Integration**: Master **Enable widgets** toggle switch under Settings → Widgets. Toggling off uses `PackageManager.setComponentEnabledSetting` to disable all five widget receivers and removes them from the widget picker; it also cancels queued, periodic and midnight widget refreshes.
+- **Glance Widget (4×1, down to 2×1, up to two rows tall)**: Compact view of today's Gregorian and lunar dates, traditional animal year and Sak, timezone, and optional holy-day, Western zodiac and Ganzhi badges. The date tile places the weekday, day number, and timezone emoji on separate lines. It has one refresh button and a yearly animal watermark; compact width keeps the date and traditional year details.
+- **App Settings Integration**: Master **Enable widgets** toggle switch under Settings → Widgets. Toggling off uses `PackageManager.setComponentEnabledSetting` to disable all five widget receivers and removes them from the widget picker; it also cancels queued, periodic and midnight widget refreshes. **Add widgets** opens a swipeable chooser with a preview, name and size for each widget, then asks the launcher to add the selected widget when supported.
 - **Shared Appearance**: Widgets follow the app's language, theme, accent color, selected time zone and widget font size; changing any setting refreshes installed widgets immediately while the app is open.
 - **Global Event Filtering**: Expandable switches in App Settings control Personal events, Public holidays, Observances, and Hide personal event details across all widgets. Buddhist holy days follow app-wide Calendar and Event settings.
-- **Dynamic Light & Dark Previews**: Embedded 8-bit PNG preview thumbnails (`res/drawable/` and `res/drawable-night/`) automatically reflect the system light/dark theme in the Android widget picker.
+- **Dynamic Light & Dark Previews**: Embedded PNG preview thumbnails (`res/drawable/` and `res/drawable-night/`) reflect the system theme in the Android widget picker. The in-app chooser adjusts its previews to the current app theme.
 
 ### 📱 Adaptive Multi-Form-Factor UI
 - **Phone Landscape Experience**: Navigation rail tabs dynamically expand across the entire vertical height (`weight(1f)`), delivering ergonomic tap targets without empty dead space.
@@ -110,7 +110,7 @@ KhmerCalendar/
 │   │   │   │   └── ReminderWork.kt      # Background executor for reminder work
 │   │   │   ├── widgets/
 │   │   │   │   ├── CalendarHomeWidget.kt # Glance base class & Focus/Productivity/Month/Glance widgets
-│   │   │   │   ├── GlanceWidgetContent.kt # One-row Glance widget and badges
+│   │   │   │   ├── GlanceWidgetContent.kt # Resizable Glance widget and badges
 │   │   │   │   ├── PlannerWidgetRenderer.kt # Native 29-day agenda widget
 │   │   │   │   ├── WidgetContent.kt     # Size-adaptive Glance composables
 │   │   │   │   ├── WidgetDataSource.kt  # IO snapshot loading & filtering
@@ -134,7 +134,8 @@ KhmerCalendar/
 │   │   │       ├── SelectionChip.kt     # Shared filter-chip for filters & repeat choices
 │   │   │       ├── SettingsControls.kt  # Reusable settings rows & dropdowns
 │   │   │       ├── Theme.kt             # Material 3 tokens, accents, & readableSp
-│   │   │       └── WeekdayColors.kt     # Traditional weekday colors for light & dark
+│   │   │       ├── WeekdayColors.kt     # Traditional weekday colors for light & dark
+│   │   │       └── WidgetAddDialog.kt   # Swipeable widget chooser and add request
 │   │   ├── resources/
 │   │   │   ├── khmer-calendar-data.json # Event catalog: rules, dated records, official calendars, overrides & sources
 │   │   │   └── translations.tsv         # Offline localization dictionary
@@ -221,7 +222,7 @@ For detailed workflow instructions, consult the [Translation Tool Guide](tools/t
 
 - **Zero Network Permissions**: The application does not request the Android `INTERNET` permission. Library permissions merged from dependencies (`ACCESS_NETWORK_STATE`, `FOREGROUND_SERVICE`) are explicitly stripped in the manifest. The event details "Search online" action is strictly user-initiated: it opens the browser directly in Google AI mode (Custom Tab) for the event title and its history via Android's intent system — the app itself holds no network permission and sends nothing.
 - **Zero Advertising or Telemetry**: No third-party SDKs, analytics, or tracking services are bundled.
-- **Local Data Ownership**: Personal events and repeat schedules are stored on-device in SQLite; settings use Android SharedPreferences.
+- **Local Data Ownership**: Personal events and repeat schedules are stored in app-private SQLite; settings use Android SharedPreferences. Android may back up these files or transfer them to a new device when device backup is enabled; reminder delivery state is excluded. See the [Privacy Policy](PRIVACY_POLICY.md).
 
 For complete details on our data practices and user controls, read our [Privacy Policy](PRIVACY_POLICY.md).
 
