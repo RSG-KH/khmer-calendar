@@ -944,12 +944,13 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Test
     fun showWesternZodiacSettingTogglesZodiacInDateDetailsAndBanner() {
         start(AppSettings(khmer = false, theme = ThemeMode.LIGHT))
-        val zodiac = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 10)).zodiac
-        val zodiacText = zodiac.label.removePrefix("${zodiac.emoji} ")
-
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
-        compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals(zodiacText)
+        compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("Big 3")
+        compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
+        compose.onNodeWithTag("western-header-sun").assertTextEquals("Sun")
+        compose.onNodeWithTag("western-header-moon").assertTextEquals("Moon")
+        compose.onNodeWithTag("western-header-rising").assertTextEquals("Rising sign")
         compose.onNodeWithText("Close").performClick()
 
         compose.onNodeWithText("Settings").performClick()
@@ -961,12 +962,14 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         compose.onNodeWithTag("date-details-zodiac-label").assertDoesNotExist()
+        compose.onNodeWithTag("western-zodiac-table").assertDoesNotExist()
         compose.onNodeWithText("Close").performClick()
 
         // 2026-09-12 has neither a Buddhist holy day/shaving day nor western zodiac when hidden
         compose.onNode(hasContentDescription("Saturday, 12 September", substring = true)).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         compose.onNodeWithTag("date-details-zodiac-label").assertDoesNotExist()
+        compose.onNodeWithTag("western-zodiac-table").assertDoesNotExist()
         compose.onNodeWithText(L.text("ui.thngai_sil_buddhist_holy_day.89de73", false)).assertDoesNotExist()
         compose.onNodeWithText(L.text("ui.thngai_kaor_before_a_holy_day.d02977", false)).assertDoesNotExist()
         // The Ganzhi table stays visible regardless of the Western zodiac setting.
@@ -996,6 +999,32 @@ class CalendarRenderTest : CalendarUiScenarios() {
         assertEquals(holy.left, zodiac.left)
         assertEquals(holy.left, ganzhi.left)
         screenshot("date-details-symbol-label-alignment-khmer")
+    }
+
+    @Test fun westernZodiacTableDisplaysBigThreeTodayAndOmitsRisingSignWhenNotToday() {
+        start(AppSettings(khmer = false))
+        // September 24 is NOT today: Sun & Moon calculated, Rising sign is "—"
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
+        compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
+        compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("Big 3")
+        compose.onNodeWithTag("western-header-sun").assertTextEquals("Sun")
+        compose.onNodeWithTag("western-header-moon").assertTextEquals("Moon")
+        compose.onNodeWithTag("western-header-rising").assertTextEquals("Rising sign")
+        compose.onNodeWithTag("western-sign-sun").assertTextEquals("♎ Libra")
+        compose.onNodeWithTag("western-sign-moon").assertTextEquals("♓ Pisces")
+        compose.onNodeWithTag("western-sign-rising").assertTextEquals("—")
+        compose.onNodeWithText("Close").performClick()
+
+        // September 10 IS today: all 3 calculated
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
+        compose.onNodeWithTag("western-header-sun").assertTextEquals("Sun")
+        compose.onNodeWithTag("western-header-moon").assertTextEquals("Moon")
+        compose.onNodeWithTag("western-header-rising").assertTextEquals("Rising sign")
+        compose.onNodeWithTag("western-sign-sun").assertTextEquals("♍ Virgo")
+        compose.onNodeWithTag("western-sign-moon").assertTextEquals("♍ Virgo")
+        compose.onNodeWithTag("western-sign-rising").assertExists()
+        compose.onNodeWithText("Close").performClick()
     }
 
     @Test fun ganzhiTableUsesCurrentHourOnlyTodayAndRespectsEmojiSetting() {

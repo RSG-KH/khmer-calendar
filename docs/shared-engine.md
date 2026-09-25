@@ -11,7 +11,7 @@ The engine's [API contract](https://github.com/RSG-KH/khmer-calendar-engine/blob
 | `domain/KhmerCalendar.kt` | Reuses one engine instance, converts civil dates and supplies localized lunar labels |
 | `domain/KhmerNewYear.kt` | Converts the engine's New Year dates to `LocalDate` and exposes traditional arrival estimate |
 | `domain/KhmerDateDetails.kt` | Formats lunar and traditional year labels, and localizes Ganzhi animal names |
-| `ui/CalendarApp.kt` | Presents the engine's Ganzhi sign and clash branches for the selected date, adding Hour for Today |
+| `ui/CalendarApp.kt` | Presents the engine's Ganzhi sign and clash branches, and Western Big 3 (Sun, Moon, Rising) tables in date details |
 | `data/RecurringEvents.kt` | Parses the bundled event catalog, translates rule definitions into engine rules, and formats arrival time |
 | `data/EventRepository.kt` | Layers catalog rules, recorded dates, official holiday calendars and date overrides over engine results for each requested year |
 
@@ -57,7 +57,7 @@ Version 0.5.0 adds Lichun-based year pillars, solar-term month pillars, Four Pil
 
 Version 0.5.1 synchronizes Four Pillars (BaZi) day and hour rollover at 23:00 (late Rat hour), isolates the Chinese festival registry, and hardens runtime validation.
 
-Version 0.6.0 introduces the standalone `WesternZodiacCalculator` calculating Western astrology ("Big 3" + Angles: Sun, Moon, Ascendant, Midheaven) coordinates over 1800–2200 using Jean Meeus algorithms and Espenak & Meeus piecewise Delta-T with singularity detection.
+Version 0.6.0 introduces the standalone `WesternZodiacCalculator` calculating Western astrology ("Big 3" + Angles: Sun, Moon, Ascendant, Midheaven) coordinates over 1800–2200 using Jean Meeus algorithms and Espenak & Meeus piecewise Delta-T with singularity detection. Android displays the Big 3 (Sun, Moon, Rising sign) table in date details, using live time for Today and midpoint civil calculations for past/future dates.
 
 Supported date coverage and passing regression tests are not a claim of independent historical validation for every date. Official public holidays require year-specific government records; a calculated festival date alone does not establish a day off.
 

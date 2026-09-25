@@ -35945,6 +35945,102 @@
       }
     },
     {
+      "id": "ui.western_big3",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Big 3",
+      "km": "Big 3",
+      "original": {
+        "en": "Big 3",
+        "km": "Big 3"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.western_sun",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Sun",
+      "km": "ព្រះអាទិត្យ",
+      "original": {
+        "en": "Sun",
+        "km": "ព្រះអាទិត្យ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.western_moon",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Moon",
+      "km": "ព្រះចន្ទ",
+      "original": {
+        "en": "Moon",
+        "km": "ព្រះចន្ទ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.western_rising_sign",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Rising sign",
+      "km": "លគ្នារាសី",
+      "original": {
+        "en": "Rising sign",
+        "km": "លគ្នារាសី"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.western_sign",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Sign",
+      "km": "សញ្ញារាសី",
+      "original": {
+        "en": "Sign",
+        "km": "សញ្ញារាសី"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.western_range",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Western astrology calculations are available for 1800–2200.",
+      "km": "ការគណនាហោរាសាស្ត្រលោកខាងលិចមានសម្រាប់ឆ្នាំ ១៨០០–២២០០។",
+      "original": {
+        "en": "Western astrology calculations are available for 1800–2200.",
+        "km": "ការគណនាហោរាសាស្ត្រលោកខាងលិចមានសម្រាប់ឆ្នាំ ១៨០០–២២០០។"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
       "id": "ui.copy_full_date",
       "section": "interface",
       "context": "CalendarApp.kt",

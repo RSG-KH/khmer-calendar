@@ -96,9 +96,13 @@ import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.domain.*
 import com.rsgkh.calendar.engine.ChineseZodiacCalculator
 import com.rsgkh.calendar.engine.GanzhiPillar
+import com.rsgkh.calendar.engine.western.WesternHoroscope
+import com.rsgkh.calendar.engine.western.WesternZodiacCalculator
+import com.rsgkh.calendar.engine.western.WesternZodiacSign
 import com.rsgkh.calendar.widgets.WidgetUpdater
 import java.time.DayOfWeek
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
@@ -1210,7 +1214,7 @@ internal fun WidgetSettingsCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 24.dp, top = 24.dp, end = 12.dp, bottom = 24.dp)
+                        .padding(start = 24.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
                 ) {
                     Row(Modifier.padding(end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(
@@ -1227,7 +1231,7 @@ internal fun WidgetSettingsCard(
                             fontSize = 12.readableSp
                         )
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(8.dp))
                     val scrollState = rememberScrollState()
                     Column(
                         modifier = Modifier
@@ -1236,7 +1240,7 @@ internal fun WidgetSettingsCard(
                             .verticalScroll(scrollState)
                             // Leave room inside the viewport for the copy button's full tap area.
                             .padding(end = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         val fullDate = if (k) info.fullKhmerDate() else info.fullEnglishDate()
@@ -1280,16 +1284,7 @@ internal fun WidgetSettingsCard(
                                     }
                                 }
                                 if (showWesternZodiac) {
-                                    Row(verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(DetailSymbolGap)) {
-                                        Box(Modifier.size(DetailSymbolSlot), contentAlignment = Alignment.Center) {
-                                            Text(info.zodiac.emoji, fontSize = 15.readableSp)
-                                        }
-                                        Text(info.zodiac.label.removePrefix("${info.zodiac.emoji} "),
-                                            Modifier.testTag("date-details-zodiac-label"),
-                                            fontSize = 13.readableSp, color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.Medium)
-                                    }
+                                    WesternZodiacTable(info, date == today, todayTimeZone, k)
                                 }
                                 if (showGanzhi) {
                                     GanzhiTable(info, date == today, todayTimeZone, k, useEmojiForGanzhiAnimals)
@@ -1323,7 +1318,7 @@ internal fun WidgetSettingsCard(
                             }
                         }
                     }
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(10.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(end = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1338,6 +1333,136 @@ internal fun WidgetSettingsCard(
                     }
                 }
             }
+        }
+    }
+}
+
+private data class WesternColumn(val key: String, val label: String, val sign: WesternZodiacSign?)
+
+@Composable private fun WesternZodiacTable(
+    info: KhmerDateDetails, isToday: Boolean, timeZone: TodayTimeZone, khmer: Boolean
+) {
+    val zone = timeZone.zone()
+    val currentClock by produceState(
+        initialValue = run {
+            val now = ZonedDateTime.now(zone)
+            now.hour to now.minute
+        },
+        isToday, zone
+    ) {
+        while (isToday) {
+            val now = ZonedDateTime.now(zone)
+            value = now.hour to now.minute
+            val nextMinute = now.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1)
+            delay(Duration.between(now.toInstant(), nextMinute.toInstant()).toMillis().coerceAtLeast(1_000))
+        }
+    }
+    val date = info.date
+    val westernSupported = date.year in 1800..2200
+    val (latitude, longitude, utcOffsetHours) = remember(timeZone, zone) {
+        val now = Instant.now()
+        val offsetSeconds = zone.rules.getOffset(now).totalSeconds
+        val offsetHours = offsetSeconds / 3600.0
+        if (timeZone == TodayTimeZone.CAMBODIA || zone.id == "Asia/Phnom_Penh") {
+            Triple(11.5564, 104.9282, 7.0)
+        } else {
+            Triple(11.5564, (offsetHours * 15.0).coerceIn(-180.0, 180.0), offsetHours)
+        }
+    }
+    val horoscope = remember(date, westernSupported, isToday, currentClock, utcOffsetHours, latitude, longitude) {
+        if (!westernSupported) null
+        else {
+            try {
+                val (hour, minute) = if (isToday) currentClock else 12 to 0
+                WesternZodiacCalculator.calculateHoroscope(
+                    year = date.year, month = date.monthValue, day = date.dayOfMonth,
+                    hour = hour, minute = minute, second = 0.0,
+                    utcOffsetHours = utcOffsetHours,
+                    latitudeDeg = latitude, longitudeDeg = longitude
+                )
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+    val columns = listOf(
+        WesternColumn("sun", L.text("ui.western_sun", khmer), horoscope?.sun?.sign),
+        WesternColumn("moon", L.text("ui.western_moon", khmer), horoscope?.moon?.sign),
+        WesternColumn("rising", L.text("ui.western_rising_sign", khmer), if (isToday) horoscope?.ascendant?.sign else null),
+    )
+    val heading = L.text("ui.western_big3", khmer)
+    val signLabel = L.text("ui.western_sign", khmer)
+    val signs = columns.map { column ->
+        column.sign?.let { "${it.symbol} ${it.englishName}" } ?: "—"
+    }
+    val headingStyle = LocalTextStyle.current.copy(fontSize = 12.readableSp, fontWeight = FontWeight.Medium)
+    val labelStyle = LocalTextStyle.current.copy(fontSize = 11.readableSp)
+    val headerStyle = labelStyle.copy(fontWeight = FontWeight.Medium)
+    val signStyle = LocalTextStyle.current.copy(fontSize = 12.readableSp)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    fun textSize(value: String, style: TextStyle) =
+        measurer.measure(value, style, maxLines = 1, softWrap = false).size
+    val labelWidth = with(density) {
+        maxOf(DetailSymbolSlot + DetailSymbolGap + textSize(heading, headingStyle).width.toDp(),
+            textSize(signLabel, labelStyle).width.toDp()) + 4.dp
+    }
+    val columnWidthFactor = if (khmer) 1.2f else 1f
+    val columnWidths = columns.indices.map { index ->
+        with(density) {
+            maxOf(textSize(columns[index].label, headerStyle).width,
+                textSize(signs[index], signStyle).width).toDp() + 8.dp
+        } * columnWidthFactor
+    }
+    val headerHeight = with(density) {
+        maxOf(textSize("☸️", LocalTextStyle.current.copy(fontSize = 15.readableSp)).height,
+            textSize(heading, headingStyle).height,
+            columns.maxOf { textSize(it.label, headerStyle).height }).toDp() + 4.dp
+    }.coerceAtLeast(24.dp)
+    val signRowHeight = with(density) {
+        maxOf(textSize(signLabel, labelStyle).height,
+            signs.maxOf { textSize(it, signStyle).height }).toDp() + 4.dp
+    }.coerceAtLeast(26.dp)
+    Column(Modifier.fillMaxWidth().testTag("western-zodiac-table"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth()) {
+            Column(Modifier.width(labelWidth).testTag("western-zodiac-row-labels")) {
+                Row(Modifier.fillMaxWidth().height(headerHeight),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(DetailSymbolGap)) {
+                    Box(Modifier.size(DetailSymbolSlot), contentAlignment = Alignment.Center) {
+                        Text("☸️", fontSize = 15.readableSp)
+                    }
+                    Text(heading, Modifier.testTag("date-details-zodiac-label"),
+                        fontSize = 12.readableSp, maxLines = 1, softWrap = false,
+                        color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Text(signLabel, Modifier.fillMaxWidth().height(signRowHeight).wrapContentHeight(),
+                    fontSize = 11.readableSp, maxLines = 1, softWrap = false,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()).testTag("western-zodiac-columns")) {
+                columns.forEachIndexed { index, column ->
+                    Column(Modifier.width(columnWidths[index])) {
+                        Text(column.label, Modifier.fillMaxWidth().height(headerHeight)
+                            .wrapContentHeight().testTag("western-header-${column.key}"),
+                            fontSize = 11.readableSp, maxLines = 1, softWrap = false,
+                            textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium)
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Text(signs[index], Modifier.fillMaxWidth().height(signRowHeight)
+                            .wrapContentHeight().testTag("western-sign-${column.key}"),
+                            fontSize = 12.readableSp,
+                            maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+            }
+        }
+        if (!westernSupported) {
+            Text(L.text("ui.western_range", khmer), fontSize = 10.readableSp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

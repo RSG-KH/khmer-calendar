@@ -102,4 +102,22 @@ class ZodiacTest {
             d = d.plusDays(1)
         }
     }
+
+    @Test
+    fun westernZodiacCalculatorCalculatesBigThree() {
+        val phnomPenhLat = 11.5564
+        val phnomPenhLon = 104.9282
+        val utcOffset = 7.0
+        val horoscope = com.rsgkh.calendar.engine.western.WesternZodiacCalculator.calculateHoroscope(
+            year = 2026, month = 9, day = 10,
+            hour = 12, minute = 0, second = 0.0,
+            utcOffsetHours = utcOffset,
+            latitudeDeg = phnomPenhLat,
+            longitudeDeg = phnomPenhLon
+        )
+        assertEquals(com.rsgkh.calendar.engine.western.WesternZodiacSign.VIRGO, horoscope.sun.sign)
+        assertEquals(com.rsgkh.calendar.engine.western.WesternZodiacSign.VIRGO, horoscope.moon.sign)
+        assertEquals(com.rsgkh.calendar.engine.western.WesternZodiacSign.SAGITTARIUS, horoscope.ascendant?.sign)
+        assertEquals("Virgo 17° 31' 18\"", horoscope.sun.formatted)
+    }
 }
