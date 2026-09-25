@@ -68,6 +68,7 @@ data class AppSettings(
     val fontScale: FontScale = FontScale.PERCENT_100,
     val widgetFontScale: FontScale = FontScale.PERCENT_100,
     val showWesternZodiac: Boolean = true,
+    val useEmojiForWesternZodiac: Boolean = false,
     val showGanzhi: Boolean = true,
     val useEmojiForGanzhiAnimals: Boolean = false,
     val widgetsEnabled: Boolean = false,
@@ -120,6 +121,7 @@ class AppPreferences(context: Context) {
             fontScale = FontScale.entries.firstOrNull { it.name == prefs.getString("fontScale", "PERCENT_100") } ?: FontScale.PERCENT_100,
             widgetFontScale = FontScale.entries.firstOrNull { it.name == prefs.getString("widgetFontScale", "PERCENT_100") } ?: FontScale.PERCENT_100,
             showWesternZodiac = showWesternZodiac,
+            useEmojiForWesternZodiac = prefs.getBoolean("useEmojiForWesternZodiac", false),
             showGanzhi = prefs.getBoolean("showGanzhi", true),
             useEmojiForGanzhiAnimals = prefs.getBoolean("useEmojiForGanzhiAnimals", false),
             widgetsEnabled = prefs.getBoolean("widgetsEnabled", false),
@@ -156,6 +158,7 @@ class AppPreferences(context: Context) {
             putString("fontScale", settings.fontScale.name)
             putString("widgetFontScale", settings.widgetFontScale.name)
             putBoolean("showWesternZodiac", settings.showWesternZodiac)
+            putBoolean("useEmojiForWesternZodiac", settings.useEmojiForWesternZodiac)
             putBoolean("showGanzhi", settings.showGanzhi)
             putBoolean("useEmojiForGanzhiAnimals", settings.useEmojiForGanzhiAnimals)
             putBoolean("widgetsEnabled", settings.widgetsEnabled)

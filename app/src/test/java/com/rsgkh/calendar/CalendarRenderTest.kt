@@ -137,12 +137,14 @@ class CalendarRenderTest : CalendarUiScenarios() {
             fontScale = FontScale.PERCENT_100, backgroundAccent = true, showWesternZodiac = true)
         assertEquals(defaults, AppSettings())
         assertEquals(defaults, AppPreferences(context).read())
+        org.junit.Assert.assertFalse(defaults.useEmojiForWesternZodiac)
         org.junit.Assert.assertFalse(defaults.useEmojiForGanzhiAnimals)
         val expected = AppSettings(ThemeMode.DARK, Accent.LIME, khmer = false, mondayFirst = true, showLongerWeekdayNames = true, showCopyButtons = true, showLunar = false,
             highlightWeekdayNames = true, showObservances = false, showHolyDaysInCalendar = false, showHolyDaysInEvents = true,
             highlightSunday = false, pushCustomEvents = false, pushHolidays = false, pushObservances = false, pushHolyDays = false,
             repeatHours = 6, todayTimeZone = TodayTimeZone.CAMBODIA,
             fontScale = FontScale.PERCENT_110, backgroundAccent = false, showWesternZodiac = false,
+            useEmojiForWesternZodiac = true,
             useEmojiForGanzhiAnimals = true)
         AppPreferences(context).write(expected)
         assertEquals(expected, AppPreferences(context).read())
@@ -1010,8 +1012,8 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("western-header-sun").assertTextEquals("Sun")
         compose.onNodeWithTag("western-header-moon").assertTextEquals("Moon")
         compose.onNodeWithTag("western-header-rising").assertTextEquals("Rising sign")
-        compose.onNodeWithTag("western-sign-sun").assertTextEquals("♎ Libra")
-        compose.onNodeWithTag("western-sign-moon").assertTextEquals("♓ Pisces")
+        compose.onNodeWithTag("western-sign-sun").assertTextEquals("Libra")
+        compose.onNodeWithTag("western-sign-moon").assertTextEquals("Pisces")
         compose.onNodeWithTag("western-sign-rising").assertTextEquals("—")
         compose.onNodeWithText("Close").performClick()
 
@@ -1021,9 +1023,45 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("western-header-sun").assertTextEquals("Sun")
         compose.onNodeWithTag("western-header-moon").assertTextEquals("Moon")
         compose.onNodeWithTag("western-header-rising").assertTextEquals("Rising sign")
-        compose.onNodeWithTag("western-sign-sun").assertTextEquals("♍ Virgo")
-        compose.onNodeWithTag("western-sign-moon").assertTextEquals("♍ Virgo")
+        compose.onNodeWithTag("western-sign-sun").assertTextEquals("Virgo")
+        compose.onNodeWithTag("western-sign-moon").assertTextEquals("Virgo")
         compose.onNodeWithTag("western-sign-rising").assertExists()
+        compose.onNodeWithText("Close").performClick()
+    }
+
+    @Test fun westernZodiacTableRespectsEmojiSettingAndPersistsChoice() {
+        start(AppSettings(khmer = false, useEmojiForWesternZodiac = true))
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
+        compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
+        compose.onNodeWithTag("western-sign-sun").assertTextEquals("♎")
+        compose.onNodeWithTag("western-sign-moon").assertTextEquals("♓")
+        compose.onNodeWithTag("western-sign-rising").assertTextEquals("—")
+        screenshot("western-zodiac-table-emoji")
+        compose.onNodeWithText("Close").performClick()
+
+        compose.onNodeWithText("Settings").performClick()
+        val westernToggle = L.text("ui.show_western_zodiac", false)
+        val emojiToggle = L.text("ui.western_emoji_toggle", false)
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasContentDescription(westernToggle))
+        assertEquals("Show western zodiac", westernToggle)
+        assertEquals("Choose between Emoji and name", L.text("ui.western_emoji_subtitle", false))
+        assertEquals("ជ្រើសរើសរវាង Emoji និងឈ្មោះ", L.text("ui.western_emoji_subtitle", true))
+        assertEquals("ប្រើ Emoji សម្រាប់តារានិករ", L.text("ui.western_emoji_toggle", true))
+        compose.onNodeWithText(westernToggle).assertIsDisplayed()
+        compose.onNodeWithContentDescription(emojiToggle).assertIsOn().performClick().assertIsOff()
+        screenshot("settings-western-emoji")
+        compose.onNodeWithContentDescription(westernToggle).performClick().assertIsOff()
+        compose.onNodeWithContentDescription(emojiToggle).assertDoesNotExist()
+        // Re-enabling Western zodiac must not override the user's emoji choice.
+        compose.onNodeWithContentDescription(westernToggle).performClick().assertIsOn()
+        compose.onNodeWithContentDescription(emojiToggle).assertIsOff()
+
+        compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
+        compose.onNodeWithTag("western-sign-sun").assertTextEquals("Libra")
+        compose.onNodeWithTag("western-sign-moon").assertTextEquals("Pisces")
+        compose.onNodeWithTag("western-sign-rising").assertTextEquals("—")
+        screenshot("western-zodiac-table-names")
         compose.onNodeWithText("Close").performClick()
     }
 
@@ -1055,6 +1093,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         assertEquals("បង្ហាញហោរាសាស្ត្រចិន (干支)", L.text("ui.show_chinese_ganzhi", true))
         for (language in listOf(false, true)) {
             assertEquals(L.text("ui.show_western_zodiac_subtitle", language), L.text("ui.show_chinese_ganzhi_subtitle", language))
+            assertEquals(L.text("ui.western_emoji_subtitle", language), L.text("ui.ganzhi_emoji_subtitle", language))
         }
         compose.onNodeWithText(ganzhiToggle).assertIsDisplayed()
         compose.onNodeWithContentDescription(emojiToggle).assertIsOn().performClick().assertIsOff()

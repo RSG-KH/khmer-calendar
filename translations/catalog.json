@@ -35724,13 +35724,13 @@
       "id": "ui.show_western_zodiac",
       "section": "interface",
       "context": "CalendarApp.kt",
-      "en": "Show Western zodiac signs",
+      "en": "Show western zodiac",
       "km": "បង្ហាញតារានិករ",
       "original": {
-        "en": "Show Western zodiac signs",
+        "en": "Show western zodiac",
         "km": "បង្ហាញតារានិករ"
       },
-      "reviewed": false,
+      "reviewed": true,
       "required": {
         "en": [],
         "km": []
@@ -35746,7 +35746,39 @@
         "en": "In date summary and details",
         "km": "ក្នុងកាលបរិច្ឆេទសង្ខេប និងលម្អិត"
       },
-      "reviewed": false,
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.western_emoji_toggle",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Use emoji for western zodiac",
+      "km": "ប្រើ Emoji សម្រាប់តារានិករ",
+      "original": {
+        "en": "Use emoji for western zodiac",
+        "km": "ប្រើ Emoji សម្រាប់តារានិករ"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.western_emoji_subtitle",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Choose between Emoji and name",
+      "km": "ជ្រើសរើសរវាង Emoji និងឈ្មោះ",
+      "original": {
+        "en": "Choose between Emoji and name",
+        "km": "ជ្រើសរើសរវាង Emoji និងឈ្មោះ"
+      },
+      "reviewed": true,
       "required": {
         "en": [],
         "km": []

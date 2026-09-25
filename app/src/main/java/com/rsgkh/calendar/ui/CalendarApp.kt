@@ -372,6 +372,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                 showHolyDaysInCalendar = settings.showHolyDaysInCalendar,
                 showCopyButtons = settings.showCopyButtons,
                 showWesternZodiac = settings.showWesternZodiac,
+                useEmojiForWesternZodiac = settings.useEmojiForWesternZodiac,
                 showGanzhi = settings.showGanzhi,
                 useEmojiForGanzhiAnimals = settings.useEmojiForGanzhiAnimals,
                 todayTimeZone = settings.todayTimeZone,
@@ -985,6 +986,11 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                 SettingSwitch(L.text("ui.show_western_zodiac", k), L.text("ui.show_western_zodiac_subtitle", k), settings.showWesternZodiac) {
                     onChange(settings.copy(showWesternZodiac = it))
                 }
+                if (settings.showWesternZodiac) {
+                    SettingSwitch(L.text("ui.western_emoji_toggle", k), L.text("ui.western_emoji_subtitle", k), settings.useEmojiForWesternZodiac) {
+                        onChange(settings.copy(useEmojiForWesternZodiac = it))
+                    }
+                }
                 SettingSwitch(L.text("ui.show_chinese_ganzhi", k), L.text("ui.show_chinese_ganzhi_subtitle", k), settings.showGanzhi) {
                     onChange(settings.copy(showGanzhi = it))
                 }
@@ -1189,6 +1195,7 @@ internal fun WidgetSettingsCard(
     date: LocalDate, today: LocalDate, k: Boolean, custom: List<CalendarEvent>,
     showHolyDays: Boolean, showObservances: Boolean, showHolyDaysInCalendar: Boolean, showCopyButtons: Boolean, showWesternZodiac: Boolean = true,
     showGanzhi: Boolean = true, useEmojiForGanzhiAnimals: Boolean = false,
+    useEmojiForWesternZodiac: Boolean = false,
     todayTimeZone: TodayTimeZone,
     onEvent: (CalendarEvent) -> Unit, onAddEvent: () -> Unit, onDismiss: () -> Unit
 ) {
@@ -1284,7 +1291,7 @@ internal fun WidgetSettingsCard(
                                     }
                                 }
                                 if (showWesternZodiac) {
-                                    WesternZodiacTable(info, date == today, todayTimeZone, k)
+                                    WesternZodiacTable(info, date == today, todayTimeZone, k, useEmojiForWesternZodiac)
                                 }
                                 if (showGanzhi) {
                                     GanzhiTable(info, date == today, todayTimeZone, k, useEmojiForGanzhiAnimals)
@@ -1340,7 +1347,7 @@ internal fun WidgetSettingsCard(
 private data class WesternColumn(val key: String, val label: String, val sign: WesternZodiacSign?)
 
 @Composable private fun WesternZodiacTable(
-    info: KhmerDateDetails, isToday: Boolean, timeZone: TodayTimeZone, khmer: Boolean
+    info: KhmerDateDetails, isToday: Boolean, timeZone: TodayTimeZone, khmer: Boolean, useEmoji: Boolean = false
 ) {
     val zone = timeZone.zone()
     val currentClock by produceState(
@@ -1393,12 +1400,12 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
     val heading = L.text("ui.western_big3", khmer)
     val signLabel = L.text("ui.western_sign", khmer)
     val signs = columns.map { column ->
-        column.sign?.let { "${it.symbol} ${it.englishName}" } ?: "—"
+        column.sign?.let { if (useEmoji) it.symbol else it.englishName } ?: "—"
     }
     val headingStyle = LocalTextStyle.current.copy(fontSize = 12.readableSp, fontWeight = FontWeight.Medium)
     val labelStyle = LocalTextStyle.current.copy(fontSize = 11.readableSp)
     val headerStyle = labelStyle.copy(fontWeight = FontWeight.Medium)
-    val signStyle = LocalTextStyle.current.copy(fontSize = 12.readableSp)
+    val signStyle = LocalTextStyle.current.copy(fontSize = (if (useEmoji) 19 else 12).readableSp)
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     fun textSize(value: String, style: TextStyle) =
@@ -1421,8 +1428,8 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
     }.coerceAtLeast(24.dp)
     val signRowHeight = with(density) {
         maxOf(textSize(signLabel, labelStyle).height,
-            signs.maxOf { textSize(it, signStyle).height }).toDp() + 4.dp
-    }.coerceAtLeast(26.dp)
+            signs.maxOf { textSize(it, signStyle).height }).toDp() + (if (useEmoji) 8.dp else 4.dp)
+    }.coerceAtLeast(if (useEmoji) 34.dp else 26.dp)
     Column(Modifier.fillMaxWidth().testTag("western-zodiac-table"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Column(Modifier.width(labelWidth).testTag("western-zodiac-row-labels")) {
@@ -1453,7 +1460,7 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         Text(signs[index], Modifier.fillMaxWidth().height(signRowHeight)
                             .wrapContentHeight().testTag("western-sign-${column.key}"),
-                            fontSize = 12.readableSp,
+                            fontSize = (if (useEmoji && column.sign != null) 19 else 12).readableSp,
                             maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurface)
                     }
