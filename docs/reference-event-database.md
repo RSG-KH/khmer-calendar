@@ -9,7 +9,7 @@ The Android app packages its event catalog in [`khmer-calendar-data.json`](../ap
 | Top-level field | Contents |
 | --- | --- |
 | `schemaVersion` | Catalog schema major version; the current bundle is `3` |
-| `dataVersion` | Data revision of this bundle (`0.4.5`) |
+| `dataVersion` | Data revision of this bundle (`0.5.0`) |
 | `sources` | Provenance records referenced by `sourceIds` elsewhere |
 | `events` | 139 event definitions: rules and recorded dates |
 | `holidayCalendars` | Official public-holiday calendars, one per year (2016–2027) |

@@ -1,10 +1,10 @@
 # Shared calendar engine
 
-Android uses the JVM package from [Khmer Calendar Engine v0.5.1](https://github.com/RSG-KH/khmer-calendar-engine/releases/tag/v0.5.1). It supplies lunar conversion, Buddhist Era, animal year, Sak, holy days, New Year dates and traditional arrival estimate, Ganzhi (sexagenary) pillars, Chinese festival recurrence calculation and recurrence evaluation for 1800–2200. Android keeps date conversion to `java.time.LocalDate`, labels, event records, UI and reminders.
+Android uses the JVM package from [Khmer Calendar Engine v0.6.0](https://github.com/RSG-KH/khmer-calendar-engine/releases/tag/v0.6.0). It supplies lunar conversion, Buddhist Era, animal year, Sak, holy days, New Year dates and traditional arrival estimate, Ganzhi (sexagenary) pillars, Chinese festival recurrence calculation and recurrence evaluation for 1800–2200. Android keeps date conversion to `java.time.LocalDate`, labels, event records, UI and reminders.
 
 ## Ownership and API
 
-The engine's [API contract](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.5.1/docs/api.md) defines supported inputs and calculation behavior. Its [reference evidence](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.5.1/docs/references.md) records algorithm provenance, reviewed corrections and validation limits. Calculation fixes belong in that project, followed by an Android dependency update.
+The engine's [API contract](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.6.0/docs/api.md) defines supported inputs and calculation behavior. Its [reference evidence](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.6.0/docs/references.md) records algorithm provenance, reviewed corrections and validation limits. Calculation fixes belong in that project, followed by an Android dependency update.
 
 | Android component | Responsibility |
 | --- | --- |
@@ -19,17 +19,17 @@ The engine operates on civil dates without a time zone. Android chooses the date
 
 ## Build dependency
 
-Gradle downloads `khmer-calendar-engine-jvm-0.5.1.jar` directly from the GitHub release. The version is pinned in `gradle/libs.versions.toml`; `settings.gradle.kts` limits the release repository to that module. No engine checkout or manual download is needed.
+Gradle downloads `khmer-calendar-engine-jvm-0.6.0.jar` directly from the GitHub release. The version is pinned in `gradle/libs.versions.toml`; `settings.gradle.kts` limits the release repository to that module. No engine checkout or manual download is needed.
 
 Before building, `:app:verifyCalendarEngine` checks the downloaded JAR against the release's SHA-256:
 
 ```text
-a2abade2c1972ed3015fa78e667f401c7498d617e87003a0870289c016279ecd
+ca791529a2f9d4175c342440ac4b15448c4af19f4a3df3742b6782c71c2baba6
 ```
 
 The first build needs network access. Gradle caches the dependency for later builds, including `--offline` builds once all dependencies are cached. The installed app remains offline and has no Internet permission.
 
-The release is resolved as an artifact without Maven metadata. Version 0.5.1's only runtime dependency is Kotlin stdlib, which the app already supplies through AGP's built-in Kotlin support. Both the app and engine produce Java 11 bytecode; the Android build uses JDK 25 and Kotlin 2.4.20.
+The release is resolved as an artifact without Maven metadata. Version 0.6.0's only runtime dependency is Kotlin stdlib, which the app already supplies through AGP's built-in Kotlin support. Both the app and engine produce Java 11 bytecode; the Android build uses JDK 25 and Kotlin 2.4.20.
 
 ## Updating the engine
 
@@ -56,6 +56,8 @@ Version 0.4.0 adds the standalone `ChineseZodiacCalculator` with Ganzhi (干支,
 Version 0.5.0 adds Lichun-based year pillars, solar-term month pillars, Four Pillars (BaZi) and clash branches to `ChineseZodiacCalculator`. These solar-calendar calculations cover 1900–2100 under the engine's UTC+8 civil-date convention. Android displays the Year, Month and Day animal and clash branches in date details, plus Hour for Today using the app's selected clock time zone. For dates outside 1900–2100, Year and Month are marked unavailable; Day remains available.
 
 Version 0.5.1 synchronizes Four Pillars (BaZi) day and hour rollover at 23:00 (late Rat hour), isolates the Chinese festival registry, and hardens runtime validation.
+
+Version 0.6.0 introduces the standalone `WesternZodiacCalculator` calculating Western astrology ("Big 3" + Angles: Sun, Moon, Ascendant, Midheaven) coordinates over 1800–2200 using Jean Meeus algorithms and Espenak & Meeus piecewise Delta-T with singularity detection.
 
 Supported date coverage and passing regression tests are not a claim of independent historical validation for every date. Official public holidays require year-specific government records; a calculated festival date alone does not establish a day off.
 
