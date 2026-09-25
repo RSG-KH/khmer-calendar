@@ -76,7 +76,7 @@ class EventRepositoryTest {
     }
 
     @Test fun officialHolidayCalendarsStandardizeOffDaysWithSubDecreeCitationsAcrossTwelveYears() {
-        assertEquals("0.4.4", RecurringEvents.catalog.dataVersion)
+        assertEquals("0.4.5", RecurringEvents.catalog.dataVersion)
         assertEquals(3, RecurringEvents.catalog.schemaVersion)
         // 12 official holiday calendars (2016–2027) totaling 283 off-days
         var totalOfficialDays = 0
@@ -162,7 +162,7 @@ class EventRepositoryTest {
 
     @Test fun newYearArrivalCatalogAndUnifiedTitleDisplay() {
         assertEquals(3, RecurringEvents.catalog.schemaVersion)
-        assertEquals("0.4.4", RecurringEvents.catalog.dataVersion)
+        assertEquals("0.4.5", RecurringEvents.catalog.dataVersion)
         val arrivals = RecurringEvents.catalog.newYearArrivals
         assertEquals(19, arrivals.size)
         val expectedYears = listOf(1997, 2009) + (2010..2026).toList()

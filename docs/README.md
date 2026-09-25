@@ -13,6 +13,6 @@ These guides describe the Android app and its integration with the dedicated [Kh
 | [Custom repeat verification](custom-repeat-verification.md) | Behavior checklist and test record for repeating personal events |
 | [Translation editor](../tools/translation/README.md) | Bilingual catalog and generated resources |
 
-Calculation contracts and supporting research live with the engine: see the [v0.5.0 API](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.5.0/docs/api.md) and [reference evidence](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.5.0/docs/references.md). Android retains consumer regression tests and bundled attribution; it does not maintain a second calculation implementation or algorithm guide.
+Calculation contracts and supporting research live with the engine: see the [v0.5.1 API](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.5.1/docs/api.md) and [reference evidence](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.5.1/docs/references.md). Android retains consumer regression tests and bundled attribution; it does not maintain a second calculation implementation or algorithm guide.
 
 [Project README](../README.md)
