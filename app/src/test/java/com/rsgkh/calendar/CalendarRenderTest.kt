@@ -1001,7 +1001,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         assertEquals(holy.left, zodiac.left)
         assertEquals(holy.left, ganzhi.left)
         compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("Big 3")
-        compose.onNodeWithTag("western-header-rising").assertTextEquals("លគ្ន៍ (រះ)")
+        compose.onNodeWithTag("western-header-rising").assertTextEquals("រះ")
         screenshot("date-details-symbol-label-alignment-khmer")
     }
 
