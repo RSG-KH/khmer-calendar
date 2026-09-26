@@ -95,8 +95,6 @@ import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.domain.*
 import com.rsgkh.calendar.engine.ChineseZodiacCalculator
 import com.rsgkh.calendar.engine.GanzhiPillar
-import com.rsgkh.calendar.engine.western.WesternHoroscope
-import com.rsgkh.calendar.engine.western.WesternZodiacCalculator
 import com.rsgkh.calendar.engine.western.WesternZodiacSign
 import com.rsgkh.calendar.widgets.WidgetUpdater
 import java.time.DayOfWeek
@@ -1425,36 +1423,13 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
     val zone = timeZone.zone()
     val date = info.date
     val westernSupported = date.year in 1800..2200
-    val (latitude, longitude, utcOffsetHours) = remember(timeZone, zone) {
-        val now = Instant.now()
-        val offsetSeconds = zone.rules.getOffset(now).totalSeconds
-        val offsetHours = offsetSeconds / 3600.0
-        if (timeZone == TodayTimeZone.CAMBODIA || zone.id == "Asia/Phnom_Penh") {
-            Triple(11.5564, 104.9282, 7.0)
-        } else {
-            Triple(11.5564, (offsetHours * 15.0).coerceIn(-180.0, 180.0), offsetHours)
-        }
-    }
-    val horoscope = remember(date, westernSupported, customTime, utcOffsetHours, latitude, longitude) {
-        if (!westernSupported) null
-        else {
-            try {
-                val (hour, minute) = customTime?.let { it.hour to it.minute } ?: (12 to 0)
-                WesternZodiacCalculator.calculateHoroscope(
-                    year = date.year, month = date.monthValue, day = date.dayOfMonth,
-                    hour = hour, minute = minute, second = 0.0,
-                    utcOffsetHours = utcOffsetHours,
-                    latitudeDeg = latitude, longitudeDeg = longitude
-                )
-            } catch (_: Exception) {
-                null
-            }
-        }
+    val horoscope = remember(date, customTime, timeZone, zone) {
+        westernBig3Signs(date, customTime, timeZone, zone)
     }
     val columns = listOf(
-        WesternColumn("sun", L.text("ui.western_sun", khmer), horoscope?.sun?.sign),
-        WesternColumn("moon", L.text("ui.western_moon", khmer), horoscope?.moon?.sign),
-        WesternColumn("rising", L.text("ui.western_rising_sign", khmer), if (customTime != null) horoscope?.ascendant?.sign else null),
+        WesternColumn("sun", L.text("ui.western_sun", khmer), horoscope?.sun),
+        WesternColumn("moon", L.text("ui.western_moon", khmer), horoscope?.moon),
+        WesternColumn("rising", L.text("ui.western_rising_sign", khmer), horoscope?.rising),
     )
     val heading = L.text("ui.western_big3", khmer)
     val signLabel = L.text("ui.western_sign", khmer)

@@ -25,6 +25,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 - Gregorian and Khmer lunar dates, Buddhist Era, animal year, Sak, New Year dates, traditional Moha Sangkran arrival estimates, traditional Chinese festivals, and Ganzhi (干支) year/month/day/hour pillars are provided by [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine).
 - Calendar algorithms, source references and validation are documented in the [engine project](https://github.com/RSG-KH/khmer-calendar-engine#verification-and-accuracy). Android supplies the interface, translations, personal events and reminders.
 - Date details can show Western zodiac signs, elements and ruling bodies, plus a Chinese Ganzhi (干支) table with Year, Month and Day signs and clash animals. The Rising sign and Hour pillar use the selected time; Today starts with the current time when its popup opens, while other dates let you pick one.
+- Rising sign uses the selected date's time-zone offset and a representative city for that zone (Phnom Penh for Cambodia; Brussels for local `Europe/Brussels`). The app does not use your exact location, so changing zones does not guarantee a different sign for every time.
 
 ### 🌸 Buddhist Holy Days (*Thngai Seil*)
 
