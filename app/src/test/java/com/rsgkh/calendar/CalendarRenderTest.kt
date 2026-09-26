@@ -12,6 +12,7 @@ import org.robolectric.annotation.GraphicsMode
 import org.robolectric.annotation.LooperMode
 import androidx.test.core.app.ApplicationProvider
 import androidx.compose.ui.test.*
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.unit.dp
 import com.rsgkh.calendar.data.*
 import com.rsgkh.calendar.domain.KhmerDateDetails
@@ -23,6 +24,8 @@ import com.rsgkh.calendar.widgets.WidgetEventRequest
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import android.app.Application
@@ -950,6 +953,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("Big 3")
         compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
+        compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed()
         compose.onNodeWithTag("western-header-sun").assertTextEquals("Sun")
         compose.onNodeWithTag("western-header-moon").assertTextEquals("Moon")
         compose.onNodeWithTag("western-header-rising").assertTextEquals("Rising")
@@ -965,6 +969,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         compose.onNodeWithTag("date-details-zodiac-label").assertDoesNotExist()
         compose.onNodeWithTag("western-zodiac-table").assertDoesNotExist()
+        compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed()
         compose.onNodeWithText("Close").performClick()
 
         // 2026-09-12 has neither a Buddhist holy day/shaving day nor western zodiac when hidden
@@ -989,6 +994,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNode(hasContentDescription("Saturday, 12 September", substring = true)).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         compose.onNodeWithTag("ganzhi-table").assertDoesNotExist()
+        compose.onNodeWithTag("date-details-time-chip").assertDoesNotExist()
         compose.onNodeWithText("Close").performClick()
     }
 
@@ -1005,6 +1011,23 @@ class CalendarRenderTest : CalendarUiScenarios() {
         screenshot("date-details-symbol-label-alignment-khmer")
     }
 
+    @Test @Config(qualifiers = "w360dp-h800dp-xhdpi")
+    fun dateDetailsTimeEmojiHasRoomInKhmerPopup() {
+        start(AppSettings(khmer = true, theme = ThemeMode.LIGHT, fontScale = FontScale.PERCENT_120))
+        val date = LocalDate.of(2026, 9, 18)
+        compose.onNode(hasContentDescription(CalendarWords.date(date, true), substring = true)).performClick()
+        val westernClock = compose.onNodeWithTag("western-sign-rising").assertTextEquals("🕒")
+        val ganzhiClock = compose.onNodeWithTag("ganzhi-sign-hour").assertTextEquals("🕒")
+        val westernBounds = westernClock.getUnclippedBoundsInRoot()
+        val ganzhiBounds = ganzhiClock.getUnclippedBoundsInRoot()
+        assertTrue(westernBounds.bottom - westernBounds.top > 24.dp)
+        assertTrue(ganzhiBounds.bottom - ganzhiBounds.top > 24.dp)
+        screenshot("date-details-time-emoji-khmer")
+        westernClock.performScrollTo().assertIsDisplayed()
+        ganzhiClock.performScrollTo().assertIsDisplayed()
+        screenshot("date-details-time-emoji-khmer-scrolled")
+    }
+
     @Test fun westernZodiacTableDisplaysBigThreeTodayAndOmitsRisingSignWhenNotToday() {
         start(AppSettings(khmer = false))
         // September 24 is NOT today: Sun & Moon calculated, Rising sign is "—"
@@ -1016,6 +1039,10 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("western-header-rising").assertTextEquals("Rising")
         compose.onNodeWithTag("western-sign-sun").assertTextEquals("Libra")
         compose.onNodeWithTag("western-sign-moon").assertTextEquals("Pisces")
+        compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed().assertTextEquals("🕒")
+            .assertContentDescriptionEquals(L.text("ui.select_time.eacac3", false)).performClick()
+        compose.onNodeWithText(L.text("ui.select_time.eacac3", false)).assertIsDisplayed()
+        compose.onNodeWithText(L.text("ui.cancel.5bf834", false)).performClick()
         compose.onNodeWithTag("western-sign-rising").assertTextEquals("🕒").performClick()
         compose.onNodeWithText(L.text("ui.select_time.eacac3", false)).assertIsDisplayed()
         compose.onNodeWithText(L.text("ui.ok.04c4aa", false)).performClick()
@@ -1027,7 +1054,9 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithText(L.text("ui.clear.7d76fd", false)).assertIsDisplayed().performClick()
         compose.onNodeWithTag("western-sign-rising").assertTextEquals("🕒")
         compose.onNodeWithTag("ganzhi-sign-hour").assertTextEquals("🕒")
-        compose.onNodeWithTag("date-details-time-chip").assertDoesNotExist()
+        compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed().assertTextEquals("🕒").performClick()
+        compose.onNodeWithText(L.text("ui.select_time.eacac3", false)).assertIsDisplayed()
+        compose.onNodeWithText(L.text("ui.cancel.5bf834", false)).performClick()
         compose.onNodeWithText("Close").performClick()
 
         // September 10 IS today: all 3 calculated
@@ -1039,7 +1068,51 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("western-sign-sun").assertTextEquals("Virgo")
         compose.onNodeWithTag("western-sign-moon").assertTextEquals("Virgo")
         compose.onNodeWithTag("western-sign-rising").assertExists()
+        compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed()
         compose.onNodeWithText("Close").performClick()
+    }
+
+    @Test fun todayDateDetailsStartsAtCurrentTimeAndCanBeChangedOrCleared() {
+        val zone = TodayTimeZone.CAMBODIA.zone()
+        val format = DateTimeFormatter.ofPattern("HH:mm")
+        start(AppSettings(khmer = false, todayTimeZone = TodayTimeZone.CAMBODIA))
+        val before = LocalTime.now(zone).truncatedTo(ChronoUnit.MINUTES)
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        val chip = compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed()
+        val shown = chip.fetchSemanticsNode().config[SemanticsProperties.Text].joinToString("") { it.text }
+        val after = LocalTime.now(zone).truncatedTo(ChronoUnit.MINUTES)
+        assertTrue("The popup should capture the current Cambodia time: $shown",
+            shown.contains(before.format(format)) || shown.contains(after.format(format)))
+        screenshot("date-details-today-editable-time")
+
+        chip.performClick()
+        compose.onNodeWithTag("wheel-hour").performScrollToNode(hasText("06"))
+        compose.onNode(hasText("06") and hasAnyAncestor(hasTestTag("wheel-hour"))).performClick()
+        compose.onNodeWithTag("wheel-minute").performScrollToNode(hasText("15"))
+        compose.onNode(hasText("15") and hasAnyAncestor(hasTestTag("wheel-minute"))).performClick()
+        compose.onNodeWithText(L.text("ui.ok.04c4aa", false)).performClick()
+        compose.onNodeWithTag("date-details-time-chip").assertTextContains("06:15", substring = true)
+        val morningAnimal = compose.onNodeWithTag("ganzhi-sign-hour")
+            .fetchSemanticsNode().config[SemanticsProperties.Text].single().text
+
+        compose.onNodeWithTag("ganzhi-sign-hour").performClick()
+        compose.onNodeWithTag("wheel-hour").performScrollToNode(hasText("18"))
+        compose.onNode(hasText("18") and hasAnyAncestor(hasTestTag("wheel-hour"))).performClick()
+        compose.onNodeWithText(L.text("ui.ok.04c4aa", false)).performClick()
+        compose.onNodeWithTag("date-details-time-chip").assertTextContains("18:15", substring = true)
+        val eveningAnimal = compose.onNodeWithTag("ganzhi-sign-hour")
+            .fetchSemanticsNode().config[SemanticsProperties.Text].single().text
+        assertTrue("Changing the time should update the hour pillar", morningAnimal != eveningAnimal)
+
+        compose.onNodeWithTag("date-details-time-chip").performClick()
+        compose.onNodeWithText(L.text("ui.clear.7d76fd", false)).performClick()
+        compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed().assertTextEquals("🕒")
+        compose.onNodeWithTag("western-sign-rising").assertTextEquals("🕒")
+        compose.onNodeWithTag("ganzhi-sign-hour").assertTextEquals("🕒")
+        compose.onNodeWithText("Close").performClick()
+
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed()
     }
 
     @Test fun westernZodiacTableRespectsEmojiSettingAndPersistsChoice() {
@@ -1078,7 +1151,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithText("Close").performClick()
     }
 
-    @Test fun ganzhiTableUsesCurrentHourOnlyTodayAndRespectsEmojiSetting() {
+    @Test fun ganzhiTableStartsWithAnHourForTodayAndRespectsEmojiSetting() {
         start(AppSettings(khmer = false, useEmojiForGanzhiAnimals = true))
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
         compose.onNodeWithTag("ganzhi-table").assertIsDisplayed()

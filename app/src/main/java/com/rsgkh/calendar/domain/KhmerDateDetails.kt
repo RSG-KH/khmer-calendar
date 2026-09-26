@@ -23,8 +23,12 @@ fun EarthlyBranch.ganzhiAnimalLabel(khmer: Boolean, useEmoji: Boolean): String =
 data class KhmerDateDetails(
     val date: LocalDate, val lunar: LunarDate, val animalYear: Int, val sak: Int,
     val animalYearChangesToday: Boolean,
-    val ganzhiDay: GanzhiPillar,
 ) {
+    // Ordinary date views need lunar data without calculating a Ganzhi pillar.
+    val ganzhiDay: GanzhiPillar by lazy {
+        ChineseZodiacCalculator.getDayPillar(date.year, date.monthValue, date.dayOfMonth)
+    }
+
     fun lunarSummary(khmer: Boolean): String {
         return if (khmer) {
             "${lunar.fullLabel(true)}\nឆ្នាំ${animalLabel(true)} ${L.text("calendar.sak.$sak", true)}"
@@ -85,8 +89,7 @@ data class KhmerDateDetails(
         fun fromGregorian(date: LocalDate): KhmerDateDetails {
             val result = KhmerCalendar.details(date)
             return KhmerDateDetails(date, LunarDate(result.lunar), result.animalYear, result.sak,
-                result.animalYearChangesToday,
-                ChineseZodiacCalculator.getDayPillar(date.year, date.monthValue, date.dayOfMonth))
+                result.animalYearChangesToday)
         }
     }
 }

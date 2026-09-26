@@ -28,7 +28,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -101,12 +100,10 @@ import com.rsgkh.calendar.engine.western.WesternZodiacCalculator
 import com.rsgkh.calendar.engine.western.WesternZodiacSign
 import com.rsgkh.calendar.widgets.WidgetUpdater
 import java.time.DayOfWeek
-import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
-import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -1200,10 +1197,27 @@ internal fun WidgetSettingsCard(
     todayTimeZone: TodayTimeZone,
     onEvent: (CalendarEvent) -> Unit, onAddEvent: () -> Unit, onDismiss: () -> Unit
 ) {
-    var customTimeMinutes by rememberSaveable(date) { mutableStateOf<Int?>(null) }
+    val hasAstrology = showWesternZodiac || showGanzhi
+    var customTimeMinutes by rememberSaveable(date, today, todayTimeZone, hasAstrology) {
+        val openingTime = if (hasAstrology && date == today) LocalTime.now(todayTimeZone.zone()) else null
+        mutableStateOf(openingTime?.let { it.hour * 60 + it.minute })
+    }
     val customTime = customTimeMinutes?.let { LocalTime.of(it / 60, it % 60) }
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
     val info = remember(date) { KhmerDateDetails.fromGregorian(date) }
+    val hasHolyDay = showHolyDaysInCalendar && (info.lunar.isHolyDay || info.lunar.isShavingDay)
+    val symbolMeasurer = rememberTextMeasurer()
+    val symbolStyle = LocalTextStyle.current.copy(fontSize = 15.readableSp)
+    val symbolSlot = with(LocalDensity.current) {
+        // Keep the compact default English table fitting narrow phones.
+        if ((!hasAstrology && !hasHolyDay) || (!k && fontScale <= 1f)) DetailSymbolSlot else {
+            val symbols = listOf("🙏", "☸️", "☯️").map {
+                symbolMeasurer.measure(it, symbolStyle, maxLines = 1, softWrap = false).size
+            }
+            maxOf(DetailSymbolSlot, symbols.maxOf { it.width }.toDp() + 4.dp,
+                symbols.maxOf { it.height }.toDp() + 4.dp)
+        }
+    }
     val title = if (k) info.gregorianLabel else "${CalendarWords.weekday(date.dayOfWeek.value, false)}, ${info.gregorianLabel}"
     val events = remember(date, custom, showHolyDays, showObservances) {
         (EventRepository.forDate(date) + custom.filter { it.date == date })
@@ -1236,19 +1250,16 @@ internal fun WidgetSettingsCard(
                             fontSize = 14.readableSp,
                             lineHeight = 22.readableSp,
                         )
-                        if (date == today) {
-                            Text(
-                                L.text("ui.today.d71ac6", k),
-                                color = MaterialTheme.colorScheme.primary,
-                                fontSize = 12.readableSp
-                            )
-                        } else if (customTime != null) {
+                        if (hasAstrology) {
                             val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH) }
                             Surface(
                                 onClick = { showTimePicker = true },
                                 shape = RoundedCornerShape(8.dp),
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                                 modifier = Modifier.testTag("date-details-time-chip")
+                                    .then(if (customTime == null) Modifier.semantics {
+                                        contentDescription = L.text("ui.select_time.eacac3", k)
+                                    } else Modifier)
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
@@ -1256,12 +1267,14 @@ internal fun WidgetSettingsCard(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Text("🕒", fontSize = 12.readableSp)
-                                    Text(
-                                        text = customTime.format(timeFormatter),
-                                        fontSize = 12.readableSp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                                    if (customTime != null) {
+                                        Text(
+                                            text = customTime.format(timeFormatter),
+                                            fontSize = 12.readableSp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -1284,8 +1297,7 @@ internal fun WidgetSettingsCard(
                             if (showCopyButtons) CopyTextButton(fullDate, L.text("ui.copy_full_date", k), L.text("ui.full_date_copied", k),
                                 firstLineHeight = 32.readableSp)
                         }
-                        val hasHolyDay = showHolyDaysInCalendar && (info.lunar.isHolyDay || info.lunar.isShavingDay)
-                        if (hasHolyDay || showWesternZodiac || showGanzhi) {
+                        if (hasHolyDay || hasAstrology) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 if (hasHolyDay) {
@@ -1294,15 +1306,17 @@ internal fun WidgetSettingsCard(
                                         horizontalArrangement = Arrangement.spacedBy(DetailSymbolGap)
                                     ) {
                                         if (info.lunar.isHolyDay) {
-                                            Image(
-                                                painter = painterResource(holyDayLotusDrawable(info.lunar)),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(DetailSymbolSlot).padding(2.dp),
-                                                contentScale = ContentScale.Fit
-                                            )
+                                            Box(Modifier.size(symbolSlot), contentAlignment = Alignment.Center) {
+                                                Image(
+                                                    painter = painterResource(holyDayLotusDrawable(info.lunar)),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(DetailSymbolSlot).padding(2.dp),
+                                                    contentScale = ContentScale.Fit
+                                                )
+                                            }
                                         } else {
                                             Box(
-                                                modifier = Modifier.size(DetailSymbolSlot),
+                                                modifier = Modifier.size(symbolSlot),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Text("🙏", fontSize = 15.readableSp)
@@ -1321,23 +1335,22 @@ internal fun WidgetSettingsCard(
                                 if (showWesternZodiac) {
                                     WesternZodiacTable(
                                         info = info,
-                                        isToday = date == today,
                                         timeZone = todayTimeZone,
                                         khmer = k,
                                         useEmoji = useEmojiForWesternZodiac,
+                                        symbolSlot = symbolSlot,
                                         customTime = customTime,
-                                        onPickTime = if (date != today) { { showTimePicker = true } } else null
+                                        onPickTime = { showTimePicker = true }
                                     )
                                 }
                                 if (showGanzhi) {
                                     GanzhiTable(
                                         info = info,
-                                        isToday = date == today,
-                                        timeZone = todayTimeZone,
                                         khmer = k,
                                         useEmoji = useEmojiForGanzhiAnimals,
+                                        symbolSlot = symbolSlot,
                                         customTime = customTime,
-                                        onPickTime = if (date != today) { { showTimePicker = true } } else null
+                                        onPickTime = { showTimePicker = true }
                                     )
                                 }
                             }
@@ -1386,7 +1399,7 @@ internal fun WidgetSettingsCard(
             }
         }
     }
-    if (showTimePicker) {
+    if (hasAstrology && showTimePicker) {
         val initialTime = customTime ?: LocalTime.now(todayTimeZone.zone()).truncatedTo(ChronoUnit.MINUTES)
         TimeSelectionDialog(
             initial = initialTime,
@@ -1405,24 +1418,11 @@ internal fun WidgetSettingsCard(
 private data class WesternColumn(val key: String, val label: String, val sign: WesternZodiacSign?)
 
 @Composable private fun WesternZodiacTable(
-    info: KhmerDateDetails, isToday: Boolean, timeZone: TodayTimeZone, khmer: Boolean, useEmoji: Boolean = false,
+    info: KhmerDateDetails, timeZone: TodayTimeZone, khmer: Boolean, useEmoji: Boolean = false,
+    symbolSlot: Dp,
     customTime: LocalTime? = null, onPickTime: (() -> Unit)? = null
 ) {
     val zone = timeZone.zone()
-    val currentClock by produceState(
-        initialValue = run {
-            val now = ZonedDateTime.now(zone)
-            now.hour to now.minute
-        },
-        isToday, zone
-    ) {
-        while (isToday) {
-            val now = ZonedDateTime.now(zone)
-            value = now.hour to now.minute
-            val nextMinute = now.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1)
-            delay(Duration.between(now.toInstant(), nextMinute.toInstant()).toMillis().coerceAtLeast(1_000))
-        }
-    }
     val date = info.date
     val westernSupported = date.year in 1800..2200
     val (latitude, longitude, utcOffsetHours) = remember(timeZone, zone) {
@@ -1435,11 +1435,11 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
             Triple(11.5564, (offsetHours * 15.0).coerceIn(-180.0, 180.0), offsetHours)
         }
     }
-    val horoscope = remember(date, westernSupported, isToday, currentClock, customTime, utcOffsetHours, latitude, longitude) {
+    val horoscope = remember(date, westernSupported, customTime, utcOffsetHours, latitude, longitude) {
         if (!westernSupported) null
         else {
             try {
-                val (hour, minute) = if (isToday) currentClock else (customTime?.let { it.hour to it.minute } ?: (12 to 0))
+                val (hour, minute) = customTime?.let { it.hour to it.minute } ?: (12 to 0)
                 WesternZodiacCalculator.calculateHoroscope(
                     year = date.year, month = date.monthValue, day = date.dayOfMonth,
                     hour = hour, minute = minute, second = 0.0,
@@ -1454,12 +1454,12 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
     val columns = listOf(
         WesternColumn("sun", L.text("ui.western_sun", khmer), horoscope?.sun?.sign),
         WesternColumn("moon", L.text("ui.western_moon", khmer), horoscope?.moon?.sign),
-        WesternColumn("rising", L.text("ui.western_rising_sign", khmer), if (isToday || customTime != null) horoscope?.ascendant?.sign else null),
+        WesternColumn("rising", L.text("ui.western_rising_sign", khmer), if (customTime != null) horoscope?.ascendant?.sign else null),
     )
     val heading = L.text("ui.western_big3", khmer)
     val signLabel = L.text("ui.western_sign", khmer)
     val signs = columns.map { column ->
-        if (column.key == "rising" && column.sign == null && !isToday && westernSupported) "🕒"
+        if (column.key == "rising" && column.sign == null && westernSupported) "🕒"
         else column.sign?.let { if (useEmoji) it.symbol else it.englishName } ?: "—"
     }
     val headingStyle = LocalTextStyle.current.copy(fontSize = 12.readableSp, fontWeight = FontWeight.Medium)
@@ -1467,19 +1467,24 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
     val headerStyle = labelStyle.copy(fontWeight = FontWeight.Medium)
     val signStyle = LocalTextStyle.current.copy(fontSize = (if (useEmoji) 19 else 12).readableSp)
     val boldSignStyle = signStyle.copy(fontWeight = FontWeight.Bold)
+    val timeChipStyle = LocalTextStyle.current.copy(fontSize = 12.readableSp)
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     fun textSize(value: String, style: TextStyle) =
         measurer.measure(value, style, maxLines = 1, softWrap = false).size
+    val timeChipSize = with(density) {
+        val emoji = textSize("🕒", timeChipStyle)
+        maxOf(24.dp, emoji.width.toDp() + 4.dp, emoji.height.toDp() + 4.dp)
+    }
     val labelWidth = with(density) {
-        maxOf(DetailSymbolSlot + DetailSymbolGap + textSize(heading, headingStyle).width.toDp(),
+        maxOf(symbolSlot + DetailSymbolGap + textSize(heading, headingStyle).width.toDp(),
             textSize(signLabel, labelStyle).width.toDp()) + 4.dp
     }
     val columnWidthFactor = if (khmer) 1.2f else 1f
     val columnWidths = columns.indices.map { index ->
         val style = if (columns[index].key == "sun") boldSignStyle else signStyle
         with(density) {
-            val contentWidth = if (columns[index].key == "rising" && columns[index].sign == null && !isToday) 24.dp
+            val contentWidth = if (columns[index].key == "rising" && columns[index].sign == null) timeChipSize
             else textSize(signs[index], style).width.toDp()
             maxOf(textSize(columns[index].label, headerStyle).width.toDp(), contentWidth) + 8.dp
         } * columnWidthFactor
@@ -1492,14 +1497,14 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
     val signRowHeight = with(density) {
         maxOf(textSize(signLabel, labelStyle).height,
             signs.maxOf { textSize(it, signStyle).height }).toDp() + (if (useEmoji) 8.dp else 4.dp)
-    }.coerceAtLeast(if (useEmoji) 34.dp else 26.dp)
+    }.coerceAtLeast(maxOf(if (useEmoji) 34.dp else 26.dp, timeChipSize + 4.dp))
     Column(Modifier.fillMaxWidth().testTag("western-zodiac-table"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Column(Modifier.width(labelWidth).testTag("western-zodiac-row-labels")) {
                 Row(Modifier.fillMaxWidth().height(headerHeight),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(DetailSymbolGap)) {
-                    Box(Modifier.size(DetailSymbolSlot), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(symbolSlot), contentAlignment = Alignment.Center) {
                         Text("☸️", fontSize = 15.readableSp)
                     }
                     Text(heading, Modifier.testTag("date-details-zodiac-label"),
@@ -1523,23 +1528,24 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
                             textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium)
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        if (isRising && column.sign == null && !isToday && onPickTime != null && westernSupported) {
+                        if (isRising && column.sign == null && onPickTime != null && westernSupported) {
                             Box(Modifier.fillMaxWidth().height(signRowHeight), contentAlignment = Alignment.Center) {
                                 Surface(
                                     onClick = onPickTime,
                                     shape = RoundedCornerShape(6.dp),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(24.dp).testTag("western-sign-${column.key}")
+                                    modifier = Modifier.size(timeChipSize).testTag("western-sign-${column.key}")
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
-                                        Text("🕒", fontSize = 12.readableSp, textAlign = TextAlign.Center)
+                                        Text("🕒", style = timeChipStyle, maxLines = 1, softWrap = false,
+                                            textAlign = TextAlign.Center)
                                     }
                                 }
                             }
                         } else {
                             Text(signs[index], Modifier.fillMaxWidth().height(signRowHeight)
                                 .wrapContentHeight().testTag("western-sign-${column.key}")
-                                .then(if (isRising && !isToday && onPickTime != null && westernSupported) Modifier.clickable(onClick = onPickTime) else Modifier),
+                                .then(if (isRising && onPickTime != null && westernSupported) Modifier.clickable(onClick = onPickTime) else Modifier),
                                 fontSize = (if (useEmoji && column.sign != null) 19 else 12).readableSp,
                                 fontWeight = if (isSun && column.sign != null) FontWeight.Bold else FontWeight.Normal,
                                 maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
@@ -1559,21 +1565,13 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
 private data class GanzhiColumn(val key: String, val label: String, val pillar: GanzhiPillar?)
 
 @Composable private fun GanzhiTable(
-    info: KhmerDateDetails, isToday: Boolean, timeZone: TodayTimeZone, khmer: Boolean, useEmoji: Boolean,
+    info: KhmerDateDetails, khmer: Boolean, useEmoji: Boolean,
+    symbolSlot: Dp,
     customTime: LocalTime? = null, onPickTime: (() -> Unit)? = null
 ) {
-    val zone = timeZone.zone()
-    val currentHour by produceState(timeZone.hour(localZone = zone), isToday, zone) {
-        while (isToday) {
-            val now = ZonedDateTime.now(zone)
-            value = timeZone.hour(now.toInstant(), zone)
-            val nextHour = now.truncatedTo(ChronoUnit.HOURS).plusHours(1)
-            delay(Duration.between(now.toInstant(), nextHour.toInstant()).toMillis().coerceAtLeast(1_000))
-        }
-    }
     val date = info.date
     val solarSupported = date.year in 1900..2100
-    val effectiveHour = if (isToday) currentHour else customTime?.hour
+    val effectiveHour = customTime?.hour
     val columns = listOf(
         GanzhiColumn("year", L.text("ui.ganzhi_year", khmer),
             if (solarSupported) ChineseZodiacCalculator.getYearPillar(date.year, date.monthValue, date.dayOfMonth) else null),
@@ -1587,7 +1585,7 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
     val signLabel = L.text("ui.ganzhi_sign", khmer)
     val clashLabel = L.text("ui.ganzhi_clash", khmer)
     val animals = columns.map { column ->
-        if (column.key == "hour" && column.pillar == null && !isToday && solarSupported) "🕒" to "🕒"
+        if (column.key == "hour" && column.pillar == null && solarSupported) "🕒" to "🕒"
         else (column.pillar?.branch?.ganzhiAnimalLabel(khmer, useEmoji) ?: "—") to
             (column.pillar?.clashBranch?.ganzhiAnimalLabel(khmer, useEmoji) ?: "—")
     }
@@ -1596,12 +1594,17 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
     val headerStyle = labelStyle.copy(fontWeight = FontWeight.Medium)
     val animalStyle = LocalTextStyle.current.copy(fontSize = (if (useEmoji) 19 else 12).readableSp)
     val boldAnimalStyle = animalStyle.copy(fontWeight = FontWeight.Bold)
+    val timeChipStyle = LocalTextStyle.current.copy(fontSize = 12.readableSp)
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     fun textSize(value: String, style: TextStyle) =
         measurer.measure(value, style, maxLines = 1, softWrap = false).size
+    val timeChipSize = with(density) {
+        val emoji = textSize("🕒", timeChipStyle)
+        maxOf(24.dp, emoji.width.toDp() + 4.dp, emoji.height.toDp() + 4.dp)
+    }
     val labelWidth = with(density) {
-        maxOf(DetailSymbolSlot + DetailSymbolGap + textSize(heading, headingStyle).width.toDp(),
+        maxOf(symbolSlot + DetailSymbolGap + textSize(heading, headingStyle).width.toDp(),
             textSize(signLabel, labelStyle).width.toDp(),
             textSize(clashLabel, labelStyle).width.toDp()) + 4.dp
     }
@@ -1609,7 +1612,7 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
     val columnWidths = columns.indices.map { index ->
         val style = if (columns[index].key == "year") boldAnimalStyle else animalStyle
         with(density) {
-            val contentWidth = if (columns[index].key == "hour" && columns[index].pillar == null && !isToday) 24.dp
+            val contentWidth = if (columns[index].key == "hour" && columns[index].pillar == null) timeChipSize
             else maxOf(textSize(animals[index].first, style).width.toDp(),
                 textSize(animals[index].second, style).width.toDp())
             maxOf(textSize(columns[index].label, headerStyle).width.toDp(), contentWidth) + 8.dp
@@ -1624,14 +1627,14 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
         maxOf(textSize(signLabel, labelStyle).height, textSize(clashLabel, labelStyle).height,
             animals.maxOf { maxOf(textSize(it.first, animalStyle).height,
                 textSize(it.second, animalStyle).height) }).toDp() + 8.dp
-    }.coerceAtLeast(34.dp)
+    }.coerceAtLeast(maxOf(34.dp, timeChipSize + 4.dp))
     Column(Modifier.fillMaxWidth().testTag("ganzhi-table"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Column(Modifier.width(labelWidth).testTag("ganzhi-row-labels")) {
                 Row(Modifier.fillMaxWidth().height(headerHeight),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(DetailSymbolGap)) {
-                    Box(Modifier.size(DetailSymbolSlot), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(symbolSlot), contentAlignment = Alignment.Center) {
                         Text("☯️", fontSize = 15.readableSp)
                     }
                     Text(heading, Modifier.testTag("ganzhi-heading-label"),
@@ -1659,16 +1662,17 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
                             textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium)
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        if (isHour && column.pillar == null && !isToday && onPickTime != null && solarSupported) {
+                        if (isHour && column.pillar == null && onPickTime != null && solarSupported) {
                             Box(Modifier.fillMaxWidth().height(animalRowHeight), contentAlignment = Alignment.Center) {
                                 Surface(
                                     onClick = onPickTime,
                                     shape = RoundedCornerShape(6.dp),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(24.dp).testTag("ganzhi-sign-${column.key}")
+                                    modifier = Modifier.size(timeChipSize).testTag("ganzhi-sign-${column.key}")
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
-                                        Text("🕒", fontSize = 12.readableSp, textAlign = TextAlign.Center)
+                                        Text("🕒", style = timeChipStyle, maxLines = 1, softWrap = false,
+                                            textAlign = TextAlign.Center)
                                     }
                                 }
                             }
@@ -1677,24 +1681,25 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
                                     onClick = onPickTime,
                                     shape = RoundedCornerShape(6.dp),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(24.dp).testTag("ganzhi-clash-${column.key}")
+                                    modifier = Modifier.size(timeChipSize).testTag("ganzhi-clash-${column.key}")
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
-                                        Text("🕒", fontSize = 12.readableSp, textAlign = TextAlign.Center)
+                                        Text("🕒", style = timeChipStyle, maxLines = 1, softWrap = false,
+                                            textAlign = TextAlign.Center)
                                     }
                                 }
                             }
                         } else {
                             Text(animals[index].first, Modifier.fillMaxWidth().height(animalRowHeight)
                                 .wrapContentHeight().testTag("ganzhi-sign-${column.key}")
-                                .then(if (isHour && !isToday && onPickTime != null && solarSupported) Modifier.clickable(onClick = onPickTime) else Modifier),
+                                .then(if (isHour && onPickTime != null && solarSupported) Modifier.clickable(onClick = onPickTime) else Modifier),
                                 fontSize = (if (useEmoji && column.pillar != null) 19 else 12).readableSp,
                                 fontWeight = if (isYear && column.pillar != null) FontWeight.Bold else FontWeight.Normal,
                                 maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
                                 color = if (isYear && column.pillar != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                             Text(animals[index].second, Modifier.fillMaxWidth().height(animalRowHeight)
                                 .wrapContentHeight().testTag("ganzhi-clash-${column.key}")
-                                .then(if (isHour && !isToday && onPickTime != null && solarSupported) Modifier.clickable(onClick = onPickTime) else Modifier),
+                                .then(if (isHour && onPickTime != null && solarSupported) Modifier.clickable(onClick = onPickTime) else Modifier),
                                 fontSize = (if (useEmoji && column.pillar != null) 19 else 12).readableSp,
                                 fontWeight = if (isYear && column.pillar != null) FontWeight.Bold else FontWeight.Normal,
                                 maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
