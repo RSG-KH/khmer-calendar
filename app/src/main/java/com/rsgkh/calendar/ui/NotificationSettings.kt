@@ -200,6 +200,7 @@ private fun WheelBox(
     k: Boolean,
     onDismiss: () -> Unit,
     zoneLabel: String = L.text("ui.cambodia_time_utc_7.6b9f2d", k),
+    onClear: (() -> Unit)? = null,
     onSelect: (LocalTime) -> Unit
 ) {
     var selectedHour by rememberSaveable(initial) { mutableIntStateOf(initial.hour) }
@@ -291,8 +292,15 @@ private fun WheelBox(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(L.text("ui.cancel.5bf834", k))
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (onClear != null) {
+                    TextButton(onClick = onClear) {
+                        Text(L.text("ui.clear.7d76fd", k))
+                    }
+                }
+                TextButton(onClick = onDismiss) {
+                    Text(L.text("ui.cancel.5bf834", k))
+                }
             }
         },
         confirmButton = {
