@@ -25,7 +25,7 @@ flowchart TD
 
 ## Calendar integration
 
-The [shared engine integration guide](shared-engine.md) describes the pinned dependency, API boundary, Android adapters and upgrade checks. The engine owns lunar conversion, traditional year transitions, holy days, New Year dates, Ganzhi (sexagenary) year/month/day/hour pillars and recurrence evaluation for **1800–2200**. Android owns `LocalDate` conversion, localized labels and Western zodiac presentation.
+The [shared engine integration guide](shared-engine.md) describes the pinned dependency, API boundary, Android adapters and upgrade checks. The engine owns lunar conversion, traditional year transitions, holy days, New Year dates and recurrence evaluation across the app's **1800–2200** range, plus Ganzhi pillars and Western zodiac calculations within their supported ranges. Android owns `LocalDate` conversion, localized labels, optional astrology presentation and the date-details time picker. The popup calls each astrology calculator only while its corresponding setting is enabled. The Ganzhi day pillar in `KhmerDateDetails` is lazy, so ordinary date views do not calculate it when Chinese Ganzhi is hidden.
 
 Calculation algorithms and supporting evidence are maintained in the engine project. Android tests verify that the app continues to consume its results correctly when the dependency changes.
 
@@ -99,7 +99,7 @@ Settings changes reschedule alarms only when reminder enablement, event categori
 - **Custom series**: Each date resolves in the saved zone, keeping its wall time across DST. Future gaps move forward by the gap; future folds choose the first offset. The original occurrence retains its saved offset. The planner lazily searches from the current day for the next eligible occurrence, including distant leap years, while retaining the single-alarm queue. Past anchors can have future reminders, but occurrences at or before the save instant are suppressed.
 - **Repeats**: Configurable periodic repeats (**Off**, 2, 4, 6, 8, or 12 hours) use elapsed hours and stop at midnight in the selected zone for built-in events, or the saved event zone for custom events. Daylight-saving gaps move a nonexistent push time forward by the gap; repeated clock times use the first occurrence for the initial reminder.
 
-The UI reads today's date immediately when the activity becomes visible and every 30 seconds while its lifecycle is at least `STARTED`, including visible multi-window use. Polling stops when the activity is hidden and restarts with an immediate read when it returns. This keeps the Today marker current across midnight or device clock changes without hidden UI polling. Reminder delivery is independent: `AlarmManager` invokes its receiver, and the manifest-registered restore receiver recalculates the next alarm after system date/time or time-zone changes, reboot, app replacement and exact-alarm access changes.
+The UI reads today's date immediately when the activity becomes visible and every 30 seconds while its lifecycle is at least `STARTED`, including visible multi-window use. Polling stops when the activity is hidden and restarts with an immediate read when it returns. This keeps the Today marker current across midnight or device clock changes without hidden UI polling. Date details takes a separate one-time current-time snapshot on opening Today's popup and does not refresh it while open. Reminder delivery is independent: `AlarmManager` invokes its receiver, and the manifest-registered restore receiver recalculates the next alarm after system date/time or time-zone changes, reboot, app replacement and exact-alarm access changes.
 
 ---
 
@@ -134,6 +134,6 @@ The **Add widgets** action in settings opens a swipeable in-app chooser with the
 
 The in-app UI is built using Jetpack Compose with Material 3 design tokens:
 
-- **State Hoisting**: Screens and components are stateless composables driven by immutable state models (`AppSettings`, `KhmerDateDetails`, `CalendarEvent`).
+- **State and local controls**: Screens receive settings and date/event models (`AppSettings`, `KhmerDateDetails`, `CalendarEvent`); dialogs also keep short-lived UI state such as the selected date-details time and whether its picker is open.
 - **Adaptive Scaffolding**: Detects screen dimensions, smallest width (`sw600dp`), and orientation (`ORIENTATION_LANDSCAPE`) to dynamically switch between compact phone layouts, phone landscape rails, and tablet 2-column widescreen experiences.
 - **Dynamic Text Scaling**: Custom `readableSp` extension scales typography dynamically based on user-selected font scaling preferences without disrupting fixed grid geometry.

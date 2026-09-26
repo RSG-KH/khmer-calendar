@@ -41,6 +41,7 @@ Connected tests require a running emulator or device listed by `adb devices`.
 | Event repository and recurrence | Catalog coverage across 1800–2200, engine parity for calculated events and holy days, recorded date lists, official holiday calendars with citations, rule translation, captured-date comparisons and classification |
 | Reminder planner and delivery | Category controls, appearance changes preserving alarms, permissions, saved event instants, clock/time-zone broadcasts without an activity, daylight saving and repeats |
 | Today refresh | Visible-only polling, immediate refresh on return, midnight, clock jumps and device time-zone changes |
+| Date details | Current-time snapshot on opening Today, editable and clearable time on any date, header/table picker access, emoji button sizing, and each astrology switch's table visibility |
 | Compose UI | Phone/tablet layouts, both languages, dialogs, font scaling and settings |
 | Home screen widgets | Date rollover and event-filter policies, tap navigation into date or event details, hidden personal-event details, Glance labels and badges, Planner week boundaries and scroll targets, snapshots following saved widget choices, appearance-following palettes, and English Western zodiac names in both app languages |
 | System window behavior | Light/dark edge-to-edge configuration on API 31, 34 and 35 |

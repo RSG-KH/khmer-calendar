@@ -24,7 +24,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 
 - Gregorian and Khmer lunar dates, Buddhist Era, animal year, Sak, New Year dates, traditional Moha Sangkran arrival estimates, traditional Chinese festivals, and Ganzhi (干支) year/month/day/hour pillars are provided by [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine).
 - Calendar algorithms, source references and validation are documented in the [engine project](https://github.com/RSG-KH/khmer-calendar-engine#verification-and-accuracy). Android supplies the interface, translations, personal events and reminders.
-- Date details also show Western zodiac signs, elements and ruling bodies, plus a Chinese Ganzhi (干支) table with the Year, Month and Day sign and clash animals — and the Hour pillar for Today — displayed as emoji or animal names.
+- Date details can show Western zodiac signs, elements and ruling bodies, plus a Chinese Ganzhi (干支) table with Year, Month and Day signs and clash animals. The Rising sign and Hour pillar use the selected time; Today starts with the current time when its popup opens, while other dates let you pick one.
 
 ### 🌸 Buddhist Holy Days (*Thngai Seil*)
 
@@ -73,7 +73,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 - **Longer Weekday Names**: Optional calendar headings show Sun–Sat in English and full weekday names in Khmer. Off by default under Settings → Calendar.
 - **Weekday Colors**: Traditional weekday heading colors, with shades adapted for light and dark themes. On by default under Settings → Calendar; existing saved choices are preserved.
 - **Western Zodiac Signs**: The selected-date card, date details and event details show the Western zodiac sign, element and ruling body. On by default under Settings → Astrology & Zodiac.
-- **Chinese Ganzhi (干支) Table**: Date details show the Year, Month and Day sign and clash animals, plus the Hour pillar for Today in the selected time zone, with an emoji/name toggle. On by default under Settings → Astrology & Zodiac.
+- **Chinese Ganzhi (干支) Table**: Date details show Year, Month and Day signs and clash animals, plus the Hour pillar when a time is set, with an emoji/name toggle. The popup opens at the current time for Today and lets you change or clear it; other dates start without a selected time. On by default under Settings → Astrology & Zodiac.
 - **Curated Theme Accents**: Choose from **Blue** (Default), **Lavender**, **Rose**, **Amber**, and **Lime** (*បៃតងចាស់*).
 - **Theme Modes**: Initially follows the system theme; choosing Light or Dark saves that preference. Background accent is on by default, tinting pages and navigation with the chosen accent; turning it off restores neutral backgrounds.
 - **Dynamic Font Scaling**: Choose 80%–150% on all devices. Home screen widgets have their own separate 80%–200% font size setting.

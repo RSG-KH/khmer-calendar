@@ -1028,9 +1028,9 @@ class CalendarRenderTest : CalendarUiScenarios() {
         screenshot("date-details-time-emoji-khmer-scrolled")
     }
 
-    @Test fun westernZodiacTableDisplaysBigThreeTodayAndOmitsRisingSignWhenNotToday() {
+    @Test fun westernZodiacTableDisplaysBigThreeTodayAndTimePickerForOtherDates() {
         start(AppSettings(khmer = false))
-        // September 24 is NOT today: Sun & Moon calculated, Rising sign is "—"
+        // September 24 is not today: Sun and Moon use noon; Rising offers a time picker.
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
         compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
         compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("Big 3")

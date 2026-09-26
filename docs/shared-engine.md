@@ -10,12 +10,12 @@ The engine's [API contract](https://github.com/RSG-KH/khmer-calendar-engine/blob
 | --- | --- |
 | `domain/KhmerCalendar.kt` | Reuses one engine instance, converts civil dates and supplies localized lunar labels |
 | `domain/KhmerNewYear.kt` | Converts the engine's New Year dates to `LocalDate` and exposes traditional arrival estimate |
-| `domain/KhmerDateDetails.kt` | Formats lunar and traditional year labels, and localizes Ganzhi animal names |
-| `ui/CalendarApp.kt` | Presents the engine's Ganzhi sign and clash branches, and Western Big 3 (Sun, Moon, Rising) tables in date details |
+| `domain/KhmerDateDetails.kt` | Formats lunar and traditional year labels, localizes Ganzhi animal names and calculates the Ganzhi day pillar only when needed |
+| `ui/CalendarApp.kt` | Presents the optional Ganzhi and Western Big 3 tables in date details, with a shared time picker and per-setting calculation guards |
 | `data/RecurringEvents.kt` | Parses the bundled event catalog, translates rule definitions into engine rules, and formats arrival time |
 | `data/EventRepository.kt` | Layers catalog rules, recorded dates, official holiday calendars and date overrides over engine results for each requested year |
 
-The engine operates on civil dates without a time zone. Android chooses the date for **Today follows** and resolves reminder instants. Event definitions, effective years, translations, official holiday calendars and date overrides are app data in the bundled catalog; the engine release does not supply or update them.
+The engine's lunar calendar operates on civil dates without a time zone. Android chooses the date for **Today follows**, supplies a selected clock hour to Ganzhi and time and offset inputs to Western astrology, and resolves reminder instants. Event definitions, effective years, translations, official holiday calendars and date overrides are app data in the bundled catalog; the engine release does not supply or update them.
 
 ## Build dependency
 
@@ -53,11 +53,11 @@ Version 0.3.0 exposes the traditional Moha Sangkran `arrivalEstimate` on `NewYea
 
 Version 0.4.0 adds the standalone `ChineseZodiacCalculator` with Ganzhi (干支, sexagenary) day and hour pillars over the proleptic Gregorian range 1..9999. Android first presented the day pillar as a row in date details. The current **Show Chinese Ganzhi (干支)** setting controls the table described below; existing lunar, holy-day and recurrence results are unchanged.
 
-Version 0.5.0 adds Lichun-based year pillars, solar-term month pillars, Four Pillars (BaZi) and clash branches to `ChineseZodiacCalculator`. These solar-calendar calculations cover 1900–2100 under the engine's UTC+8 civil-date convention. Android displays the Year, Month and Day animal and clash branches in date details, plus Hour for Today using the app's selected clock time zone. For dates outside 1900–2100, Year and Month are marked unavailable; Day remains available.
+Version 0.5.0 adds Lichun-based year pillars, solar-term month pillars, Four Pillars (BaZi) and clash branches to `ChineseZodiacCalculator`. These solar-calendar calculations cover 1900–2100 under the engine's UTC+8 civil-date convention. Android displays the Year, Month and Day animal and clash branches in date details, plus Hour when a time is selected. Today starts with the current time in the configured **Today follows** zone when its popup opens; other dates start without a time. For dates outside 1900–2100, Year and Month are marked unavailable; Day remains available.
 
 Version 0.5.1 synchronizes Four Pillars (BaZi) day and hour rollover at 23:00 (late Rat hour), isolates the Chinese festival registry, and hardens runtime validation.
 
-Version 0.6.0 introduces the standalone `WesternZodiacCalculator` calculating Western astrology ("Big 3" + Angles: Sun, Moon, Ascendant, Midheaven) coordinates over 1800–2200 using Jean Meeus algorithms and Espenak & Meeus piecewise Delta-T with singularity detection. Android displays the Big 3 (Sun, Moon, Rising sign) table in date details, using live time for Today and midpoint civil calculations for past/future dates.
+Version 0.6.0 introduces the standalone `WesternZodiacCalculator` calculating Western astrology ("Big 3" + Angles: Sun, Moon, Ascendant, Midheaven) coordinates over 1800–2200 using Jean Meeus algorithms and Espenak & Meeus piecewise Delta-T with singularity detection. Android displays the Big 3 (Sun, Moon, Rising sign) table in date details. Today uses the time captured when its popup opens; other dates use noon for Sun and Moon until the user picks a time, at which point Rising also becomes available. The popup does not update its time while open; the user can change or clear it. Each table's calculator runs only while its setting is enabled. If both tables are off, the popup neither captures time nor shows a time picker.
 
 Supported date coverage and passing regression tests are not a claim of independent historical validation for every date. Official public holidays require year-specific government records; a calculated festival date alone does not establish a day off.
 
