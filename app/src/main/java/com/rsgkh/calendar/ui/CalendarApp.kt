@@ -1479,8 +1479,9 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
     val columnWidths = columns.indices.map { index ->
         val style = if (columns[index].key == "sun") boldSignStyle else signStyle
         with(density) {
-            maxOf(textSize(columns[index].label, headerStyle).width,
-                textSize(signs[index], style).width).toDp() + 8.dp
+            val contentWidth = if (columns[index].key == "rising" && columns[index].sign == null && !isToday) 24.dp
+            else textSize(signs[index], style).width.toDp()
+            maxOf(textSize(columns[index].label, headerStyle).width.toDp(), contentWidth) + 8.dp
         } * columnWidthFactor
     }
     val headerHeight = with(density) {
@@ -1528,10 +1529,11 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
                                     onClick = onPickTime,
                                     shape = RoundedCornerShape(6.dp),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    modifier = Modifier.testTag("western-sign-${column.key}")
+                                    modifier = Modifier.size(24.dp).testTag("western-sign-${column.key}")
                                 ) {
-                                    Text("🕒", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                        fontSize = 12.readableSp, textAlign = TextAlign.Center)
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text("🕒", fontSize = 12.readableSp, textAlign = TextAlign.Center)
+                                    }
                                 }
                             }
                         } else {
@@ -1607,9 +1609,10 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
     val columnWidths = columns.indices.map { index ->
         val style = if (columns[index].key == "year") boldAnimalStyle else animalStyle
         with(density) {
-            maxOf(textSize(columns[index].label, headerStyle).width,
-                textSize(animals[index].first, style).width,
-                textSize(animals[index].second, style).width).toDp() + 8.dp
+            val contentWidth = if (columns[index].key == "hour" && columns[index].pillar == null && !isToday) 24.dp
+            else maxOf(textSize(animals[index].first, style).width.toDp(),
+                textSize(animals[index].second, style).width.toDp())
+            maxOf(textSize(columns[index].label, headerStyle).width.toDp(), contentWidth) + 8.dp
         } * columnWidthFactor
     }
     val headerHeight = with(density) {
@@ -1662,10 +1665,11 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
                                     onClick = onPickTime,
                                     shape = RoundedCornerShape(6.dp),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    modifier = Modifier.testTag("ganzhi-sign-${column.key}")
+                                    modifier = Modifier.size(24.dp).testTag("ganzhi-sign-${column.key}")
                                 ) {
-                                    Text("🕒", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                        fontSize = 12.readableSp, textAlign = TextAlign.Center)
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text("🕒", fontSize = 12.readableSp, textAlign = TextAlign.Center)
+                                    }
                                 }
                             }
                             Box(Modifier.fillMaxWidth().height(animalRowHeight), contentAlignment = Alignment.Center) {
@@ -1673,10 +1677,11 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
                                     onClick = onPickTime,
                                     shape = RoundedCornerShape(6.dp),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    modifier = Modifier.testTag("ganzhi-clash-${column.key}")
+                                    modifier = Modifier.size(24.dp).testTag("ganzhi-clash-${column.key}")
                                 ) {
-                                    Text("🕒", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                        fontSize = 12.readableSp, textAlign = TextAlign.Center)
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text("🕒", fontSize = 12.readableSp, textAlign = TextAlign.Center)
+                                    }
                                 }
                             }
                         } else {
