@@ -948,7 +948,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         start(AppSettings(khmer = false, theme = ThemeMode.LIGHT))
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
-        compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("Big 3")
+        compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("Sun, Moon, Rising")
         compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
         compose.onNodeWithTag("western-header-sun").assertTextEquals("Sun")
         compose.onNodeWithTag("western-header-moon").assertTextEquals("Moon")
@@ -1000,6 +1000,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         val ganzhi = compose.onNodeWithTag("ganzhi-heading-label").getUnclippedBoundsInRoot()
         assertEquals(holy.left, zodiac.left)
         assertEquals(holy.left, ganzhi.left)
+        compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("ព្រះអាទិត្យ ព្រះចន្ទ រះ")
         screenshot("date-details-symbol-label-alignment-khmer")
     }
 
@@ -1008,7 +1009,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         // September 24 is NOT today: Sun & Moon calculated, Rising sign is "—"
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
         compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
-        compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("Big 3")
+        compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("Sun, Moon, Rising")
         compose.onNodeWithTag("western-header-sun").assertTextEquals("Sun")
         compose.onNodeWithTag("western-header-moon").assertTextEquals("Moon")
         compose.onNodeWithTag("western-header-rising").assertTextEquals("Rising sign")

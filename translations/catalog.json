@@ -35980,11 +35980,11 @@
       "id": "ui.western_big3",
       "section": "interface",
       "context": "CalendarApp.kt",
-      "en": "Big 3",
-      "km": "Big 3",
+      "en": "Sun, Moon, Rising",
+      "km": "ព្រះអាទិត្យ ព្រះចន្ទ រះ",
       "original": {
-        "en": "Big 3",
-        "km": "Big 3"
+        "en": "Sun, Moon, Rising",
+        "km": "ព្រះអាទិត្យ ព្រះចន្ទ រះ"
       },
       "reviewed": true,
       "required": {
