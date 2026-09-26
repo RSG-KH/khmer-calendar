@@ -1406,6 +1406,7 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
     val labelStyle = LocalTextStyle.current.copy(fontSize = 11.readableSp)
     val headerStyle = labelStyle.copy(fontWeight = FontWeight.Medium)
     val signStyle = LocalTextStyle.current.copy(fontSize = (if (useEmoji) 19 else 12).readableSp)
+    val boldSignStyle = signStyle.copy(fontWeight = FontWeight.Bold)
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     fun textSize(value: String, style: TextStyle) =
@@ -1416,9 +1417,10 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
     }
     val columnWidthFactor = if (khmer) 1.2f else 1f
     val columnWidths = columns.indices.map { index ->
+        val style = if (columns[index].key == "sun") boldSignStyle else signStyle
         with(density) {
             maxOf(textSize(columns[index].label, headerStyle).width,
-                textSize(signs[index], signStyle).width).toDp() + 8.dp
+                textSize(signs[index], style).width).toDp() + 8.dp
         } * columnWidthFactor
     }
     val headerHeight = with(density) {
@@ -1451,6 +1453,7 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
             }
             Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()).testTag("western-zodiac-columns")) {
                 columns.forEachIndexed { index, column ->
+                    val isSun = column.key == "sun"
                     Column(Modifier.width(columnWidths[index])) {
                         Text(column.label, Modifier.fillMaxWidth().height(headerHeight)
                             .wrapContentHeight().testTag("western-header-${column.key}"),
@@ -1461,8 +1464,9 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
                         Text(signs[index], Modifier.fillMaxWidth().height(signRowHeight)
                             .wrapContentHeight().testTag("western-sign-${column.key}"),
                             fontSize = (if (useEmoji && column.sign != null) 19 else 12).readableSp,
+                            fontWeight = if (isSun && column.sign != null) FontWeight.Bold else FontWeight.Normal,
                             maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurface)
+                            color = if (isSun && column.sign != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
@@ -1496,8 +1500,9 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
         GanzhiColumn("month", L.text("ui.ganzhi_month", khmer),
             if (solarSupported) ChineseZodiacCalculator.getMonthPillar(date.year, date.monthValue, date.dayOfMonth) else null),
         GanzhiColumn("day", L.text("ui.ganzhi_day_column", khmer), info.ganzhiDay),
-    ) + if (isToday) listOf(GanzhiColumn("hour", L.text("ui.ganzhi_hour_column", khmer),
-        ChineseZodiacCalculator.getHourPillarForDate(date.year, date.monthValue, date.dayOfMonth, currentHour))) else emptyList()
+        GanzhiColumn("hour", L.text("ui.ganzhi_hour_column", khmer),
+            if (isToday) ChineseZodiacCalculator.getHourPillarForDate(date.year, date.monthValue, date.dayOfMonth, currentHour) else null),
+    )
     val heading = "干支"
     val signLabel = L.text("ui.ganzhi_sign", khmer)
     val clashLabel = L.text("ui.ganzhi_clash", khmer)
@@ -1509,6 +1514,7 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
     val labelStyle = LocalTextStyle.current.copy(fontSize = 11.readableSp)
     val headerStyle = labelStyle.copy(fontWeight = FontWeight.Medium)
     val animalStyle = LocalTextStyle.current.copy(fontSize = (if (useEmoji) 19 else 12).readableSp)
+    val boldAnimalStyle = animalStyle.copy(fontWeight = FontWeight.Bold)
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     fun textSize(value: String, style: TextStyle) =
@@ -1520,10 +1526,11 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
     }
     val columnWidthFactor = if (khmer) 1.2f else 1f
     val columnWidths = columns.indices.map { index ->
+        val style = if (columns[index].key == "year") boldAnimalStyle else animalStyle
         with(density) {
             maxOf(textSize(columns[index].label, headerStyle).width,
-                textSize(animals[index].first, animalStyle).width,
-                textSize(animals[index].second, animalStyle).width).toDp() + 8.dp
+                textSize(animals[index].first, style).width,
+                textSize(animals[index].second, style).width).toDp() + 8.dp
         } * columnWidthFactor
     }
     val headerHeight = with(density) {
@@ -1561,6 +1568,7 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
             }
             Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()).testTag("ganzhi-columns")) {
                 columns.forEachIndexed { index, column ->
+                    val isYear = column.key == "year"
                     Column(Modifier.width(columnWidths[index])) {
                         Text(column.label, Modifier.fillMaxWidth().height(headerHeight)
                             .wrapContentHeight().testTag("ganzhi-header-${column.key}"),
@@ -1570,14 +1578,16 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         Text(animals[index].first, Modifier.fillMaxWidth().height(animalRowHeight)
                             .wrapContentHeight().testTag("ganzhi-sign-${column.key}"),
-                            fontSize = (if (useEmoji) 19 else 12).readableSp,
+                            fontSize = (if (useEmoji && column.pillar != null) 19 else 12).readableSp,
+                            fontWeight = if (isYear && column.pillar != null) FontWeight.Bold else FontWeight.Normal,
                             maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurface)
+                            color = if (isYear && column.pillar != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                         Text(animals[index].second, Modifier.fillMaxWidth().height(animalRowHeight)
                             .wrapContentHeight().testTag("ganzhi-clash-${column.key}"),
-                            fontSize = (if (useEmoji) 19 else 12).readableSp,
+                            fontSize = (if (useEmoji && column.pillar != null) 19 else 12).readableSp,
+                            fontWeight = if (isYear && column.pillar != null) FontWeight.Bold else FontWeight.Normal,
                             maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurface)
+                            color = if (isYear && column.pillar != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
