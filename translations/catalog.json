@@ -35980,11 +35980,11 @@
       "id": "ui.western_big3",
       "section": "interface",
       "context": "CalendarApp.kt",
-      "en": "Sun, Moon, Rising",
-      "km": "ព្រះអាទិត្យ ព្រះចន្ទ រះ",
+      "en": "Big 3",
+      "km": "Big 3",
       "original": {
-        "en": "Sun, Moon, Rising",
-        "km": "ព្រះអាទិត្យ ព្រះចន្ទ រះ"
+        "en": "Big 3",
+        "km": "Big 3"
       },
       "reviewed": true,
       "required": {
@@ -36028,11 +36028,11 @@
       "id": "ui.western_rising_sign",
       "section": "interface",
       "context": "CalendarApp.kt",
-      "en": "Rising sign",
-      "km": "លគ្នារាសី",
+      "en": "Rising",
+      "km": "រះ",
       "original": {
-        "en": "Rising sign",
-        "km": "លគ្នារាសី"
+        "en": "Rising",
+        "km": "រះ"
       },
       "reviewed": true,
       "required": {
