@@ -1,6 +1,6 @@
 # PWA 0.12.1 → Android sync
 
-Reviewed on 27 September 2026 against PWA `148c28c` (app 0.12.1.0), starting from Android `7f06e61` (0.11.1, code 26). This change syncs the features; the Android version remains **0.11.1, version code 26** pending a separate version commit. The calculation engine stays at 0.6.0 and the shared event catalog at 0.5.0; the two apps' event JSON is semantically identical.
+Reviewed on 27 September 2026 against PWA `148c28c` (app 0.12.1.0), starting from Android `7f06e61` (0.11.1, code 26). The feature sync was committed separately from the version bump to **0.12.1, version code 27**. The calculation engine stays at 0.6.0 and the shared event catalog at 0.5.0; the two apps' event JSON is semantically identical.
 
 ## Change coverage
 
