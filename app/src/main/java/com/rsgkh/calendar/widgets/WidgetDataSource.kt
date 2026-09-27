@@ -66,11 +66,14 @@ internal object WidgetDataSource {
         val zone = settings.todayTimeZone.zone()
         val today = settings.todayTimeZone.today(now)
         val dates = if (includePlanner) WidgetPolicy.plannerWindow(today) else WidgetPolicy.window(today)
+        val month = YearMonth.from(today)
+        val personalStart = if (includeMonth) minOf(dates.first(), month.atDay(1)) else dates.first()
+        val personalEnd = if (includeMonth) maxOf(dates.last(), month.atEndOfMonth()) else dates.last()
         var personalUnavailable = false
         val personal = if (!settings.widgetShowPersonal) emptyList() else try {
             CustomEventRepository(context).use { it.all() }.flatMap { event ->
                 try {
-                    event.occurrences(dates.first(), dates.last(), zone)
+                    event.occurrences(personalStart, personalEnd, zone)
                 } catch (error: Exception) {
                     personalUnavailable = true
                     // Do not put a user's title/notes in the log.
@@ -83,6 +86,7 @@ internal object WidgetDataSource {
             Log.w("CalendarWidgets", "Personal events could not be read: ${error.javaClass.simpleName}")
             emptyList()
         }
+        val personalByDate = personal.groupBy { it.date }
         var todayHoliday: String? = null
         val days = dates.map { date ->
             val supported = date.year in EventRepository.coveredYears
@@ -94,7 +98,7 @@ internal object WidgetDataSource {
                 Log.w("CalendarWidgets", "Built-in events could not be read: ${error.javaClass.simpleName}")
                 emptyList()
             }
-            val visibleEvents = (builtIn + personal.filter { it.date == date })
+            val visibleEvents = (builtIn + personalByDate[date].orEmpty())
                     .filter { event ->
                         when (event.kind) {
                             EventKind.CUSTOM -> settings.widgetShowPersonal
@@ -124,23 +128,9 @@ internal object WidgetDataSource {
             null
         }
 
-        // Only the Month widget needs this grid. Other widgets refresh frequently enough that
-        // building 28–31 lunar dates and reopening the personal-event store wastes CPU and battery.
+        // Only Month needs the lunar grid. Its personal markers reuse the same database
+        // snapshot as the daily cards, including adjacent dates across a month boundary.
         val monthDays = if (includeMonth) {
-            val month = YearMonth.from(today)
-            val monthStart = month.atDay(1)
-            val monthEnd = month.atEndOfMonth()
-            val monthPersonal = if (!settings.widgetShowPersonal) emptyList() else try {
-                CustomEventRepository(context).use { it.all() }.flatMap { event ->
-                    try {
-                        event.occurrences(monthStart, monthEnd, zone)
-                    } catch (_: Exception) {
-                        emptyList()
-                    }
-                }
-            } catch (_: Exception) {
-                emptyList()
-            }
             (1..month.lengthOfMonth()).map { dayNum ->
                 val date = month.atDay(dayNum)
                 val d = if (date.year in EventRepository.coveredYears) try { KhmerDateDetails.fromGregorian(date) } catch (_: Exception) { null } else null
@@ -150,7 +140,7 @@ internal object WidgetDataSource {
                 val builtIn = if (date.year in EventRepository.coveredYears) try { EventRepository.forDate(date) } catch (_: Exception) { emptyList() } else emptyList()
                 val hasHoliday = settings.widgetShowHolidays && builtIn.any { it.kind == EventKind.HOLIDAY }
                 val hasObservance = settings.showObservances && settings.widgetShowObservances && builtIn.any { it.kind == EventKind.OBSERVANCE }
-                val hasPersonal = settings.widgetShowPersonal && monthPersonal.any { it.date == date }
+                val hasPersonal = personalByDate[date].orEmpty().isNotEmpty()
 
                 MonthDayInfo(
                     date = date,

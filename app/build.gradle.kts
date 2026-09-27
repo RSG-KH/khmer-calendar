@@ -55,6 +55,8 @@ android {
         compose = true
         buildConfig = true
     }
+    // Widgets choose Khmer/English independently of the device's installed language.
+    bundle { language { enableSplit = false } }
     testOptions { unitTests.isIncludeAndroidResources = true }
     sourceSets {
         getByName("test").kotlin.directories.add("src/sharedTest/java")

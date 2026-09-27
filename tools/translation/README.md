@@ -24,7 +24,7 @@ Each save regenerates:
 
 **Rebuild and reinstall the APK to see saved corrections on a phone.** Saving does not change an already installed app. Kotlin reads these generated resources offline; builds do not need Python or this server. Generated text is encoded as UTF-8/base64 so Khmer, quotes, tabs and newlines are preserved. Do not edit the generated TSV directly.
 
-The catalog covers app-owned wording. Android/Material system controls and the verbatim open-source license are supplied by their respective libraries; personal custom-event text belongs to the user.
+The catalog covers UI wording and calendar vocabulary, including holy-day labels. Catalog event titles and background summaries are maintained separately in `app/src/main/resources/khmer-calendar-data.json` and `event-knowledge.json`. Android/Material system controls and verbatim license assets are supplied by their respective owners; personal custom-event text belongs to the user.
 
 To recover a saved version, stop editing, copy a backup over the project's `translations/catalog.json`, run `python server.py --export`, then reload the editor. Saving from a stale browser version is rejected rather than overwriting newer project changes.
 

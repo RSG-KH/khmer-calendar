@@ -28,6 +28,10 @@ Reviewed on 27 September 2026 against PWA `148c28c` (app 0.12.1.0), starting fro
 
 ## Verification
 
+This section records the September 27 sync checks; counts and artifact names
+refer to that run. Current build commands and lifecycle checks are maintained in
+[Development and testing](development-and-testing.md).
+
 - `:app:testDebugUnitTest`: **230 tests pass**, including native rendering, recurrence, notifications, widgets, storage recovery, coordinate parsing, data/cache validation, nested dialogs, clipboard failure paths and Settings persistence. The full suite, debug build and lint were rerun with version 0.11.1 (26) before committing.
 - Translation tooling: **7 tests pass**.
 - `:app:lintDebug`: no errors; 51 warnings remain in existing widget/resources/dependency configuration. No warnings in the new location picker/catalog or updated custom-event storage.

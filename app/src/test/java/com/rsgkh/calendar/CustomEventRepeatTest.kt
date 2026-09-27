@@ -17,6 +17,34 @@ class CustomEventRepeatTest {
         CustomEvent(id = "series", title = "Repeat", date = date(start), time = LocalTime.parse(time), zoneId = zone, repeat = rule)
     private val onlyCustom = AppSettings(notificationsEnabled = true, pushHolidays = false, pushObservances = false, pushHolyDays = false)
 
+    @Test fun regularPreviewsSupportTheFullRangeAndHugeIntervals() {
+        val start = date("1800-01-01")
+        val daily = rule(RepeatFrequency.DAYS, "2200-12-31", interval = 1).preview(start)
+        assertEquals(146462, daily.dates.size)
+        assertEquals(start, daily.dates.first())
+        assertEquals(date("2200-12-31"), daily.dates.last())
+        assertEquals(start.plusDays(100_000), daily.dates[100_000])
+        assertTrue(daily.skipped.isEmpty())
+        assertFalse(daily.affectsFebruary || daily.affectsThirty)
+        assertThrows(IndexOutOfBoundsException::class.java) { daily.dates[-1] }
+        assertThrows(IndexOutOfBoundsException::class.java) { daily.dates[daily.dates.size] }
+        val weekly = rule(RepeatFrequency.WEEKLY, "2200-12-31").preview(start)
+        assertEquals(146461 / 7 + 1, weekly.dates.size)
+        assertEquals(start.plusDays(146461 / 7 * 7L), weekly.dates.last())
+        assertEquals(listOf(start), rule(RepeatFrequency.DAYS, "2200-12-31", interval = 9_007_199_254_740_991L).preview(start).dates)
+        assertTrue(rule(RepeatFrequency.DAYS, "2200-12-31", interval = 0).preview(start).dates.isEmpty())
+    }
+
+    @Test fun customOnlyAndDisabledCategoriesDoNotLoadBuiltInCalendars() {
+        val source = event("2026-09-28", rule(RepeatFrequency.WEEKLY, "2027-09-28"))
+        val now = Instant.parse("2026-09-28T00:00:00Z")
+        val next = ReminderPlanner.next(now, onlyCustom, listOf(source), yearEvents = { error("Unneeded calendar load") })
+        assertEquals(source.instant, next?.at)
+        assertNull(ReminderPlanner.next(now, onlyCustom.copy(pushCustomEvents = false,
+            pushObservances = true, showObservances = false, pushHolyDays = true, showHolyDaysInEvents = false),
+            listOf(source), yearEvents = { error("Hidden categories should not load calendars") }))
+    }
+
     @Test fun monthEndFallbacksAreIndependentAndNeverMoveTheAnchor() {
         val start = date("2026-01-31")
         val strict = rule(RepeatFrequency.MONTHLY, "2026-12-31")

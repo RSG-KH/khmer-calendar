@@ -46,7 +46,9 @@ object ReminderPlanner {
         }
         val push = LocalTime.of(settings.pushMinutes / 60, settings.pushMinutes % 60)
         val startYear = today.year.coerceAtLeast(1800)
-        if (startYear <= 2200) {
+        val needsBuiltIns = settings.pushHolidays || (settings.showObservances && settings.pushObservances) ||
+            (settings.showHolyDaysInEvents && settings.pushHolyDays)
+        if (needsBuiltIns && startYear <= 2200) {
             for (year in startYear..minOf(startYear + 1, 2200)) {
                 yearEvents(year).forEach { consider(it, it.date.atTime(push).atZone(reminderZone)) }
                 if (earliest != null) break

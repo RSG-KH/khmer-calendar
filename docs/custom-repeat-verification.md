@@ -22,6 +22,10 @@ in a separate commit.
 
 ## Results
 
+These are historical results from the custom-repeat implementation review, not
+the current suite totals or lint baseline. See [Development and testing](development-and-testing.md)
+for current commands and lifecycle coverage.
+
 | Check | Result |
 | --- | --- |
 | `gradlew.bat testDebugUnitTest` | 138 passed; no failures or skips |

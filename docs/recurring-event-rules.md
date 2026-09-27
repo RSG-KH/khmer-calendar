@@ -1,6 +1,6 @@
 # Recurring event rules
 
-Android owns 111 recurrence definitions, stored on each event in the bundled [event catalog](reference-event-database.md) (`khmer-calendar-data.json`). The [shared engine](shared-engine.md) evaluates their dates for every supported year; Android supplies effective years, localized titles, event classification and reviewed date overrides.
+Android owns 113 recurrence definitions, stored on each event in the bundled [event catalog](reference-event-database.md) (`khmer-calendar-data.json`). The [shared engine](shared-engine.md) evaluates their dates for every supported year; Android supplies effective years, localized titles, event classification and reviewed date overrides.
 
 ## Coverage and precedence
 
@@ -11,7 +11,7 @@ Android owns 111 recurrence definitions, stored on each event in the bundled [ev
 
 Engine-derived Buddhist holy days are computed on demand for every supported year. User-created events are stored separately and combined with built-in events by the UI and reminder planner.
 
-Calculated occurrences use `DateBasis.CALCULATED`, `EventKind.OBSERVANCE` and the catalog event's ID; the event key also includes the date. Overridden occurrences use `DateBasis.CORRECTED` and carry the override's source. Neither has an official-source URL or arrival time. A recurrence describes a calendar pattern; it does not establish government leave for a year.
+Calculated occurrences use `DateBasis.CALCULATED`, `EventKind.OBSERVANCE` and the catalog event's ID; the event key also includes the date. Overridden occurrences use `DateBasis.CORRECTED` and carry the override's source. An official-source URL is added by the holiday-calendar overlay. The first New Year event also appends its recorded or estimated arrival time and source IDs, even outside official holiday years. A recurrence describes a calendar pattern; it does not establish government leave for a year.
 
 ## Definition mapping
 
@@ -38,5 +38,5 @@ The rules cover Khmer festivals, 9 traditional Chinese festivals, royal and nati
 ## Updating definitions
 
 1. Edit the event's `rule` in `khmer-calendar-data.json`, keeping IDs stable and reviewing effective years and source evidence.
-2. Update titles in `translations/catalog.json` when necessary and export translations as described in the [translation guide](../tools/translation/README.md).
+2. Update bilingual event titles in `khmer-calendar-data.json` and the corresponding background entry in `event-knowledge.json` when necessary. UI labels and shared calendar vocabulary belong in `translations/catalog.json`; export those as described in the [translation guide](../tools/translation/README.md).
 3. Run `.\gradlew.bat testDebugUnitTest` and inspect failures before committing. Tests compare rule results with the fixture, engine parity, official calendars and repository classification.

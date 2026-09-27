@@ -13,6 +13,23 @@ import java.time.LocalDate
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [32])
 class EventRepositoryTest {
+    @Test fun yearCacheEvictsOldYearsAndKeepsRecentlyUsedYears() {
+        EventRepository.clearCache()
+        try {
+            val first = EventRepository.forYear(2000)
+            val second = EventRepository.forYear(2001)
+            (2002..2011).forEach { EventRepository.forYear(it) }
+            assertSame(first, EventRepository.forYear(2000))
+            EventRepository.forYear(2012)
+            assertSame(first, EventRepository.forYear(2000))
+            val rebuilt = EventRepository.forYear(2001)
+            assertNotSame(second, rebuilt)
+            assertEquals(second, rebuilt)
+        } finally {
+            EventRepository.clearCache()
+        }
+    }
+
     @Test fun dynamicCatalogCoverageSpansAllSupportedYearsFrom1800To2200() {
         assertEquals(1800..2200, EventRepository.coveredYears)
         for (year in listOf(1800, 1900, 1975, 2000, 2025, 2050, 2100, 2200)) {

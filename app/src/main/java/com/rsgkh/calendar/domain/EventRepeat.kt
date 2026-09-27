@@ -22,6 +22,14 @@ data class EventRepeat(
         candidates(start, from, through).filter { it.included }.map { it.date }
 
     fun preview(start: LocalDate): RepeatPreview {
+        if (!isValid(start)) return RepeatPreview(emptyList(), emptyList(), false, false)
+        if (frequency == RepeatFrequency.DAYS || frequency == RepeatFrequency.WEEKLY) {
+            val step = if (frequency == RepeatFrequency.WEEKLY) 7L else interval
+            val count = (ChronoUnit.DAYS.between(start, until) / step + 1).toInt()
+            // The editor needs a count, a few leading dates and the last date. Keep
+            // regular schedules as an indexed view instead of retaining up to 146,462 dates.
+            return RepeatPreview(RegularDates(start, step, count), emptyList(), false, false)
+        }
         val dates = mutableListOf<LocalDate>()
         val skipped = mutableListOf<LocalDate>()
         var thirty = false
@@ -63,6 +71,17 @@ data class EventRepeat(
                 month = month.plusMonths(if (frequency == RepeatFrequency.MONTHLY) 1 else 12)
             }
         }
+    }
+}
+
+private class RegularDates(
+    private val start: LocalDate,
+    private val step: Long,
+    override val size: Int,
+) : AbstractList<LocalDate>(), java.util.RandomAccess {
+    override fun get(index: Int): LocalDate {
+        if (index !in 0 until size) throw IndexOutOfBoundsException("Index: $index, size: $size")
+        return start.plusDays(index * step)
     }
 }
 

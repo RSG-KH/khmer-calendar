@@ -36,6 +36,29 @@ import org.robolectric.annotation.Config
 class WidgetSettingsTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
 
+    @Test fun monthSnapshotIncludesPersonalMarkersAndAdjacentDaysAcrossYearBoundaries() {
+        val preferences = AppPreferences(context)
+        val original = preferences.read()
+        val event = CustomEvent(title = "Boundary series", date = LocalDate.of(2026, 12, 1), time = LocalTime.NOON,
+            repeat = com.rsgkh.calendar.domain.EventRepeat(com.rsgkh.calendar.domain.RepeatFrequency.DAYS,
+                LocalDate.of(2027, 2, 1), interval = 1))
+        try {
+            preferences.write(original.copy(todayTimeZone = TodayTimeZone.CAMBODIA, widgetShowPersonal = true))
+            CustomEventRepository(context).use { it.save(event) }
+            for (now in listOf(Instant.parse("2026-12-31T08:00:00Z"), Instant.parse("2027-01-01T08:00:00Z"))) {
+                val snapshot = WidgetDataSource.load(context, now = now, includeMonth = true)
+                assertEquals(31, snapshot.monthDays.size)
+                assertTrue(snapshot.monthDays.all { it.hasPersonal })
+                for (day in listOf(snapshot.yesterday, snapshot.current, snapshot.tomorrow)) {
+                    assertTrue("Missing series on ${day.date}", day.items.any { it.eventId == "custom:${event.id}@${day.date}" })
+                }
+            }
+        } finally {
+            CustomEventRepository(context).use { it.delete(event.id) }
+            preferences.write(original)
+        }
+    }
+
     @Test fun globalObservanceChoiceOverridesWidgetChoiceAndRestoresIt() {
         val preferences = AppPreferences(context)
         val original = preferences.read()

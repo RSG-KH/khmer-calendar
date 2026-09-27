@@ -31,7 +31,7 @@ Calculation algorithms and supporting evidence are maintained in the engine proj
 
 ## Events and storage
 
-`EventRepository` builds every supported year (1800–2200) on demand and caches each requested year's localized event list in memory. Each year is layered from the bundled event catalog (`khmer-calendar-data.json`) and the shared engine: recorded date lists (fixed heritage milestones), engine-evaluated recurrence rules (including dynamic Chinese festivals for 1900–2100) with reviewed per-year date overrides, official government holiday calendars for 2016–2027 that promote matching occurrences to cited public holidays, and Buddhist holy days computed day by day from the engine. The calendar grid and date details use the engine directly. User-created events come from a separate repository and are combined with built-in events by the UI and reminder planner.
+`EventRepository` builds every supported year (1800–2200) on demand and retains at most 12 years in a synchronized least-recently-used cache. Event objects carry both Khmer and English titles. Each year is layered from the bundled event catalog (`khmer-calendar-data.json`) and the shared engine: recorded date lists (fixed heritage milestones), engine-evaluated recurrence rules (including dynamic Chinese festivals for 1900–2100) with reviewed per-year date overrides, official government holiday calendars for 2016–2027 that promote matching occurrences to cited public holidays, and Buddhist holy days computed day by day from the engine. The calendar grid and date details use the engine directly. User-created events come from a separate repository and are combined with built-in events by the UI and reminder planner.
 
 | Event kind | Source |
 | --- | --- |
@@ -66,22 +66,49 @@ February and 30-day fallbacks never shift later months. All repeat modes require
 an end date within 1800–2200. Yearly February 29 series can skip non-leap years or
 include February 28.
 
+Daily and weekly previews use an arithmetic, indexed date list: the editor can
+read the exact count, first dates and last date without allocating every occurrence.
+Monthly and yearly previews retain only their bounded civil-month candidates.
+
 Calendar and Events expand only the years being viewed, projecting each occurrence
 from its saved zone into the selected display zone. Occurrence IDs include the
 source date, with a separate series ID for editing and deletion. Both operations
 apply to the entire series. Editing a series keeps its original date, wall time and
 zone; switching a single event to a series anchors it in the editor's displayed zone.
 
+Database helpers retain the application context. The activity closes its helper on
+destruction; reminder and widget reads use scoped helpers, and every query closes
+its cursor. Invalid stored event rows are skipped individually without deleting
+their raw data or hiding valid neighbors.
+
+## Preferences and locations
+
+`AppPreferences` stores settings in `appearance` SharedPreferences and recovers
+invalid values individually. `SavedBirthplaces` stores reusable places in the
+`birthplaces` preferences; the default Rising place is stored separately in
+`appearance`. Place records include a label, coordinates, IANA time zone and,
+for catalog entries, source identity and dataset version. No GPS permission is used.
+`BirthplaceCatalog` reads bundled assets on IO threads and keeps at most two
+country documents per dialog instance. Compose cancels location-loading effects
+when their keys change or the dialog leaves composition.
+
+Android backup and device transfer include events, settings and saved places when
+enabled by the device. Both backup rule files exclude `reminder-state.xml`, whose
+scheduled/delivered timestamps belong to the current device.
+
 ## Reminders and notifications
 
-The application provides local, reliable event notifications without relying on Google Play Services, Firebase Cloud Messaging (FCM), or external background workers.
+The application schedules local event notifications without Google Play Services or Firebase Cloud Messaging (FCM). Android notification permissions, alarm access and power restrictions affect delivery.
 
 ### Architecture
 - **`EventReminderReceiver`** (in `notifications/EventNotifications.kt`): Broadcast receiver triggered by Android's `AlarmManager.setExactAndAllowWhileIdle` for precision alarms.
-- **`ReminderRestoreReceiver`** (in `notifications/EventNotifications.kt`): Re-calculates and re-registers the next upcoming alarm upon device restart (`ACTION_BOOT_COMPLETED`), package replacement, clock adjustment (`ACTION_TIME_SET`, `ACTION_TIMEZONE_CHANGED`), or exact-alarm permission changes.
+- Without exact-alarm access, scheduling falls back to `setAndAllowWhileIdle`; Android may defer delivery.
+- **`ReminderWork`**: A single background executor serializes scheduling and delivery using the application context. Broadcast receivers use `goAsync()` and finish their pending result in `finally`, including when work fails.
+- **`ReminderRestoreReceiver`** (in `notifications/EventNotifications.kt`): Re-calculates and re-registers the next upcoming alarm upon device restart (`ACTION_BOOT_COMPLETED`), package replacement, clock adjustment (`Intent.ACTION_TIME_CHANGED`, whose action string is `android.intent.action.TIME_SET`, or `ACTION_TIMEZONE_CHANGED`), or exact-alarm permission changes.
 - **Single Next-Alarm Queue**:
   - Rather than filling Android's alarm table with hundreds of future alarms, the app calculates the immediate next event moment and schedules a single alarm.
   - When that alarm fires, notifications are posted, and the queue automatically schedules the subsequent alarm.
+  - Built-in years are loaded only when at least one built-in reminder category is eligible. Custom-only reminders use their saved event schedules directly.
 
 ### Event-type controls
 
@@ -117,12 +144,12 @@ All widgets follow the dedicated **Font size** setting in the Widgets section of
 
 The **Add widgets** action in settings opens a swipeable in-app chooser with theme-adjusted previews, widget names and target sizes. It uses Android's widget pinning request for the selected widget when the launcher supports that flow.
 
-`WidgetDataSource` builds the full-month lunar grid only for the Month widget; other widgets load the dates they need.
+`WidgetDataSource` builds the full-month lunar grid only for the Month widget; other widgets load the dates they need. Each snapshot reads personal events once, expands the necessary date window and groups occurrences by date. Month markers reuse that snapshot, including yesterday/tomorrow across month and year boundaries.
 
 ### Lifecycle & Background Refresh
 - **`WidgetUpdater`**: Manages WorkManager (`WidgetRefreshWorker`) periodic hourly updates, immediate background updates, and `AlarmManager`'s inexact midnight triggers (`RTC_WAKEUP`). Every refresh path re-reads the **Enable widgets** setting and skips work while it is off; turning it off cancels the queued, periodic and midnight refreshes. A refresh failure on one widget does not stop the remaining widgets.
 - **`WidgetReceivers`**: Manifest-registered broadcast receivers (`FocusWidgetReceiver`, `ProductivityWidgetReceiver`, `MonthWidgetReceiver`, `PlannerWidgetReceiver`, `GlanceWidgetReceiver`, `WidgetRefreshReceiver`) react to system triggers (`BOOT_COMPLETED`, `TIME_CHANGED`, `TIMEZONE_CHANGED`, `DATE_CHANGED`, `LOCALE_CHANGED`, `MY_PACKAGE_REPLACED`). The midnight receiver refreshes widgets inline within its broadcast window — with the queued WorkManager job kept as a fallback for OEMs that interrupt background receivers — and reschedules the next selected-zone midnight.
-- **In-app refresh**: Changing any setting while the app is open refreshes installed widgets immediately, so language or appearance changes are visible as soon as the user returns home; the queued worker remains as a fallback.
+- **In-app refresh**: A changed setting starts an immediate refresh of enabled, installed widgets; saving unchanged settings does no work. A newer settings change cancels the previous activity refresh, and activity destruction cancels its remaining work. Rendering is serialized by `WidgetUpdater`'s mutex; the queued worker remains as a fallback.
 
 ### Master Enable/Disable Control
 - **`PackageManager` State Management**: When **Enable widgets** is toggled off in App Settings, `WidgetUpdater.setWidgetsEnabled(context, false)` sets `COMPONENT_ENABLED_STATE_DISABLED` on all five widget receivers and cancels their queued, periodic and midnight refreshes.

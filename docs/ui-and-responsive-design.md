@@ -79,7 +79,7 @@ Calendar cells and date details use the supplied 300×300 PNGs unchanged: `lutos
 
 ## 1. Adaptive Multi-Form-Factor Layouts
 
-The application continuously evaluates configuration metrics (`smallestScreenWidthDp`, `orientation`, and window size classes) to deliver an optimized user experience.
+The application uses configuration metrics (`smallestScreenWidthDp` and `orientation`), layout constraints and the actual window size to adapt its layout.
 
 | Form Factor & Orientation | Navigation Structure | Main Content Layout |
 | :--- | :--- | :--- |
@@ -92,7 +92,7 @@ The application continuously evaluates configuration metrics (`smallestScreenWid
 
 ### Edge-to-edge and system insets
 
-`MainActivity` calls `WindowCompat.setDecorFitsSystemWindows(window, false)` and sets the display cutout mode to `ALWAYS`, supported throughout the app's API 31+ range. The existing compact layout uses Scaffold's default content insets, 68% of its top padding in landscape, and half the bottom navigation-bar inset in portrait. The custom-event editor uses `imePadding()` for the keyboard.
+`MainActivity` calls `WindowCompat.setDecorFitsSystemWindows(window, false)` and sets the display cutout mode to `ALWAYS`, supported throughout the app's API 31+ range. Scaffold explicitly uses `WindowInsets.systemBars`, with 68% of its top padding in landscape and half the bottom navigation-bar inset in portrait. The custom-event editor uses `imePadding()` for the keyboard.
 
 The Compose theme updates system icon brightness with `WindowInsetsControllerCompat`. For Android 12–14, the XML theme sets transparent status/navigation bars and disables status-bar contrast enforcement. The `values-v35` theme inherits the shared light/dark base directly, without those legacy overrides; Android 15+ supplies the edge-to-edge bar backgrounds. Navigation-bar contrast enforcement remains enabled for three-button navigation. This follows [Android's manual setup guidance](https://developer.android.com/develop/ui/views/layout/edge-to-edge-manually) for older versions. See also [Android's Compose inset guidance](https://developer.android.com/develop/ui/compose/system/insets-ui) and [Android 15's edge-to-edge requirements](https://developer.android.com/about/versions/15/behavior-changes-15#edge-to-edge).
 

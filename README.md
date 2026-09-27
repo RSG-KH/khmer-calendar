@@ -50,7 +50,7 @@ Same-day event lists show timed personal events first, then untimed personal eve
 - **Time Zone Intelligence**:
   - **Display Time Zone**: Choose device local time or Cambodia time (UTC+7) for Today, event display and the daily reminder clock.
   - **Repeating Event Time Zone**: Each series keeps its saved time zone and wall-clock time across daylight saving changes; occurrences are shown in the selected display zone.
-- **Local Alarms**: Android's `AlarmManager.setExactAndAllowWhileIdle` schedules reminders on-device, with notification and exact-alarm access enabled. No remote push server is used.
+- **Local Alarms**: Android's `AlarmManager` schedules reminders on-device. With exact-alarm access it uses precise alarms; otherwise it falls back to inexact alarms that Android may defer. Notification access is required. No remote push server is used.
 - **Repeat Reminders**: Configure the daily reminder time and optional additional reminders every 2, 4, 6, 8 or 12 hours. These are separate from an event's repeat schedule.
 - **Event-Type Controls**: Choose reminders for personal events, holidays, observances, and Buddhist holy days independently.
 
@@ -97,6 +97,7 @@ KhmerCalendar/
 │   │   │   ├── TodayRefresh.kt          # Visible-only today-date refresh polling
 │   │   │   ├── data/
 │   │   │   │   ├── AppPreferences.kt    # Settings (theme, accent, font scale, timezone, widgets)
+│   │   │   │   ├── Birthplaces.kt       # Offline location catalogs and saved places
 │   │   │   │   ├── CustomEventRepository.kt # Personal event CRUD (local persistence)
 │   │   │   │   ├── EventRepository.kt   # Event models & bundled snapshot loading
 │   │   │   │   └── RecurringEvents.kt   # Built-in observance recurrence rules
@@ -105,6 +106,8 @@ KhmerCalendar/
 │   │   │   │   ├── KhmerCalendar.kt     # Shared-engine date adapter & lunar labels
 │   │   │   │   ├── KhmerDateDetails.kt  # Engine results & Android formatting
 │   │   │   │   ├── KhmerNewYear.kt      # Shared-engine festival date adapter
+│   │   │   │   ├── WesternBig3.kt       # Selected time/place adapter for Sun, Moon and Rising
+│   │   │   │   ├── Coordinates.kt       # Decimal/DMS coordinate parsing
 │   │   │   │   └── Zodiac.kt            # Western zodiac signs & elements
 │   │   │   ├── i18n/
 │   │   │   │   ├── CalendarWords.kt     # Khmer/English month, day & number words
@@ -139,12 +142,18 @@ KhmerCalendar/
 │   │   │       ├── SelectionChip.kt     # Shared filter-chip for filters & repeat choices
 │   │   │       ├── SettingsControls.kt  # Reusable settings rows & dropdowns
 │   │   │       ├── Theme.kt             # Material 3 tokens, accents, & readableSp
+│   │   │       ├── TimeAndLocationDialog.kt # Time, catalog and custom-location picker
+│   │   │       ├── TimeInput.kt         # Shared HH:mm input and picker action
+│   │   │       ├── LocationChoices.kt   # Administrative choices and search ranking
+│   │   │       ├── SavedLocationChips.kt # Reusable saved-location controls
 │   │   │       ├── WeekdayColors.kt     # Traditional weekday colors for light & dark
 │   │   │       └── WidgetAddDialog.kt   # Swipeable widget chooser and add request
 │   │   ├── resources/
+│   │   │   ├── event-knowledge.json     # Offline event background and reading links
 │   │   │   ├── khmer-calendar-data.json # Event catalog: rules, dated records, official calendars, overrides & sources
 │   │   │   └── translations.tsv         # Offline localization dictionary
 │   │   └── assets/
+│   │       ├── birthplaces/             # Offline administrative points, zones and attribution
 │   │       ├── NOTICE.txt               # App & data catalog attribution notices
 │   │       ├── app-LICENSE.txt          # App's Apache 2.0 license
 │   │       ├── engine-LICENSE.txt       # Shared engine's Apache 2.0 license
@@ -204,6 +213,7 @@ Android architecture, integration and developer guides are maintained in the [`d
 - 📖 **[System Architecture](docs/architecture.md)**: Engine adapters, event repository pipeline and exact alarm subsystem.
 - 🎨 **[UI & Responsive Design](docs/ui-and-responsive-design.md)**: Phone vs. tablet layouts, landscape navigation rail distribution, dynamic scrollbar modifier, and font scaling architecture.
 - 🛠️ **[Development & Testing Guide](docs/development-and-testing.md)**: Environment configuration, test suite details, translation tool setup, and dataset generation pipelines.
+- **[Stability & Performance Review](docs/stability-and-performance.md)**: Verified fixes, activity-retention checks, test results and remaining limits.
 - 📜 **[Recurring Event Rules](docs/recurring-event-rules.md)**: App recurrence definitions, engine mapping and reviewed date overrides.
 - ✅ **[Custom Repeat Verification](docs/custom-repeat-verification.md)**: Behavior checklist and test record for repeating personal events.
 - 🗃️ **[Bundled Event Data](docs/reference-event-database.md)**: Event catalog schema, official holiday calendars, provenance and maintenance.
@@ -212,7 +222,7 @@ Android architecture, integration and developer guides are maintained in the [`d
 
 ## Translation & Localization
 
-All in-app text, calendar vocabulary, and event templates are managed through [`translations/catalog.json`](translations/catalog.json).
+UI text and calendar vocabulary are managed through [`translations/catalog.json`](translations/catalog.json). Built-in event titles, citations and background information are maintained in the bundled event JSON resources; license and notice assets retain their original text.
 
 A local web editor is included for seamless translation maintenance:
 ```cmd
@@ -227,7 +237,7 @@ For detailed workflow instructions, consult the [Translation Tool Guide](tools/t
 
 - **Zero Network Permissions**: The application does not request the Android `INTERNET` permission. Library permissions merged from dependencies (`ACCESS_NETWORK_STATE`, `FOREGROUND_SERVICE`) are explicitly stripped in the manifest. The event details "Search online" action is strictly user-initiated: it opens the browser directly in Google AI mode (Custom Tab) for the event title and its history via Android's intent system — the app itself holds no network permission and sends nothing.
 - **Zero Advertising or Telemetry**: No third-party SDKs, analytics, or tracking services are bundled.
-- **Local Data Ownership**: Personal events and repeat schedules are stored in app-private SQLite; settings use Android SharedPreferences. Android may back up these files or transfer them to a new device when device backup is enabled; reminder delivery state is excluded. See the [Privacy Policy](PRIVACY_POLICY.md).
+- **Local Data Ownership**: Personal events and repeat schedules are stored in app-private SQLite; settings and saved location labels, coordinates and time zones use Android SharedPreferences. No device location access is requested. Android may back up these files or transfer them to a new device when device backup is enabled; reminder delivery state is excluded. See the [Privacy Policy](PRIVACY_POLICY.md).
 
 For complete details on our data practices and user controls, read our [Privacy Policy](PRIVACY_POLICY.md).
 

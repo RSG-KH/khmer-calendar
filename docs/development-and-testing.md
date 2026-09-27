@@ -24,6 +24,10 @@ Run from the project root in PowerShell:
 
 The debug APK is `app/build/outputs/apk/debug/app-debug.apk` and uses the Android debug keystore. The unsigned release APK is `app/build/outputs/apk/release/app-release-unsigned.apk`; the release bundle is `app/build/outputs/bundle/release/app-release.aab`. Release distribution requires your signing configuration.
 
+Language splitting is disabled for the app bundle. English and Khmer resources
+must both be installed because the app and widgets choose their language
+independently of the device locale, including while offline.
+
 ## Testing
 
 ```powershell
@@ -41,6 +45,7 @@ Connected tests require a running emulator or device listed by `adb devices`.
 | Event repository and recurrence | Catalog coverage across 1800–2200, engine parity for calculated events and holy days, recorded date lists, official holiday calendars with citations, rule translation, captured-date comparisons and classification |
 | Reminder planner and delivery | Category controls, appearance changes preserving alarms, permissions, saved event instants, clock/time-zone broadcasts without an activity, daylight saving and repeats |
 | Today refresh | Visible-only polling, immediate refresh on return, midnight, clock jumps and device time-zone changes |
+| Memory and lifecycle | Twelve-year event cache eviction, two-country location cache bounds, full-range arithmetic repeat previews, and on-device collection of destroyed activities after recreation and background/foreground cycles |
 | Date details | Today-zone clock snapshot, saved default time/place, header-only time/location picker, display-only tables, nested popup state, grouped event ordering, and master/individual astrology visibility |
 | Compose UI | Phone/tablet layouts, both languages, dialogs, font scaling and settings |
 | Home screen widgets | Date rollover and event-filter policies, tap navigation into date or event details, hidden personal-event details, Glance labels and badges, Planner week boundaries and scroll targets, snapshots following saved widget choices, appearance-following palettes, and English Western zodiac names in both app languages |
@@ -52,6 +57,21 @@ The app retains its pinned MomentKH fixture and generator to catch consumer regr
 Shared UI scenarios in `app/src/sharedTest` run under Robolectric and on a device. Device screenshots capture the full display so open dialogs are included. Inspect changed screens when updating layout or source-dialog content.
 
 The bilingual About/Sources interaction check runs in `CalendarUiTest` on Android, covering real inline-link rendering, the engine link's destination and bundled licenses. Compose tests use the v2 test rules; alarm assertions use Robolectric's current accessors.
+
+For a focused activity-retention check:
+
+```powershell
+.\gradlew.bat connectedDebugAndroidTest "-Pandroid.testInstrumentationRunnerArguments.class=com.rsgkh.calendar.LifecycleDeviceTest"
+```
+
+`LifecycleDeviceTest` changes settings, backgrounds/resumes and recreates the
+activity eight times, then closes the last activity and checks that all nine weak
+references clear after garbage collection. It restores the original settings.
+This detects retained activities in that scenario; it is not proof that every
+dialog, widget host or long-running device session is leak-free. For release
+qualification, also inspect heap dumps after extended navigation, location
+searches and widget resizing on representative devices. Test counts and device
+results in dated verification documents describe those specific runs.
 
 ## Translations
 

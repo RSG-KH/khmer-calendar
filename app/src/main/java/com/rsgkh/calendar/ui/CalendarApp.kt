@@ -1998,7 +1998,7 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
                     ).joinToString("\n")
                 }
             )) { append(locationLink) }
-            if (!k) append(".")
+            append(if (k) "។" else ".")
         }
     }
     val scrollState = rememberScrollState()

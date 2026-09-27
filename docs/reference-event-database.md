@@ -55,7 +55,7 @@ The companion `event-knowledge.json` resource bundles the manager's curated know
 
 For the first New Year stage (`khmer_new_year_1`), both the calculated occurrence and any official holiday promotion append the resolved Moha Sangkran arrival time to the title and merge the arrival record's sources, as described above.
 
-Every supported year 1800–2200 is built this way on demand and cached in memory per year. Outside 2016–2027 no event is marked as an official holiday; a calculated festival date alone never establishes government leave.
+Every supported year 1800–2200 is built this way on demand, with at most 12 years retained in a synchronized least-recently-used cache. Outside 2016–2027 no event is marked as an official holiday; a calculated festival date alone never establishes government leave.
 
 Normal builds package the committed catalog; there is no on-device database, precaching job or network request for built-in events.
 

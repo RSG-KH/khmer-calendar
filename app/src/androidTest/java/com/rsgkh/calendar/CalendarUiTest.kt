@@ -92,8 +92,8 @@ class CalendarUiTest : CalendarUiScenarios() {
             val version = L.text("about.version", k, "version" to BuildConfig.VERSION_NAME)
             compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText(version))
             compose.onNodeWithText(version).assertIsDisplayed()
-            compose.onNodeWithText("PWA · RSG-KH/khmer-calendar-pwa").assertIsDisplayed().assertHasClickAction()
-            compose.onNodeWithText("Android · RSG-KH/khmer-calendar").assertIsDisplayed().assertHasClickAction()
+            compose.onNodeWithText("PWA · RSG-KH/khmer-calendar-pwa").performScrollTo().assertIsDisplayed().assertHasClickAction()
+            compose.onNodeWithText("Android · RSG-KH/khmer-calendar").performScrollTo().assertIsDisplayed().assertHasClickAction()
             screenshot("about-$k")
             compose.onNodeWithText(L.text("ui.calendar_sources_licenses.c2bdb3", k)).performScrollTo().performClick()
             val holidayText = L.text("about.public_holiday_source", k)
@@ -116,7 +116,7 @@ class CalendarUiTest : CalendarUiScenarios() {
             compose.onNodeWithText("Khmer Calendar Engine").assertDoesNotExist()
             screenshot("engine-sources-$k")
             val sourceLink = L.text("about.view_source_urls", k)
-            val sourceParagraph = L.text("about.location_sources", k) + " " + sourceLink + if (k) "" else "."
+            val sourceParagraph = L.text("about.location_sources", k) + " " + sourceLink + if (k) "។" else "."
             val locationSource = compose.onNodeWithTag("location-source-paragraph")
             locationSource.performScrollTo().assertTextEquals(sourceParagraph)
             screenshot("location-source-paragraph-$k")

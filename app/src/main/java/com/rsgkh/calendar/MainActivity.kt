@@ -27,6 +27,7 @@ import com.rsgkh.calendar.widgets.WidgetUpdater
 import java.time.LocalDate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
     private var openDateRequest by mutableStateOf<Pair<LocalDate, Long>?>(null)
     private var openWidgetEventRequest by mutableStateOf<com.rsgkh.calendar.widgets.WidgetEventRequest?>(null)
     private var awaitingNotificationPermission = false
+    private var widgetRefreshJob: Job? = null
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         awaitingNotificationPermission = false
         preferences.write(preferences.read().copy(notificationsEnabled = granted))
@@ -100,18 +102,22 @@ class MainActivity : ComponentActivity() {
     }
     internal fun updateSettings(next: AppSettings) {
         val previous = preferences.read()
+        if (next == previous) return
         preferences.write(next)
         revision++
         WidgetUpdater.requestUpdate(this)
         if (next.widgetsEnabled != previous.widgetsEnabled) {
             WidgetUpdater.setWidgetsEnabled(this, next.widgetsEnabled)
         }
-        if (next != previous && next.widgetsEnabled) {
+        widgetRefreshJob?.cancel()
+        widgetRefreshJob = null
+        if (next.widgetsEnabled) {
             // WorkManager can defer its one-time job. Update installed widgets while the app is
             // open so a language or appearance change is visible as soon as the user goes home.
-            lifecycleScope.launch(Dispatchers.IO) {
+            val appContext = applicationContext
+            widgetRefreshJob = lifecycleScope.launch(Dispatchers.IO) {
                 try {
-                    WidgetUpdater.refreshAll(applicationContext)
+                    WidgetUpdater.refreshAll(appContext)
                 } catch (cancelled: CancellationException) {
                     throw cancelled // The queued worker remains as a fallback if this activity closes.
                 } catch (error: Exception) {

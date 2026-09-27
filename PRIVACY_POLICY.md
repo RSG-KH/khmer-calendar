@@ -1,7 +1,7 @@
 # Privacy Policy for Khmer Calendar (ប្រតិទិនខ្មែរ)
 
 **Effective Date:** September 15, 2026  
-**Last Updated:** September 24, 2026
+**Last Updated:** September 28, 2026
 
 This Privacy Policy explains how **Khmer Calendar (ប្រតិទិនខ្មែរ)** ("the Application"), developed by **RSG-KH** ("we", "us", or "our"), handles your information. 
 
@@ -17,8 +17,9 @@ The Application does **not** declare or request the `android.permission.INTERNET
 * **User-initiated external search:** The event details screen offers a "Search online" action on built-in events. Tapping it opens your web browser on a search for the event title and its history, as a Custom Tab or an external browser. The browser may connect to the internet and handle the query under its own privacy terms; the Application itself does not open a network connection.
 
 ## 2. Information Handling and Storage
-* **Personal Data:** We do not collect, store, or transmit your name, email address, phone number, location, IP address, or hardware identifiers.
+* **Personal Data:** We do not receive your personal information. The Application does not request device location access or collect hardware identifiers.
 * **Events, Notes, and Preferences:** Custom events and notes are stored in an app-private SQLite database; settings are stored in app-private Android SharedPreferences. We have no access to your entries or settings.
+* **Saved Locations:** Places you select or enter for the Rising sign are stored locally, including their labels, coordinates and time zones. The default Rising place and reusable saved places are kept in app-private preferences. Selecting a place does not read your device's current location or send the place to us. Saved places and defaults may be included in Android backup and device transfer.
 * **Android backup and transfer:** The Application allows Android backup. Depending on your device and backup settings, Android may copy the database and preferences to your configured cloud backup or transfer them to a new device. Reminder delivery state is excluded from backup. You can manage backup in your device settings. See [Android's Auto Backup documentation](https://developer.android.com/identity/data/autobackup).
 * **Alarms & Notifications:** The Application utilizes standard Android exact alarms (`SCHEDULE_EXACT_ALARM`) and notification permissions (`POST_NOTIFICATIONS`) solely to trigger local, on-device alerts for your holy days and custom reminders. No notification data is transmitted over a network.
 
@@ -29,6 +30,7 @@ The Application does **not** declare or request the `android.permission.INTERNET
 ## 4. User Data Control and Deletion
 You retain complete control over all data stored by the Application:
 * You can view, edit, or delete personal events at any time directly within the application interface.
+* You can remove saved places in the location picker. The default Rising place in Settings is a separate preference; removing a saved-place chip does not erase that default.
 * Clearing the Application’s storage via your device’s **Android Settings > Apps > Khmer Calendar > Storage > Clear Data** erases its local databases and preferences.
 * Uninstalling the Application removes its local data from that device. If Android made a backup, a separate backup copy may remain under your device's backup settings.
 
