@@ -14,7 +14,7 @@ The Application does **not** declare or request the `android.permission.INTERNET
 * The Application itself does not connect to a server or send analytics or telemetry. Its calendar, event, widget, and reminder features work offline.
 * If Android backup is enabled on your device, the operating system may back up the Application's saved data through your configured backup service. See Section 2.
 
-* **User-initiated external search:** The event details screen offers a "Search online" action on built-in events. Tapping it opens your web browser on a search for the event title and its history, as a Custom Tab or an external browser. The browser may connect to the internet and handle the query under its own privacy terms; the Application itself does not open a network connection.
+* **User-initiated Ask AI:** Learn more and astrology detail popups offer an "Ask AI" action. Tapping it passes a query to Google AI mode in your browser, as a Custom Tab or an external browser. Event queries contain the event title and context; astrology queries contain displayed signs, pillars and clashes, without adding the selected date, time, location label or coordinates. The browser and search provider may process the query under their own privacy terms; the Application itself does not open a network connection.
 
 ## 2. Information Handling and Storage
 * **Personal Data:** We do not receive your personal information. The Application does not request device location access or collect hardware identifiers.

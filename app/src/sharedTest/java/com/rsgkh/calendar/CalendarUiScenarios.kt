@@ -44,6 +44,50 @@ import java.time.ZoneId
 abstract class CalendarUiScenarios {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun astrologyTablesOpenDetailsAndPreserveTheSelectedTime() = checkAstrologyDetails(false)
+
+    @Test fun khmerAstrologyDetailsKeepEmojiTablesAndLocalizedActions() = checkAstrologyDetails(true)
+
+    private fun checkAstrologyDetails(k: Boolean) {
+        start(AppSettings(khmer = k, useEmojiForWesternZodiac = k, useEmojiForGanzhiAnimals = k))
+        val date = LocalDate.of(2026, 9, 24)
+        compose.onNode(hasContentDescription(com.rsgkh.calendar.i18n.CalendarWords.date(date, k), substring = true)
+            and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        compose.onNodeWithTag("date-details-time-chip").performClick()
+        compose.onNodeWithTag("location-time").performTextReplacement("08:35")
+        compose.onNodeWithTag("location-save").performClick()
+        val tags = listOf("western-sign-sun", "western-sign-moon", "western-sign-rising") +
+            listOf("year", "month", "day", "hour").flatMap { listOf("ganzhi-sign-$it", "ganzhi-clash-$it") }
+        val original = tags.associateWith { tag ->
+            compose.onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode()
+                .config[androidx.compose.ui.semantics.SemanticsProperties.Text].single().text
+        }
+        fun popup(tag: String) = compose.onNode(hasTestTag(tag) and hasAnyAncestor(hasTestTag("astrology-details-dialog")),
+            useUnmergedTree = true)
+        compose.onNodeWithTag("western-zodiac-table").assertHasClickAction().performClick()
+        popup("astrology-details-title").assertTextEquals(if (k) "តារានិករ · Big 3" else "Zodiac · Big 3")
+        popup("western-zodiac-table").assertHasNoClickAction()
+        tags.take(3).forEach { popup(it).assertTextEquals(original.getValue(it)) }
+        for (key in listOf("sun", "moon", "rising")) {
+            popup("big3-detail-$key").assertExists()
+        }
+        popup("big3-detail-sun").assertTextEquals("♎️ Libra (Air · Venus)")
+        popup("astrology-watermark").assertExists()
+        compose.onNodeWithText(if (k) "សួរ AI" else "Ask AI").assertIsDisplayed()
+        screenshot("big3-details-$k")
+        popup("astrology-close").performClick()
+        compose.onNodeWithTag("date-details-time-chip").assertTextContains("08:35", substring = true)
+        compose.onNodeWithTag("ganzhi-table").assertHasClickAction().performClick()
+        popup("astrology-details-title").assertTextEquals(if (k) "ហោរាសាស្ត្រចិន (干支)" else "Chinese Ganzhi (干支)")
+        popup("ganzhi-table").assertHasNoClickAction()
+        tags.drop(3).forEach { popup(it).assertTextEquals(original.getValue(it)) }
+        popup("big3-detail-sun").assertDoesNotExist()
+        popup("astrology-watermark").assertExists()
+        screenshot("ganzhi-details-$k")
+        popup("astrology-close").performClick()
+        compose.onNodeWithTag("date-details-time-chip").assertTextContains("08:35", substring = true)
+    }
+
     @Test fun savedLocationChipsLimitRowsAndKeepOverflowActionsUsable() {
         val settings = mutableStateOf(AppSettings(khmer = false, theme = ThemeMode.LIGHT))
         fun fixtures(k: Boolean) = (1..8).map { index ->

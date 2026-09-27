@@ -36777,11 +36777,11 @@
       }
     },
     {
-      "id": "ui.search_online",
+      "id": "ui.ask_ai",
       "section": "interface",
-      "context": "CalendarApp.kt",
-      "en": "Search online",
-      "km": "ស្វែងរកលើអ៊ីនធឺណិត",
+      "context": "Opens a Google AI-mode query in the browser",
+      "en": "Ask AI",
+      "km": "សួរ AI",
       "original": {
         "en": "Search online",
         "km": "ស្វែងរកលើអ៊ីនធឺណិត"
@@ -37366,6 +37366,58 @@
       "required": {
         "en": [],
         "km": []
+      }
+    },
+    {
+      "id": "ui.zodiac_big3_title",
+      "section": "interface",
+      "context": "Western astrology detail popup title",
+      "en": "Zodiac · Big 3",
+      "km": "តារានិករ · Big 3",
+      "original": {
+        "en": "Zodiac · Big 3",
+        "km": "តារានិករ · Big 3"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.chinese_ganzhi_title",
+      "section": "interface",
+      "context": "Chinese astrology detail popup title",
+      "en": "Chinese Ganzhi (干支)",
+      "km": "ហោរាសាស្ត្រចិន (干支)",
+      "original": {
+        "en": "Chinese Ganzhi (干支)",
+        "km": "ហោរាសាស្ត្រចិន (干支)"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.astrology_ai_query",
+      "section": "interface",
+      "context": "Browser AI query using only displayed signs and pillars",
+      "en": "Explain the traditional astrological meanings of {details}.",
+      "km": "ពន្យល់អត្ថន័យតាមហោរាសាស្ត្រនៃ {details}។",
+      "original": {
+        "en": "Explain the traditional astrological meanings of {details}.",
+        "km": "ពន្យល់អត្ថន័យតាមហោរាសាស្ត្រនៃ {details}។"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [
+          "details"
+        ],
+        "km": [
+          "details"
+        ]
       }
     }
   ],

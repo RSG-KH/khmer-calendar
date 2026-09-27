@@ -15,9 +15,9 @@ class CalendarUiTest : CalendarUiScenarios() {
     @Test fun ganzhiTableUsesEmojiAndEnglishAnimalNamesOnDevice() {
         start(com.rsgkh.calendar.data.AppSettings(khmer = false, useEmojiForGanzhiAnimals = true))
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
-        compose.onNodeWithTag("ganzhi-sign-day").assertTextEquals("🐮")
-        compose.onNodeWithTag("ganzhi-clash-day").assertTextEquals("🐐")
-        compose.onNodeWithTag("ganzhi-sign-hour").assertTextEquals("🐴").assertHasNoClickAction()
+        compose.onNodeWithTag("ganzhi-sign-day", useUnmergedTree = true).assertTextEquals("🐮")
+        compose.onNodeWithTag("ganzhi-clash-day", useUnmergedTree = true).assertTextEquals("🐐")
+        compose.onNodeWithTag("ganzhi-sign-hour", useUnmergedTree = true).assertTextEquals("🐴").assertHasNoClickAction()
         screenshot("ganzhi-device-emoji")
         compose.onNodeWithText("Close").performClick()
 
@@ -27,8 +27,8 @@ class CalendarUiTest : CalendarUiScenarios() {
         compose.onNodeWithContentDescription(emojiToggle).assertIsOn().performClick().assertIsOff()
         compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
-        compose.onNodeWithTag("ganzhi-sign-day").assertTextEquals("Ox")
-        compose.onNodeWithTag("ganzhi-clash-day").assertTextEquals("Goat")
+        compose.onNodeWithTag("ganzhi-sign-day", useUnmergedTree = true).assertTextEquals("Ox")
+        compose.onNodeWithTag("ganzhi-clash-day", useUnmergedTree = true).assertTextEquals("Goat")
         screenshot("ganzhi-device-english-names")
     }
 

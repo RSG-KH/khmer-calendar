@@ -109,7 +109,7 @@ import java.util.Locale
 import kotlin.math.abs
 
 private val CardShape = RoundedCornerShape(24.dp)
-private val DetailSymbolSlot = 24.dp
+internal val DetailSymbolSlot = 24.dp
 private val DetailSymbolGap = 6.dp
 internal fun timeZoneLabel(choice: TodayTimeZone, k: Boolean) = if (choice == TodayTimeZone.LOCAL)
     L.text("ui.local_time.541b44", k) else L.text("ui.cambodia_time_utc_7.6b9f2d", k)
@@ -141,7 +141,7 @@ private fun holyDayLotusDrawable(lunar: LunarDate): Int =
     if (lunar.day <= 8) R.drawable.holy_day_lotus else R.drawable.holy_day_lotus_blossom
 
 @DrawableRes
-private fun zodiacDrawable(animalYear: Int, compact: Boolean = false): Int = when (Math.floorMod(animalYear, 12)) {
+internal fun zodiacDrawable(animalYear: Int, compact: Boolean = false): Int = when (Math.floorMod(animalYear, 12)) {
     0 -> if (compact) R.drawable.zodiac_rat_400 else R.drawable.zodiac_rat
     1 -> if (compact) R.drawable.zodiac_ox_400 else R.drawable.zodiac_ox
     2 -> if (compact) R.drawable.zodiac_tiger_400 else R.drawable.zodiac_tiger
@@ -158,7 +158,7 @@ private fun zodiacDrawable(animalYear: Int, compact: Boolean = false): Int = whe
 }
 
 @DrawableRes
-private fun westernZodiacDrawable(sign: ZodiacSign): Int = when (sign) {
+internal fun westernZodiacDrawable(sign: ZodiacSign): Int = when (sign) {
     ZodiacSign.ARIES -> R.drawable.western_zodiac_aries
     ZodiacSign.TAURUS -> R.drawable.western_zodiac_taurus
     ZodiacSign.GEMINI -> R.drawable.western_zodiac_gemini
@@ -174,7 +174,7 @@ private fun westernZodiacDrawable(sign: ZodiacSign): Int = when (sign) {
 }
 
 @Composable
-private fun zodiacAlpha(): Float = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) 0.03f else 0.05f
+internal fun zodiacAlpha(): Float = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) 0.03f else 0.05f
 
 @Composable
 private fun BoxScope.DetailsZodiacBackground(info: KhmerDateDetails, showWesternZodiac: Boolean = true) {
@@ -1278,6 +1278,14 @@ internal fun WidgetSettingsCard(
     var risingPlaceJson by rememberSaveable(date) { mutableStateOf<String?>(defaultPlace.toJson()) }
     val risingPlace = remember(risingPlaceJson) { Birthplace.fromJson(risingPlaceJson) }
     val info = remember(date) { KhmerDateDetails.fromGregorian(date) }
+    var astrologyDetail by rememberSaveable(date) { mutableStateOf<AstrologyDetail?>(null) }
+    val displayZone = todayTimeZone.zone()
+    val horoscope = remember(date, customTime, todayTimeZone, displayZone, risingPlace, showWesternZodiac) {
+        if (showWesternZodiac) westernBig3Signs(date, customTime, todayTimeZone, displayZone, risingPlace) else null
+    }
+    val pillars = remember(info, customTime, k, showGanzhi) {
+        if (showGanzhi) ganzhiColumns(info, customTime, k) else emptyList()
+    }
     val hasHolyDay = showHolyDaysInCalendar && (info.lunar.isHolyDay || info.lunar.isShavingDay)
     val symbolMeasurer = rememberTextMeasurer()
     val symbolStyle = LocalTextStyle.current.copy(fontSize = 15.readableSp)
@@ -1411,12 +1419,11 @@ internal fun WidgetSettingsCard(
                                 if (showWesternZodiac) {
                                     WesternZodiacTable(
                                         info = info,
-                                        timeZone = todayTimeZone,
-                                        place = risingPlace,
+                                        horoscope = horoscope,
                                         khmer = k,
                                         useEmoji = useEmojiForWesternZodiac,
                                         symbolSlot = symbolSlot,
-                                        customTime = customTime
+                                        onOpen = { astrologyDetail = AstrologyDetail.BIG_3 }
                                     )
                                 }
                                 if (showGanzhi) {
@@ -1425,7 +1432,8 @@ internal fun WidgetSettingsCard(
                                         khmer = k,
                                         useEmoji = useEmojiForGanzhiAnimals,
                                         symbolSlot = symbolSlot,
-                                        customTime = customTime
+                                        columns = pillars,
+                                        onOpen = { astrologyDetail = AstrologyDetail.GANZHI }
                                     )
                                 }
                             }
@@ -1474,6 +1482,10 @@ internal fun WidgetSettingsCard(
             }
         }
     }
+    astrologyDetail?.takeIf { if (it == AstrologyDetail.BIG_3) showWesternZodiac else showGanzhi }?.let { kind ->
+        AstrologyDetailsDialog(kind, info, horoscope, pillars, k,
+            useEmojiForWesternZodiac, useEmojiForGanzhiAnimals, symbolSlot) { astrologyDetail = null }
+    }
     if (hasAstrology && showTimePicker) {
         val initialTime = customTime ?: LocalTime.now(todayTimeZone.zone()).truncatedTo(ChronoUnit.MINUTES)
         if (showWesternZodiac) {
@@ -1494,17 +1506,13 @@ internal fun WidgetSettingsCard(
 
 private data class WesternColumn(val key: String, val label: String, val sign: WesternZodiacSign?)
 
-@Composable private fun WesternZodiacTable(
-    info: KhmerDateDetails, timeZone: TodayTimeZone, khmer: Boolean, useEmoji: Boolean = false,
-    symbolSlot: Dp, place: Birthplace?,
-    customTime: LocalTime? = null
+@Composable internal fun WesternZodiacTable(
+    info: KhmerDateDetails, horoscope: WesternBig3Signs?, khmer: Boolean, useEmoji: Boolean = false,
+    symbolSlot: Dp, onOpen: (() -> Unit)? = null,
 ) {
-    val zone = timeZone.zone()
     val date = info.date
     val westernSupported = date.year in 1800..2200
-    val horoscope = remember(date, customTime, timeZone, zone, place) {
-        westernBig3Signs(date, customTime, timeZone, zone, place)
-    }
+    val openDetails = Modifier.openAstrologyDetails(L.text("ui.zodiac_big3_title", khmer), onOpen)
     val columns = listOf(
         WesternColumn("sun", L.text("ui.western_sun", khmer), horoscope?.sun),
         WesternColumn("moon", L.text("ui.western_moon", khmer), horoscope?.moon),
@@ -1545,7 +1553,7 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
         maxOf(textSize(signLabel, labelStyle).height,
             signs.maxOf { textSize(it, signStyle).height }).toDp() + (if (useEmoji) 8.dp else 4.dp)
     }.coerceAtLeast(if (useEmoji) 34.dp else 26.dp)
-    Column(Modifier.fillMaxWidth().testTag("western-zodiac-table"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(Modifier.fillMaxWidth().testTag("western-zodiac-table").then(openDetails), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Column(Modifier.width(labelWidth).testTag("western-zodiac-row-labels")) {
                 Row(Modifier.fillMaxWidth().height(headerHeight),
@@ -1591,17 +1599,13 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
     }
 }
 
-private data class GanzhiColumn(val key: String, val label: String, val pillar: GanzhiPillar?)
+internal data class GanzhiColumn(val key: String, val label: String, val pillar: GanzhiPillar?)
 
-@Composable private fun GanzhiTable(
-    info: KhmerDateDetails, khmer: Boolean, useEmoji: Boolean,
-    symbolSlot: Dp,
-    customTime: LocalTime? = null
-) {
+internal fun ganzhiColumns(info: KhmerDateDetails, customTime: LocalTime?, khmer: Boolean): List<GanzhiColumn> {
     val date = info.date
     val solarSupported = date.year in 1900..2100
     val effectiveHour = customTime?.hour
-    val columns = listOf(
+    return listOf(
         GanzhiColumn("year", L.text("ui.ganzhi_year", khmer),
             if (solarSupported) ChineseZodiacCalculator.getYearPillar(date.year, date.monthValue, date.dayOfMonth) else null),
         GanzhiColumn("month", L.text("ui.ganzhi_month", khmer),
@@ -1610,6 +1614,17 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
         GanzhiColumn("hour", L.text("ui.ganzhi_hour_column", khmer),
             if (effectiveHour != null) ChineseZodiacCalculator.getHourPillarForDate(date.year, date.monthValue, date.dayOfMonth, effectiveHour) else null),
     )
+}
+
+private fun Modifier.openAstrologyDetails(label: String, onOpen: (() -> Unit)?): Modifier =
+    if (onOpen == null) this else clip(RoundedCornerShape(8.dp)).clickable(role = Role.Button, onClickLabel = label, onClick = onOpen)
+
+@Composable internal fun GanzhiTable(
+    info: KhmerDateDetails, columns: List<GanzhiColumn>, khmer: Boolean, useEmoji: Boolean,
+    symbolSlot: Dp, onOpen: (() -> Unit)? = null,
+) {
+    val solarSupported = info.date.year in 1900..2100
+    val openDetails = Modifier.openAstrologyDetails(L.text("ui.chinese_ganzhi_title", khmer), onOpen)
     val heading = "干支"
     val signLabel = L.text("ui.ganzhi_sign", khmer)
     val clashLabel = L.text("ui.ganzhi_clash", khmer)
@@ -1650,7 +1665,7 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
             animals.maxOf { maxOf(textSize(it.first, animalStyle).height,
                 textSize(it.second, animalStyle).height) }).toDp() + 8.dp
     }.coerceAtLeast(34.dp)
-    Column(Modifier.fillMaxWidth().testTag("ganzhi-table"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(Modifier.fillMaxWidth().testTag("ganzhi-table").then(openDetails), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Column(Modifier.width(labelWidth).testTag("ganzhi-row-labels")) {
                 Row(Modifier.fillMaxWidth().height(headerHeight),
@@ -2244,17 +2259,21 @@ private fun LearnMoreDialog(event: CalendarEvent, k: Boolean, onDismiss: () -> U
                 }
                 Spacer(Modifier.height(24.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = { launchOnlineSearch(context, event, k) }) {
-                        SearchIcon(Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(L.text("ui.search_online", k))
-                        Spacer(Modifier.width(5.dp))
-                        OpenInNewIcon(Modifier.size(14.dp), contentDescription = L.text("ui.opens_in_external_browser", k))
-                    }
+                    AskAiButton(k, onClick = { launchOnlineSearch(context, event, k) })
                     TextButton(onClick = onDismiss) { Text(L.text("ui.close.7df7dc", k)) }
                 }
             }
         }
+    }
+}
+
+@Composable internal fun AskAiButton(k: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    TextButton(onClick = onClick, modifier = modifier) {
+        SearchIcon(Modifier.size(16.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(L.text("ui.ask_ai", k))
+        Spacer(Modifier.width(5.dp))
+        OpenInNewIcon(Modifier.size(14.dp), contentDescription = L.text("ui.opens_in_external_browser", k))
     }
 }
 
@@ -2301,6 +2320,10 @@ private fun launchOnlineSearch(context: Context, event: CalendarEvent, k: Boolea
         }
         listOf(title, anchor, suffix).filter { it.isNotBlank() }.joinToString(" ")
     }
+    launchAiSearch(context, query, k)
+}
+
+internal fun launchAiSearch(context: Context, query: String, k: Boolean) {
     val searchUri = "https://www.google.com/search".toUri()
         .buildUpon()
         .appendQueryParameter("q", query)

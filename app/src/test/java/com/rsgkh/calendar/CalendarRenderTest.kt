@@ -90,19 +90,70 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithText("Every 14 days · End by Dec 31, 2026", substring = true).assertIsDisplayed()
     }
 
-    @Test fun eventDialogSearchOnlineOpensTheResultsUrlDirectlyWithTheEventNameAndDate() {
+    @Test fun eventDialogAskAiOpensTheResultsUrlWithTheEventContext() {
         start()
         compose.onNodeWithText("Events").performClick()
         compose.onNodeWithText("Search events").performTextInput("Constitution")
         compose.onNodeWithText("Constitution Day · 33rd").performClick()
         compose.onNodeWithText("Learn more").performClick()
-        compose.onNodeWithText("Search online").performClick()
+        compose.onNodeWithText("Ask AI").performClick()
         val intent = Shadows.shadowOf(ApplicationProvider.getApplicationContext<Application>()).nextStartedActivity
         assertEquals(Intent.ACTION_VIEW, intent.action)
         val query = intent.data!!.getQueryParameter("q")!!
         assertEquals("Constitution Day · 33rd Cambodia history and significance", query)
         assertEquals("50", intent.data!!.getQueryParameter("udm"))
         assertEquals("en", intent.data!!.getQueryParameter("hl"))
+    }
+
+    @Test fun astrologyAskAiUsesDisplayedSignsAndKeepsThePopupOpen() {
+        start()
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        for ((tag, title) in listOf("western-zodiac-table" to "Zodiac · Big 3", "ganzhi-table" to "Chinese Ganzhi (干支)")) {
+            compose.onNodeWithTag(tag).performClick()
+            compose.onNodeWithTag("astrology-ask-ai").performClick()
+            val intent = Shadows.shadowOf(ApplicationProvider.getApplicationContext<Application>()).nextStartedActivity
+            assertEquals(Intent.ACTION_VIEW, intent.action)
+            val query = intent.data!!.getQueryParameter("q")!!
+            assertTrue(query.contains(title))
+            if (tag == "western-zodiac-table") {
+                assertTrue(query.contains("Sun: Libra"))
+                assertTrue(query.contains("Moon: Pisces"))
+                assertTrue(query.contains("Rising: Sagittarius"))
+            } else {
+                assertTrue(query.contains("Year:"))
+                assertTrue(query.contains("Horse"))
+                assertTrue(query.contains("Clash:"))
+            }
+            assertEquals("50", intent.data!!.getQueryParameter("udm"))
+            compose.onNodeWithTag("astrology-details-title").assertTextEquals(title)
+            compose.onNodeWithTag("astrology-close").performClick()
+        }
+    }
+
+    @Test @Config(qualifiers = "w320dp-h640dp-xhdpi")
+    fun astrologyPopupsFitNarrowKhmerScreensWithLargeText() {
+        checkAstrologyPopupBounds(AppSettings(khmer = true, fontScale = FontScale.PERCENT_150))
+    }
+
+    @Test @Config(qualifiers = "w640dp-h320dp-land-xhdpi")
+    fun astrologyPopupsScrollInShortLandscapeWindows() {
+        checkAstrologyPopupBounds(AppSettings(khmer = false, theme = ThemeMode.DARK, fontScale = FontScale.PERCENT_150))
+    }
+
+    private fun checkAstrologyPopupBounds(settings: AppSettings) {
+        start(settings)
+        val date = LocalDate.of(2026, 9, 24)
+        compose.onNode(hasContentDescription(CalendarWords.date(date, settings.khmer), substring = true)
+            and hasAnyAncestor(hasTestTag("month-grid"))).performScrollTo().assertIsDisplayed().performClick()
+        for (tag in listOf("western-zodiac-table", "ganzhi-table")) {
+            compose.onNodeWithTag(tag).performScrollTo().performClick()
+            compose.onNodeWithTag("astrology-details-title").assertIsDisplayed()
+            compose.onNodeWithTag("astrology-ask-ai").assertIsDisplayed()
+            compose.onNodeWithTag("astrology-close").assertIsDisplayed()
+            if (tag == "western-zodiac-table") compose.onNodeWithTag("big3-detail-rising").performScrollTo().assertIsDisplayed()
+            screenshot("astrology-popup-$tag-${settings.khmer}")
+            compose.onNodeWithTag("astrology-close").performClick()
+        }
     }
 
     @Test fun learnMorePopupStacksBothSummariesWithTheAppLanguageFirst() {
@@ -951,12 +1002,12 @@ class CalendarRenderTest : CalendarUiScenarios() {
         start(AppSettings(khmer = false, theme = ThemeMode.LIGHT))
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
-        compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("Big 3")
+        compose.onNodeWithTag("date-details-zodiac-label", useUnmergedTree = true).assertTextEquals("Big 3")
         compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
         compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed()
-        compose.onNodeWithTag("western-header-sun").assertTextEquals("Sun")
-        compose.onNodeWithTag("western-header-moon").assertTextEquals("Moon")
-        compose.onNodeWithTag("western-header-rising").assertTextEquals("Rising")
+        compose.onNodeWithTag("western-header-sun", useUnmergedTree = true).assertTextEquals("Sun")
+        compose.onNodeWithTag("western-header-moon", useUnmergedTree = true).assertTextEquals("Moon")
+        compose.onNodeWithTag("western-header-rising", useUnmergedTree = true).assertTextEquals("Rising")
         compose.onAllNodesWithText("Close").onLast().performClick()
 
         compose.onNodeWithText("Settings").performClick()
@@ -967,7 +1018,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
 
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
-        compose.onNodeWithTag("date-details-zodiac-label").assertDoesNotExist()
+        compose.onNodeWithTag("date-details-zodiac-label", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("western-zodiac-table").assertDoesNotExist()
         compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed()
         compose.onAllNodesWithText("Close").onLast().performClick()
@@ -975,13 +1026,13 @@ class CalendarRenderTest : CalendarUiScenarios() {
         // 2026-09-12 has neither a Buddhist holy day/shaving day nor western zodiac when hidden
         compose.onNode(hasContentDescription("Saturday, 12 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
-        compose.onNodeWithTag("date-details-zodiac-label").assertDoesNotExist()
+        compose.onNodeWithTag("date-details-zodiac-label", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("western-zodiac-table").assertDoesNotExist()
         compose.onNodeWithText(L.text("ui.thngai_sil_buddhist_holy_day.89de73", false)).assertDoesNotExist()
         compose.onNodeWithText(L.text("ui.thngai_kaor_before_a_holy_day.d02977", false)).assertDoesNotExist()
         // The Ganzhi table stays visible regardless of the Western zodiac setting.
         compose.onNodeWithTag("ganzhi-table").assertIsDisplayed()
-        compose.onNodeWithTag("ganzhi-sign-day").assertExists()
+        compose.onNodeWithTag("ganzhi-sign-day", useUnmergedTree = true).assertExists()
         compose.onAllNodesWithText("Close").onLast().performClick()
 
         // Its own toggle in the Astrology & Zodiac card hides it.
@@ -1002,12 +1053,12 @@ class CalendarRenderTest : CalendarUiScenarios() {
         start(AppSettings(khmer = true, theme = ThemeMode.LIGHT))
         compose.onNode(hasContentDescription("១៣រោច", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         val holy = compose.onNodeWithTag("date-details-holy-label").getUnclippedBoundsInRoot()
-        val zodiac = compose.onNodeWithTag("date-details-zodiac-label").getUnclippedBoundsInRoot()
-        val ganzhi = compose.onNodeWithTag("ganzhi-heading-label").getUnclippedBoundsInRoot()
+        val zodiac = compose.onNodeWithTag("date-details-zodiac-label", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        val ganzhi = compose.onNodeWithTag("ganzhi-heading-label", useUnmergedTree = true).getUnclippedBoundsInRoot()
         assertEquals(holy.left, zodiac.left)
         assertEquals(holy.left, ganzhi.left)
-        compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("Big 3")
-        compose.onNodeWithTag("western-header-rising").assertTextEquals("រះ")
+        compose.onNodeWithTag("date-details-zodiac-label", useUnmergedTree = true).assertTextEquals("Big 3")
+        compose.onNodeWithTag("western-header-rising", useUnmergedTree = true).assertTextEquals("រះ")
         screenshot("date-details-symbol-label-alignment-khmer")
     }
 
@@ -1016,8 +1067,8 @@ class CalendarRenderTest : CalendarUiScenarios() {
         start(AppSettings(khmer = true, theme = ThemeMode.LIGHT, fontScale = FontScale.PERCENT_120))
         val date = LocalDate.of(2026, 9, 18)
         compose.onNode(hasContentDescription(CalendarWords.date(date, true), substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
-        val westernClock = compose.onNodeWithTag("western-sign-rising").assertHasNoClickAction()
-        val ganzhiClock = compose.onNodeWithTag("ganzhi-sign-hour").assertHasNoClickAction()
+        val westernClock = compose.onNodeWithTag("western-sign-rising", useUnmergedTree = true).assertHasNoClickAction()
+        val ganzhiClock = compose.onNodeWithTag("ganzhi-sign-hour", useUnmergedTree = true).assertHasNoClickAction()
         val westernBounds = westernClock.getUnclippedBoundsInRoot()
         val ganzhiBounds = ganzhiClock.getUnclippedBoundsInRoot()
         assertTrue(westernBounds.bottom - westernBounds.top > 24.dp)
@@ -1031,18 +1082,18 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Test fun pastDateUsesDefaultNoonAndOnlyHeaderOpensTimeAndLocation() {
         start(AppSettings(khmer = false))
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
-        compose.onNodeWithTag("western-sign-sun").assertTextEquals("Libra")
-        compose.onNodeWithTag("western-sign-moon").assertTextEquals("Pisces")
-        compose.onNodeWithTag("western-sign-rising").assertTextEquals("Sagittarius").assertHasNoClickAction()
-        compose.onNodeWithTag("ganzhi-sign-hour").assertTextEquals("Horse").assertHasNoClickAction()
+        compose.onNodeWithTag("western-sign-sun", useUnmergedTree = true).assertTextEquals("Libra")
+        compose.onNodeWithTag("western-sign-moon", useUnmergedTree = true).assertTextEquals("Pisces")
+        compose.onNodeWithTag("western-sign-rising", useUnmergedTree = true).assertTextEquals("Sagittarius").assertHasNoClickAction()
+        compose.onNodeWithTag("ganzhi-sign-hour", useUnmergedTree = true).assertTextEquals("Horse").assertHasNoClickAction()
         compose.onNodeWithTag("date-details-time-chip").assertTextContains("12:00", substring = true).performClick()
         compose.onNodeWithText("Time and location for Big 3 & Ganzhi").assertIsDisplayed()
         compose.onNodeWithText("Cancel").performClick()
         compose.onNodeWithTag("date-details-time-chip").assertTextContains("12:00", substring = true)
         compose.onAllNodesWithText("Close").onLast().performClick()
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
-        compose.onNodeWithTag("western-sign-sun").assertTextEquals("Virgo")
-        compose.onNodeWithTag("western-sign-rising").assertHasNoClickAction()
+        compose.onNodeWithTag("western-sign-sun", useUnmergedTree = true).assertTextEquals("Virgo")
+        compose.onNodeWithTag("western-sign-rising", useUnmergedTree = true).assertHasNoClickAction()
     }
 
     @Test fun astrologyTimeInputValidatesTypedValuesAndSavesWheelChanges() {
@@ -1084,9 +1135,9 @@ class CalendarRenderTest : CalendarUiScenarios() {
         assertTrue(shown.contains(before.format(format)) || shown.contains(after.format(format)))
         chooseDateTime("06", "15")
         compose.onNodeWithTag("date-details-time-chip").assertTextContains("06:15", substring = true)
-        val morning = compose.onNodeWithTag("ganzhi-sign-hour").fetchSemanticsNode().config[SemanticsProperties.Text].single().text
+        val morning = compose.onNodeWithTag("ganzhi-sign-hour", useUnmergedTree = true).fetchSemanticsNode().config[SemanticsProperties.Text].single().text
         chooseDateTime("18", "15")
-        val evening = compose.onNodeWithTag("ganzhi-sign-hour").fetchSemanticsNode().config[SemanticsProperties.Text].single().text
+        val evening = compose.onNodeWithTag("ganzhi-sign-hour", useUnmergedTree = true).fetchSemanticsNode().config[SemanticsProperties.Text].single().text
         assertTrue(morning != evening)
         compose.onNode(hasText("Nested personal event") and hasAnyAncestor(hasTestTag("date-details-events"))).performScrollTo().performClick()
         compose.onAllNodesWithText("Close").onLast().performClick()
@@ -1123,7 +1174,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithContentDescription("Delete Brussels test").performClick()
         compose.onNodeWithTag("location-name").assertTextEquals("Location name", "")
         compose.onNodeWithTag("location-save").assertIsEnabled().performClick()
-        compose.onNodeWithTag("western-sign-rising").assertTextEquals("—")
+        compose.onNodeWithTag("western-sign-rising", useUnmergedTree = true).assertTextEquals("—")
         compose.onNodeWithTag("date-details-time-chip").assertTextContains("12:00", substring = true)
         compose.onAllNodesWithText("Close").onLast().performClick()
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
@@ -1237,9 +1288,9 @@ class CalendarRenderTest : CalendarUiScenarios() {
         start(AppSettings(khmer = false, useEmojiForWesternZodiac = true))
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
-        compose.onNodeWithTag("western-sign-sun").assertTextEquals("♎")
-        compose.onNodeWithTag("western-sign-moon").assertTextEquals("♓")
-        compose.onNodeWithTag("western-sign-rising").assertHasNoClickAction()
+        compose.onNodeWithTag("western-sign-sun", useUnmergedTree = true).assertTextEquals("♎")
+        compose.onNodeWithTag("western-sign-moon", useUnmergedTree = true).assertTextEquals("♓")
+        compose.onNodeWithTag("western-sign-rising", useUnmergedTree = true).assertHasNoClickAction()
         screenshot("western-zodiac-table-emoji")
         compose.onAllNodesWithText("Close").onLast().performClick()
 
@@ -1262,9 +1313,9 @@ class CalendarRenderTest : CalendarUiScenarios() {
 
         compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
-        compose.onNodeWithTag("western-sign-sun").assertTextEquals("Libra")
-        compose.onNodeWithTag("western-sign-moon").assertTextEquals("Pisces")
-        compose.onNodeWithTag("western-sign-rising").assertHasNoClickAction()
+        compose.onNodeWithTag("western-sign-sun", useUnmergedTree = true).assertTextEquals("Libra")
+        compose.onNodeWithTag("western-sign-moon", useUnmergedTree = true).assertTextEquals("Pisces")
+        compose.onNodeWithTag("western-sign-rising", useUnmergedTree = true).assertHasNoClickAction()
         screenshot("western-zodiac-table-names")
         compose.onAllNodesWithText("Close").onLast().performClick()
     }
@@ -1273,21 +1324,21 @@ class CalendarRenderTest : CalendarUiScenarios() {
         start(AppSettings(khmer = false, useEmojiForGanzhiAnimals = true))
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("ganzhi-table").assertIsDisplayed()
-        compose.onNodeWithTag("ganzhi-header-year").assertExists()
-        compose.onNodeWithTag("ganzhi-header-month").assertExists()
-        compose.onNodeWithTag("ganzhi-header-day").assertExists()
-        compose.onNodeWithTag("ganzhi-header-hour").assertExists()
-        compose.onNodeWithTag("ganzhi-sign-hour").assertHasNoClickAction()
-        compose.onNodeWithTag("ganzhi-clash-hour").assertHasNoClickAction()
-        compose.onNodeWithTag("ganzhi-sign-day").assertTextEquals("🐮")
-        compose.onNodeWithTag("ganzhi-clash-day").assertTextEquals("🐐")
+        compose.onNodeWithTag("ganzhi-header-year", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("ganzhi-header-month", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("ganzhi-header-day", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("ganzhi-header-hour", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("ganzhi-sign-hour", useUnmergedTree = true).assertHasNoClickAction()
+        compose.onNodeWithTag("ganzhi-clash-hour", useUnmergedTree = true).assertHasNoClickAction()
+        compose.onNodeWithTag("ganzhi-sign-day", useUnmergedTree = true).assertTextEquals("🐮")
+        compose.onNodeWithTag("ganzhi-clash-day", useUnmergedTree = true).assertTextEquals("🐐")
         screenshot("ganzhi-table-emoji")
         compose.onAllNodesWithText("Close").onLast().performClick()
 
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
-        compose.onNodeWithTag("ganzhi-header-hour").assertExists()
-        compose.onNodeWithTag("ganzhi-sign-hour").assertExists()
-        compose.onNodeWithTag("ganzhi-clash-hour").assertExists()
+        compose.onNodeWithTag("ganzhi-header-hour", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("ganzhi-sign-hour", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("ganzhi-clash-hour", useUnmergedTree = true).assertExists()
         screenshot("ganzhi-table-today-hour")
         compose.onAllNodesWithText("Close").onLast().performClick()
 
@@ -1311,21 +1362,21 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithContentDescription(emojiToggle).assertIsOff()
         compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
-        compose.onNodeWithTag("ganzhi-sign-day").assertTextEquals("Ox")
-        compose.onNodeWithTag("ganzhi-clash-day").assertTextEquals("Goat")
-        compose.onNodeWithTag("ganzhi-sign-hour").assertHasNoClickAction()
-        compose.onNodeWithTag("ganzhi-clash-hour").assertHasNoClickAction()
+        compose.onNodeWithTag("ganzhi-sign-day", useUnmergedTree = true).assertTextEquals("Ox")
+        compose.onNodeWithTag("ganzhi-clash-day", useUnmergedTree = true).assertTextEquals("Goat")
+        compose.onNodeWithTag("ganzhi-sign-hour", useUnmergedTree = true).assertHasNoClickAction()
+        compose.onNodeWithTag("ganzhi-clash-hour", useUnmergedTree = true).assertHasNoClickAction()
         screenshot("ganzhi-table-english-names")
     }
 
     @Test fun ganzhiAnimalNamesUseKhmerWhenEmojiIsOff() {
         start(AppSettings(khmer = true, theme = ThemeMode.LIGHT, useEmojiForGanzhiAnimals = false))
         compose.onNode(hasContentDescription("១៣កើត", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
-        compose.onNodeWithTag("ganzhi-sign-day").assertTextEquals("ឆ្លូវ")
-        compose.onNodeWithTag("ganzhi-clash-day").assertTextEquals("មមែ")
-        compose.onNodeWithTag("ganzhi-header-hour").assertExists()
-        compose.onNodeWithTag("ganzhi-sign-hour").assertHasNoClickAction()
-        compose.onNodeWithTag("ganzhi-clash-hour").assertHasNoClickAction()
+        compose.onNodeWithTag("ganzhi-sign-day", useUnmergedTree = true).assertTextEquals("ឆ្លូវ")
+        compose.onNodeWithTag("ganzhi-clash-day", useUnmergedTree = true).assertTextEquals("មមែ")
+        compose.onNodeWithTag("ganzhi-header-hour", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("ganzhi-sign-hour", useUnmergedTree = true).assertHasNoClickAction()
+        compose.onNodeWithTag("ganzhi-clash-hour", useUnmergedTree = true).assertHasNoClickAction()
         screenshot("ganzhi-table-khmer-names")
         compose.onNodeWithText(L.text("ui.close.7df7dc", true)).performClick()
         compose.onNodeWithText(L.text("ui.settings.0e0a4f", true)).performClick()
@@ -1340,8 +1391,8 @@ class CalendarRenderTest : CalendarUiScenarios() {
     fun ganzhiEmojiColumnsFitNarrowPhoneWithoutScrolling() {
         start(AppSettings(khmer = false, useEmojiForGanzhiAnimals = true))
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
-        val columns = compose.onNodeWithTag("ganzhi-columns").getUnclippedBoundsInRoot()
-        val hour = compose.onNodeWithTag("ganzhi-header-hour").getUnclippedBoundsInRoot()
+        val columns = compose.onNodeWithTag("ganzhi-columns", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        val hour = compose.onNodeWithTag("ganzhi-header-hour", useUnmergedTree = true).getUnclippedBoundsInRoot()
         screenshot("ganzhi-table-narrow-emoji")
         assertTrue("hour=$hour columns=$columns", hour.right <= columns.right)
     }
@@ -1350,22 +1401,29 @@ class CalendarRenderTest : CalendarUiScenarios() {
     fun ganzhiHourScrollsWhileRowLabelsStayVisibleOnNarrowPhone() {
         start(AppSettings(khmer = false, theme = ThemeMode.LIGHT, useEmojiForGanzhiAnimals = false))
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
-        compose.onNodeWithTag("ganzhi-columns").assert(hasScrollAction())
-        val labelsBefore = compose.onNodeWithTag("ganzhi-row-labels").getUnclippedBoundsInRoot()
-        compose.onNodeWithTag("ganzhi-header-hour").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("ganzhi-sign-hour").assertIsDisplayed()
-        compose.onNodeWithTag("ganzhi-clash-hour").assertIsDisplayed()
-        assertEquals(labelsBefore, compose.onNodeWithTag("ganzhi-row-labels").getUnclippedBoundsInRoot())
+        compose.onNodeWithTag("ganzhi-columns", useUnmergedTree = true).assert(hasScrollAction())
+        val labelsBefore = compose.onNodeWithTag("ganzhi-row-labels", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        compose.onNodeWithTag("ganzhi-columns", useUnmergedTree = true).performTouchInput { swipeLeft() }
+        compose.onNodeWithTag("astrology-details-dialog").assertDoesNotExist()
+        assertTrue(compose.onNodeWithTag("ganzhi-columns", useUnmergedTree = true).fetchSemanticsNode()
+            .config[SemanticsProperties.HorizontalScrollAxisRange].value() > 0f)
+        compose.onNodeWithTag("ganzhi-header-hour", useUnmergedTree = true).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("ganzhi-sign-hour", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("ganzhi-clash-hour", useUnmergedTree = true).assertIsDisplayed()
+        assertEquals(labelsBefore, compose.onNodeWithTag("ganzhi-row-labels", useUnmergedTree = true).getUnclippedBoundsInRoot())
         screenshot("ganzhi-table-narrow-names-scrolled")
+        // Header taps share the same action as the sign and clash rows.
+        compose.onNodeWithTag("ganzhi-header-hour", useUnmergedTree = true).performTouchInput { click() }
+        compose.onNodeWithTag("astrology-details-title").assertTextEquals("Chinese Ganzhi (干支)")
     }
 
     @Test fun ganzhiTableKeepsDayOutsideTheSolarTermRange() {
         val date = LocalDate.of(1800, 9, 10)
         start(now = Instant.parse("1800-09-10T12:00:00Z"))
         compose.onNode(hasContentDescription(CalendarWords.date(date, false), substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
-        compose.onNodeWithTag("ganzhi-sign-year").assertTextEquals("—")
-        compose.onNodeWithTag("ganzhi-sign-month").assertTextEquals("—")
-        compose.onNodeWithTag("ganzhi-sign-day").assertExists()
+        compose.onNodeWithTag("ganzhi-sign-year", useUnmergedTree = true).assertTextEquals("—")
+        compose.onNodeWithTag("ganzhi-sign-month", useUnmergedTree = true).assertTextEquals("—")
+        compose.onNodeWithTag("ganzhi-sign-day", useUnmergedTree = true).assertExists()
         compose.onNodeWithText(L.text("ui.ganzhi_solar_range", false)).assertIsDisplayed()
     }
 }

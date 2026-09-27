@@ -25,6 +25,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 - Gregorian and Khmer lunar dates, Buddhist Era, animal year, Sak, New Year dates, traditional Moha Sangkran arrival estimates, traditional Chinese festivals, and Ganzhi (干支) year/month/day/hour pillars are provided by [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine).
 - Calendar algorithms, source references and validation are documented in the [engine project](https://github.com/RSG-KH/khmer-calendar-engine#verification-and-accuracy). Android supplies the interface, translations, personal events and reminders.
 - Date details can show Western zodiac signs, elements and ruling bodies, plus a Chinese Ganzhi (干支) table with Year, Month and Day signs and clash animals. The Rising sign and Hour pillar use the selected time; Today starts with the current time in the Today follows zone; other dates start at the saved time (12:00 initially).
+- Tapping either astrology table opens its own detail popup. Big 3 adds Sun/Moon/Rising sign descriptions; both popups include matching sign artwork and an **Ask AI** browser action.
 - Rising sign uses a chosen location and its IANA time zone. The offline picker includes Cambodian provinces/districts/communes and GeoNames administrative divisions worldwide, with saved places and a custom coordinate/time-zone option. The initial location is Sangkat Voat Phnum, Phnom Penh. Changing location does not shift the displayed clock.
 
 ### 🌸 Buddhist Holy Days (*Thngai Seil*)
@@ -131,6 +132,7 @@ KhmerCalendar/
 │   │   │   │   ├── WidgetReceivers.kt   # Receiver components & system restores
 │   │   │   │   └── WidgetStrings.kt     # Localized string formatters & Khmer time
 │   │   │   └── ui/
+│   │   │       ├── AstrologyDetails.kt # Big 3/Ganzhi popups, sign details and AI queries
 │   │   │       ├── CalendarApp.kt       # Main screens, responsive nav & widget settings
 │   │   │       ├── CopyTextButton.kt    # Copy icon with copied confirmation feedback
 │   │   │       ├── CustomEventEditor.kt # Personal event editor with native pickers
@@ -235,7 +237,7 @@ For detailed workflow instructions, consult the [Translation Tool Guide](tools/t
 
 ## Privacy & Open Source Philosophy
 
-- **Zero Network Permissions**: The application does not request the Android `INTERNET` permission. Library permissions merged from dependencies (`ACCESS_NETWORK_STATE`, `FOREGROUND_SERVICE`) are explicitly stripped in the manifest. The event details "Search online" action is strictly user-initiated: it opens the browser directly in Google AI mode (Custom Tab) for the event title and its history via Android's intent system — the app itself holds no network permission and sends nothing.
+- **Zero Network Permissions**: The application does not request the Android `INTERNET` permission. Library permissions merged from dependencies (`ACCESS_NETWORK_STATE`, `FOREGROUND_SERVICE`) are explicitly stripped in the manifest. The **Ask AI** action in Learn more and astrology details opens the browser in Google AI mode (Custom Tab), with event context or the displayed astrology signs. These queries are passed to the browser only when tapped; the app holds no network permission.
 - **Zero Advertising or Telemetry**: No third-party SDKs, analytics, or tracking services are bundled.
 - **Local Data Ownership**: Personal events and repeat schedules are stored in app-private SQLite; settings and saved location labels, coordinates and time zones use Android SharedPreferences. No device location access is requested. Android may back up these files or transfer them to a new device when device backup is enabled; reminder delivery state is excluded. See the [Privacy Policy](PRIVACY_POLICY.md).
 
