@@ -162,5 +162,6 @@ The **Add widgets** action in settings opens a swipeable in-app chooser with the
 The in-app UI is built using Jetpack Compose with Material 3 design tokens:
 
 - **State and local controls**: Screens receive settings and date/event models (`AppSettings`, `KhmerDateDetails`, `CalendarEvent`); dialogs also keep short-lived UI state such as the selected date-details time and whether its picker is open.
+- **Astrology details**: Date details memoizes its enabled Big 3 and Ganzhi calculations. Tapping either whole table opens `AstrologyDetailsDialog` with those same values; closing it preserves the parent's time, place and scroll state. `domain/Zodiac.kt` supplies sign names, elements and rulers. Ask AI passes a query to the browser only when tapped, using the displayed signs/pillars rather than the selected date or location.
 - **Adaptive Scaffolding**: Detects screen dimensions, smallest width (`sw600dp`), and orientation (`ORIENTATION_LANDSCAPE`) to dynamically switch between compact phone layouts, phone landscape rails, and tablet 2-column widescreen experiences.
 - **Dynamic Text Scaling**: Custom `readableSp` extension scales typography dynamically based on user-selected font scaling preferences without disrupting fixed grid geometry.

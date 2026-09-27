@@ -24,7 +24,7 @@ contains the maintained commands.
 - The bilingual About/Sources device test scrolls each repository link into view
   before checking it, supporting smaller phones as well as the larger emulator.
 
-## Verification
+## Original stability verification
 
 | Check | Result |
 | --- | --- |
@@ -59,6 +59,28 @@ available dependency updates. Dependency versions were preserved for this review
 Reports are generated under `app/build/reports` and `app/build/test-results`.
 The local review logs and initial device results are retained under the ignored
 `artifacts/stability-audit/` directory.
+
+## Astrology popup follow-up
+
+Later on 28 September, the Big 3/Ganzhi detail popups and Ask AI actions passed
+the expanded **242-test JVM/Robolectric suite**, **29 Android tests** on the same
+Pixel 10a emulator, and **7 translation-tool tests**. The Android run repeated
+the activity-retention check successfully. Debug and test APK builds and lint
+also passed; lint retained the same 50 warnings and no errors.
+
+Coverage includes both languages, emoji/name preferences, shared table values,
+preserved parent time/place state, calculated Sun/Year watermarks, unavailable
+signs, browser query contents, and narrow/landscape layouts at 150% text.
+A further gesture check verified horizontal scrolling without opening a popup
+and opening it by tapping the table header.
+
+After reducing the three Big 3 sign-detail rows to `12.readableSp` with
+`20.readableSp` line height, all four focused popup/render checks and the debug
+build passed. The updated build was installed on the emulator; the complete
+device suite above preceded this typography-only adjustment. Logs are retained
+under `artifacts/stability-audit/` as `astrology-final-check.log`,
+`astrology-device-check.log`, `astrology-gestures-check.log` and
+`astrology-smaller-text-check.log`.
 
 ## Memory and performance limits
 

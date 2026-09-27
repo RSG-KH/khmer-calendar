@@ -16,9 +16,9 @@ Reviewed on 27 September 2026 against PWA `148c28c` (app 0.12.1.0), starting fro
 | `601da20`: translations and credits | Sources and licenses title, supplied Khmer attribution, corrected អាជ្ញាប័ណ្ណ spelling, source URL popup and Buddhist Shaving Day label. The location source-URL link flows inside the attribution paragraph. Translation resources regenerated from the catalog. |
 | `601da20`: stability/performance | Per-field preference recovery, per-row saved-event validation without deleting malformed neighbors, stable SQLite updates, a 12-year event LRU, a two-country location LRU, reused event-search snapshots and cancellable composition-scoped location loading. |
 
-## Android adaptations
+## Original Android adaptations
 
-- Saved locations use compact bordered chips, capped at three rows with independent vertical scrolling. Both catalog and custom locations retain selection and removal actions, including with larger Khmer text. The Events floating search button uses a new right-handle icon; Search online retains the left-handle icon.
+- Saved locations use compact bordered chips, capped at three rows with independent vertical scrolling. Both catalog and custom locations retain selection and removal actions, including with larger Khmer text. The Events floating search button uses a new right-handle icon; the action then labeled Search online retains the left-handle icon.
 - With only Chinese Ganzhi enabled, the date-detail clock opens the time wheel directly, retaining the date popup underneath. Cancel preserves the previous time; OK changes only that popup's time.
 - Material dialogs, native time wheels, keyboard, selection/copy feedback, navigation, scrolling tables and touch sizes remain Android-specific. Location suggestions use a lazy list capped at 178 dp; dialog width uses the actual window size. The explicit width avoids a reproduced intrinsic-measurement loop. The astrology time input shares the Add event outlined HH:mm field, direct editing and Pick button; both use the same parser and typography. The astrology time wheel uses a standalone 24-hour caption when no time zone is shown. Footer spacing follows the native date-detail layout; the mode action is on the left, with matching button typography and Cancel/Save kept together at the right (wrapping together on narrow screens). Administrative labels follow country and language. Cambodia offers communes only, global countries also offer ADM2 points; localized country names retain English hints. Prefix/alias ranking, unavailable-coordinate/zone hints, and empty-catalog guidance match the PWA.
 - The existing Android personal-event editor still requires a time for notification scheduling. The shared list comparator also handles untimed entries and preserves equal-time saved order.
@@ -26,7 +26,20 @@ Reviewed on 27 September 2026 against PWA `148c28c` (app 0.12.1.0), starting fro
 - Browser service-worker, DOM-listener and Clipboard API fallbacks do not apply to Android. Compose owns popup disposal; location data is packaged for offline access. Android's asset merger expands source `.gz` files to `.json` paths; packaged file contents were checked against the original data.
 - PWA source files and its maintainer-certified UI contract were not changed. The existing local time-wheel footer edit in `NotificationSettings.kt` was preserved.
 
-## Verification
+## Subsequent Android changes — 28 September 2026
+
+Each entire Big 3 or Ganzhi table now opens its own detail popup, including taps
+on its heading and rows. Horizontal swipes still scroll the columns. The child
+popups reuse the selected time/place results and emoji choices, with a Sun-sign
+or Year-animal watermark. Big 3 adds three sign/element/ruler rows at
+`12.readableSp` with `20.readableSp` line height. Learn more and both astrology
+popups use **Ask AI** / **សួរ AI**, retaining the search and external-browser icons.
+
+Current behavior is maintained in [UI and responsive design](ui-and-responsive-design.md#astrology--zodiac-visibility).
+The [stability review](stability-and-performance.md#astrology-popup-follow-up)
+records the later 242-test local suite, 29-test emulator run and final font-size checks.
+
+## Original verification
 
 This section records the September 27 sync checks; counts and artifact names
 refer to that run. Current build commands and lifecycle checks are maintained in

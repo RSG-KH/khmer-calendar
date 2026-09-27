@@ -13,6 +13,7 @@ The engine's [API contract](https://github.com/RSG-KH/khmer-calendar-engine/blob
 | `domain/KhmerDateDetails.kt` | Formats lunar and traditional year labels, localizes Ganzhi animal names and calculates the Ganzhi day pillar only when needed |
 | `domain/WesternBig3.kt` | Resolves the selected civil time, place time zone and saved coordinates for Western Big 3 calculations |
 | `ui/CalendarApp.kt` | Presents the optional Ganzhi and Western Big 3 tables in date details, with a shared time picker and per-setting calculation guards |
+| `ui/AstrologyDetails.kt` | Reuses those calculated values in child popups, maps signs to the Android sign catalog and prepares user-initiated Ask AI queries |
 | `data/RecurringEvents.kt` | Parses the bundled event catalog, translates rule definitions into engine rules, and formats arrival time |
 | `data/EventRepository.kt` | Layers catalog rules, recorded dates, official holiday calendars and date overrides over engine results for each requested year |
 

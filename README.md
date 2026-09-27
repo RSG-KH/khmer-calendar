@@ -38,7 +38,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 - **Unified Moha Sangkran Arrival Time**: Displays verified official arrival times (TVK broadcasts and government decrees, 1997, 2009, 2010–2026 unbroken) and traditional astronomical estimates (2027+) directly in event titles with authentic Khmer 12-hour period descriptors (`ព្រឹក`, `រសៀល`, `ល្ងាច`, `យប់`, `រំលងអធ្រាត្រ`).
 - **Official Holiday Calendars (2016–2027)**: Bundled government calendars mark public holidays with their citing subdecree or ministry source, shown in event details.
 - **Anniversary Counts**: Commemorations display their anniversary count in both languages, rendered per year from the catalog — ខួបលើកទី៤៧ in Khmer and · 47th with English ordinal suffixes (1st, 2nd, 3rd … 11th–13th, 21st) — alongside official holiday titles from the citing subdecree.
-- **Learn More Knowledge**: Every built-in event carries a curated bilingual knowledge summary (bundled from the Khmer Calendar Manager dataset), shown in a Learn more popup that stacks both languages — the app language first.
+- **Learn More Knowledge**: Each catalog event carries a curated bilingual knowledge summary (bundled from the Khmer Calendar Manager dataset), shown in a Learn more popup that stacks both languages — the app language first. Calculated Buddhist holy days have an Ask AI action without a bundled summary.
 - **On-Device Event Calculation (1800–2200)**: Observances, traditional Cambodian festivals, Chinese festivals and Buddhist holy days are calculated on the device from bundled rules for every supported year, with reviewed date corrections where captured records differ.
 - **Cambodian Holidays & Festivals**: Browse public holidays and traditional festivals, including Khmer New Year, Pchum Ben, Water Festival and Royal Ploughing.
 - **National & International Observances**: Includes commemorations and UN observances alongside Buddhist holy days.
@@ -79,7 +79,7 @@ Same-day event lists show timed personal events first, then untimed personal eve
 - **Longer Weekday Names**: Optional calendar headings show Sun–Sat in English and full weekday names in Khmer. Off by default under Settings → Calendar.
 - **Weekday Colors**: Traditional weekday heading colors, with shades adapted for light and dark themes. On by default under Settings → Calendar; existing saved choices are preserved.
 - **Western Zodiac Signs**: The selected-date card, date details and event details show the Western zodiac sign, element and ruling body. On by default under Settings → Astrology & Zodiac.
-- **Chinese Ganzhi (干支) Table**: Date details show Year, Month and Day signs and clash animals, plus the Hour pillar when a time is set, with an emoji/name toggle. The popup opens at the current time for Today and uses the saved default time for other dates. Its header opens the time and location picker. On by default under Settings → Astrology & Zodiac.
+- **Chinese Ganzhi (干支) Table**: Date details show Year, Month and Day signs and clash animals, plus the Hour pillar when a time is set, with an emoji/name toggle. Date details opens at the current time for Today and uses the saved default time for other dates. Its date header opens the time and location picker when Western zodiac is enabled, or the time wheel when only Ganzhi is enabled. Tapping the table opens the Ganzhi detail popup. On by default under Settings → Astrology & Zodiac.
 - **Curated Theme Accents**: Choose from **Blue** (Default), **Lavender**, **Rose**, **Amber**, and **Lime** (*បៃតងចាស់*).
 - **Theme Modes**: Initially follows the system theme; choosing Light or Dark saves that preference. Background accent is on by default, tinting pages and navigation with the chosen accent; turning it off restores neutral backgrounds.
 - **Dynamic Font Scaling**: Choose 80%–150% on all devices. Home screen widgets have their own separate 80%–200% font size setting.
@@ -100,7 +100,7 @@ KhmerCalendar/
 │   │   │   │   ├── AppPreferences.kt    # Settings (theme, accent, font scale, timezone, widgets)
 │   │   │   │   ├── Birthplaces.kt       # Offline location catalogs and saved places
 │   │   │   │   ├── CustomEventRepository.kt # Personal event CRUD (local persistence)
-│   │   │   │   ├── EventRepository.kt   # Event models & bundled snapshot loading
+│   │   │   │   ├── EventRepository.kt   # Catalog/engine event models & bounded year cache
 │   │   │   │   └── RecurringEvents.kt   # Built-in observance recurrence rules
 │   │   │   ├── domain/
 │   │   │   │   ├── EventRepeat.kt       # Personal event repeat schedules & fallbacks
@@ -132,7 +132,7 @@ KhmerCalendar/
 │   │   │   │   ├── WidgetReceivers.kt   # Receiver components & system restores
 │   │   │   │   └── WidgetStrings.kt     # Localized string formatters & Khmer time
 │   │   │   └── ui/
-│   │   │       ├── AstrologyDetails.kt # Big 3/Ganzhi popups, sign details and AI queries
+│   │   │       ├── AstrologyDetails.kt  # Big 3/Ganzhi popups, sign details and AI queries
 │   │   │       ├── CalendarApp.kt       # Main screens, responsive nav & widget settings
 │   │   │       ├── CopyTextButton.kt    # Copy icon with copied confirmation feedback
 │   │   │       ├── CustomEventEditor.kt # Personal event editor with native pickers
