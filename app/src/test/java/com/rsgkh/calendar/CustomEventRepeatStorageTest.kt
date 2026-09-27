@@ -73,4 +73,37 @@ class CustomEventRepeatStorageTest {
             }
         }
     }
+
+    @Test fun malformedRowsStayOnDiskWithoutHidingValidEvents() {
+        CustomEventRepository(context).use { repo ->
+            repo.save(event, now)
+            val corruptions = listOf("date = 'invalid'", "time = '25:00'", "zone_id = 'Missing/Zone'",
+                "repeat_frequency = 'UNKNOWN'", "repeat_frequency = 'DAYS', repeat_interval = 0", "offset_seconds = 100000",
+                "remind_after = 'invalid'")
+            corruptions.forEachIndexed { index, corruption ->
+                val id = "damaged-$index"
+                repo.save(event.copy(id = id), now)
+                repo.writableDatabase.execSQL("UPDATE events SET $corruption WHERE id = ?", arrayOf(id))
+            }
+            assertEquals(listOf(event.id), repo.all().map { it.id })
+            repo.save(event.copy(title = "Edited safely"), now)
+            assertEquals("Edited safely", repo.all().single().title)
+            repo.delete(event.id)
+            assertTrue(repo.all().isEmpty())
+            repo.readableDatabase.rawQuery("SELECT count(*) FROM events", null).use {
+                assertTrue(it.moveToFirst())
+                assertEquals(corruptions.size, it.getInt(0))
+            }
+        }
+    }
+
+    @Test fun equalTimeEventsKeepSavedOrderAfterEditing() {
+        CustomEventRepository(context).use { repo ->
+            repo.save(event.copy(id = "first", title = "Z first"), now)
+            repo.save(event.copy(id = "second", title = "A second"), now)
+            assertEquals(listOf("first", "second"), repo.all().map { it.id })
+            repo.save(repo.all().first().copy(title = "Updated first"), now)
+            assertEquals(listOf("first", "second"), repo.all().map { it.id })
+        }
+    }
 }

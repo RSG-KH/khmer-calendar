@@ -162,9 +162,9 @@ class CalendarRenderTest : CalendarUiScenarios() {
         val eventTitle = observance.title(false)
         val dateLabel = "${CalendarWords.weekday(observance.date.dayOfWeek.value, false)}, ${observance.date.dayOfMonth} September"
         start(AppSettings(khmer = false))
-        compose.onNode(hasContentDescription(dateLabel, substring = true)).performClick()
+        compose.onNode(hasContentDescription(dateLabel, substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNode(hasText(eventTitle) and hasAnyAncestor(isDialog())).assertIsDisplayed()
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
         compose.onNodeWithText("Events").performClick()
         compose.onNodeWithText("Observances").performClick()
         compose.onNodeWithText("Settings").performClick()
@@ -179,16 +179,16 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithText("No matching events. Try another filter or search.").assertIsDisplayed()
         compose.onNodeWithTag("event-search").performTextReplacement("")
         compose.onNodeWithText("Calendar").performClick()
-        compose.onNode(hasContentDescription(dateLabel, substring = true))
+        compose.onNode(hasContentDescription(dateLabel, substring = true) and hasAnyAncestor(hasTestTag("month-grid")))
             .assert(hasContentDescription(eventTitle, substring = true).not())
             .performClick()
         compose.onNodeWithText(eventTitle).assertDoesNotExist()
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
         compose.onNodeWithText("Settings").performClick()
         compose.onNodeWithTag("settings-scroll").performScrollToNode(hasContentDescription(title))
         compose.onNodeWithContentDescription(title).performClick().assertIsOn()
         compose.onNodeWithText("Calendar").performClick()
-        compose.onNode(hasContentDescription(dateLabel, substring = true)).performClick()
+        compose.onNode(hasContentDescription(dateLabel, substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNode(hasText(eventTitle) and hasAnyAncestor(isDialog())).assertIsDisplayed()
     }
 
@@ -328,7 +328,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Test fun copyButtonsToggleControlsDateAndEventDetails() {
         start()
         fun openDate() {
-            compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
+            compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
             compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         }
         fun openEvent() {
@@ -349,8 +349,8 @@ class CalendarRenderTest : CalendarUiScenarios() {
             compose.onNodeWithContentDescription("Copy full date description").assertDoesNotExist()
             openEvent()
             compose.onNodeWithContentDescription("Copy event title").assertDoesNotExist()
-            compose.onNodeWithText("Close").performClick()
-            compose.onNodeWithText("Close").performClick()
+            compose.onAllNodesWithText("Close").onLast().performClick()
+            compose.onAllNodesWithText("Close").onLast().performClick()
         }
 
         assertHiddenInBothDialogs()
@@ -363,8 +363,8 @@ class CalendarRenderTest : CalendarUiScenarios() {
         pressCopyButton("Copy event title", "event-copy-buttons-english")
         assertClipboardText("Constitution Day · 33rd")
         assertCopyConfirmation("Copy event title", "Event title copied", "event-copy-buttons-english")
-        compose.onNodeWithText("Close").performClick()
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
         toggleCopyButtons(false)
         assertHiddenInBothDialogs()
     }
@@ -374,7 +374,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
             time = LocalTime.NOON, notes = "Notes must not be copied with the title")
         start(AppSettings(khmer = true, theme = ThemeMode.DARK, showCopyButtons = true, todayTimeZone = TodayTimeZone.CAMBODIA),
             customEvents = listOf(event))
-        compose.onNode(hasContentDescription("១៣រោច", substring = true)).performClick()
+        compose.onNode(hasContentDescription("១៣រោច", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         pressCopyButton(L.text("ui.copy_full_date", true), "date-copy-buttons-khmer")
         assertClipboardText("ថ្ងៃព្រហស្បតិ៍ ១៣រោច ខែស្រាពណ៍ ឆ្នាំមមី អដ្ឋស័ក ពុទ្ធសករាជ ២៥៧០ ត្រូវនឹងថ្ងៃទី១០ ខែកញ្ញា ឆ្នាំ២០២៦")
         assertCopyConfirmation(L.text("ui.copy_full_date", true), L.text("ui.full_date_copied", true), "date-copy-buttons-khmer")
@@ -507,22 +507,22 @@ class CalendarRenderTest : CalendarUiScenarios() {
         // Verify Buddhist Holy Day is NOT listed as an event card in the calendar-scroll list below
         compose.onAllNodes(hasText("Buddhist Holy Day") and hasAnyAncestor(hasTestTag("calendar-scroll")) and hasClickAction()).assertCountEquals(0)
         // Open date details for a holy day (Sept 11, 2026 is 14 Roach / Buddhist Holy Day)
-        compose.onNode(hasContentDescription("Friday, 11 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Friday, 11 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         compose.onNodeWithText("Buddhist Holy Day", substring = true).assertIsDisplayed()
         screenshot("date-details-holy-day-blossom")
-        compose.onNodeWithText("Close").performClick()
-        compose.onNode(hasContentDescription("Saturday, 5 September", substring = true)).performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
+        compose.onNode(hasContentDescription("Saturday, 5 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         screenshot("date-details-holy-day-closed-lotus")
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
         // Open date details for a shaving day (Sept 10, 2026 is 13 Roach / Shaving Day)
-        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
-        compose.onNodeWithText("Shaving Day").assertIsDisplayed()
+        compose.onNodeWithText("Buddhist Shaving Day").assertIsDisplayed()
         compose.onNodeWithText("🙏").assertIsDisplayed()
         screenshot("date-details-shaving-day-praying-hands")
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
 
         // Disable "Buddhist holy days in calendar" in Settings
         compose.onNodeWithText("Settings").performClick()
@@ -534,19 +534,19 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onAllNodes(hasContentDescription("Buddhist Holy Day", substring = true)).assertCountEquals(0)
 
         // Open date details for Holy Day (Sept 11) - should NOT show Buddhist Holy Day
-        compose.onNode(hasContentDescription("Friday, 11 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Friday, 11 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         compose.onNodeWithText("Buddhist Holy Day", substring = true).assertDoesNotExist()
         screenshot("date-details-holy-day-disabled")
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
 
         // Open date details for Shaving Day (Sept 10) - should NOT show Shaving Day or 🙏
-        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
-        compose.onNodeWithText("Shaving Day").assertDoesNotExist()
+        compose.onNodeWithText("Buddhist Shaving Day").assertDoesNotExist()
         compose.onNodeWithText("🙏").assertDoesNotExist()
         screenshot("date-details-shaving-day-disabled")
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
     }
 
     @Test
@@ -649,14 +649,14 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Config(qualifiers = "sw800dp-w1280dp-h800dp-land-xhdpi")
     fun tabletLandscapeEventsOnTheDayRespectsHolyDaysToggle() {
         start(AppSettings(khmer = false, showHolyDaysInCalendar = true, showHolyDaysInEvents = false))
-        compose.onNode(hasContentDescription("Friday, 11 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Friday, 11 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithText("Events on the day").assertDoesNotExist()
 
         compose.onNodeWithText("Settings").performClick()
         compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("Buddhist holy days in events"))
         compose.onNode(hasContentDescription("Buddhist holy days in events") and isToggleable()).performClick()
         compose.onNodeWithText("Calendar").performClick()
-        compose.onNode(hasContentDescription("Friday, 11 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Friday, 11 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithText("Events on the day").assertIsDisplayed()
         compose.onAllNodes(hasText("Buddhist Holy Day", substring = true) and hasClickAction()).onFirst().assertIsDisplayed()
     }
@@ -665,12 +665,12 @@ class CalendarRenderTest : CalendarUiScenarios() {
     fun dateDetailsPopupRespectsHolyDaysToggle() {
         start(AppSettings(khmer = false, showHolyDaysInCalendar = true, showHolyDaysInEvents = false))
         // Click 11 September once to select, second time to open Date details dialog
-        compose.onNode(hasContentDescription("Friday, 11 September", substring = true)).performClick()
-        compose.onNode(hasContentDescription("Friday, 11 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Friday, 11 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        compose.onNode(hasContentDescription("Friday, 11 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         // Event section in Date details should NOT exist when toggle is false
         compose.onNodeWithTag("date-details-events").assertDoesNotExist()
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
 
         // Turn toggle ON in Settings
         compose.onNodeWithText("Settings").performClick()
@@ -679,8 +679,8 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithText("Calendar").performClick()
 
         // Reopen Date details dialog for 11 September
-        compose.onNode(hasContentDescription("Friday, 11 September", substring = true)).performClick()
-        compose.onNode(hasContentDescription("Friday, 11 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Friday, 11 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        compose.onNode(hasContentDescription("Friday, 11 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         // Event section in Date details should now exist
         compose.onNodeWithTag("date-details-events").assertIsDisplayed()
@@ -699,12 +699,12 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Config(qualifiers = "sw800dp-w1280dp-h800dp-land-xhdpi")
     fun tabletLandscapeDateInfoBlockDisplaysGregorianZodiacAndGanzhiBesideLunarDate() {
         start(AppSettings(khmer = false))
-        compose.onNode(hasContentDescription("Saturday, 5 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Saturday, 5 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithText("September 5, 2026").assertIsDisplayed()
         compose.onNode(hasText("Virgo (Earth · Mercury)", substring = true)).assertIsDisplayed()
         compose.onNodeWithText("8 Roach (Waning) · Srapon\nYear of the Horse · Atthasak\nBuddhist Era 2570").assertIsDisplayed()
 
-        compose.onNode(hasContentDescription("Friday, 11 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Friday, 11 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         val ganzhi = compose.onNodeWithTag("date-summary-ganzhi", useUnmergedTree = true)
             .performScrollTo().assertIsDisplayed().assertTextEquals("☯️ 干支 (🐴🐔🐭 x 🐭🐰🐴)")
         val zodiac = compose.onNode(hasText("Virgo (Earth · Mercury)", substring = true), useUnmergedTree = true).assertIsDisplayed()
@@ -765,12 +765,12 @@ class CalendarRenderTest : CalendarUiScenarios() {
         screenshot("custom-event-calendar-grid")
 
         // Click September 15 date cell
-        compose.onNode(hasContentDescription("Tuesday, 15 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Tuesday, 15 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         // Event should appear in the events list below calendar
         compose.onNode(hasText("Family Celebration") and hasAnyAncestor(hasTestTag("calendar-scroll"))).assertIsDisplayed()
 
         // Click date again to open Date details dialog
-        compose.onNode(hasContentDescription("Tuesday, 15 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Tuesday, 15 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         compose.onNodeWithTag("date-details-events").assertIsDisplayed()
         compose.onNode(
@@ -778,7 +778,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
                 hasText("Family Celebration")
         ).assertIsDisplayed()
         screenshot("custom-event-preview")
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
     }
 
     @Test
@@ -792,8 +792,8 @@ class CalendarRenderTest : CalendarUiScenarios() {
         start(AppSettings(khmer = false, theme = ThemeMode.DARK), customEvents = listOf(customEvent))
         compose.onNodeWithText("Personal").assertIsDisplayed()
         screenshot("custom-event-calendar-dark")
-        compose.onNode(hasContentDescription("Tuesday, 15 September", substring = true)).performClick()
-        compose.onNodeWithText("Close").performClick()
+        compose.onNode(hasContentDescription("Tuesday, 15 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
         screenshot("calendar-today-and-selected-custom-dark")
     }
 
@@ -806,7 +806,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
             notes = ""
         )
         start(AppSettings(khmer = true, theme = ThemeMode.DARK), customEvents = listOf(customEvent))
-        compose.onNode(hasContentDescription("This is a custom event", substring = true) and hasClickAction()).performClick()
+        compose.onNode(hasContentDescription("This is a custom event", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onAllNodes(hasText("This is a custom event that I manually added to test if everything is ok.") and hasClickAction()).onFirst().performClick()
         screenshot("custom-event-dialog-popup")
     }
@@ -837,7 +837,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Test
     fun addEventFromDateDetailsPopupOpensEditorWithSelectedDate() {
         start()
-        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
 
         // "Add event" button should be displayed inside Date details popup
@@ -853,13 +853,13 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Test
     fun secondClickOnSameDateOpensDateDetailsPopup() {
         start()
-        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
         compose.onNodeWithTag("date-details-title").assertDoesNotExist()
 
         // Clicking the same selected date again re-opens Date details popup
-        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
     }
 
@@ -949,7 +949,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Test
     fun showWesternZodiacSettingTogglesZodiacInDateDetailsAndBanner() {
         start(AppSettings(khmer = false, theme = ThemeMode.LIGHT))
-        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("Big 3")
         compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
@@ -957,7 +957,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("western-header-sun").assertTextEquals("Sun")
         compose.onNodeWithTag("western-header-moon").assertTextEquals("Moon")
         compose.onNodeWithTag("western-header-rising").assertTextEquals("Rising")
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
 
         compose.onNodeWithText("Settings").performClick()
         compose.onNodeWithTag("settings-scroll").performScrollToNode(hasContentDescription(L.text("ui.show_western_zodiac", false)))
@@ -965,15 +965,15 @@ class CalendarRenderTest : CalendarUiScenarios() {
 
         compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
 
-        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         compose.onNodeWithTag("date-details-zodiac-label").assertDoesNotExist()
         compose.onNodeWithTag("western-zodiac-table").assertDoesNotExist()
         compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed()
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
 
         // 2026-09-12 has neither a Buddhist holy day/shaving day nor western zodiac when hidden
-        compose.onNode(hasContentDescription("Saturday, 12 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Saturday, 12 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         compose.onNodeWithTag("date-details-zodiac-label").assertDoesNotExist()
         compose.onNodeWithTag("western-zodiac-table").assertDoesNotExist()
@@ -982,7 +982,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         // The Ganzhi table stays visible regardless of the Western zodiac setting.
         compose.onNodeWithTag("ganzhi-table").assertIsDisplayed()
         compose.onNodeWithTag("ganzhi-sign-day").assertExists()
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
 
         // Its own toggle in the Astrology & Zodiac card hides it.
         compose.onNodeWithText("Settings").performClick()
@@ -991,16 +991,16 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithContentDescription(L.text("ui.show_western_zodiac", false)).assertIsOff()
         compose.onNodeWithContentDescription(L.text("ui.show_chinese_ganzhi", false)).assertIsOn().performClick().assertIsOff()
         compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
-        compose.onNode(hasContentDescription("Saturday, 12 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Saturday, 12 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         compose.onNodeWithTag("ganzhi-table").assertDoesNotExist()
         compose.onNodeWithTag("date-details-time-chip").assertDoesNotExist()
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
     }
 
     @Test fun dateDetailsSymbolLabelsAlignInKhmer() {
         start(AppSettings(khmer = true, theme = ThemeMode.LIGHT))
-        compose.onNode(hasContentDescription("១៣រោច", substring = true)).performClick()
+        compose.onNode(hasContentDescription("១៣រោច", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         val holy = compose.onNodeWithTag("date-details-holy-label").getUnclippedBoundsInRoot()
         val zodiac = compose.onNodeWithTag("date-details-zodiac-label").getUnclippedBoundsInRoot()
         val ganzhi = compose.onNodeWithTag("ganzhi-heading-label").getUnclippedBoundsInRoot()
@@ -1015,9 +1015,9 @@ class CalendarRenderTest : CalendarUiScenarios() {
     fun dateDetailsTimeEmojiHasRoomInKhmerPopup() {
         start(AppSettings(khmer = true, theme = ThemeMode.LIGHT, fontScale = FontScale.PERCENT_120))
         val date = LocalDate.of(2026, 9, 18)
-        compose.onNode(hasContentDescription(CalendarWords.date(date, true), substring = true)).performClick()
-        val westernClock = compose.onNodeWithTag("western-sign-rising").assertTextEquals("🕒")
-        val ganzhiClock = compose.onNodeWithTag("ganzhi-sign-hour").assertTextEquals("🕒")
+        compose.onNode(hasContentDescription(CalendarWords.date(date, true), substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        val westernClock = compose.onNodeWithTag("western-sign-rising").assertHasNoClickAction()
+        val ganzhiClock = compose.onNodeWithTag("ganzhi-sign-hour").assertHasNoClickAction()
         val westernBounds = westernClock.getUnclippedBoundsInRoot()
         val ganzhiBounds = ganzhiClock.getUnclippedBoundsInRoot()
         assertTrue(westernBounds.bottom - westernBounds.top > 24.dp)
@@ -1028,102 +1028,220 @@ class CalendarRenderTest : CalendarUiScenarios() {
         screenshot("date-details-time-emoji-khmer-scrolled")
     }
 
-    @Test fun westernZodiacTableDisplaysBigThreeTodayAndTimePickerForOtherDates() {
+    @Test fun pastDateUsesDefaultNoonAndOnlyHeaderOpensTimeAndLocation() {
         start(AppSettings(khmer = false))
-        // September 24 is not today: Sun and Moon use noon; Rising offers a time picker.
-        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
-        compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
-        compose.onNodeWithTag("date-details-zodiac-label").assertTextEquals("Big 3")
-        compose.onNodeWithTag("western-header-sun").assertTextEquals("Sun")
-        compose.onNodeWithTag("western-header-moon").assertTextEquals("Moon")
-        compose.onNodeWithTag("western-header-rising").assertTextEquals("Rising")
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("western-sign-sun").assertTextEquals("Libra")
         compose.onNodeWithTag("western-sign-moon").assertTextEquals("Pisces")
-        compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed().assertTextEquals("🕒")
-            .assertContentDescriptionEquals(L.text("ui.select_time.eacac3", false)).performClick()
-        compose.onNodeWithText(L.text("ui.select_time.eacac3", false)).assertIsDisplayed()
-        compose.onNodeWithText(L.text("ui.cancel.5bf834", false)).performClick()
-        compose.onNodeWithTag("western-sign-rising").assertTextEquals("🕒").performClick()
-        compose.onNodeWithText(L.text("ui.select_time.eacac3", false)).assertIsDisplayed()
-        compose.onNodeWithText(L.text("ui.ok.04c4aa", false)).performClick()
-        compose.onNodeWithTag("western-sign-rising").assertExists()
-        compose.onNodeWithTag("ganzhi-sign-hour").assertExists()
-        compose.onNodeWithTag("ganzhi-clash-hour").assertExists()
-        compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed()
-        compose.onNodeWithTag("date-details-time-chip").performClick()
-        compose.onNodeWithText(L.text("ui.clear.7d76fd", false)).assertIsDisplayed().performClick()
-        compose.onNodeWithTag("western-sign-rising").assertTextEquals("🕒")
-        compose.onNodeWithTag("ganzhi-sign-hour").assertTextEquals("🕒")
-        compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed().assertTextEquals("🕒").performClick()
-        compose.onNodeWithText(L.text("ui.select_time.eacac3", false)).assertIsDisplayed()
-        compose.onNodeWithText(L.text("ui.cancel.5bf834", false)).performClick()
-        compose.onNodeWithText("Close").performClick()
-
-        // September 10 IS today: all 3 calculated
-        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
-        compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
-        compose.onNodeWithTag("western-header-sun").assertTextEquals("Sun")
-        compose.onNodeWithTag("western-header-moon").assertTextEquals("Moon")
-        compose.onNodeWithTag("western-header-rising").assertTextEquals("Rising")
+        compose.onNodeWithTag("western-sign-rising").assertTextEquals("Sagittarius").assertHasNoClickAction()
+        compose.onNodeWithTag("ganzhi-sign-hour").assertTextEquals("Horse").assertHasNoClickAction()
+        compose.onNodeWithTag("date-details-time-chip").assertTextContains("12:00", substring = true).performClick()
+        compose.onNodeWithText("Time and location for Big 3 & Ganzhi").assertIsDisplayed()
+        compose.onNodeWithText("Cancel").performClick()
+        compose.onNodeWithTag("date-details-time-chip").assertTextContains("12:00", substring = true)
+        compose.onAllNodesWithText("Close").onLast().performClick()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("western-sign-sun").assertTextEquals("Virgo")
-        compose.onNodeWithTag("western-sign-moon").assertTextEquals("Virgo")
-        compose.onNodeWithTag("western-sign-rising").assertExists()
-        compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed()
-        compose.onNodeWithText("Close").performClick()
+        compose.onNodeWithTag("western-sign-rising").assertHasNoClickAction()
     }
 
-    @Test fun todayDateDetailsStartsAtCurrentTimeAndCanBeChangedOrCleared() {
+    @Test fun astrologyTimeInputValidatesTypedValuesAndSavesWheelChanges() {
+        start(AppSettings(khmer = false))
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        compose.onNodeWithTag("date-details-time-chip").performClick()
+        compose.onNodeWithTag("location-time").assertTextContains(L.text("ui.time_hh_mm.8cf351", false))
+        for (invalid in listOf("25:00", "12:60", "", "8:35")) {
+            compose.onNodeWithTag("location-time").performTextReplacement(invalid)
+            compose.onNodeWithTag("location-save").assertIsNotEnabled()
+        }
+        compose.onNodeWithTag("location-time").performTextReplacement("08:35")
+        compose.onNodeWithTag("location-save").assertIsEnabled().performClick()
+        compose.onNodeWithTag("date-details-time-chip").assertTextContains("08:35", substring = true)
+        chooseDateTime("09", "40")
+        compose.onNodeWithTag("date-details-time-chip").assertTextContains("09:40", substring = true)
+    }
+
+    private fun chooseDateTime(hour: String, minute: String) {
+        compose.onNodeWithTag("date-details-time-chip").performClick()
+        compose.onNodeWithTag("location-time").onChildren().filter(hasClickAction()).onFirst().performClick()
+        compose.onNodeWithTag("wheel-hour").performScrollToNode(hasText(hour))
+        compose.onNode(hasText(hour) and hasAnyAncestor(hasTestTag("wheel-hour"))).performClick()
+        compose.onNodeWithTag("wheel-minute").performScrollToNode(hasText(minute))
+        compose.onNode(hasText(minute) and hasAnyAncestor(hasTestTag("wheel-minute"))).performClick()
+        compose.onNodeWithText("OK").performClick()
+        compose.onNodeWithTag("location-save").performClick()
+    }
+
+    @Test fun todayUsesTodayZoneClockAndNestedEventClosePreservesTheOverride() {
         val zone = TodayTimeZone.CAMBODIA.zone()
         val format = DateTimeFormatter.ofPattern("HH:mm")
-        start(AppSettings(khmer = false, todayTimeZone = TodayTimeZone.CAMBODIA))
+        start(AppSettings(khmer = false, todayTimeZone = TodayTimeZone.CAMBODIA),
+            customEvents = listOf(CustomEvent(title = "Nested personal event", date = LocalDate.of(2026, 9, 10), time = LocalTime.of(9, 0))))
         val before = LocalTime.now(zone).truncatedTo(ChronoUnit.MINUTES)
-        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
-        val chip = compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed()
-        val shown = chip.fetchSemanticsNode().config[SemanticsProperties.Text].joinToString("") { it.text }
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        val shown = compose.onNodeWithTag("date-details-time-chip").fetchSemanticsNode().config[SemanticsProperties.Text].joinToString("") { it.text }
         val after = LocalTime.now(zone).truncatedTo(ChronoUnit.MINUTES)
-        assertTrue("The popup should capture the current Cambodia time: $shown",
-            shown.contains(before.format(format)) || shown.contains(after.format(format)))
-        screenshot("date-details-today-editable-time")
-
-        chip.performClick()
-        compose.onNodeWithTag("wheel-hour").performScrollToNode(hasText("06"))
-        compose.onNode(hasText("06") and hasAnyAncestor(hasTestTag("wheel-hour"))).performClick()
-        compose.onNodeWithTag("wheel-minute").performScrollToNode(hasText("15"))
-        compose.onNode(hasText("15") and hasAnyAncestor(hasTestTag("wheel-minute"))).performClick()
-        compose.onNodeWithText(L.text("ui.ok.04c4aa", false)).performClick()
+        assertTrue(shown.contains(before.format(format)) || shown.contains(after.format(format)))
+        chooseDateTime("06", "15")
         compose.onNodeWithTag("date-details-time-chip").assertTextContains("06:15", substring = true)
-        val morningAnimal = compose.onNodeWithTag("ganzhi-sign-hour")
-            .fetchSemanticsNode().config[SemanticsProperties.Text].single().text
-
-        compose.onNodeWithTag("ganzhi-sign-hour").performClick()
-        compose.onNodeWithTag("wheel-hour").performScrollToNode(hasText("18"))
-        compose.onNode(hasText("18") and hasAnyAncestor(hasTestTag("wheel-hour"))).performClick()
-        compose.onNodeWithText(L.text("ui.ok.04c4aa", false)).performClick()
+        val morning = compose.onNodeWithTag("ganzhi-sign-hour").fetchSemanticsNode().config[SemanticsProperties.Text].single().text
+        chooseDateTime("18", "15")
+        val evening = compose.onNodeWithTag("ganzhi-sign-hour").fetchSemanticsNode().config[SemanticsProperties.Text].single().text
+        assertTrue(morning != evening)
+        compose.onNode(hasText("Nested personal event") and hasAnyAncestor(hasTestTag("date-details-events"))).performScrollTo().performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
+        compose.onNodeWithTag("date-details-title").assertIsDisplayed()
         compose.onNodeWithTag("date-details-time-chip").assertTextContains("18:15", substring = true)
-        val eveningAnimal = compose.onNodeWithTag("ganzhi-sign-hour")
-            .fetchSemanticsNode().config[SemanticsProperties.Text].single().text
-        assertTrue("Changing the time should update the hour pillar", morningAnimal != eveningAnimal)
+        screenshot("date-details-after-nested-event")
+    }
 
+    @Test fun locationPickerRestoresCatalogAndKeepsManualOverrideLocalToTheDate() {
+        start(AppSettings(khmer = false))
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-time-chip").performClick()
-        compose.onNodeWithText(L.text("ui.clear.7d76fd", false)).performClick()
-        compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed().assertTextEquals("🕒")
-        compose.onNodeWithTag("western-sign-rising").assertTextEquals("🕒")
-        compose.onNodeWithTag("ganzhi-sign-hour").assertTextEquals("🕒")
-        compose.onNodeWithText("Close").performClick()
+        compose.waitUntil(5_000) {
+            compose.onAllNodesWithTag("location-lower").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("location-country").assertTextContains("Cambodia")
+        compose.onNodeWithTag("location-adm1").assertTextContains("Capital / province")
+        compose.onNodeWithTag("location-lower").assertTextContains("ADM 2 · ADM 3")
+        compose.onNodeWithTag("location-lower").assertTextContains("Voat Phnum", substring = true)
+        assertLocationActions(false, false)
+        screenshot("location-picker-catalog-default")
+        compose.onNodeWithText("Custom location").performClick()
+        assertLocationActions(false, true)
+        compose.onNodeWithTag("location-name").performTextInput("Brussels test")
+        compose.onNodeWithTag("location-latitude").performTextInput("50.8503, 4.3517")
+        compose.onNodeWithTag("location-longitude").assertTextContains("4.3517")
+        compose.onNodeWithTag("location-zone").performScrollTo().performTextInput("Europe/Brussels")
+        compose.onNode(hasText("Europe/Brussels") and hasAnyAncestor(isPopup())).performClick()
+        screenshot("location-picker-manual")
+        compose.onNodeWithTag("location-save").assertIsEnabled().performClick()
+        compose.onNodeWithTag("date-details-time-chip").assertTextContains("12:00", substring = true)
+        compose.onNodeWithTag("date-details-time-chip").performClick()
+        compose.onNodeWithTag("location-name").assertTextContains("Brussels test")
+        compose.onNodeWithContentDescription("Delete Brussels test").performClick()
+        compose.onNodeWithTag("location-name").assertTextEquals("Location name", "")
+        compose.onNodeWithTag("location-save").assertIsEnabled().performClick()
+        compose.onNodeWithTag("western-sign-rising").assertTextEquals("—")
+        compose.onNodeWithTag("date-details-time-chip").assertTextContains("12:00", substring = true)
+        compose.onAllNodesWithText("Close").onLast().performClick()
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        compose.onNodeWithTag("date-details-time-chip").performClick()
+        compose.onNodeWithText("Custom location").assertExists()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("location-lower").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("location-lower").assertTextContains("Voat Phnum", substring = true)
+    }
 
-        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+    @Test fun settingsLocationSearchSavesAdministrativePointAndRestoresHierarchy() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val preferences = AppPreferences(context)
+        val state = mutableStateOf(AppSettings(khmer = false))
+        compose.setContent {
+            CalendarApp(state.value, LocalDate.of(2026, 9, 10)) {
+                preferences.write(it)
+                state.value = it
+            }
+        }
+        compose.onNodeWithText("Settings").performClick()
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasTestTag("astrology-default-location"))
+        compose.onNodeWithTag("astrology-default-location").performClick()
+        compose.onNodeWithTag("location-time").assertDoesNotExist()
+        compose.onNodeWithTag("location-country").performTextReplacement("Belgium")
+        compose.waitUntil(5_000) { compose.onAllNodes(hasText("Belgium") and hasAnyAncestor(isPopup())).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasText("Belgium") and hasAnyAncestor(isPopup())).performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("location-adm1").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("location-adm1").assertTextContains("Province / state")
+        compose.onNodeWithTag("location-adm1").performTextReplacement("Bruxelles")
+        compose.waitUntil(5_000) { compose.onAllNodes(hasText("Bruxelles-Capitale") and hasAnyAncestor(isPopup())).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasText("Bruxelles-Capitale") and hasAnyAncestor(isPopup())).performClick()
+        compose.onNodeWithTag("location-save").assertIsEnabled().performClick()
+        assertEquals("BE", AppPreferences(context).read().risingPlace.countryCode)
+        assertEquals("Europe/Brussels", AppPreferences(context).read().risingPlace.timeZone)
+        compose.onNodeWithTag("astrology-default-location").performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("location-lower").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("location-country").assertTextContains("Belgium")
+        compose.onNodeWithTag("location-adm1").assertTextContains("Bruxelles-Capitale")
+        compose.onNodeWithTag("location-lower").performClick()
+        compose.onNodeWithTag("location-lower-options").assertIsDisplayed()
+        screenshot("location-picker-belgium-suggestions")
+    }
+
+    @Test @Config(qualifiers = "w320dp-h568dp-xhdpi")
+    fun locationPickerFitsSmallKhmerPhone() = checkLocationPickerLayout(FontScale.PERCENT_120, "small-phone")
+
+    @Test @Config(qualifiers = "w800dp-h360dp-xhdpi")
+    fun locationPickerFitsLargeKhmerTextInLandscape() = checkLocationPickerLayout(FontScale.PERCENT_150, "landscape")
+
+    private fun checkLocationPickerLayout(scale: FontScale, name: String) {
+        start(AppSettings(khmer = true, theme = ThemeMode.DARK, fontScale = scale))
+        val date = LocalDate.of(2026, 9, 24)
+        compose.onNode(hasContentDescription(CalendarWords.date(date, true), substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        compose.onNodeWithTag("date-details-time-chip").performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("location-lower").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("location-save").assertIsDisplayed()
+        compose.onNodeWithTag("location-adm1").assertTextContains("រាជធានី / ខេត្ត")
+        compose.onNodeWithTag("location-lower").assertTextContains("ស្រុក / ខណ្ឌ · ឃុំ / សង្កាត់")
+        assertLocationActions(true, false)
+        compose.onNodeWithTag("location-lower").performScrollTo().assertIsDisplayed()
+        screenshot("location-picker-$name-khmer")
+        compose.onNodeWithText("ទីកន្លែងផ្ទាល់ខ្លួន").performClick()
+        assertLocationActions(true, true)
+        compose.onNodeWithTag("location-zone").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("location-save").assertIsDisplayed().assertIsNotEnabled()
+        screenshot("location-picker-$name-manual-khmer")
+        compose.onNodeWithText(L.text("ui.cancel.5bf834", true)).performClick()
         compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed()
+    }
+
+    @Test fun emptyLocationCatalogShowsGuidanceAndCountryClearHidesSuggestions() {
+        start(AppSettings(khmer = false))
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        compose.onNodeWithTag("date-details-time-chip").performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("location-lower").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithContentDescription("Clear Country / territory").performClick()
+        compose.onNodeWithTag("location-country-options").assertDoesNotExist()
+        compose.onNodeWithTag("location-adm1").assertDoesNotExist()
+        compose.onNodeWithTag("location-country").performTextReplacement("Singapore")
+        compose.onNode(hasText("Singapore") and hasAnyAncestor(isPopup())).performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithText(L.text("location.no_points", false)).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("location-adm1").assertDoesNotExist()
+        compose.onNodeWithTag("location-save").assertIsNotEnabled()
+        compose.onNodeWithText("Custom location").performClick()
+        compose.onNodeWithTag("location-zone").assertTextContains("Time zone (city or country)")
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h800dp-xhdpi")
+    fun groupedTodayEventsKeepTimeOrderAndCalendarWidthCap() {
+        val date = LocalDate.of(2026, 9, 27)
+        start(AppSettings(khmer = false, theme = ThemeMode.DARK),
+            now = Instant.parse("2026-09-27T12:00:00Z"),
+            customEvents = listOf(CustomEvent(title = "Later personal", date = date, time = LocalTime.of(17, 0)),
+                CustomEvent(title = "First personal", date = date, time = LocalTime.of(9, 0))))
+        val card = compose.onNodeWithTag("calendar-month-card").getUnclippedBoundsInRoot()
+        assertTrue("Calendar width must be at most 1.25 times its height", (card.right - card.left).value <= (card.bottom - card.top).value * 1.25f + 1f)
+        val group = compose.onAllNodesWithTag("event-day-2026-09-27").onLast()
+        group.performScrollTo()
+        val early = compose.onAllNodesWithText("First personal").onLast().getUnclippedBoundsInRoot()
+        val late = compose.onAllNodesWithText("Later personal").onLast().getUnclippedBoundsInRoot()
+        assertTrue(early.top < late.top)
+        screenshot("grouped-today-events-dark")
+        compose.onNode(hasText("Events") and hasClickAction()).performClick()
+        compose.onNodeWithTag("event-search").performTextInput("personal")
+        compose.onNodeWithTag("event-day-2026-09-27").assertExists()
+        assertTrue(compose.onNodeWithText("First personal").getUnclippedBoundsInRoot().top < compose.onNodeWithText("Later personal").getUnclippedBoundsInRoot().top)
+        screenshot("grouped-filtered-events")
     }
 
     @Test fun westernZodiacTableRespectsEmojiSettingAndPersistsChoice() {
         start(AppSettings(khmer = false, useEmojiForWesternZodiac = true))
-        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("western-zodiac-table").assertIsDisplayed()
         compose.onNodeWithTag("western-sign-sun").assertTextEquals("♎")
         compose.onNodeWithTag("western-sign-moon").assertTextEquals("♓")
-        compose.onNodeWithTag("western-sign-rising").assertTextEquals("🕒")
+        compose.onNodeWithTag("western-sign-rising").assertHasNoClickAction()
         screenshot("western-zodiac-table-emoji")
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
 
         compose.onNodeWithText("Settings").performClick()
         val westernToggle = L.text("ui.show_western_zodiac", false)
@@ -1134,7 +1252,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         assertEquals("ជ្រើសរើសរវាង Emoji និងឈ្មោះ", L.text("ui.western_emoji_subtitle", true))
         assertEquals("ប្រើ Emoji សម្រាប់តារានិករ", L.text("ui.western_emoji_toggle", true))
         compose.onNodeWithText(westernToggle).assertIsDisplayed()
-        compose.onNodeWithContentDescription(emojiToggle).assertIsOn().performClick().assertIsOff()
+        compose.onNodeWithContentDescription(emojiToggle).performScrollTo().assertIsOn().performClick().assertIsOff()
         screenshot("settings-western-emoji")
         compose.onNodeWithContentDescription(westernToggle).performClick().assertIsOff()
         compose.onNodeWithContentDescription(emojiToggle).assertDoesNotExist()
@@ -1143,35 +1261,35 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithContentDescription(emojiToggle).assertIsOff()
 
         compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
-        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("western-sign-sun").assertTextEquals("Libra")
         compose.onNodeWithTag("western-sign-moon").assertTextEquals("Pisces")
-        compose.onNodeWithTag("western-sign-rising").assertTextEquals("🕒")
+        compose.onNodeWithTag("western-sign-rising").assertHasNoClickAction()
         screenshot("western-zodiac-table-names")
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
     }
 
     @Test fun ganzhiTableStartsWithAnHourForTodayAndRespectsEmojiSetting() {
         start(AppSettings(khmer = false, useEmojiForGanzhiAnimals = true))
-        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("ganzhi-table").assertIsDisplayed()
         compose.onNodeWithTag("ganzhi-header-year").assertExists()
         compose.onNodeWithTag("ganzhi-header-month").assertExists()
         compose.onNodeWithTag("ganzhi-header-day").assertExists()
         compose.onNodeWithTag("ganzhi-header-hour").assertExists()
-        compose.onNodeWithTag("ganzhi-sign-hour").assertTextEquals("🕒")
-        compose.onNodeWithTag("ganzhi-clash-hour").assertTextEquals("🕒")
+        compose.onNodeWithTag("ganzhi-sign-hour").assertHasNoClickAction()
+        compose.onNodeWithTag("ganzhi-clash-hour").assertHasNoClickAction()
         compose.onNodeWithTag("ganzhi-sign-day").assertTextEquals("🐮")
         compose.onNodeWithTag("ganzhi-clash-day").assertTextEquals("🐐")
         screenshot("ganzhi-table-emoji")
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
 
-        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("ganzhi-header-hour").assertExists()
         compose.onNodeWithTag("ganzhi-sign-hour").assertExists()
         compose.onNodeWithTag("ganzhi-clash-hour").assertExists()
         screenshot("ganzhi-table-today-hour")
-        compose.onNodeWithText("Close").performClick()
+        compose.onAllNodesWithText("Close").onLast().performClick()
 
         compose.onNodeWithText("Settings").performClick()
         val ganzhiToggle = L.text("ui.show_chinese_ganzhi", false)
@@ -1184,7 +1302,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
             assertEquals(L.text("ui.western_emoji_subtitle", language), L.text("ui.ganzhi_emoji_subtitle", language))
         }
         compose.onNodeWithText(ganzhiToggle).assertIsDisplayed()
-        compose.onNodeWithContentDescription(emojiToggle).assertIsOn().performClick().assertIsOff()
+        compose.onNodeWithContentDescription(emojiToggle).performScrollTo().assertIsOn().performClick().assertIsOff()
         screenshot("settings-ganzhi-emoji")
         compose.onNodeWithContentDescription(ganzhiToggle).performClick().assertIsOff()
         compose.onNodeWithContentDescription(emojiToggle).assertDoesNotExist()
@@ -1192,36 +1310,36 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithContentDescription(ganzhiToggle).performClick().assertIsOn()
         compose.onNodeWithContentDescription(emojiToggle).assertIsOff()
         compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
-        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("ganzhi-sign-day").assertTextEquals("Ox")
         compose.onNodeWithTag("ganzhi-clash-day").assertTextEquals("Goat")
-        compose.onNodeWithTag("ganzhi-sign-hour").assertTextEquals("🕒")
-        compose.onNodeWithTag("ganzhi-clash-hour").assertTextEquals("🕒")
+        compose.onNodeWithTag("ganzhi-sign-hour").assertHasNoClickAction()
+        compose.onNodeWithTag("ganzhi-clash-hour").assertHasNoClickAction()
         screenshot("ganzhi-table-english-names")
     }
 
     @Test fun ganzhiAnimalNamesUseKhmerWhenEmojiIsOff() {
         start(AppSettings(khmer = true, theme = ThemeMode.LIGHT, useEmojiForGanzhiAnimals = false))
-        compose.onNode(hasContentDescription("១៣កើត", substring = true)).performClick()
+        compose.onNode(hasContentDescription("១៣កើត", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("ganzhi-sign-day").assertTextEquals("ឆ្លូវ")
         compose.onNodeWithTag("ganzhi-clash-day").assertTextEquals("មមែ")
         compose.onNodeWithTag("ganzhi-header-hour").assertExists()
-        compose.onNodeWithTag("ganzhi-sign-hour").assertTextEquals("🕒")
-        compose.onNodeWithTag("ganzhi-clash-hour").assertTextEquals("🕒")
+        compose.onNodeWithTag("ganzhi-sign-hour").assertHasNoClickAction()
+        compose.onNodeWithTag("ganzhi-clash-hour").assertHasNoClickAction()
         screenshot("ganzhi-table-khmer-names")
         compose.onNodeWithText(L.text("ui.close.7df7dc", true)).performClick()
         compose.onNodeWithText(L.text("ui.settings.0e0a4f", true)).performClick()
         compose.onNodeWithTag("settings-scroll").performScrollToNode(hasContentDescription(L.text("ui.show_chinese_ganzhi", true)))
         compose.onNodeWithText(L.text("ui.show_chinese_ganzhi", true)).assertIsDisplayed()
         assertEquals("ប្រើ Emoji សម្រាប់សត្វ 干支", L.text("ui.ganzhi_emoji_toggle", true))
-        compose.onNodeWithText(L.text("ui.ganzhi_emoji_toggle", true)).assertIsDisplayed()
+        compose.onNodeWithText(L.text("ui.ganzhi_emoji_toggle", true)).performScrollTo().assertIsDisplayed()
         screenshot("settings-ganzhi-khmer")
     }
 
     @Test @Config(qualifiers = "w320dp-h568dp-xhdpi")
     fun ganzhiEmojiColumnsFitNarrowPhoneWithoutScrolling() {
         start(AppSettings(khmer = false, useEmojiForGanzhiAnimals = true))
-        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         val columns = compose.onNodeWithTag("ganzhi-columns").getUnclippedBoundsInRoot()
         val hour = compose.onNodeWithTag("ganzhi-header-hour").getUnclippedBoundsInRoot()
         screenshot("ganzhi-table-narrow-emoji")
@@ -1231,7 +1349,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Test @Config(qualifiers = "w320dp-h568dp-xhdpi")
     fun ganzhiHourScrollsWhileRowLabelsStayVisibleOnNarrowPhone() {
         start(AppSettings(khmer = false, theme = ThemeMode.LIGHT, useEmojiForGanzhiAnimals = false))
-        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("ganzhi-columns").assert(hasScrollAction())
         val labelsBefore = compose.onNodeWithTag("ganzhi-row-labels").getUnclippedBoundsInRoot()
         compose.onNodeWithTag("ganzhi-header-hour").performScrollTo().assertIsDisplayed()
@@ -1244,7 +1362,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Test fun ganzhiTableKeepsDayOutsideTheSolarTermRange() {
         val date = LocalDate.of(1800, 9, 10)
         start(now = Instant.parse("1800-09-10T12:00:00Z"))
-        compose.onNode(hasContentDescription(CalendarWords.date(date, false), substring = true)).performClick()
+        compose.onNode(hasContentDescription(CalendarWords.date(date, false), substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("ganzhi-sign-year").assertTextEquals("—")
         compose.onNodeWithTag("ganzhi-sign-month").assertTextEquals("—")
         compose.onNodeWithTag("ganzhi-sign-day").assertExists()

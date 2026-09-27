@@ -14,10 +14,10 @@ import org.junit.runner.RunWith
 class CalendarUiTest : CalendarUiScenarios() {
     @Test fun ganzhiTableUsesEmojiAndEnglishAnimalNamesOnDevice() {
         start(com.rsgkh.calendar.data.AppSettings(khmer = false, useEmojiForGanzhiAnimals = true))
-        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("ganzhi-sign-day").assertTextEquals("🐮")
         compose.onNodeWithTag("ganzhi-clash-day").assertTextEquals("🐐")
-        compose.onNodeWithTag("ganzhi-header-hour").assertDoesNotExist()
+        compose.onNodeWithTag("ganzhi-sign-hour").assertTextEquals("🐴").assertHasNoClickAction()
         screenshot("ganzhi-device-emoji")
         compose.onNodeWithText("Close").performClick()
 
@@ -26,10 +26,59 @@ class CalendarUiTest : CalendarUiScenarios() {
         compose.onNodeWithTag("settings-scroll").performScrollToNode(hasContentDescription(emojiToggle))
         compose.onNodeWithContentDescription(emojiToggle).assertIsOn().performClick().assertIsOff()
         compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
-        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true)).performClick()
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("ganzhi-sign-day").assertTextEquals("Ox")
         compose.onNodeWithTag("ganzhi-clash-day").assertTextEquals("Goat")
         screenshot("ganzhi-device-english-names")
+    }
+
+    @Test fun timeAndLocationSearchWorksWithTheDeviceKeyboard() {
+        start()
+        compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        compose.onNodeWithTag("date-details-time-chip").performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("location-lower").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("location-country").performClick().performTextReplacement("Belgium")
+        compose.waitUntil(5_000) { compose.onAllNodes(hasText("Belgium") and hasAnyAncestor(isPopup())).fetchSemanticsNodes().isNotEmpty() }
+        screenshot("location-country-device-keyboard")
+        compose.onNode(hasText("Belgium") and hasAnyAncestor(isPopup())).performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("location-adm1").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("location-adm1").performClick().performTextReplacement("Bruxelles")
+        compose.waitUntil(5_000) { compose.onAllNodes(hasText("Bruxelles-Capitale") and hasAnyAncestor(isPopup())).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasText("Bruxelles-Capitale") and hasAnyAncestor(isPopup())).performClick()
+        compose.onNodeWithTag("location-save").assertIsEnabled()
+        screenshot("location-catalog-device")
+        compose.onNodeWithTag("location-time").performTextReplacement("25:00")
+        compose.onNodeWithTag("location-save").assertIsNotEnabled()
+        compose.onNodeWithTag("location-time").performTextReplacement("08:35")
+        compose.onNodeWithTag("location-save").assertIsEnabled()
+        compose.onNodeWithTag("location-time").onChildren().filter(hasClickAction()).onFirst().performClick()
+        compose.onNodeWithTag("time-picker-clock-label").assertTextEquals("24-hour clock format")
+        screenshot("astrology-time-picker-english")
+        compose.onAllNodesWithText("Cancel").onLast().performClick()
+        compose.onNodeWithText("Cancel").performClick()
+        compose.onNodeWithTag("date-details-time-chip").assertTextContains("12:00", substring = true)
+    }
+
+    @Test fun khmerLocationPickerUsesLocalizedLabelsAndConsistentActions() {
+        start(com.rsgkh.calendar.data.AppSettings(khmer = true))
+        val date = java.time.LocalDate.of(2026, 9, 24)
+        compose.onNode(hasContentDescription(com.rsgkh.calendar.i18n.CalendarWords.date(date, true), substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        compose.onNodeWithTag("date-details-time-chip").performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("location-lower").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("location-adm1").assertTextContains(L.text("location.capital_province", true))
+        compose.onNodeWithTag("location-lower").assertTextContains(L.text("location.lower_divisions", true))
+        assertLocationActions(true, false)
+        screenshot("location-device-khmer-catalog")
+        compose.onNodeWithTag("location-time").onChildren().filter(hasClickAction()).onFirst().performClick()
+        compose.onNodeWithTag("time-picker-clock-label").assertTextEquals("ទម្រង់ ២៤ ម៉ោង")
+        screenshot("astrology-time-picker-khmer")
+        compose.onAllNodesWithText(L.text("ui.cancel.5bf834", true)).onLast().performClick()
+        compose.onNodeWithTag("location-mode").performClick()
+        assertLocationActions(true, true)
+        compose.onNodeWithTag("location-zone").assertTextContains(L.text("location.zone", true))
+        screenshot("location-device-khmer-manual")
+        compose.onNodeWithTag("location-cancel").performClick()
+        compose.onNodeWithTag("date-details-time-chip").assertIsDisplayed()
     }
 
     // Device coverage for inline source links and packaged license assets.
@@ -66,6 +115,15 @@ class CalendarUiTest : CalendarUiScenarios() {
             }
             compose.onNodeWithText("Khmer Calendar Engine").assertDoesNotExist()
             screenshot("engine-sources-$k")
+            val sourceLink = L.text("about.view_source_urls", k)
+            val sourceParagraph = L.text("about.location_sources", k) + " " + sourceLink + if (k) "" else "."
+            val locationSource = compose.onNodeWithTag("location-source-paragraph")
+            locationSource.performScrollTo().assertTextEquals(sourceParagraph)
+            screenshot("location-source-paragraph-$k")
+            locationSource.performFirstLinkClick { sourceParagraph.substring(it.start, it.end) == sourceLink }
+            compose.onNodeWithText("https://openadmindata.org/api/kh/").performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText(L.text("ui.copy", k)).performClick()
+            compose.onNode(hasText(L.text("ui.calendar_sources.7f962e", k)) and hasAnyAncestor(isDialog())).assertIsDisplayed()
             val licenseHeader = compose.onNodeWithText(L.text("ui.open_source_license.ab00af", k))
             val appNotice = compose.onNodeWithTag("app-license-text", useUnmergedTree = true)
             val engineNotice = compose.onNodeWithTag("engine-license-text", useUnmergedTree = true)

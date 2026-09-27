@@ -40,7 +40,7 @@ import java.util.UUID
     var timePicker by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf(false) }
     val date = runCatching { LocalDate.parse(dateText) }.getOrNull()?.takeIf { it.year in 1800..2200 }
-    val time = runCatching { LocalTime.parse(timeText) }.getOrNull()?.takeIf { timeText.length == 5 }
+    val time = parseTimeInput(timeText)
     val clockGap = date != null && time != null && zone.rules.getValidOffsets(date.atTime(time)).isEmpty()
     Column(Modifier.widthIn(max = 640.dp).fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 10.dp, vertical = 20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -55,9 +55,8 @@ import java.util.UUID
         OutlinedTextField(dateText, { dateText = it.take(10) }, Modifier.fillMaxWidth().testTag("custom-date"), singleLine = true,
             label = { Text(L.text("ui.event_date", k)) }, isError = date == null,
             supportingText = { Text("1800–2200") }, trailingIcon = { TextButton(onClick = { datePicker = true }) { Text(L.text("ui.pick.971faf", k)) } })
-        OutlinedTextField(timeText, { timeText = it.take(5) }, Modifier.fillMaxWidth().testTag("custom-time"), singleLine = true,
-            label = { Text(L.text("ui.time_hh_mm.8cf351", k)) }, isError = time == null || clockGap,
-            trailingIcon = { TextButton(onClick = { timePicker = true }) { Text(L.text("ui.pick.971faf", k)) } })
+        TimeInput(timeText, { timeText = it }, k, Modifier.fillMaxWidth().testTag("custom-time"),
+            isError = time == null || clockGap, onPick = { timePicker = true })
         if (clockGap) Text(L.text("ui.this_time_does_not_exist_because_the_local_clock_change.49ab61", k), color = MaterialTheme.colorScheme.error)
         OutlinedTextField(notes, { notes = it.take(2000) }, Modifier.fillMaxWidth().testTag("custom-notes"), minLines = 2, maxLines = 2, label = { Text(L.text("ui.notes_optional.fde199", k)) })
         HorizontalDivider()

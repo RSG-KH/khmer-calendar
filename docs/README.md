@@ -11,6 +11,7 @@ These guides describe the Android app and its integration with the dedicated [Kh
 | [Recurring event rules](recurring-event-rules.md) | App-owned definitions, engine mapping and reviewed overrides |
 | [Bundled event data](reference-event-database.md) | Event catalog schema, official holiday calendars, provenance and maintenance |
 | [Custom repeat verification](custom-repeat-verification.md) | Behavior checklist and test record for repeating personal events |
+| [PWA 0.12.1 sync](pwa-0.12.1-sync.md) | Feature mapping, Android adaptations and validation |
 | [Translation editor](../tools/translation/README.md) | Bilingual catalog and generated resources |
 
 Calculation contracts and supporting research live with the engine: see the [v0.6.0 API](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.6.0/docs/api.md) and [reference evidence](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.6.0/docs/references.md). Android retains consumer regression tests and bundled attribution; it does not maintain a second calculation implementation or algorithm guide.

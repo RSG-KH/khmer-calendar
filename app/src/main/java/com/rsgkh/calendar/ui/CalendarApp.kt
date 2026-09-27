@@ -3,8 +3,6 @@
 
 package com.rsgkh.calendar.ui
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.os.Build
 import android.widget.Toast
 import com.rsgkh.calendar.i18n.L
@@ -21,6 +19,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -46,6 +45,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -55,11 +56,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import android.content.res.Configuration
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.platform.LocalContext
 import androidx.browser.customtabs.CustomTabsIntent
 import android.content.Context
 import android.content.Intent
@@ -356,7 +357,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
         }
     }
         if (jump) MonthPicker(month, today.year, k, { jump = false }) { navigate(it); jump = false }
-        if (detail == null) dateDetailText?.let { dateString ->
+        dateDetailText?.let { dateString ->
             val date = LocalDate.parse(dateString)
             DateDetailsDialog(
                 date = date,
@@ -367,11 +368,13 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                 showObservances = settings.showObservances,
                 showHolyDaysInCalendar = settings.showHolyDaysInCalendar,
                 showCopyButtons = settings.showCopyButtons,
-                showWesternZodiac = settings.showWesternZodiac,
+                showWesternZodiac = settings.enableAstrologyAndZodiac && settings.showWesternZodiac,
                 useEmojiForWesternZodiac = settings.useEmojiForWesternZodiac,
-                showGanzhi = settings.showGanzhi,
+                showGanzhi = settings.enableAstrologyAndZodiac && settings.showGanzhi,
                 useEmojiForGanzhiAnimals = settings.useEmojiForGanzhiAnimals,
                 todayTimeZone = settings.todayTimeZone,
+                defaultTimeMinutes = settings.astrologyMinutes,
+                defaultPlace = settings.risingPlace,
                 onEvent = { detail = it },
                 onAddEvent = {
                     selectedText = date.toString()
@@ -383,7 +386,7 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
         }
         detail?.let { original ->
             val event = if (original.kind == EventKind.CUSTOM) allCustom.firstOrNull { it.id == original.id } ?: original else original
-            EventDialog(event, k, timeZoneLabel(settings.todayTimeZone, k), settings.showCopyButtons, settings.showWesternZodiac, onEdit = {
+            EventDialog(event, k, timeZoneLabel(settings.todayTimeZone, k), settings.showCopyButtons, settings.enableAstrologyAndZodiac && settings.showWesternZodiac, onEdit = {
             editingId = event.customSeriesId ?: event.id.removePrefix("custom:"); detail = null; dateDetailText = null
         }, onDelete = {
             onDeleteCustom(event.customSeriesId ?: event.id.removePrefix("custom:")); detail = null
@@ -465,12 +468,13 @@ private fun CalendarHeader(
 @Composable
 private fun CalendarMonthCard(
     month: YearMonth, selected: LocalDate, today: LocalDate, gridEvents: List<CalendarEvent>,
-    settings: AppSettings, onSelect: (LocalDate) -> Unit, onPrevious: () -> Unit, onNext: () -> Unit
+    settings: AppSettings, onSelect: (LocalDate) -> Unit, onPrevious: () -> Unit, onNext: () -> Unit,
+    onNaturalHeight: (Int) -> Unit = {},
 ) {
     val k = settings.khmer
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     Surface(modifier = Modifier.padding(bottom = if (isLandscape) 4.dp else 10.dp), shape = CardShape, color = MaterialTheme.colorScheme.surface) {
-        Box(Modifier.fillMaxWidth().clip(CardShape)) {
+        Box(Modifier.fillMaxWidth().clip(CardShape).testTag("calendar-month-card").onSizeChanged { onNaturalHeight(it.height) }) {
             if (month.monthValue == 4) {
                 val oldAnimal = Math.floorMod(month.year - 4 - 1, 12)
                 val newAnimal = Math.floorMod(month.year - 4, 12)
@@ -549,7 +553,7 @@ private fun CalendarScreen(
     val isTablet = configuration.smallestScreenWidthDp >= 600
     val allMonthEvents = remember(month, custom) {
         (EventRepository.forMonth(month) + custom.filter { YearMonth.from(it.date) == month })
-            .sortedWith(compareBy({ it.date }, { it.time ?: LocalTime.MIN }, { it.id }))
+            .sortedWith(calendarEventOrder)
     }
     val gridEvents = remember(allMonthEvents, settings.showHolyDaysInCalendar, settings.showObservances) {
         allMonthEvents.filter {
@@ -563,95 +567,106 @@ private fun CalendarScreen(
                 (settings.showObservances || it.kind != EventKind.OBSERVANCE)
         }
     }
-    if (isLandscape) {
-        val leftWeight = if (isTablet) 1.0f else 0.9f
-        Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Column(Modifier.weight(leftWeight).fillMaxHeight().verticalScroll(rememberScrollState())) {
-                CalendarHeader(month, selected, today, k, onJump, onPrevious, onNext, onToday)
-                CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext)
-                if (isTablet) {
-                    val selectedEvents = remember(selected, listEvents) { listEvents.filter { it.date == selected } }
-                    val selectedInfo = remember(selected) { KhmerDateDetails.fromGregorian(selected) }
-                    Spacer(Modifier.height(4.dp))
-                    Surface(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surface) {
-                        Row(
-                            modifier = Modifier
-                                .clickable { onOpenDateDetails(selected) }
-                                .padding(12.dp)
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Text(
-                                if (k) selectedInfo.fullKhmerDate() else selectedInfo.fullEnglishDate(),
-                                modifier = Modifier.weight(1f),
-                                fontSize = 13.readableSp,
-                                lineHeight = 20.readableSp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Column(
-                                horizontalAlignment = Alignment.End,
-                                verticalArrangement = Arrangement.spacedBy(0.dp)
+    BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        val density = LocalDensity.current
+        var naturalCardHeight by remember(month, settings, maxWidth, maxHeight, density.fontScale) { mutableStateOf<Int?>(null) }
+        val columnCap = naturalCardHeight?.let { with(density) { it.toDp() * 1.25f } } ?: maxWidth
+        val measureCard: (Int) -> Unit = { if (naturalCardHeight == null) naturalCardHeight = it }
+        if (isLandscape) {
+            Row(Modifier.widthIn(max = columnCap * 2 + 12.dp).fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
+                    CalendarHeader(month, selected, today, k, onJump, onPrevious, onNext, onToday)
+                    CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext, measureCard)
+                    if (isTablet) {
+                        val selectedEvents = remember(selected, listEvents) { listEvents.filter { it.date == selected } }
+                        val selectedInfo = remember(selected) { KhmerDateDetails.fromGregorian(selected) }
+                        Spacer(Modifier.height(4.dp))
+                        Surface(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surface) {
+                            Row(
+                                modifier = Modifier
+                                    .clickable { onOpenDateDetails(selected) }
+                                    .padding(12.dp)
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Top
                             ) {
                                 Text(
-                                    selectedInfo.gregorianLabel,
+                                    if (k) selectedInfo.fullKhmerDate() else selectedInfo.fullEnglishDate(),
+                                    modifier = Modifier.weight(1f),
                                     fontSize = 13.readableSp,
                                     lineHeight = 20.readableSp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.End
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
-                                if (settings.showWesternZodiac) {
+                                Spacer(Modifier.width(12.dp))
+                                Column(
+                                    horizontalAlignment = Alignment.End,
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                                ) {
                                     Text(
-                                        selectedInfo.zodiac.label,
-                                        fontSize = 12.readableSp,
+                                        selectedInfo.gregorianLabel,
+                                        fontSize = 13.readableSp,
                                         lineHeight = 20.readableSp,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         textAlign = TextAlign.End
                                     )
-                                }
-                                if (settings.showGanzhi) {
-                                    selectedInfo.ganzhiEmojiSummary()?.let { summary ->
+                                    if (settings.enableAstrologyAndZodiac && settings.showWesternZodiac) {
                                         Text(
-                                            summary,
-                                            modifier = Modifier.testTag("date-summary-ganzhi"),
-                                            fontSize = 11.readableSp,
+                                            selectedInfo.zodiac.label,
+                                            fontSize = 12.readableSp,
                                             lineHeight = 20.readableSp,
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.Medium,
                                             textAlign = TextAlign.End
                                         )
                                     }
+                                    if (settings.enableAstrologyAndZodiac && settings.showGanzhi) {
+                                        selectedInfo.ganzhiEmojiSummary()?.let { summary ->
+                                            Text(
+                                                summary,
+                                                modifier = Modifier.testTag("date-summary-ganzhi"),
+                                                fontSize = 11.readableSp,
+                                                lineHeight = 20.readableSp,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontWeight = FontWeight.Medium,
+                                                textAlign = TextAlign.End
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
+                        if (selectedEvents.isNotEmpty()) {
+                            Text(L.text("ui.events_on_the_day.a174fc", k), Modifier.padding(start = 10.dp, top = 4.dp, bottom = 4.dp),
+                                fontSize = 12.readableSp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            EventDayGroup(selectedEvents, k, false, true, true, onEvent)
+                        }
                     }
-                    if (selectedEvents.isNotEmpty()) {
-                        Text(L.text("ui.events_on_the_day.a174fc", k), Modifier.padding(start = 10.dp, top = 4.dp, bottom = 4.dp),
-                            fontSize = 12.readableSp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        selectedEvents.forEach { EventRow(it, k, Modifier.padding(bottom = 6.dp)) { onEvent(it) } }
+                }
+                LazyColumn(Modifier.weight(1f).fillMaxHeight().testTag("calendar-scroll"), contentPadding = PaddingValues(top = 4.dp, end = 12.dp, bottom = 6.dp)) {
+                    if (listEvents.isNotEmpty()) {
+                        item {
+                            Text(L.text("ui.all_events_in_month.ab923a", k, "month" to monthName(month, k)), Modifier.padding(start = 10.dp, top = 4.dp, bottom = 4.dp),
+                                fontSize = 12.readableSp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        val days = listEvents.groupBy { it.date }.values.toList()
+                        itemsIndexed(days, key = { _, events -> events.first().date }) { index, events ->
+                            EventDayGroup(events, k, events.first().date == today, index == 0, index == days.lastIndex, onEvent)
+                        }
                     }
                 }
             }
-            LazyColumn(Modifier.weight(1f).fillMaxHeight().testTag("calendar-scroll"), contentPadding = PaddingValues(top = 4.dp, end = 12.dp, bottom = 6.dp)) {
-                if (listEvents.isNotEmpty()) {
+        } else {
+            Column(Modifier.widthIn(max = minOf(640.dp, columnCap + 20.dp)).fillMaxSize()) {
+                CalendarHeader(month, selected, today, k, onJump, onPrevious, onNext, onToday)
+                LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag("calendar-scroll"), contentPadding = PaddingValues(10.dp, 0.dp, 10.dp, 24.dp)) {
                     item {
-                        Text(L.text("ui.all_events_in_month.ab923a", k, "month" to monthName(month, k)), Modifier.padding(start = 10.dp, top = 4.dp, bottom = 4.dp),
-                            fontSize = 12.readableSp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext, measureCard)
                     }
-                    items(listEvents, key = { it.key }) { EventRow(it, k, Modifier.padding(bottom = 6.dp)) { onEvent(it) } }
+                    val days = listEvents.groupBy { it.date }.values.toList()
+                    itemsIndexed(days, key = { _, events -> events.first().date }) { index, events ->
+                        EventDayGroup(events, k, events.first().date == today, index == 0, index == days.lastIndex, onEvent)
+                    }
                 }
-            }
-        }
-    } else {
-        Column(Modifier.widthIn(max = 640.dp).fillMaxSize()) {
-            CalendarHeader(month, selected, today, k, onJump, onPrevious, onNext, onToday)
-            LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag("calendar-scroll"), contentPadding = PaddingValues(10.dp, 0.dp, 10.dp, 24.dp)) {
-                item {
-                    CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext)
-                }
-                items(listEvents, key = { it.key }) { EventRow(it, k, Modifier.padding(bottom = 8.dp)) { onEvent(it) } }
             }
         }
     }
@@ -786,13 +801,15 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
     LaunchedEffect(filter) { if (filter == 4) filterScroll.scrollTo(0) }
     LaunchedEffect(settings.showHolyDaysInEvents) { if (!settings.showHolyDaysInEvents && filter == 3) filter = 0 }
     LaunchedEffect(settings.showObservances) { if (!settings.showObservances && filter == 2) filter = 0 }
+    val builtInEvents = remember(year) { EventRepository.forYear(year) }
+    val normalizedQuery = remember(query) { searchText(query) }
     val events = remember(year, query, filter, settings.showHolyDaysInEvents, settings.showObservances, custom) {
-        (EventRepository.forYear(year) + custom.filter { it.date.year == year }).filter { event ->
+        (builtInEvents + custom.filter { it.date.year == year }).filter { event ->
             (settings.showHolyDaysInEvents || event.kind != EventKind.HOLY_DAY) &&
                 (settings.showObservances || event.kind != EventKind.OBSERVANCE) &&
                 (filter == 0 || (filter == 1 && event.kind == EventKind.HOLIDAY) || (filter == 2 && event.kind == EventKind.OBSERVANCE) || (filter == 3 && event.kind == EventKind.HOLY_DAY) || (filter == 4 && event.kind == EventKind.CUSTOM)) &&
-                (query.isBlank() || searchText("${event.titleEn} ${event.titleKm} ${event.date} ${event.notes}").contains(searchText(query)))
-        }.sortedWith(compareBy({ it.date }, { it.time ?: LocalTime.MIN }, { it.id }))
+                (query.isBlank() || searchText("${event.titleEn} ${event.titleKm} ${event.date} ${event.notes}").contains(normalizedQuery))
+        }.sortedWith(calendarEventOrder)
     }
     if (showYearPicker) {
         EventYearPicker(year, today.year, k, onDismiss = { showYearPicker = false }) {
@@ -849,7 +866,10 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
                             Text(number(monthEvents.size, k), fontSize = 14.readableSp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
-                    items(monthEvents, key = { it.key }) { EventRow(it, k, Modifier.padding(bottom = 8.dp)) { onEvent(it) } }
+                    val days = monthEvents.groupBy { it.date }.values.toList()
+                    itemsIndexed(days, key = { _, events -> events.first().date }) { index, events ->
+                        EventDayGroup(events, k, events.first().date == today, index == 0, index == days.lastIndex, onEvent)
+                    }
                 }
             }
         }
@@ -866,7 +886,7 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-            ) { SearchIcon(Modifier.size(24.dp)) }
+            ) { SearchRightHandleIcon(Modifier.size(24.dp)) }
         }
         FloatingActionButton(onClick = onAdd, modifier = Modifier.align(Alignment.BottomEnd).padding(end = 32.dp, bottom = 32.dp)
             .size(48.dp).testTag("add-event").semantics { contentDescription = L.text("ui.add_event.bf2f10", k) },
@@ -878,10 +898,29 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
 }
 
 @Composable
-private fun EventRow(event: CalendarEvent, k: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolean, first: Boolean, last: Boolean, onEvent: (CalendarEvent) -> Unit) {
+    if (events.isEmpty()) return
+    val background = if (today) MaterialTheme.colorScheme.primary.copy(alpha = .02f).compositeOver(MaterialTheme.colorScheme.surface)
+        else MaterialTheme.colorScheme.surface
+    val holiday = events.any { it.kind == EventKind.HOLIDAY }
+    Surface(shape = RoundedCornerShape(topStart = if (first) 16.dp else 0.dp, topEnd = if (first) 16.dp else 0.dp,
+        bottomStart = if (last) 16.dp else 0.dp, bottomEnd = if (last) 16.dp else 0.dp), color = background,
+        modifier = Modifier.fillMaxWidth().testTag("event-day-" + events.first().date).semantics { isTraversalGroup = true }) {
+        Column {
+            events.forEachIndexed { index, event ->
+                if (index > 0) HorizontalDivider(Modifier.padding(start = 68.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                EventRow(event, k, showDate = index == 0, holiday = holiday) { onEvent(event) }
+            }
+            if (!last) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        }
+    }
+}
+
+@Composable
+private fun EventRow(event: CalendarEvent, k: Boolean, modifier: Modifier = Modifier, showDate: Boolean = true, holiday: Boolean = false, onClick: () -> Unit) {
     val color = eventColor(event.kind)
-    val dateColor = if (event.kind == EventKind.HOLIDAY) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface
-    Surface(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface) {
+    val dateColor = if (holiday || event.kind == EventKind.HOLIDAY) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface
+    Surface(onClick = onClick, modifier = modifier.semantics { contentDescription = listOf(event.title(k), dateLabel(event.date, k), number(event.date.year, k), kindLabel(event.kind, k), event.time?.toString()).filterNotNull().joinToString(", ") }, shape = RectangleShape, color = Color.Transparent) {
         Box(Modifier.fillMaxWidth()) {
             if (event.kind == EventKind.CUSTOM) {
                 Image(
@@ -897,10 +936,12 @@ private fun EventRow(event: CalendarEvent, k: Boolean, modifier: Modifier = Modi
                 )
             }
             Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.width(42.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.width(42.dp).clearAndSetSemantics {}, horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (showDate) {
                     Text(number(event.date.dayOfMonth, k), color = dateColor, fontSize = 21.readableSp, lineHeight = 21.readableSp, fontWeight = FontWeight.SemiBold)
-                    Text(CalendarWords.weekday(event.date.dayOfWeek.value, k, "short"), modifier = Modifier.offset(y = (-1.5).dp),
+                    Text(CalendarWords.weekday(event.date.dayOfWeek.value, k, "short"), modifier = Modifier.offset(y = (-3.5).dp),
                         fontSize = 10.readableSp, lineHeight = 12.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
                 Box(Modifier.padding(horizontal = 12.dp).width(3.dp).height(28.dp).background(color.copy(alpha = .65f), CircleShape))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -919,6 +960,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
     val k = settings.khmer
     val fontScales = FontScale.entries.filter { it.multiplier <= 1.5f }
     var showSources by remember { mutableStateOf(false) }
+    var astrologyPicker by remember { mutableStateOf<LocationPickerMode?>(null) }
     LazyColumn(Modifier.widthIn(max = 640.dp).fillMaxSize().testTag("settings-scroll"), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 20.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
         item {
             SettingsCard(L.text("ui.appearance.23e609", k)) {
@@ -979,20 +1021,35 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
         }
         item {
             SettingsCard(L.text("ui.astrology_zodiac", k)) {
-                SettingSwitch(L.text("ui.show_western_zodiac", k), L.text("ui.show_western_zodiac_subtitle", k), settings.showWesternZodiac) {
-                    onChange(settings.copy(showWesternZodiac = it))
+                SettingSwitch(L.text("ui.enable_astrology_zodiac", k), L.text("ui.enable_astrology_zodiac_subtitle", k), settings.enableAstrologyAndZodiac) {
+                    onChange(settings.copy(enableAstrologyAndZodiac = it))
                 }
-                if (settings.showWesternZodiac) {
-                    SettingSwitch(L.text("ui.western_emoji_toggle", k), L.text("ui.western_emoji_subtitle", k), settings.useEmojiForWesternZodiac) {
-                        onChange(settings.copy(useEmojiForWesternZodiac = it))
+                if (settings.enableAstrologyAndZodiac) {
+                    SettingsRow(L.text("ui.set_time_for_past_future", k), L.text("ui.set_time_for_past_future_subtitle", k)) {
+                        TextButton(onClick = { astrologyPicker = LocationPickerMode.TIME }, modifier = Modifier.testTag("astrology-default-time")) {
+                            Text(LocalTime.of(settings.astrologyMinutes / 60, settings.astrologyMinutes % 60).format(DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)))
+                        }
                     }
-                }
-                SettingSwitch(L.text("ui.show_chinese_ganzhi", k), L.text("ui.show_chinese_ganzhi_subtitle", k), settings.showGanzhi) {
-                    onChange(settings.copy(showGanzhi = it))
-                }
-                if (settings.showGanzhi) {
-                    SettingSwitch(L.text("ui.ganzhi_emoji_toggle", k), L.text("ui.ganzhi_emoji_subtitle", k), settings.useEmojiForGanzhiAnimals) {
-                        onChange(settings.copy(useEmojiForGanzhiAnimals = it))
+                    SettingSwitch(L.text("ui.show_western_zodiac", k), L.text("ui.show_western_zodiac_subtitle", k), settings.showWesternZodiac) {
+                        onChange(settings.copy(showWesternZodiac = it))
+                    }
+                    if (settings.enableAstrologyAndZodiac && settings.showWesternZodiac) {
+                        SettingSwitch(L.text("ui.western_emoji_toggle", k), L.text("ui.western_emoji_subtitle", k), settings.useEmojiForWesternZodiac) {
+                            onChange(settings.copy(useEmojiForWesternZodiac = it))
+                        }
+                    }
+                    if (settings.showWesternZodiac) SettingsRow(L.text("ui.location_for_rising_sign", k), L.text("ui.location_for_rising_sign_subtitle", k)) {
+                        TextButton(onClick = { astrologyPicker = LocationPickerMode.LOCATION }, modifier = Modifier.widthIn(max = 144.dp).testTag("astrology-default-location")) {
+                            Text(settings.risingPlace.label, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                    SettingSwitch(L.text("ui.show_chinese_ganzhi", k), L.text("ui.show_chinese_ganzhi_subtitle", k), settings.showGanzhi) {
+                        onChange(settings.copy(showGanzhi = it))
+                    }
+                    if (settings.enableAstrologyAndZodiac && settings.showGanzhi) {
+                        SettingSwitch(L.text("ui.ganzhi_emoji_toggle", k), L.text("ui.ganzhi_emoji_subtitle", k), settings.useEmojiForGanzhiAnimals) {
+                            onChange(settings.copy(useEmojiForGanzhiAnimals = it))
+                        }
                     }
                 }
             }
@@ -1016,6 +1073,21 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
         }
     }
     if (showSources) SourcesDialog(k) { showSources = false }
+    astrologyPicker?.let { picker ->
+        val initialTime = LocalTime.of(settings.astrologyMinutes / 60, settings.astrologyMinutes % 60)
+        if (picker == LocationPickerMode.TIME) {
+            TimeSelectionDialog(initialTime, k, onDismiss = { astrologyPicker = null }, zoneLabel = null) { time ->
+                onChange(settings.copy(astrologyMinutes = time.hour * 60 + time.minute))
+                astrologyPicker = null
+            }
+        } else {
+            TimeAndLocationDialog(initialTime, settings.risingPlace, k, picker,
+                onDismiss = { astrologyPicker = null }, onSave = { _, place ->
+                    onChange(settings.copy(risingPlace = place ?: settings.risingPlace))
+                    astrologyPicker = null
+                })
+        }
+    }
 }
 
 @Composable internal fun SettingsCard(title: String, spacedContent: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
@@ -1193,15 +1265,18 @@ internal fun WidgetSettingsCard(
     showGanzhi: Boolean = true, useEmojiForGanzhiAnimals: Boolean = false,
     useEmojiForWesternZodiac: Boolean = false,
     todayTimeZone: TodayTimeZone,
+    defaultTimeMinutes: Int = 720, defaultPlace: Birthplace = Birthplace.DEFAULT,
     onEvent: (CalendarEvent) -> Unit, onAddEvent: () -> Unit, onDismiss: () -> Unit
 ) {
     val hasAstrology = showWesternZodiac || showGanzhi
     var customTimeMinutes by rememberSaveable(date, today, todayTimeZone, hasAstrology) {
-        val openingTime = if (hasAstrology && date == today) LocalTime.now(todayTimeZone.zone()) else null
+        val openingTime = if (!hasAstrology) null else if (date == today) LocalTime.now(todayTimeZone.zone()) else LocalTime.of(defaultTimeMinutes / 60, defaultTimeMinutes % 60)
         mutableStateOf(openingTime?.let { it.hour * 60 + it.minute })
     }
     val customTime = customTimeMinutes?.let { LocalTime.of(it / 60, it % 60) }
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
+    var risingPlaceJson by rememberSaveable(date) { mutableStateOf<String?>(defaultPlace.toJson()) }
+    val risingPlace = remember(risingPlaceJson) { Birthplace.fromJson(risingPlaceJson) }
     val info = remember(date) { KhmerDateDetails.fromGregorian(date) }
     val hasHolyDay = showHolyDaysInCalendar && (info.lunar.isHolyDay || info.lunar.isShavingDay)
     val symbolMeasurer = rememberTextMeasurer()
@@ -1220,7 +1295,7 @@ internal fun WidgetSettingsCard(
     val events = remember(date, custom, showHolyDays, showObservances) {
         (EventRepository.forDate(date) + custom.filter { it.date == date })
             .filter { (showHolyDays || it.kind != EventKind.HOLY_DAY) && (showObservances || it.kind != EventKind.OBSERVANCE) }
-            .sortedWith(compareBy({ it.time ?: LocalTime.MIN }, { it.id }))
+            .sortedWith(calendarEventOrder)
     }
     CalendarBasicAlertDialog(
         onDismissRequest = onDismiss,
@@ -1255,16 +1330,17 @@ internal fun WidgetSettingsCard(
                                 shape = RoundedCornerShape(8.dp),
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                                 modifier = Modifier.testTag("date-details-time-chip")
-                                    .then(if (customTime == null) Modifier.semantics {
-                                        contentDescription = L.text("ui.select_time.eacac3", k)
-                                    } else Modifier)
+                                    .semantics {
+                                        contentDescription = (if (showWesternZodiac) timeAndLocationTitle(k) else L.text("ui.select_time.eacac3", k)) +
+                                            (customTime?.let { ", " + it.format(timeFormatter) } ?: "")
+                                    }
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                                    Text("🕒", fontSize = 12.readableSp)
+                                    Text(if (showWesternZodiac) placeFlag(risingPlace?.countryCode.orEmpty()) else "🕒", fontSize = 12.readableSp)
                                     if (customTime != null) {
                                         Text(
                                             text = customTime.format(timeFormatter),
@@ -1291,12 +1367,13 @@ internal fun WidgetSettingsCard(
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         val fullDate = if (k) info.fullKhmerDate() else info.fullEnglishDate()
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(fullDate, modifier = Modifier.weight(1f), fontSize = 18.readableSp, lineHeight = 32.readableSp, color = MaterialTheme.colorScheme.onSurface)
+                            SelectionContainer(Modifier.weight(1f)) {
+                                Text(fullDate, fontSize = 18.readableSp, lineHeight = 32.readableSp, color = MaterialTheme.colorScheme.onSurface)
+                            }
                             if (showCopyButtons) CopyTextButton(fullDate, L.text("ui.copy_full_date", k), L.text("ui.full_date_copied", k),
-                                firstLineHeight = 32.readableSp)
+                                firstLineHeight = 32.readableSp, errorMessage = L.text("ui.could_not_copy_date", k))
                         }
                         if (hasHolyDay || hasAstrology) {
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 if (hasHolyDay) {
                                     Row(
@@ -1330,15 +1407,16 @@ internal fun WidgetSettingsCard(
                                         )
                                     }
                                 }
+                                if (hasAstrology) HorizontalDivider(Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant)
                                 if (showWesternZodiac) {
                                     WesternZodiacTable(
                                         info = info,
                                         timeZone = todayTimeZone,
+                                        place = risingPlace,
                                         khmer = k,
                                         useEmoji = useEmojiForWesternZodiac,
                                         symbolSlot = symbolSlot,
-                                        customTime = customTime,
-                                        onPickTime = { showTimePicker = true }
+                                        customTime = customTime
                                     )
                                 }
                                 if (showGanzhi) {
@@ -1347,8 +1425,7 @@ internal fun WidgetSettingsCard(
                                         khmer = k,
                                         useEmoji = useEmojiForGanzhiAnimals,
                                         symbolSlot = symbolSlot,
-                                        customTime = customTime,
-                                        onPickTime = { showTimePicker = true }
+                                        customTime = customTime
                                     )
                                 }
                             }
@@ -1399,17 +1476,19 @@ internal fun WidgetSettingsCard(
     }
     if (hasAstrology && showTimePicker) {
         val initialTime = customTime ?: LocalTime.now(todayTimeZone.zone()).truncatedTo(ChronoUnit.MINUTES)
-        TimeSelectionDialog(
-            initial = initialTime,
-            k = k,
-            onDismiss = { showTimePicker = false },
-            zoneLabel = timeSelectionZoneLabel(todayTimeZone, k),
-            onClear = if (customTime != null) { { customTimeMinutes = null; showTimePicker = false } } else null,
-            onSelect = { time ->
+        if (showWesternZodiac) {
+            TimeAndLocationDialog(initialTime, risingPlace, k,
+                onDismiss = { showTimePicker = false }, onSave = { time, place ->
+                    customTimeMinutes = time.hour * 60 + time.minute
+                    risingPlaceJson = place?.toJson()
+                    showTimePicker = false
+                })
+        } else {
+            TimeSelectionDialog(initialTime, k, onDismiss = { showTimePicker = false }, zoneLabel = null) { time ->
                 customTimeMinutes = time.hour * 60 + time.minute
                 showTimePicker = false
             }
-        )
+        }
     }
 }
 
@@ -1417,14 +1496,14 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
 
 @Composable private fun WesternZodiacTable(
     info: KhmerDateDetails, timeZone: TodayTimeZone, khmer: Boolean, useEmoji: Boolean = false,
-    symbolSlot: Dp,
-    customTime: LocalTime? = null, onPickTime: (() -> Unit)? = null
+    symbolSlot: Dp, place: Birthplace?,
+    customTime: LocalTime? = null
 ) {
     val zone = timeZone.zone()
     val date = info.date
     val westernSupported = date.year in 1800..2200
-    val horoscope = remember(date, customTime, timeZone, zone) {
-        westernBig3Signs(date, customTime, timeZone, zone)
+    val horoscope = remember(date, customTime, timeZone, zone, place) {
+        westernBig3Signs(date, customTime, timeZone, zone, place)
     }
     val columns = listOf(
         WesternColumn("sun", L.text("ui.western_sun", khmer), horoscope?.sun),
@@ -1434,23 +1513,17 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
     val heading = L.text("ui.western_big3", khmer)
     val signLabel = L.text("ui.western_sign", khmer)
     val signs = columns.map { column ->
-        if (column.key == "rising" && column.sign == null && westernSupported) "🕒"
-        else column.sign?.let { if (useEmoji) it.symbol else it.englishName } ?: "—"
+        column.sign?.let { if (useEmoji) it.symbol else it.englishName } ?: "—"
     }
     val headingStyle = LocalTextStyle.current.copy(fontSize = 12.readableSp, fontWeight = FontWeight.Medium)
     val labelStyle = LocalTextStyle.current.copy(fontSize = 11.readableSp)
     val headerStyle = labelStyle.copy(fontWeight = FontWeight.Medium)
     val signStyle = LocalTextStyle.current.copy(fontSize = (if (useEmoji) 19 else 12).readableSp)
     val boldSignStyle = signStyle.copy(fontWeight = FontWeight.Bold)
-    val timeChipStyle = LocalTextStyle.current.copy(fontSize = 12.readableSp)
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     fun textSize(value: String, style: TextStyle) =
         measurer.measure(value, style, maxLines = 1, softWrap = false).size
-    val timeChipSize = with(density) {
-        val emoji = textSize("🕒", timeChipStyle)
-        maxOf(24.dp, emoji.width.toDp() + 4.dp, emoji.height.toDp() + 4.dp)
-    }
     val labelWidth = with(density) {
         maxOf(symbolSlot + DetailSymbolGap + textSize(heading, headingStyle).width.toDp(),
             textSize(signLabel, labelStyle).width.toDp()) + 4.dp
@@ -1459,8 +1532,7 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
     val columnWidths = columns.indices.map { index ->
         val style = if (columns[index].key == "sun") boldSignStyle else signStyle
         with(density) {
-            val contentWidth = if (columns[index].key == "rising" && columns[index].sign == null) timeChipSize
-            else textSize(signs[index], style).width.toDp()
+            val contentWidth = textSize(signs[index], style).width.toDp()
             maxOf(textSize(columns[index].label, headerStyle).width.toDp(), contentWidth) + 8.dp
         } * columnWidthFactor
     }
@@ -1472,7 +1544,7 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
     val signRowHeight = with(density) {
         maxOf(textSize(signLabel, labelStyle).height,
             signs.maxOf { textSize(it, signStyle).height }).toDp() + (if (useEmoji) 8.dp else 4.dp)
-    }.coerceAtLeast(maxOf(if (useEmoji) 34.dp else 26.dp, timeChipSize + 4.dp))
+    }.coerceAtLeast(if (useEmoji) 34.dp else 26.dp)
     Column(Modifier.fillMaxWidth().testTag("western-zodiac-table"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Column(Modifier.width(labelWidth).testTag("western-zodiac-row-labels")) {
@@ -1495,7 +1567,6 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
             Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()).testTag("western-zodiac-columns")) {
                 columns.forEachIndexed { index, column ->
                     val isSun = column.key == "sun"
-                    val isRising = column.key == "rising"
                     Column(Modifier.width(columnWidths[index])) {
                         Text(column.label, Modifier.fillMaxWidth().height(headerHeight)
                             .wrapContentHeight().testTag("western-header-${column.key}"),
@@ -1503,29 +1574,12 @@ private data class WesternColumn(val key: String, val label: String, val sign: W
                             textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium)
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        if (isRising && column.sign == null && onPickTime != null && westernSupported) {
-                            Box(Modifier.fillMaxWidth().height(signRowHeight), contentAlignment = Alignment.Center) {
-                                Surface(
-                                    onClick = onPickTime,
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(timeChipSize).testTag("western-sign-${column.key}")
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text("🕒", style = timeChipStyle, maxLines = 1, softWrap = false,
-                                            textAlign = TextAlign.Center)
-                                    }
-                                }
-                            }
-                        } else {
-                            Text(signs[index], Modifier.fillMaxWidth().height(signRowHeight)
-                                .wrapContentHeight().testTag("western-sign-${column.key}")
-                                .then(if (isRising && onPickTime != null && westernSupported) Modifier.clickable(onClick = onPickTime) else Modifier),
-                                fontSize = (if (useEmoji && column.sign != null) 19 else 12).readableSp,
-                                fontWeight = if (isSun && column.sign != null) FontWeight.Bold else FontWeight.Normal,
-                                maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
-                                color = if (isSun && column.sign != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-                        }
+                        Text(signs[index], Modifier.fillMaxWidth().height(signRowHeight)
+                            .wrapContentHeight().testTag("western-sign-${column.key}"),
+                            fontSize = (if (useEmoji && column.sign != null) 19 else 12).readableSp,
+                            fontWeight = if (isSun && column.sign != null) FontWeight.Bold else FontWeight.Normal,
+                            maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
+                            color = if (isSun && column.sign != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
@@ -1542,7 +1596,7 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
 @Composable private fun GanzhiTable(
     info: KhmerDateDetails, khmer: Boolean, useEmoji: Boolean,
     symbolSlot: Dp,
-    customTime: LocalTime? = null, onPickTime: (() -> Unit)? = null
+    customTime: LocalTime? = null
 ) {
     val date = info.date
     val solarSupported = date.year in 1900..2100
@@ -1560,8 +1614,7 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
     val signLabel = L.text("ui.ganzhi_sign", khmer)
     val clashLabel = L.text("ui.ganzhi_clash", khmer)
     val animals = columns.map { column ->
-        if (column.key == "hour" && column.pillar == null && solarSupported) "🕒" to "🕒"
-        else (column.pillar?.branch?.ganzhiAnimalLabel(khmer, useEmoji) ?: "—") to
+        (column.pillar?.branch?.ganzhiAnimalLabel(khmer, useEmoji) ?: "—") to
             (column.pillar?.clashBranch?.ganzhiAnimalLabel(khmer, useEmoji) ?: "—")
     }
     val headingStyle = LocalTextStyle.current.copy(fontSize = 12.readableSp, fontWeight = FontWeight.Medium)
@@ -1569,15 +1622,10 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
     val headerStyle = labelStyle.copy(fontWeight = FontWeight.Medium)
     val animalStyle = LocalTextStyle.current.copy(fontSize = (if (useEmoji) 19 else 12).readableSp)
     val boldAnimalStyle = animalStyle.copy(fontWeight = FontWeight.Bold)
-    val timeChipStyle = LocalTextStyle.current.copy(fontSize = 12.readableSp)
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     fun textSize(value: String, style: TextStyle) =
         measurer.measure(value, style, maxLines = 1, softWrap = false).size
-    val timeChipSize = with(density) {
-        val emoji = textSize("🕒", timeChipStyle)
-        maxOf(24.dp, emoji.width.toDp() + 4.dp, emoji.height.toDp() + 4.dp)
-    }
     val labelWidth = with(density) {
         maxOf(symbolSlot + DetailSymbolGap + textSize(heading, headingStyle).width.toDp(),
             textSize(signLabel, labelStyle).width.toDp(),
@@ -1587,8 +1635,7 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
     val columnWidths = columns.indices.map { index ->
         val style = if (columns[index].key == "year") boldAnimalStyle else animalStyle
         with(density) {
-            val contentWidth = if (columns[index].key == "hour" && columns[index].pillar == null) timeChipSize
-            else maxOf(textSize(animals[index].first, style).width.toDp(),
+            val contentWidth = maxOf(textSize(animals[index].first, style).width.toDp(),
                 textSize(animals[index].second, style).width.toDp())
             maxOf(textSize(columns[index].label, headerStyle).width.toDp(), contentWidth) + 8.dp
         } * columnWidthFactor
@@ -1602,7 +1649,7 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
         maxOf(textSize(signLabel, labelStyle).height, textSize(clashLabel, labelStyle).height,
             animals.maxOf { maxOf(textSize(it.first, animalStyle).height,
                 textSize(it.second, animalStyle).height) }).toDp() + 8.dp
-    }.coerceAtLeast(maxOf(34.dp, timeChipSize + 4.dp))
+    }.coerceAtLeast(34.dp)
     Column(Modifier.fillMaxWidth().testTag("ganzhi-table"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Column(Modifier.width(labelWidth).testTag("ganzhi-row-labels")) {
@@ -1629,7 +1676,6 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
             Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()).testTag("ganzhi-columns")) {
                 columns.forEachIndexed { index, column ->
                     val isYear = column.key == "year"
-                    val isHour = column.key == "hour"
                     Column(Modifier.width(columnWidths[index])) {
                         Text(column.label, Modifier.fillMaxWidth().height(headerHeight)
                             .wrapContentHeight().testTag("ganzhi-header-${column.key}"),
@@ -1637,49 +1683,18 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
                             textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium)
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        if (isHour && column.pillar == null && onPickTime != null && solarSupported) {
-                            Box(Modifier.fillMaxWidth().height(animalRowHeight), contentAlignment = Alignment.Center) {
-                                Surface(
-                                    onClick = onPickTime,
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(timeChipSize).testTag("ganzhi-sign-${column.key}")
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text("🕒", style = timeChipStyle, maxLines = 1, softWrap = false,
-                                            textAlign = TextAlign.Center)
-                                    }
-                                }
-                            }
-                            Box(Modifier.fillMaxWidth().height(animalRowHeight), contentAlignment = Alignment.Center) {
-                                Surface(
-                                    onClick = onPickTime,
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(timeChipSize).testTag("ganzhi-clash-${column.key}")
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text("🕒", style = timeChipStyle, maxLines = 1, softWrap = false,
-                                            textAlign = TextAlign.Center)
-                                    }
-                                }
-                            }
-                        } else {
-                            Text(animals[index].first, Modifier.fillMaxWidth().height(animalRowHeight)
-                                .wrapContentHeight().testTag("ganzhi-sign-${column.key}")
-                                .then(if (isHour && onPickTime != null && solarSupported) Modifier.clickable(onClick = onPickTime) else Modifier),
-                                fontSize = (if (useEmoji && column.pillar != null) 19 else 12).readableSp,
-                                fontWeight = if (isYear && column.pillar != null) FontWeight.Bold else FontWeight.Normal,
-                                maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
-                                color = if (isYear && column.pillar != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-                            Text(animals[index].second, Modifier.fillMaxWidth().height(animalRowHeight)
-                                .wrapContentHeight().testTag("ganzhi-clash-${column.key}")
-                                .then(if (isHour && onPickTime != null && solarSupported) Modifier.clickable(onClick = onPickTime) else Modifier),
-                                fontSize = (if (useEmoji && column.pillar != null) 19 else 12).readableSp,
-                                fontWeight = if (isYear && column.pillar != null) FontWeight.Bold else FontWeight.Normal,
-                                maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
-                                color = if (isYear && column.pillar != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-                        }
+                        Text(animals[index].first, Modifier.fillMaxWidth().height(animalRowHeight)
+                            .wrapContentHeight().testTag("ganzhi-sign-${column.key}"),
+                            fontSize = (if (useEmoji && column.pillar != null) 19 else 12).readableSp,
+                            fontWeight = if (isYear && column.pillar != null) FontWeight.Bold else FontWeight.Normal,
+                            maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
+                            color = if (isYear && column.pillar != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                        Text(animals[index].second, Modifier.fillMaxWidth().height(animalRowHeight)
+                            .wrapContentHeight().testTag("ganzhi-clash-${column.key}"),
+                            fontSize = (if (useEmoji && column.pillar != null) 19 else 12).readableSp,
+                            fontWeight = if (isYear && column.pillar != null) FontWeight.Bold else FontWeight.Normal,
+                            maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
+                            color = if (isYear && column.pillar != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
@@ -1746,16 +1761,17 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
                 ) {
                     var isSingleLine by remember(event.title(k)) { mutableStateOf(true) }
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(
-                            event.title(k),
-                            modifier = Modifier.weight(1f),
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = 18.readableSp,
-                            lineHeight = 26.readableSp,
-                            onTextLayout = { isSingleLine = it.lineCount == 1 }
-                        )
+                        SelectionContainer(Modifier.weight(1f)) {
+                            Text(
+                                event.title(k),
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 18.readableSp,
+                                lineHeight = 26.readableSp,
+                                onTextLayout = { isSingleLine = it.lineCount == 1 }
+                            )
+                        }
                         if (showCopyButtons) CopyTextButton(event.title(k), L.text("ui.copy_event_title", k), L.text("ui.event_title_copied", k),
-                            firstLineHeight = 26.readableSp)
+                            firstLineHeight = 26.readableSp, errorMessage = L.text("ui.could_not_copy_event_title", k))
                     }
                     Spacer(Modifier.height(if (showCopyButtons && isSingleLine) 2.dp else 12.dp))
                     HorizontalDivider()
@@ -1959,6 +1975,32 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
             }
         }
     }
+    val locationText = L.text("about.location_sources", k)
+    val locationLink = L.text("about.view_source_urls", k)
+    val locationTitle = L.text("about.source_urls_title", k)
+    val locationSourceAnnotated = remember(locationText, locationLink, locationTitle, linkColor, k) {
+        buildAnnotatedString {
+            append(locationText)
+            append(" ")
+            withLink(LinkAnnotation.Clickable(
+                tag = "location_source_urls",
+                styles = TextLinkStyles(style = SpanStyle(
+                    color = linkColor,
+                    textDecoration = TextDecoration.Underline,
+                    fontWeight = if (k) FontWeight.Bold else FontWeight.Medium
+                )),
+                linkInteractionListener = {
+                    urlDialogData = locationTitle to listOf(
+                        "https://www.geonames.org/", "https://creativecommons.org/licenses/by/4.0/",
+                        "https://en.wikipedia.org/wiki/Provinces_of_Cambodia",
+                        "https://en.wikipedia.org/wiki/List_of_districts,_municipalities_and_sections_in_Cambodia",
+                        "https://en.wikipedia.org/wiki/List_of_communes_in_Cambodia", "https://openadmindata.org/api/kh/"
+                    ).joinToString("\n")
+                }
+            )) { append(locationLink) }
+            if (!k) append(".")
+        }
+    }
     val scrollState = rememberScrollState()
     CalendarAlertDialog(onDismissRequest = onDismiss, title = { Text(L.text("ui.calendar_sources.7f962e", k)) }, text = {
         Column(
@@ -1972,6 +2014,8 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
             Text(L.text("rules.source_summary", k), fontSize = 14.readableSp)
             Text(holidaySourceAnnotated, fontSize = 14.readableSp, lineHeight = 22.readableSp)
             Text(engineSourceAnnotated, fontSize = 14.readableSp, lineHeight = 22.readableSp)
+            Text(locationSourceAnnotated, Modifier.testTag("location-source-paragraph"), fontSize = 14.readableSp, lineHeight = 22.readableSp)
+
             val licenseState = L.text(if (license) "ui.expanded" else "ui.collapsed", k)
             val headerColor = MaterialTheme.colorScheme.primary
             Row(
@@ -2070,7 +2114,7 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
             title = { Text(title, fontSize = 16.sp, lineHeight = 22.sp) },
             text = {
                 SelectionContainer {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         urlText.lines().forEach { url ->
                             Text(
                                 url,
@@ -2085,12 +2129,12 @@ private data class GanzhiColumn(val key: String, val label: String, val pillar: 
             },
             confirmButton = {
                 TextButton(onClick = {
-                    context.getSystemService(ClipboardManager::class.java)
-                        .setPrimaryClip(ClipData.newPlainText(title, urlText))
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                        Toast.makeText(context, L.text("ui.url_copied", k), Toast.LENGTH_SHORT).show()
-                    }
-                    urlDialogData = null
+                    if (copyToClipboard(context, title, urlText)) {
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                            Toast.makeText(context, L.text("ui.url_copied", k), Toast.LENGTH_SHORT).show()
+                        }
+                        urlDialogData = null
+                    } else Toast.makeText(context, L.text("ui.could_not_copy_urls", k), Toast.LENGTH_SHORT).show()
                 }) {
                     Text(L.text("ui.copy", k))
                 }
@@ -2296,6 +2340,15 @@ private fun OpenInNewIcon(modifier: Modifier = Modifier, color: Color = LocalCon
         line(10.5f, 13.5f, 19.2f, 4.8f)
         line(13.6f, 4.8f, 19.2f, 4.8f)
         line(19.2f, 4.8f, 19.2f, 10.4f)
+    }
+}
+
+@Composable
+private fun SearchRightHandleIcon(modifier: Modifier = Modifier, color: Color = LocalContentColor.current) {
+    Canvas(modifier) {
+        val scale = size.width / 24
+        drawCircle(color, radius = 6.2f * scale, center = Offset(10.2f * scale, 10.2f * scale), style = Stroke(width = 1.9f * scale, cap = StrokeCap.Round))
+        drawLine(color, Offset(14.58f * scale, 14.58f * scale), Offset(19.5f * scale, 19.5f * scale), strokeWidth = 1.9f * scale, cap = StrokeCap.Round)
     }
 }
 

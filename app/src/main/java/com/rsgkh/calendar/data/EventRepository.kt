@@ -10,9 +10,14 @@ import com.rsgkh.calendar.i18n.L
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
-import java.util.concurrent.ConcurrentHashMap
 
 enum class EventKind { HOLIDAY, OBSERVANCE, HOLY_DAY, CUSTOM }
+
+/** Stable personal ties keep saved order; untimed personal events follow timed ones. */
+val calendarEventOrder: Comparator<CalendarEvent> = compareBy<CalendarEvent> { it.date }
+    .thenBy { when (it.kind) { EventKind.CUSTOM -> 0; EventKind.HOLIDAY -> 1; EventKind.OBSERVANCE -> 2; EventKind.HOLY_DAY -> 3 } }
+    .thenBy { if (it.kind == EventKind.CUSTOM) it.time ?: LocalTime.MAX else LocalTime.MIN }
+    .thenBy { if (it.kind == EventKind.CUSTOM) "" else it.id }
 enum class DateBasis {
     OFFICIAL,
     CALCULATED,
@@ -52,7 +57,9 @@ data class SourceInfo(
 
 object EventRepository {
     val coveredYears = 1800..2200
-    private val cache = ConcurrentHashMap<Int, List<CalendarEvent>>()
+    private val cache = object : LinkedHashMap<Int, List<CalendarEvent>>(16, .75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Int, List<CalendarEvent>>?) = size > 12
+    }
 
     private val sourcesMap: Map<String, CatalogSource> by lazy {
         RecurringEvents.catalog.sources.associateBy { it.id }
@@ -108,7 +115,7 @@ object EventRepository {
 
     fun hasBundledYear(year: Int): Boolean = year in coveredYears
 
-    fun clearCache() {
+    @Synchronized fun clearCache() {
         cache.clear()
     }
 
@@ -118,9 +125,9 @@ object EventRepository {
     fun forDate(date: LocalDate): List<CalendarEvent> =
         forYear(date.year).filter { it.date == date }
 
-    fun forYear(year: Int): List<CalendarEvent> {
+    @Synchronized fun forYear(year: Int): List<CalendarEvent> {
         require(year in coveredYears) { "Supported years: 1800–2200." }
-        return cache.getOrPut(year) { buildYear(year) }
+        return cache.getOrPut(year) { buildYear(year).sortedWith(calendarEventOrder) }
     }
 
     private fun buildYear(year: Int): List<CalendarEvent> {

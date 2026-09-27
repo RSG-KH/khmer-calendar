@@ -260,7 +260,7 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                                     WText(holy, p.holy, 11.5f, scale, bold = false, lines = 1)
                                 }
 
-                                if (snapshot.settings.showWesternZodiac) {
+                                if ((snapshot.settings.enableAstrologyAndZodiac && snapshot.settings.showWesternZodiac)) {
                                     // 5. Western Zodiac [emoji], matching the Date details setting.
                                     Spacer(GlanceModifier.height(2.dp))
                                     val z = details?.zodiac ?: Zodiac.forDate(date)

@@ -24,12 +24,12 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 
 - Gregorian and Khmer lunar dates, Buddhist Era, animal year, Sak, New Year dates, traditional Moha Sangkran arrival estimates, traditional Chinese festivals, and Ganzhi (干支) year/month/day/hour pillars are provided by [Khmer Calendar Engine](https://github.com/RSG-KH/khmer-calendar-engine).
 - Calendar algorithms, source references and validation are documented in the [engine project](https://github.com/RSG-KH/khmer-calendar-engine#verification-and-accuracy). Android supplies the interface, translations, personal events and reminders.
-- Date details can show Western zodiac signs, elements and ruling bodies, plus a Chinese Ganzhi (干支) table with Year, Month and Day signs and clash animals. The Rising sign and Hour pillar use the selected time; Today starts with the current time when its popup opens, while other dates let you pick one.
-- Rising sign uses the selected date's time-zone offset and a representative city for that zone (Phnom Penh for Cambodia; Brussels for local `Europe/Brussels`). The app does not use your exact location, so changing zones does not guarantee a different sign for every time.
+- Date details can show Western zodiac signs, elements and ruling bodies, plus a Chinese Ganzhi (干支) table with Year, Month and Day signs and clash animals. The Rising sign and Hour pillar use the selected time; Today starts with the current time in the Today follows zone; other dates start at the saved time (12:00 initially).
+- Rising sign uses a chosen location and its IANA time zone. The offline picker includes Cambodian provinces/districts/communes and GeoNames administrative divisions worldwide, with saved places and a custom coordinate/time-zone option. The initial location is Sangkat Voat Phnum, Phnom Penh. Changing location does not shift the displayed clock.
 
 ### 🌸 Buddhist Holy Days (*Thngai Seil*)
 
-- Shows Buddhist holy days and Shaving Day (*Thngai Kaor*) using the engine's results.
+- Shows Buddhist holy days and Buddhist Shaving Day (*Thngai Kaor*) using the engine's results.
 - Lotus artwork marks holy days, with separate visibility settings for the calendar and event lists.
 
 ### 🏛️ Holidays & Cultural Observances
@@ -41,6 +41,8 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 - **On-Device Event Calculation (1800–2200)**: Observances, traditional Cambodian festivals, Chinese festivals and Buddhist holy days are calculated on the device from bundled rules for every supported year, with reviewed date corrections where captured records differ.
 - **Cambodian Holidays & Festivals**: Browse public holidays and traditional festivals, including Khmer New Year, Pchum Ben, Water Festival and Royal Ploughing.
 - **National & International Observances**: Includes commemorations and UN observances alongside Buddhist holy days.
+
+Same-day event lists show timed personal events first, then untimed personal events, holidays, observances and enabled Buddhist holy days. Each day has one date label; today has a 2% accent tint without changing event-type colors.
 
 ### ⏰ Personal Events & Precision Notifications
 - **Local SQLite Persistence**: Create, edit, and delete personal events with titles, dates, times, and notes.
@@ -71,10 +73,12 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 - **Optical Geometry Balancing**: Event markers (holiday circles, holy day triangles, observance squares) are normalized by minimum dimension for uniform visual balance.
 
 ### 🎨 Personalization & Accessibility
+
+- **Astrology defaults**: A master switch hides and skips both optional astrology features while retaining their individual choices. Save separate default time and Rising location preferences; date-popup overrides apply only to that popup.
 - **Longer Weekday Names**: Optional calendar headings show Sun–Sat in English and full weekday names in Khmer. Off by default under Settings → Calendar.
 - **Weekday Colors**: Traditional weekday heading colors, with shades adapted for light and dark themes. On by default under Settings → Calendar; existing saved choices are preserved.
 - **Western Zodiac Signs**: The selected-date card, date details and event details show the Western zodiac sign, element and ruling body. On by default under Settings → Astrology & Zodiac.
-- **Chinese Ganzhi (干支) Table**: Date details show Year, Month and Day signs and clash animals, plus the Hour pillar when a time is set, with an emoji/name toggle. The popup opens at the current time for Today and lets you change or clear it; other dates start without a selected time. On by default under Settings → Astrology & Zodiac.
+- **Chinese Ganzhi (干支) Table**: Date details show Year, Month and Day signs and clash animals, plus the Hour pillar when a time is set, with an emoji/name toggle. The popup opens at the current time for Today and uses the saved default time for other dates. Its header opens the time and location picker. On by default under Settings → Astrology & Zodiac.
 - **Curated Theme Accents**: Choose from **Blue** (Default), **Lavender**, **Rose**, **Amber**, and **Lime** (*បៃតងចាស់*).
 - **Theme Modes**: Initially follows the system theme; choosing Light or Dark saves that preference. Background accent is on by default, tinting pages and navigation with the chosen accent; turning it off restores neutral backgrounds.
 - **Dynamic Font Scaling**: Choose 80%–150% on all devices. Home screen widgets have their own separate 80%–200% font size setting.

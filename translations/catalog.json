@@ -958,7 +958,7 @@
       "section": "interface",
       "context": "CalendarApp.kt",
       "en": "Calendar sources & licenses  ›",
-      "km": "ប្រភពទិន្នន័យ និងអាជ្ញាបណ្ណ",
+      "km": "ប្រភពទិន្នន័យ និងអាជ្ញាប័ណ្ណ",
       "original": {
         "en": "Calendar sources & licenses  ›",
         "km": "ប្រភពទិន្នន័យ និងអាជ្ញាបណ្ណ"
@@ -1069,7 +1069,7 @@
       "id": "ui.thngai_kaor_before_a_holy_day.d02977",
       "section": "interface",
       "context": "CalendarApp.kt",
-      "en": "Shaving Day",
+      "en": "Buddhist Shaving Day",
       "km": "ថ្ងៃកោរ",
       "original": {
         "en": "Shaving Day",
@@ -1281,8 +1281,8 @@
       "id": "ui.calendar_sources.7f962e",
       "section": "about",
       "context": "CalendarApp.kt",
-      "en": "Calendar sources",
-      "km": "ប្រភពប្រតិទិន",
+      "en": "Sources and licenses",
+      "km": "ប្រភពទិន្នន័យ និងអាជ្ញាប័ណ្ណ",
       "original": {
         "en": "Calendar sources",
         "km": "ប្រភពប្រតិទិន"
@@ -1394,7 +1394,7 @@
       "section": "about",
       "context": "CalendarApp.kt",
       "en": "Open-source licenses",
-      "km": "អាជ្ញាបណ្ណប្រភពបើកចំហ",
+      "km": "អាជ្ញាប័ណ្ណប្រភពបើកចំហ",
       "original": {
         "en": "Open-source license",
         "km": "អាជ្ញាបណ្ណប្រភពបើកចំហ"
@@ -36833,6 +36833,534 @@
       "original": {
         "en": "Learn more",
         "km": "ស្វែងយល់បន្ថែម"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.enable_astrology_zodiac",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "km": "បើកហោរាសាស្ត្រ និងរាសីចក្រ",
+      "en": "Enable astrology and zodiac",
+      "original": {
+        "km": "បើកហោរាសាស្ត្រ និងរាសីចក្រ",
+        "en": "Enable astrology and zodiac"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.enable_astrology_zodiac_subtitle",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "km": "តារានិករ និងហោរាសាស្ត្រ 干支",
+      "en": "Western zodiac and Chinese Ganzhi",
+      "original": {
+        "km": "តារានិករ និងហោរាសាស្ត្រ 干支",
+        "en": "Western zodiac and Chinese Ganzhi"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.set_time_for_past_future",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "km": "ម៉ោងអតីតកាល និងអនាគតកាល",
+      "en": "Set time for past and future",
+      "original": {
+        "km": "ម៉ោងអតីតកាល និងអនាគតកាល",
+        "en": "Set time for past and future"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.set_time_for_past_future_subtitle",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "km": "សម្រាប់តារានិករ និងហោរាសាស្ត្រ 干支",
+      "en": "For western zodiac and Chinese Ganzhi",
+      "original": {
+        "km": "សម្រាប់តារានិករ និងហោរាសាស្ត្រ 干支",
+        "en": "For western zodiac and Chinese Ganzhi"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.location_for_rising_sign",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "km": "កំណត់ទីតាំងសម្រាប់រាសីរះ",
+      "en": "Set location for rising sign",
+      "original": {
+        "km": "កំណត់ទីតាំងសម្រាប់រាសីរះ",
+        "en": "Set location for rising sign"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.location_for_rising_sign_subtitle",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "km": "សម្រាប់តារានិករ · Big 3",
+      "en": "For western zodiac · Big 3",
+      "original": {
+        "km": "សម្រាប់តារានិករ · Big 3",
+        "en": "For western zodiac · Big 3"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "about.location_sources",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "en": "Outside Cambodia, administrative divisions come from GeoNames under CC BY 4.0. In Cambodia, Wikipedia’s province, district, and commune lists are the main references, with some additional records from CambodiaPostalCode. Most Cambodian division coordinates come from Open Admin Data under CC BY 4.0; supplemental coordinates draw on OCHA / Department of Geography, GeoNames, OpenStreetMap, and Wikidata.",
+      "km": "ទិន្នន័យបំណែងចែករដ្ឋបាលក្រៅប្រទេសកម្ពុជា គឺទទួលបានពី GeoNames ក្រោមអាជ្ញាប័ណ្ណ CC BY 4.0។ បញ្ជីឈ្មោះខេត្ត ស្រុក និងឃុំនៃប្រទេសកម្ពុជា ត្រូវបានដកស្រង់ចេញពី Wikipedia ដែលជាប្រភពយោងចម្បង ដោយរួមជាមួយនិងកំណត់ត្រាបន្ថែមមួយចំនួនពី CambodiaPostalCode។ ចំណែកកូអរដោនេផ្នែករដ្ឋបាលកម្ពុជាភាគច្រើន គឺទទួលបានពី Open Admin Data ក្រោមអាជ្ញាប័ណ្ណ CC BY 4.0។ រីឯកូអរដោនេបន្ថែម ត្រូវបានដកស្រង់ចេញពី OCHA / នាយកដ្ឋានភូមិសាស្ត្រ GeoNames OpenStreetMap និង Wikidata។",
+      "original": {
+        "en": "Outside Cambodia, administrative divisions come from GeoNames under CC BY 4.0. In Cambodia, Wikipedia’s province, district, and commune lists are the main references, with some additional records from CambodiaPostalCode. Most Cambodian division coordinates come from Open Admin Data under CC BY 4.0; supplemental coordinates draw on OCHA / Department of Geography, GeoNames, OpenStreetMap, and Wikidata.",
+        "km": "ទិន្នន័យបំណែងចែករដ្ឋបាលក្រៅប្រទេសកម្ពុជា គឺទទួលបានពី GeoNames ក្រោមអាជ្ញាប័ណ្ណ CC BY 4.0។ បញ្ជីឈ្មោះខេត្ត ស្រុក និងឃុំនៃប្រទេសកម្ពុជា ត្រូវបានដកស្រង់ចេញពី Wikipedia ដែលជាប្រភពយោងចម្បង ដោយរួមជាមួយនិងកំណត់ត្រាបន្ថែមមួយចំនួនពី CambodiaPostalCode។ ចំណែកកូអរដោនេផ្នែករដ្ឋបាលកម្ពុជាភាគច្រើន គឺទទួលបានពី Open Admin Data ក្រោមអាជ្ញាប័ណ្ណ CC BY 4.0។ រីឯកូអរដោនេបន្ថែម ត្រូវបានដកស្រង់ចេញពី OCHA / នាយកដ្ឋានភូមិសាស្ត្រ GeoNames OpenStreetMap និង Wikidata។"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.could_not_copy_date",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "km": "មិនអាចចម្លងបានទេ។ សូមជ្រើសរើសអត្ថបទកាលបរិច្ឆេទ ដើម្បីចម្លងដោយខ្លួនឯង។",
+      "en": "Could not copy. Select the date text to copy it manually.",
+      "original": {
+        "km": "មិនអាចចម្លងបានទេ។ សូមជ្រើសរើសអត្ថបទកាលបរិច្ឆេទ ដើម្បីចម្លងដោយខ្លួនឯង។",
+        "en": "Could not copy. Select the date text to copy it manually."
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.could_not_copy_event_title",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "km": "មិនអាចចម្លងបានទេ។ សូមជ្រើសរើសចំណងជើងព្រឹត្តិការណ៍ ដើម្បីចម្លងដោយខ្លួនឯង។",
+      "en": "Could not copy. Select the event title to copy it manually.",
+      "original": {
+        "km": "មិនអាចចម្លងបានទេ។ សូមជ្រើសរើសចំណងជើងព្រឹត្តិការណ៍ ដើម្បីចម្លងដោយខ្លួនឯង។",
+        "en": "Could not copy. Select the event title to copy it manually."
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "ui.could_not_copy_urls",
+      "section": "interface",
+      "context": "CalendarApp.kt",
+      "km": "មិនអាចចម្លងបានទេ។ សូមជ្រើសរើសអាសយដ្ឋានប្រភព ដើម្បីចម្លងដោយខ្លួនឯង។",
+      "en": "Could not copy. Select the source URLs to copy them manually.",
+      "original": {
+        "km": "មិនអាចចម្លងបានទេ។ សូមជ្រើសរើសអាសយដ្ឋានប្រភព ដើម្បីចម្លងដោយខ្លួនឯង។",
+        "en": "Could not copy. Select the source URLs to copy them manually."
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.title",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "ម៉ោង និងទីកន្លែងសម្រាប់ Big 3 និង 干支",
+      "en": "Time and location for Big 3 & Ganzhi",
+      "original": {
+        "km": "ម៉ោង និងទីកន្លែងសម្រាប់ Big 3 និង 干支",
+        "en": "Time and location for Big 3 & Ganzhi"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.location",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "ទីកន្លែង",
+      "en": "Location",
+      "original": {
+        "km": "ទីកន្លែង",
+        "en": "Location"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.country",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "ប្រទេស / ដែនដី",
+      "en": "Country / territory",
+      "original": {
+        "km": "ប្រទេស / ដែនដី",
+        "en": "Country / territory"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.capital_province",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "រាជធានី / ខេត្ត",
+      "en": "Capital / province",
+      "original": {
+        "km": "រាជធានី / ខេត្ត",
+        "en": "Capital / province"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.province_state",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "ខេត្ត / រដ្ឋ",
+      "en": "Province / state",
+      "original": {
+        "km": "ខេត្ត / រដ្ឋ",
+        "en": "Province / state"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.lower_divisions",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "ស្រុក / ខណ្ឌ · ឃុំ / សង្កាត់",
+      "en": "ADM 2 · ADM 3",
+      "original": {
+        "km": "ស្រុក / ខណ្ឌ · ឃុំ / សង្កាត់",
+        "en": "ADM 2 · ADM 3"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.custom",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "ទីកន្លែងផ្ទាល់ខ្លួន",
+      "en": "Custom location",
+      "original": {
+        "km": "ទីកន្លែងផ្ទាល់ខ្លួន",
+        "en": "Custom location"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.pick",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "ជ្រើសរើសទីកន្លែង",
+      "en": "Pick location",
+      "original": {
+        "km": "ជ្រើសរើសទីកន្លែង",
+        "en": "Pick location"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.name",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "ឈ្មោះទីកន្លែង",
+      "en": "Location name",
+      "original": {
+        "km": "ឈ្មោះទីកន្លែង",
+        "en": "Location name"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.latitude",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "រយៈទទឹង",
+      "en": "Latitude",
+      "original": {
+        "km": "រយៈទទឹង",
+        "en": "Latitude"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.longitude",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "រយៈបណ្តោយ",
+      "en": "Longitude",
+      "original": {
+        "km": "រយៈបណ្តោយ",
+        "en": "Longitude"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.zone",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "តំបន់ម៉ោង (ទីក្រុង ឬប្រទេស)",
+      "en": "Time zone (city or country)",
+      "original": {
+        "km": "តំបន់ម៉ោង (ទីក្រុង ឬប្រទេស)",
+        "en": "Time zone (city or country)"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.no_matches",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "គ្មានលទ្ធផលត្រូវគ្នា",
+      "en": "No matches",
+      "original": {
+        "km": "គ្មានលទ្ធផលត្រូវគ្នា",
+        "en": "No matches"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.loading_countries",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "កំពុងផ្ទុកប្រទេស…",
+      "en": "Loading countries…",
+      "original": {
+        "km": "កំពុងផ្ទុកប្រទេស…",
+        "en": "Loading countries…"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.loading_places",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "កំពុងផ្ទុកទីកន្លែង…",
+      "en": "Loading places…",
+      "original": {
+        "km": "កំពុងផ្ទុកទីកន្លែង…",
+        "en": "Loading places…"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.load_failed",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "មិនអាចផ្ទុកទិន្នន័យទីកន្លែងបាន។ សូមព្យាយាមម្ដងទៀត។",
+      "en": "Place data unavailable. Please try again.",
+      "original": {
+        "km": "មិនអាចផ្ទុកទិន្នន័យទីកន្លែងបាន។ សូមព្យាយាមម្ដងទៀត។",
+        "en": "Place data unavailable. Please try again."
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.no_points",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "គ្មានកូអរដោនេតំបន់រដ្ឋបាលនៅទីនេះ។ សូមបញ្ចូលទីកន្លែងផ្ទាល់ខ្លួន។",
+      "en": "No administrative points are available here. Enter a custom location.",
+      "original": {
+        "km": "គ្មានកូអរដោនេតំបន់រដ្ឋបាលនៅទីនេះ។ សូមបញ្ចូលទីកន្លែងផ្ទាល់ខ្លួន។",
+        "en": "No administrative points are available here. Enter a custom location."
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.coordinates_unavailable",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "គ្មានកូអរដោនេ; សូមប្រើទីកន្លែងផ្ទាល់ខ្លួន",
+      "en": "Coordinates unavailable; use Custom location",
+      "original": {
+        "km": "គ្មានកូអរដោនេ; សូមប្រើទីកន្លែងផ្ទាល់ខ្លួន",
+        "en": "Coordinates unavailable; use Custom location"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.zone_unavailable",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "គ្មានតំបន់ម៉ោង; សូមប្រើទីកន្លែងផ្ទាល់ខ្លួន",
+      "en": "Time zone unavailable; use Custom location",
+      "original": {
+        "km": "គ្មានតំបន់ម៉ោង; សូមប្រើទីកន្លែងផ្ទាល់ខ្លួន",
+        "en": "Time zone unavailable; use Custom location"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "location.approximate_point",
+      "section": "interface",
+      "context": "TimeAndLocationDialog.kt",
+      "km": "ទីតាំងប្រហាក់ប្រហែល; សូមប្រើទីកន្លែងផ្ទាល់ខ្លួនសម្រាប់ភាពច្បាស់លាស់",
+      "en": "Approximate point; use Custom location for precision",
+      "original": {
+        "km": "ទីតាំងប្រហាក់ប្រហែល; សូមប្រើទីកន្លែងផ្ទាល់ខ្លួនសម្រាប់ភាពច្បាស់លាស់",
+        "en": "Approximate point; use Custom location for precision"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "common.clock_format",
+      "section": "notifications",
+      "context": "Time picker without a time zone",
+      "en": "24-hour clock format",
+      "km": "ទម្រង់ ២៤ ម៉ោង",
+      "original": {
+        "en": "24-hour clock format",
+        "km": "ទម្រង់ ២៤ ម៉ោង"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "about.view_source_urls",
+      "section": "interface",
+      "context": "Inline link in the location attribution paragraph",
+      "en": "View source URLs",
+      "km": "មើល ប្រភព URL ទាំងអស់។",
+      "original": {
+        "en": "View source URLs",
+        "km": "មើល ប្រភព URL ទាំងអស់។"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "about.source_urls_title",
+      "section": "interface",
+      "context": "Location attribution URL dialog title",
+      "en": "Source URLs",
+      "km": "អាសយដ្ឋានប្រភព",
+      "original": {
+        "en": "Source URLs",
+        "km": "អាសយដ្ឋានប្រភព"
       },
       "reviewed": true,
       "required": {

@@ -190,8 +190,8 @@ internal fun glanceLabels(snapshot: WidgetSnapshot, strings: WidgetStrings, comp
     } ?: strings(R.string.widget_lunar_unavailable)
     val holy = (snapshot.settings.showHolyDaysInCalendar || snapshot.settings.showHolyDaysInEvents) &&
         details?.lunar?.isHolyDay == true
-    val zodiac = if (!compact && snapshot.settings.showWesternZodiac) details?.zodiac?.emoji?.trim() else null
-    val animalPillars = if (!compact && snapshot.settings.showGanzhi && details != null && date.year in 1900..2100) {
+    val zodiac = if (!compact && (snapshot.settings.enableAstrologyAndZodiac && snapshot.settings.showWesternZodiac)) details?.zodiac?.emoji?.trim() else null
+    val animalPillars = if (!compact && (snapshot.settings.enableAstrologyAndZodiac && snapshot.settings.showGanzhi) && details != null && date.year in 1900..2100) {
         runCatching {
             val yearPillar = ChineseZodiacCalculator.getYearPillar(date.year, date.monthValue, date.dayOfMonth)
             val monthPillar = ChineseZodiacCalculator.getMonthPillar(date.year, date.monthValue, date.dayOfMonth)

@@ -1,6 +1,7 @@
 // Copyright (c) 2026 RSG-KH | Apache-2.0 License
 package com.rsgkh.calendar.ui
 
+import android.content.Context
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.Build
@@ -24,8 +25,14 @@ import androidx.compose.ui.unit.dp
 import com.rsgkh.calendar.R
 import kotlinx.coroutines.delay
 
+internal fun copyToClipboard(context: Context, label: String, text: String): Boolean = runCatching {
+    val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return false
+    clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
+    true
+}.getOrDefault(false)
+
 @Composable
-internal fun CopyTextButton(text: String, label: String, copiedMessage: String, firstLineHeight: TextUnit) {
+internal fun CopyTextButton(text: String, label: String, copiedMessage: String, firstLineHeight: TextUnit, errorMessage: String) {
     val context = LocalContext.current
     var copied by remember(text, label) { mutableStateOf(false) }
     var copyRequest by remember(text, label) { mutableIntStateOf(0) }
@@ -38,13 +45,16 @@ internal fun CopyTextButton(text: String, label: String, copiedMessage: String, 
     val buttonOffsetY = with(LocalDensity.current) { (firstLineHeight.toDp() - 48.dp) / 2 }
     IconButton(
         onClick = {
-            val clipboard = context.getSystemService(ClipboardManager::class.java)
-            clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
-            copied = true
-            copyRequest++ // Another click restarts the confirmation period.
-            // Android 13+ supplies its own clipboard confirmation.
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                Toast.makeText(context, copiedMessage, Toast.LENGTH_SHORT).show()
+            if (copyToClipboard(context, label, text)) {
+                copied = true
+                copyRequest++ // Another click restarts the confirmation period.
+                // Android 13+ supplies its own clipboard confirmation.
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    Toast.makeText(context, copiedMessage, Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                copied = false
+                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
             }
         },
         // Move the whole button so the icon, ripple and touch target share one center.

@@ -199,7 +199,7 @@ private fun WheelBox(
     initial: LocalTime,
     k: Boolean,
     onDismiss: () -> Unit,
-    zoneLabel: String = L.text("ui.cambodia_time_utc_7.6b9f2d", k),
+    zoneLabel: String? = L.text("ui.cambodia_time_utc_7.6b9f2d", k),
     onClear: (() -> Unit)? = null,
     onSelect: (LocalTime) -> Unit
 ) {
@@ -283,29 +283,32 @@ private fun WheelBox(
                 }
                 Spacer(Modifier.height(18.dp))
                 Text(
-                    text = L.text("common.clock_label", k, "zone" to zoneLabel),
+                    text = if (zoneLabel.isNullOrBlank()) L.text("common.clock_format", k)
+                        else L.text("common.clock_label", k, "zone" to zoneLabel),
                     fontSize = 12.readableSp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("time-picker-clock-label")
                 )
             }
         },
-        dismissButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        confirmButton = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 if (onClear != null) {
                     TextButton(onClick = onClear) {
                         Text(L.text("ui.clear.7d76fd", k))
                     }
                 }
+                Spacer(Modifier.weight(1f))
                 TextButton(onClick = onDismiss) {
                     Text(L.text("ui.cancel.5bf834", k))
                 }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onSelect(LocalTime.of(selectedHour, selectedMinute)) }) {
-                Text(L.text("ui.ok.04c4aa", k))
+                TextButton(onClick = { onSelect(LocalTime.of(selectedHour, selectedMinute)) }) {
+                    Text(L.text("ui.ok.04c4aa", k))
+                }
             }
         }
     )

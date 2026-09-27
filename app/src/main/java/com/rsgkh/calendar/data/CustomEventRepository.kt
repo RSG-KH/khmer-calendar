@@ -3,11 +3,14 @@ package com.rsgkh.calendar.data
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import androidx.core.database.sqlite.transaction
 import com.rsgkh.calendar.domain.EventRepeat
 import com.rsgkh.calendar.domain.RepeatFrequency
 import java.time.Instant
+import java.time.DateTimeException
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -71,24 +74,44 @@ class CustomEventRepository(context: Context) : SQLiteOpenHelper(context.applica
         db.execSQL("ALTER TABLE events ADD COLUMN include_february INTEGER NOT NULL DEFAULT 0")
         db.execSQL("ALTER TABLE events ADD COLUMN remind_after TEXT")
     }
-    fun all(): List<CustomEvent> = readableDatabase.query("events", null, null, null, null, null, "date, time, title").use { cursor ->
+    fun all(): List<CustomEvent> = readableDatabase.query("events", null, null, null, null, null, "date, time, rowid").use { cursor ->
         buildList {
             while (cursor.moveToNext()) {
-                fun string(name: String) = cursor.getString(cursor.getColumnIndexOrThrow(name))
-                val offsetIndex = cursor.getColumnIndexOrThrow("offset_seconds")
-                val frequency = cursor.getString(cursor.getColumnIndexOrThrow("repeat_frequency"))
-                val repeat = frequency?.let { EventRepeat(RepeatFrequency.valueOf(it), LocalDate.parse(string("repeat_until")),
-                    cursor.getLong(cursor.getColumnIndexOrThrow("repeat_interval")),
-                    cursor.getInt(cursor.getColumnIndexOrThrow("include_thirty")) == 1,
-                    cursor.getInt(cursor.getColumnIndexOrThrow("include_february")) == 1) }
-                val remindersAfter = cursor.getString(cursor.getColumnIndexOrThrow("remind_after"))?.let(Instant::parse)
-                add(CustomEvent(string("id"), string("title"), LocalDate.parse(string("date")), LocalTime.parse(string("time")),
-                    string("notes"), cursor.getInt(cursor.getColumnIndexOrThrow("remind")) == 1, string("zone_id"),
-                    if (cursor.isNull(offsetIndex)) null else cursor.getInt(offsetIndex), repeat, remindersAfter))
+                // A malformed row must not hide valid neighbors. Leave its raw
+                // data intact so edits and deletions of other events preserve it.
+                try {
+                    add(readEvent(cursor))
+                } catch (_: DateTimeException) {
+                    continue
+                } catch (_: IllegalArgumentException) {
+                    continue
+                }
             }
         }
     }
+    private fun readEvent(cursor: Cursor): CustomEvent {
+        fun optionalString(name: String) = cursor.getString(cursor.getColumnIndexOrThrow(name))
+        fun string(name: String) = requireNotNull(optionalString(name))
+        val offsetIndex = cursor.getColumnIndexOrThrow("offset_seconds")
+        val repeat = optionalString("repeat_frequency")?.let {
+            EventRepeat(RepeatFrequency.valueOf(it), LocalDate.parse(string("repeat_until")),
+                cursor.getLong(cursor.getColumnIndexOrThrow("repeat_interval")),
+                cursor.getInt(cursor.getColumnIndexOrThrow("include_thirty")) == 1,
+                cursor.getInt(cursor.getColumnIndexOrThrow("include_february")) == 1)
+        }
+        return CustomEvent(string("id"), string("title"), LocalDate.parse(string("date")), LocalTime.parse(string("time")),
+            string("notes"), cursor.getInt(cursor.getColumnIndexOrThrow("remind")) == 1, string("zone_id"),
+            if (cursor.isNull(offsetIndex)) null else cursor.getInt(offsetIndex), repeat,
+            optionalString("remind_after")?.let(Instant::parse)).also { event ->
+            require(event.id.isNotBlank() && event.title.isNotBlank() && event.date.year in 1800..2200)
+            require(event.repeat?.isValid(event.date) != false)
+            val offsets = event.zone.rules.getValidOffsets(event.date.atTime(event.time))
+            require(offsets.isNotEmpty())
+            require(event.offsetSeconds == null || offsets.any { it.totalSeconds == event.offsetSeconds })
+        }
+    }
     fun save(event: CustomEvent, now: Instant = Instant.now()) {
+        require(event.id.isNotBlank())
         require(event.title.isNotBlank() && event.title.trim().length <= 120)
         require(event.notes.length <= 2000 && event.date.year in 1800..2200)
         require(event.repeat?.isValid(event.date) != false)
@@ -108,7 +131,13 @@ class CustomEventRepository(context: Context) : SQLiteOpenHelper(context.applica
             // Past occurrences of a newly saved series must not send same-day repeat reminders.
             put("remind_after", now.toString())
         }
-        check(writableDatabase.insertWithOnConflict("events", null, data, SQLiteDatabase.CONFLICT_REPLACE) != -1L)
+        val db = writableDatabase
+        db.transaction {
+            // Updating in place keeps equal-time events in their saved order.
+            if (db.update("events", data, "id = ?", arrayOf(event.id)) == 0) {
+                check(db.insertOrThrow("events", null, data) != -1L)
+            }
+        }
     }
     fun delete(id: String) { writableDatabase.delete("events", "id = ?", arrayOf(id)) }
 }

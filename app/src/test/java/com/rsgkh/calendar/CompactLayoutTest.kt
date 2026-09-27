@@ -171,7 +171,7 @@ class CompactLayoutTest {
     }
     @Test fun lightDateAndEventPopupsUseNeutralSurfacesAndHaveNoSourceLinks() {
         start(khmer = true)
-        compose.onNode(hasContentDescription("១៣រោច", substring = true)).performClick()
+        compose.onNode(hasContentDescription("១៣រោច", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithTag("date-details-title").assertIsDisplayed().assertTextEquals("September 10, 2026")
         val image = screenshot("date-details-light")
         // Clear space near the dialog's top center, away from text and rounded corners.

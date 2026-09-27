@@ -67,6 +67,9 @@ data class AppSettings(
     val todayTimeZone: TodayTimeZone = TodayTimeZone.LOCAL,
     val fontScale: FontScale = FontScale.PERCENT_100,
     val widgetFontScale: FontScale = FontScale.PERCENT_100,
+    val enableAstrologyAndZodiac: Boolean = true,
+    val astrologyMinutes: Int = 12 * 60,
+    val risingPlace: Birthplace = Birthplace.DEFAULT,
     val showWesternZodiac: Boolean = true,
     val useEmojiForWesternZodiac: Boolean = false,
     val showGanzhi: Boolean = true,
@@ -89,46 +92,53 @@ internal fun AppSettings.remindersDifferFrom(other: AppSettings): Boolean =
 class AppPreferences(context: Context) {
     private val prefs = context.getSharedPreferences("appearance", Context.MODE_PRIVATE)
     fun read(): AppSettings {
-        val legacyHolyDays = prefs.getBoolean("showHolyDays", true)
-        val showHolyDaysInEvents = prefs.getBoolean("showHolyDaysInEvents", false)
+        val values = prefs.all
+        fun boolean(key: String, fallback: Boolean) = values[key] as? Boolean ?: fallback
+        fun integer(key: String, fallback: Int) = values[key] as? Int ?: fallback
+        fun string(key: String, fallback: String?) = values[key] as? String ?: fallback
+        val legacyHolyDays = boolean("showHolyDays", true)
+        val showHolyDaysInEvents = boolean("showHolyDaysInEvents", false)
         val showWesternZodiac = if (prefs.contains("showWesternZodiac")) {
-            prefs.getBoolean("showWesternZodiac", true)
+            boolean("showWesternZodiac", true)
         } else {
-            !prefs.getBoolean("hideWesternZodiac", false)
+            !boolean("hideWesternZodiac", false)
         }
         return AppSettings(
-            theme = ThemeMode.entries.firstOrNull { it.name == prefs.getString("theme", "SYSTEM") } ?: ThemeMode.SYSTEM,
-            accent = Accent.entries.firstOrNull { it.name == prefs.getString("accent", "BLUE") } ?: Accent.BLUE,
-            backgroundAccent = prefs.getBoolean("backgroundAccent", true),
-            khmer = prefs.getBoolean("khmer", true),
-            mondayFirst = prefs.getBoolean("mondayFirst", false),
-            showLongerWeekdayNames = prefs.getBoolean("showLongerWeekdayNames", false),
-            showObservances = prefs.getBoolean("showObservances", true),
-            showCopyButtons = prefs.getBoolean("showCopyButtons", false),
-            highlightWeekdayNames = prefs.getBoolean("highlightWeekdayNames", true),
-            showLunar = prefs.getBoolean("showLunar", true),
-            showHolyDaysInCalendar = prefs.getBoolean("showHolyDaysInCalendar", legacyHolyDays),
+            theme = ThemeMode.entries.firstOrNull { it.name == string("theme", "SYSTEM") } ?: ThemeMode.SYSTEM,
+            accent = Accent.entries.firstOrNull { it.name == string("accent", "BLUE") } ?: Accent.BLUE,
+            backgroundAccent = boolean("backgroundAccent", true),
+            khmer = boolean("khmer", true),
+            mondayFirst = boolean("mondayFirst", false),
+            showLongerWeekdayNames = boolean("showLongerWeekdayNames", false),
+            showObservances = boolean("showObservances", true),
+            showCopyButtons = boolean("showCopyButtons", false),
+            highlightWeekdayNames = boolean("highlightWeekdayNames", true),
+            showLunar = boolean("showLunar", true),
+            showHolyDaysInCalendar = boolean("showHolyDaysInCalendar", legacyHolyDays),
             showHolyDaysInEvents = showHolyDaysInEvents,
-            highlightSunday = prefs.getBoolean("highlightSunday", true),
-            notificationsEnabled = prefs.getBoolean("notificationsEnabled", false),
-            pushCustomEvents = prefs.getBoolean("pushCustomEvents", true),
-            pushHolidays = prefs.getBoolean("pushHolidays", true),
-            pushObservances = prefs.getBoolean("pushObservances", true),
-            pushHolyDays = prefs.getBoolean("pushHolyDays", showHolyDaysInEvents),
-            pushMinutes = prefs.getInt("pushMinutes", 300).coerceIn(0, 1439),
-            repeatHours = prefs.getInt("repeatHours", 0).takeIf { it in listOf(0, 2, 4, 6, 8, 12) } ?: 0,
-            todayTimeZone = TodayTimeZone.entries.firstOrNull { it.name == prefs.getString("todayTimeZone", "LOCAL") } ?: TodayTimeZone.LOCAL,
-            fontScale = FontScale.entries.firstOrNull { it.name == prefs.getString("fontScale", "PERCENT_100") } ?: FontScale.PERCENT_100,
-            widgetFontScale = FontScale.entries.firstOrNull { it.name == prefs.getString("widgetFontScale", "PERCENT_100") } ?: FontScale.PERCENT_100,
+            highlightSunday = boolean("highlightSunday", true),
+            notificationsEnabled = boolean("notificationsEnabled", false),
+            pushCustomEvents = boolean("pushCustomEvents", true),
+            pushHolidays = boolean("pushHolidays", true),
+            pushObservances = boolean("pushObservances", true),
+            pushHolyDays = boolean("pushHolyDays", showHolyDaysInEvents),
+            pushMinutes = integer("pushMinutes", 300).coerceIn(0, 1439),
+            repeatHours = integer("repeatHours", 0).takeIf { it in listOf(0, 2, 4, 6, 8, 12) } ?: 0,
+            todayTimeZone = TodayTimeZone.entries.firstOrNull { it.name == string("todayTimeZone", "LOCAL") } ?: TodayTimeZone.LOCAL,
+            fontScale = FontScale.entries.firstOrNull { it.name == string("fontScale", "PERCENT_100") } ?: FontScale.PERCENT_100,
+            widgetFontScale = FontScale.entries.firstOrNull { it.name == string("widgetFontScale", "PERCENT_100") } ?: FontScale.PERCENT_100,
             showWesternZodiac = showWesternZodiac,
-            useEmojiForWesternZodiac = prefs.getBoolean("useEmojiForWesternZodiac", false),
-            showGanzhi = prefs.getBoolean("showGanzhi", true),
-            useEmojiForGanzhiAnimals = prefs.getBoolean("useEmojiForGanzhiAnimals", false),
-            widgetsEnabled = prefs.getBoolean("widgetsEnabled", false),
-            widgetShowPersonal = prefs.getBoolean("widgetShowPersonal", true),
-            widgetShowHolidays = prefs.getBoolean("widgetShowHolidays", true),
-            widgetShowObservances = prefs.getBoolean("widgetShowObservances", true),
-            widgetHidePersonalDetails = prefs.getBoolean("widgetHidePersonalDetails", false),
+            enableAstrologyAndZodiac = boolean("enableAstrologyAndZodiac", true),
+            astrologyMinutes = integer("astrologyMinutes", 720).takeIf { it in 0..1439 } ?: 720,
+            risingPlace = Birthplace.fromJson(string("risingPlace", null)) ?: Birthplace.DEFAULT,
+            useEmojiForWesternZodiac = boolean("useEmojiForWesternZodiac", false),
+            showGanzhi = boolean("showGanzhi", true),
+            useEmojiForGanzhiAnimals = boolean("useEmojiForGanzhiAnimals", false),
+            widgetsEnabled = boolean("widgetsEnabled", false),
+            widgetShowPersonal = boolean("widgetShowPersonal", true),
+            widgetShowHolidays = boolean("widgetShowHolidays", true),
+            widgetShowObservances = boolean("widgetShowObservances", true),
+            widgetHidePersonalDetails = boolean("widgetHidePersonalDetails", false),
         )
     }
     fun write(settings: AppSettings) {
@@ -158,6 +168,9 @@ class AppPreferences(context: Context) {
             putString("fontScale", settings.fontScale.name)
             putString("widgetFontScale", settings.widgetFontScale.name)
             putBoolean("showWesternZodiac", settings.showWesternZodiac)
+            putBoolean("enableAstrologyAndZodiac", settings.enableAstrologyAndZodiac)
+            putInt("astrologyMinutes", settings.astrologyMinutes)
+            putString("risingPlace", settings.risingPlace.toJson())
             putBoolean("useEmojiForWesternZodiac", settings.useEmojiForWesternZodiac)
             putBoolean("showGanzhi", settings.showGanzhi)
             putBoolean("useEmojiForGanzhiAnimals", settings.useEmojiForGanzhiAnimals)
