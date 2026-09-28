@@ -82,6 +82,46 @@ under `artifacts/stability-audit/` as `astrology-final-check.log`,
 `astrology-device-check.log`, `astrology-gestures-check.log` and
 `astrology-smaller-text-check.log`.
 
+## Calendar sizing follow-up
+
+The month-navigation regression reproduced a visible width change from 742 dp
+to 432.5 dp on consecutive frames. Resetting the remembered natural height on
+each month change drew an uncapped layout before `onSizeChanged` supplied its
+replacement width.
+
+`CalendarContentLayout` now resolves the dimensions before placing visible
+content, using shared weekday/legend layout and grid row metrics. The sizing
+slot excludes date calculations and artwork; both layout slots use fixed keys.
+April's decorative images no longer contribute to the measured card height.
+This first fix preserved the calendar's 1.25× natural-height cap, tablet
+event-list 2.0× width cap, centering and outer margins. It removed changes
+between frames but still allowed different months to have different widths.
+
+Verification on 28 September: **246 JVM/Robolectric tests passed**, including
+four frame-by-frame regressions across phone/tablet, portrait/landscape,
+four/five/six-week months, April, a personal-event legend, and Khmer at 150%
+with longer weekday names. **Both targeted Android frame checks passed** on
+the running Pixel Tablet emulator (Android 17/API 37). Debug and test APKs
+built successfully, and the updated app was installed and reopened.
+Logs are `calendar-resize-reproduction.log`, `calendar-resize-full-check.log`
+and `calendar-resize-device-check.log` under `artifacts/stability-audit/`.
+
+### Equal widths across four-, five- and six-row months
+
+A subsequent regression reproduced the remaining month-to-month width change
+in tablet portrait and landscape. The reference now always uses five grid rows
+and the standard legend, independent of the displayed month and its personal
+events. The 1.25× cap applies to that reference height. Visible months keep
+their actual row counts and natural heights, while calendar and event-list
+left/right edges remain fixed. Font/window/settings changes still adapt them.
+
+The strengthened tests compare widths and horizontal positions across months,
+as well as consecutive frames, and verify that four-row February remains
+shorter and six-row May taller than five-row March. All **246 local tests** and
+**both targeted tablet emulator tests** passed again; debug/test builds passed.
+The updated app was installed. Logs are `calendar-stable-width-reproduction.log`,
+`calendar-stable-width-full-check.log` and `calendar-stable-width-device-check.log`.
+
 ## Memory and performance limits
 
 No retained activity was detected in the device scenario. Resource review also

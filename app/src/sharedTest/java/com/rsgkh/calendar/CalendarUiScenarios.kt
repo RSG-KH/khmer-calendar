@@ -306,6 +306,46 @@ abstract class CalendarUiScenarios {
             compose.onNodeWithText("15:00 · Cambodia time (UTC+7)").assertIsDisplayed()
         } finally { java.util.TimeZone.setDefault(originalZone) }
     }
+    protected fun checkMonthNavigationLayoutFrames(settings: AppSettings) {
+        // February through May 2026 exercise four, five and six week rows, April artwork,
+        // and the appearance/disappearance of the personal-event legend.
+        start(settings, now = Instant.parse("2026-02-15T12:00:00Z"),
+            customEvents = listOf(CustomEvent(title = "Sizing regression", date = LocalDate.of(2026, 4, 8), time = java.time.LocalTime.NOON)))
+        val baselineCard = compose.onNodeWithTag("calendar-month-card").getUnclippedBoundsInRoot()
+        val baselineEvents = compose.onNodeWithTag("calendar-scroll").getUnclippedBoundsInRoot()
+        val monthHeights = mutableListOf(baselineCard.height)
+        compose.mainClock.autoAdvance = false
+        try {
+            for (forward in listOf(true, true, true, false, false, false)) {
+                val key = if (forward) "ui.next_month.d2d40f" else "ui.previous_month.c03e1f"
+                compose.onNodeWithContentDescription(L.text(key, settings.khmer)).performClick()
+                compose.mainClock.advanceTimeByFrame()
+                val firstCard = compose.onNodeWithTag("calendar-month-card").getUnclippedBoundsInRoot()
+                val firstEvents = compose.onNodeWithTag("calendar-scroll").getUnclippedBoundsInRoot()
+                org.junit.Assert.assertEquals("Calendar left edge must stay fixed across months", baselineCard.left, firstCard.left)
+                org.junit.Assert.assertEquals("Calendar right edge must stay fixed across months", baselineCard.right, firstCard.right)
+                org.junit.Assert.assertEquals("Event-list left edge must stay fixed across months", baselineEvents.left, firstEvents.left)
+                org.junit.Assert.assertEquals("Event-list right edge must stay fixed across months", baselineEvents.right, firstEvents.right)
+                monthHeights.add(firstCard.height)
+                repeat(3) {
+                    compose.mainClock.advanceTimeByFrame()
+                    org.junit.Assert.assertEquals("Month card must have its final bounds in the first frame", firstCard,
+                        compose.onNodeWithTag("calendar-month-card").getUnclippedBoundsInRoot())
+                    org.junit.Assert.assertEquals("Monthly events must not jump after the month is drawn", firstEvents,
+                        compose.onNodeWithTag("calendar-scroll").getUnclippedBoundsInRoot())
+                }
+            }
+            if (!settings.mondayFirst) {
+                org.junit.Assert.assertTrue("Four-row February should remain shorter than five-row March",
+                    monthHeights[0] < monthHeights[1])
+                org.junit.Assert.assertTrue("Six-row May should remain taller than five-row March",
+                    monthHeights[3] > monthHeights[1])
+            }
+        } finally {
+            compose.mainClock.autoAdvance = true
+        }
+    }
+
     protected fun start(settings: AppSettings = AppSettings(khmer = false, theme = ThemeMode.LIGHT), now: Instant? = null,
         notificationAccess: NotificationAccess = NotificationAccess(),
         customEvents: List<CustomEvent> = emptyList(), uriHandler: UriHandler? = null) {

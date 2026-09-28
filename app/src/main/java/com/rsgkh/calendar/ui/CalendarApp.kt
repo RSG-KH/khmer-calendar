@@ -56,7 +56,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import android.content.res.Configuration
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -467,43 +466,70 @@ private fun CalendarHeader(
 }
 
 @Composable
+private fun CalendarMonthBody(settings: AppSettings, hasCustom: Boolean, grid: @Composable () -> Unit) {
+    val k = settings.khmer
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    Column(Modifier.padding(start = 10.dp, end = 10.dp, top = if (isLandscape) 8.dp else 16.dp, bottom = if (isLandscape) 6.dp else 10.dp)) {
+        grid()
+        HorizontalDivider(Modifier.padding(horizontal = 8.dp, vertical = if (isLandscape) 3.dp else 5.dp), color = MaterialTheme.colorScheme.outlineVariant)
+        val spacing = if (hasCustom && settings.showHolyDaysInCalendar) (if (isLandscape) 6.dp else 8.dp) else (if (isLandscape) 10.dp else 14.dp)
+        FlowRow(
+            Modifier.fillMaxWidth().padding(vertical = if (isLandscape) 2.dp else 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(spacing, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+        ) {
+            Legend(EventKind.HOLIDAY, L.text("ui.holiday.253332", k), eventColor(EventKind.HOLIDAY))
+            if (settings.showHolyDaysInCalendar) {
+                Legend(EventKind.HOLY_DAY, L.text("ui.holy_day.28786d", k), eventColor(EventKind.HOLY_DAY))
+            }
+            if (settings.showObservances) {
+                Legend(EventKind.OBSERVANCE, L.text("ui.observance.5b9a87", k), eventColor(EventKind.OBSERVANCE))
+            }
+            if (hasCustom) {
+                Legend(EventKind.CUSTOM, L.text("ui.custom.917053", k), eventColor(EventKind.CUSTOM))
+            }
+        }
+    }
+}
+
+@Composable
 private fun CalendarMonthCard(
     month: YearMonth, selected: LocalDate, today: LocalDate, gridEvents: List<CalendarEvent>,
     settings: AppSettings, onSelect: (LocalDate) -> Unit, onPrevious: () -> Unit, onNext: () -> Unit,
-    onNaturalHeight: (Int) -> Unit = {},
 ) {
-    val k = settings.khmer
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     Surface(modifier = Modifier.padding(bottom = if (isLandscape) 4.dp else 10.dp), shape = CardShape, color = MaterialTheme.colorScheme.surface) {
-        Box(Modifier.fillMaxWidth().clip(CardShape).testTag("calendar-month-card").onSizeChanged { onNaturalHeight(it.height) }) {
+        Box(Modifier.fillMaxWidth().clip(CardShape).testTag("calendar-month-card")) {
             if (month.monthValue == 4) {
                 val oldAnimal = Math.floorMod(month.year - 4 - 1, 12)
                 val newAnimal = Math.floorMod(month.year - 4, 12)
                 val alpha = zodiacAlpha()
-                Image(
-                    painter = painterResource(zodiacDrawable(oldAnimal, compact = true)),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(start = 10.dp, top = 10.dp)
-                        .fillMaxWidth(3f / 7f)
-                        .aspectRatio(1f),
-                    contentScale = ContentScale.Fit,
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
-                    alpha = alpha,
-                )
-                Image(
-                    painter = painterResource(zodiacDrawable(newAnimal, compact = false)),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 10.dp, bottom = 10.dp)
-                        .fillMaxWidth(4f / 7f)
-                        .aspectRatio(1f),
-                    contentScale = ContentScale.Fit,
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
-                    alpha = alpha,
-                )
+                Box(Modifier.matchParentSize()) {
+                    Image(
+                        painter = painterResource(zodiacDrawable(oldAnimal, compact = true)),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(start = 10.dp, top = 10.dp)
+                            .fillMaxWidth(3f / 7f)
+                            .aspectRatio(1f),
+                        contentScale = ContentScale.Fit,
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                        alpha = alpha,
+                    )
+                    Image(
+                        painter = painterResource(zodiacDrawable(newAnimal, compact = false)),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 10.dp, bottom = 10.dp)
+                            .fillMaxWidth(4f / 7f)
+                            .aspectRatio(1f),
+                        contentScale = ContentScale.Fit,
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                        alpha = alpha,
+                    )
+                }
             } else {
                 val animalYear = remember(month) { KhmerDateDetails.fromGregorian(month.atDay(15)).animalYear }
                 Image(
@@ -515,27 +541,8 @@ private fun CalendarMonthCard(
                     alpha = zodiacAlpha(),
                 )
             }
-            Column(Modifier.padding(start = 10.dp, end = 10.dp, top = if (isLandscape) 8.dp else 16.dp, bottom = if (isLandscape) 6.dp else 10.dp)) {
+            CalendarMonthBody(settings, gridEvents.any { it.kind == EventKind.CUSTOM }) {
                 MonthGrid(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext)
-                HorizontalDivider(Modifier.padding(horizontal = 8.dp, vertical = if (isLandscape) 3.dp else 5.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                val hasCustom = gridEvents.any { it.kind == EventKind.CUSTOM }
-                val spacing = if (hasCustom && settings.showHolyDaysInCalendar) (if (isLandscape) 6.dp else 8.dp) else (if (isLandscape) 10.dp else 14.dp)
-                FlowRow(
-                    Modifier.fillMaxWidth().padding(vertical = if (isLandscape) 2.dp else 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(spacing, Alignment.CenterHorizontally),
-                    verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
-                ) {
-                    Legend(EventKind.HOLIDAY, L.text("ui.holiday.253332", k), eventColor(EventKind.HOLIDAY))
-                    if (settings.showHolyDaysInCalendar) {
-                        Legend(EventKind.HOLY_DAY, L.text("ui.holy_day.28786d", k), eventColor(EventKind.HOLY_DAY))
-                    }
-                    if (settings.showObservances) {
-                        Legend(EventKind.OBSERVANCE, L.text("ui.observance.5b9a87", k), eventColor(EventKind.OBSERVANCE))
-                    }
-                    if (hasCustom) {
-                        Legend(EventKind.CUSTOM, L.text("ui.custom.917053", k), eventColor(EventKind.CUSTOM))
-                    }
-                }
             }
         }
     }
@@ -568,24 +575,21 @@ private fun CalendarScreen(
                 (settings.showObservances || it.kind != EventKind.OBSERVANCE)
         }
     }
-    BoxWithConstraints(Modifier.fillMaxSize().testTag("calendar-content"), contentAlignment = Alignment.TopCenter) {
-        val density = LocalDensity.current
-        var naturalCardHeight by remember(month, settings, maxWidth, maxHeight, density.fontScale) { mutableStateOf<Int?>(null) }
-        val columnCap = naturalCardHeight?.let { with(density) { it.toDp() * 1.25f } } ?: maxWidth
-        val measureCard: (Int) -> Unit = { if (naturalCardHeight == null) naturalCardHeight = it }
+    CalendarContentLayout(isLandscape, isTablet, referenceCard = {
+        // Personal events can add a visible legend item, but must not change column widths.
+        CalendarMonthBody(settings, hasCustom = false) {
+            Column {
+                CalendarWeekdayHeader(settings, includeTestTags = false)
+                Spacer(Modifier.height(calendarReferenceGridHeight()))
+            }
+        }
+    }) { calendarWidth, contentWidth ->
         if (isLandscape) {
-            val sideMargin = if (isTablet) 12.dp else 0.dp
-            val columnGap = 12.dp
-            val rowModifier = if (isTablet) Modifier.fillMaxSize().padding(horizontal = sideMargin)
-                else Modifier.widthIn(max = columnCap * 2 + columnGap).fillMaxSize()
-            val calendarWidth = minOf(columnCap,
-                ((maxWidth - sideMargin * 2 - columnGap) / 2).coerceAtLeast(0.dp))
-            Row(rowModifier, horizontalArrangement = Arrangement.spacedBy(columnGap)) {
-                // Cap only the calendar on tablets; monthly events receive the remaining width.
-                val calendarModifier = if (isTablet) Modifier.width(calendarWidth) else Modifier.weight(1f)
-                Column(calendarModifier.fillMaxHeight().verticalScroll(rememberScrollState())) {
+            Row(Modifier.width(contentWidth).fillMaxHeight().padding(horizontal = if (isTablet) CalendarSideMargin else 0.dp),
+                horizontalArrangement = Arrangement.spacedBy(CalendarColumnGap)) {
+                Column(Modifier.width(calendarWidth).fillMaxHeight().verticalScroll(rememberScrollState())) {
                     CalendarHeader(month, selected, today, k, onJump, onPrevious, onNext, onToday)
-                    CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext, measureCard)
+                    CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext)
                     if (isTablet) {
                         val selectedEvents = remember(selected, listEvents) { listEvents.filter { it.date == selected } }
                         val selectedInfo = remember(selected) { KhmerDateDetails.fromGregorian(selected) }
@@ -665,11 +669,11 @@ private fun CalendarScreen(
                 }
             }
         } else {
-            Column(Modifier.widthIn(max = minOf(640.dp, columnCap + 20.dp)).fillMaxSize()) {
+            Column(Modifier.width(contentWidth).fillMaxHeight()) {
                 CalendarHeader(month, selected, today, k, onJump, onPrevious, onNext, onToday)
                 LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag("calendar-scroll"), contentPadding = PaddingValues(10.dp, 0.dp, 10.dp, 24.dp)) {
                     item {
-                        CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext, measureCard)
+                        CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext)
                     }
                     val days = listEvents.groupBy { it.date }.values.toList()
                     itemsIndexed(days, key = { _, events -> events.first().date }) { index, events ->
@@ -682,23 +686,47 @@ private fun CalendarScreen(
 }
 
 @Composable
+private fun CalendarWeekdayHeader(settings: AppSettings, includeTestTags: Boolean = true) {
+    val k = settings.khmer
+    val config = LocalConfiguration.current
+    val isPhoneLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE && config.smallestScreenWidthDp < 600
+    val weekdays = (0..6).map { CalendarWords.weekday(it, k, if (settings.showLongerWeekdayNames) "grid_long" else "grid") }
+    val ordered = if (settings.mondayFirst) weekdays.drop(1) + weekdays.first() else weekdays
+    BoxWithConstraints(Modifier.fillMaxWidth().padding(bottom = if (isPhoneLandscape) 3.dp else 8.dp)) {
+        val preferredSize = 11.readableSp
+        val headerSize = if (settings.showLongerWeekdayNames) {
+            // Keep all seven names at one size, fitting the longest without truncating Khmer.
+            val measurer = rememberTextMeasurer()
+            val style = LocalTextStyle.current.copy(fontSize = preferredSize, fontWeight = FontWeight.Medium)
+            val widest = ordered.maxOf { measurer.measure(it, style, softWrap = false, maxLines = 1).size.width }.coerceAtLeast(1)
+            val available = with(LocalDensity.current) { (maxWidth / 7 - 2.dp).toPx() }.coerceAtLeast(1f)
+            preferredSize * (available / widest).coerceAtMost(1f)
+        } else preferredSize
+        val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+        Row(Modifier.fillMaxWidth()) {
+            ordered.forEachIndexed { index, it ->
+                val weekday = DayOfWeek.of(if (settings.mondayFirst) index + 1 else if (index == 0) 7 else index)
+                val headerColor = when {
+                    settings.highlightWeekdayNames -> weekdayNameColor(weekday, dark)
+                    settings.highlightSunday && weekday == DayOfWeek.SUNDAY -> MaterialTheme.colorScheme.tertiary
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
+                Text(it, Modifier.weight(1f).then(if (includeTestTags) Modifier.testTag("weekday-header-${weekday.value}") else Modifier), textAlign = TextAlign.Center, fontSize = headerSize,
+                    fontWeight = FontWeight.Medium, color = headerColor, maxLines = 1, softWrap = false)
+            }
+        }
+    }
+}
+
+@Composable
 private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, events: List<CalendarEvent>, settings: AppSettings, onSelect: (LocalDate) -> Unit, onPrevious: () -> Unit, onNext: () -> Unit) {
     val k = settings.khmer
     val config = LocalConfiguration.current
     val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
     val isTablet = config.smallestScreenWidthDp >= 600
     val isPhoneLandscape = isLandscape && !isTablet
-    val fontScale = LocalDensity.current.fontScale.coerceAtLeast(1f)
-    val baseHeight = when {
-        isTablet && isLandscape -> 52.dp
-        isTablet -> 64.dp
-        isPhoneLandscape -> 44.dp
-        else -> 56.dp
-    }
-    val cellHeight = (baseHeight * fontScale)
-    val firstOffset = if (settings.mondayFirst) month.atDay(1).dayOfWeek.value - 1 else month.atDay(1).dayOfWeek.value % 7
-    val weekdays = (0..6).map { CalendarWords.weekday(it, k, if (settings.showLongerWeekdayNames) "grid_long" else "grid") }
-    val ordered = if (settings.mondayFirst) weekdays.drop(1) + weekdays.first() else weekdays
+    val cellHeight = calendarCellHeight()
+    val firstOffset = calendarFirstDayOffset(month, settings.mondayFirst)
     val byDate = remember(events) { events.groupBy { it.date } }
     Column(Modifier.testTag("month-grid").pointerInput(month) {
         var drag = 0f
@@ -706,31 +734,8 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
             if (abs(drag) > 80.dp.toPx()) { if (drag < 0) onNext() else onPrevious() }
         })
     }) {
-        BoxWithConstraints(Modifier.fillMaxWidth().padding(bottom = if (isPhoneLandscape) 3.dp else 8.dp)) {
-            val preferredSize = 11.readableSp
-            val headerSize = if (settings.showLongerWeekdayNames) {
-                // Keep all seven names at one size, fitting the longest without truncating Khmer.
-                val measurer = rememberTextMeasurer()
-                val style = LocalTextStyle.current.copy(fontSize = preferredSize, fontWeight = FontWeight.Medium)
-                val widest = ordered.maxOf { measurer.measure(it, style, softWrap = false, maxLines = 1).size.width }.coerceAtLeast(1)
-                val available = with(LocalDensity.current) { (maxWidth / 7 - 2.dp).toPx() }.coerceAtLeast(1f)
-                preferredSize * (available / widest).coerceAtMost(1f)
-            } else preferredSize
-            val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-            Row(Modifier.fillMaxWidth()) {
-                ordered.forEachIndexed { index, it ->
-                    val weekday = DayOfWeek.of(if (settings.mondayFirst) index + 1 else if (index == 0) 7 else index)
-                    val headerColor = when {
-                        settings.highlightWeekdayNames -> weekdayNameColor(weekday, dark)
-                        settings.highlightSunday && weekday == DayOfWeek.SUNDAY -> MaterialTheme.colorScheme.tertiary
-                        else -> MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                    Text(it, Modifier.weight(1f).testTag("weekday-header-${weekday.value}"), textAlign = TextAlign.Center, fontSize = headerSize,
-                        fontWeight = FontWeight.Medium, color = headerColor, maxLines = 1, softWrap = false)
-                }
-            }
-        }
-        repeat((firstOffset + month.lengthOfMonth() + 6) / 7) { week ->
+        CalendarWeekdayHeader(settings)
+        repeat(calendarWeekCount(month, settings.mondayFirst)) { week ->
             Row(Modifier.fillMaxWidth()) {
                 repeat(7) { column ->
                     val day = week * 7 + column - firstOffset + 1
@@ -745,7 +750,7 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
                         val isHoliday = holiday || (settings.highlightSunday && isSunday)
                         val colors = MaterialTheme.colorScheme
                         Box(
-                            Modifier.weight(1f).padding(1.dp).clip(RoundedCornerShape(if (isPhoneLandscape) 8.dp else 11.dp))
+                            Modifier.weight(1f).padding(CalendarCellPadding).clip(RoundedCornerShape(if (isPhoneLandscape) 8.dp else 11.dp))
                                 .background(if (isToday) colors.primary else Color.Transparent)
                                 .then(if (active && !isToday) Modifier.border(1.dp, colors.primary, RoundedCornerShape(if (isPhoneLandscape) 8.dp else 11.dp)) else Modifier)
                                 .clickable { onSelect(date) }
@@ -982,11 +987,13 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                     }
                 }
                 val fontSizeTitle = if (k) "ទំហំអក្សរ" else "Font size"
+                SettingsDivider()
                 SettingsRow(fontSizeTitle, L.text("ui.font_size_subtitle", k)) {
                     SettingDropdown(settings.fontScale, fontScales,
                         { it.label },
                         "font-scale", fontSizeTitle) { onChange(settings.copy(fontScale = it)) }
                 }
+                SettingsDivider()
                 SettingsRow(L.text("ui.theme.99ca72", k), L.text("ui.theme_subtitle", k)) {
                     val dark = MaterialTheme.colorScheme.surface.luminance() < .5f
                     Row(Modifier.testTag("theme-mode"), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -995,12 +1002,14 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                     }
                 }
                 fun accentName(accent: Accent) = when (accent) { Accent.BLUE -> L.text("ui.blue.cf6f1f", k); Accent.LAVENDER -> L.text("ui.lavender.b7c95a", k); Accent.ROSE -> L.text("ui.rose.ea1e14", k); Accent.AMBER -> L.text("ui.amber.195385", k); Accent.LIME -> L.text("ui.lime.46ea65", k) }
+                SettingsDivider()
                 SettingsRow(L.text("ui.accent_color.97e2af", k), L.text("ui.accent_color_subtitle", k)) {
                     SettingDropdown(settings.accent, Accent.entries,
                         ::accentName,
                         "accent-color", L.text("ui.accent_color.97e2af", k),
                         itemColor = ::accentColor) { onChange(settings.copy(accent = it)) }
                 }
+                SettingsDivider()
                 SettingSwitch(L.text("ui.background_accent", k), L.text("ui.background_accent_subtitle", k), settings.backgroundAccent) {
                     onChange(settings.copy(backgroundAccent = it))
                 }
@@ -1018,15 +1027,23 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
         item {
             SettingsCard(L.text("ui.calendar.beb873", k)) {
                 SettingSwitch(L.text("ui.show_copy_buttons", k), L.text("ui.show_copy_buttons_subtitle", k), settings.showCopyButtons) { onChange(settings.copy(showCopyButtons = it)) }
+                SettingsDivider()
                 SettingSwitch(L.text("ui.show_longer_weekday_names", k), L.text("ui.show_longer_weekday_names_subtitle", k), settings.showLongerWeekdayNames) { onChange(settings.copy(showLongerWeekdayNames = it)) }
+                SettingsDivider()
                 SettingSwitch(L.text("ui.show_observances", k), L.text("ui.show_observances_subtitle", k), settings.showObservances) { onChange(settings.copy(showObservances = it)) }
+                SettingsDivider()
                 SettingSwitch(L.text("ui.highlight_weekday_names", k), L.text("ui.highlight_weekday_names_subtitle", k), settings.highlightWeekdayNames) { onChange(settings.copy(highlightWeekdayNames = it)) }
+                SettingsDivider()
                 SettingSwitch(L.text("ui.highlight_sunday_column.549462", k), L.text("ui.show_sundays_in_red_like_holidays.245681", k), settings.highlightSunday) { onChange(settings.copy(highlightSunday = it)) }
+                SettingsDivider()
                 SettingSwitch(L.text("ui.lunar_dates_in_calendar.4dffed", k), L.text("ui.koeut_and_roach_under_each_date.f23bd7", k), settings.showLunar) { onChange(settings.copy(showLunar = it)) }
+                SettingsDivider()
                 SettingSwitch(L.text("ui.buddhist_holy_days_in_calendar.d1e9b6", k), L.text("ui.show_lotus_markers_and_holy_days.c9d0bc", k), settings.showHolyDaysInCalendar) { onChange(settings.copy(showHolyDaysInCalendar = it)) }
+                SettingsDivider()
                 SettingSwitch(L.text("ui.buddhist_holy_days_in_events.53e502", k), L.text("ui.show_in_the_events_list_and_filters.425758", k), settings.showHolyDaysInEvents) {
                     onChange(settings.copy(showHolyDaysInEvents = it))
                 }
+                SettingsDivider()
                 SettingSwitch(L.text("ui.start_week_on_monday.5578c3", k), L.text("ui.sunday_when_turned_off.e40816", k), settings.mondayFirst) { onChange(settings.copy(mondayFirst = it)) }
             }
         }
@@ -1036,28 +1053,36 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                     onChange(settings.copy(enableAstrologyAndZodiac = it))
                 }
                 if (settings.enableAstrologyAndZodiac) {
+                    SettingsDivider()
                     SettingsRow(L.text("ui.set_time_for_past_future", k), L.text("ui.set_time_for_past_future_subtitle", k)) {
                         TextButton(onClick = { astrologyPicker = LocationPickerMode.TIME }, modifier = Modifier.testTag("astrology-default-time")) {
                             Text(LocalTime.of(settings.astrologyMinutes / 60, settings.astrologyMinutes % 60).format(DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)))
                         }
                     }
+                    SettingsDivider()
                     SettingSwitch(L.text("ui.show_western_zodiac", k), L.text("ui.show_western_zodiac_subtitle", k), settings.showWesternZodiac) {
                         onChange(settings.copy(showWesternZodiac = it))
                     }
                     if (settings.enableAstrologyAndZodiac && settings.showWesternZodiac) {
+                        SettingsDivider()
                         SettingSwitch(L.text("ui.western_emoji_toggle", k), L.text("ui.western_emoji_subtitle", k), settings.useEmojiForWesternZodiac) {
                             onChange(settings.copy(useEmojiForWesternZodiac = it))
                         }
                     }
-                    if (settings.showWesternZodiac) SettingsRow(L.text("ui.location_for_rising_sign", k), L.text("ui.location_for_rising_sign_subtitle", k)) {
-                        TextButton(onClick = { astrologyPicker = LocationPickerMode.LOCATION }, modifier = Modifier.widthIn(max = 144.dp).testTag("astrology-default-location")) {
-                            Text(settings.risingPlace.label, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    if (settings.showWesternZodiac) {
+                        SettingsDivider()
+                        SettingsRow(L.text("ui.location_for_rising_sign", k), L.text("ui.location_for_rising_sign_subtitle", k)) {
+                            TextButton(onClick = { astrologyPicker = LocationPickerMode.LOCATION }, modifier = Modifier.widthIn(max = 144.dp).testTag("astrology-default-location")) {
+                                Text(settings.risingPlace.label, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            }
                         }
                     }
+                    SettingsDivider()
                     SettingSwitch(L.text("ui.show_chinese_ganzhi", k), L.text("ui.show_chinese_ganzhi_subtitle", k), settings.showGanzhi) {
                         onChange(settings.copy(showGanzhi = it))
                     }
                     if (settings.enableAstrologyAndZodiac && settings.showGanzhi) {
+                        SettingsDivider()
                         SettingSwitch(L.text("ui.ganzhi_emoji_toggle", k), L.text("ui.ganzhi_emoji_subtitle", k), settings.useEmojiForGanzhiAnimals) {
                             onChange(settings.copy(useEmojiForGanzhiAnimals = it))
                         }
@@ -1143,12 +1168,14 @@ internal fun WidgetSettingsCard(
         }
 
         if (settings.widgetsEnabled) {
+            SettingsDivider()
             SettingSwitch(
                 title = personalTitle,
                 subtitle = personalSubtitle,
                 checked = settings.widgetShowPersonal,
             ) { onChange(settings.copy(widgetShowPersonal = it)) }
 
+            SettingsDivider()
             SettingSwitch(
                 title = holidaysTitle,
                 subtitle = holidaysSubtitle,
@@ -1156,6 +1183,7 @@ internal fun WidgetSettingsCard(
             ) { onChange(settings.copy(widgetShowHolidays = it)) }
 
             if (settings.showObservances) {
+                SettingsDivider()
                 SettingSwitch(
                     title = observancesTitle,
                     subtitle = observancesSubtitle,
@@ -1164,6 +1192,7 @@ internal fun WidgetSettingsCard(
             }
 
             if (settings.widgetShowPersonal) {
+                SettingsDivider()
                 SettingSwitch(
                     title = privacyTitle,
                     subtitle = privacySubtitle,
@@ -1172,11 +1201,13 @@ internal fun WidgetSettingsCard(
             }
 
             val fontSizeTitle = if (k) "ទំហំអក្សរ" else "Font size"
+            SettingsDivider()
             SettingsRow(fontSizeTitle, L.text("ui.font_size_subtitle", k)) {
                 SettingDropdown(settings.widgetFontScale, FontScale.entries,
                     { it.label },
                     "widget-font-scale", fontSizeTitle) { onChange(settings.copy(widgetFontScale = it)) }
             }
+            SettingsDivider()
             OutlinedButton(
                 onClick = { showWidgetChooser = true },
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp).testTag("browse-widgets"),

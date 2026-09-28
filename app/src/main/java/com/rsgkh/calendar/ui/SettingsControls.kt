@@ -17,6 +17,10 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+@Composable internal fun SettingsDivider() {
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+}
+
 /** Shared title style, control alignment and row spacing for every preference. */
 @Composable internal fun SettingsRow(title: String, subtitle: String? = null, enabled: Boolean = true, control: @Composable () -> Unit) {
     val hasSubtitle = !subtitle.isNullOrBlank()

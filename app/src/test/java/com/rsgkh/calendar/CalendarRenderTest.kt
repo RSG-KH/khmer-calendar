@@ -690,6 +690,27 @@ class CalendarRenderTest : CalendarUiScenarios() {
     }
 
     @Test
+    @Config(qualifiers = "sw800dp-w1600dp-h800dp-land-xhdpi")
+    fun monthNavigationDoesNotResizeAgainOnFollowingFrames() =
+        checkMonthNavigationLayoutFrames(AppSettings(khmer = false))
+
+    @Test
+    @Config(qualifiers = "sw800dp-w1280dp-h800dp-land-xhdpi")
+    fun khmerMonthNavigationKeepsFirstFrameLayoutWithLargeFonts() =
+        checkMonthNavigationLayoutFrames(AppSettings(khmer = true, fontScale = FontScale.PERCENT_150,
+            mondayFirst = true, showLongerWeekdayNames = true, theme = ThemeMode.DARK))
+
+    @Test
+    @Config(qualifiers = "sw800dp-w800dp-h1280dp-port-xhdpi")
+    fun portraitMonthNavigationKeepsFirstFrameLayout() =
+        checkMonthNavigationLayoutFrames(AppSettings(khmer = false))
+
+    @Test
+    @Config(qualifiers = "w891dp-h411dp-land-xhdpi")
+    fun phoneLandscapeMonthNavigationKeepsFirstFrameLayout() =
+        checkMonthNavigationLayoutFrames(AppSettings(khmer = false))
+
+    @Test
     @Config(qualifiers = "w891dp-h411dp-land-xhdpi")
     fun landscapeCalendarScreenshot() {
         start()
@@ -747,7 +768,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
     }
 
     @Test
-    @Config(qualifiers = "sw800dp-w1280dp-h800dp-land-xhdpi")
+    @Config(qualifiers = "sw800dp-w1600dp-h800dp-land-xhdpi")
     fun tabletLandscapeDateInfoBlockDisplaysGregorianZodiacAndGanzhiBesideLunarDate() {
         start(AppSettings(khmer = false))
         val content = compose.onNodeWithTag("calendar-content").getUnclippedBoundsInRoot()
@@ -755,9 +776,12 @@ class CalendarRenderTest : CalendarUiScenarios() {
         val monthlyEvents = compose.onNodeWithTag("calendar-scroll").getUnclippedBoundsInRoot()
         assertTrue("Keep the calendar width/height cap", (card.right - card.left).value <= (card.bottom - card.top).value * 1.25f + 1f)
         assertTrue("Monthly events should use the spare tablet width", monthlyEvents.right - monthlyEvents.left > card.right - card.left)
-        assertEquals(12f, (card.left - content.left).value, 1f)
+        assertEquals("Monthly events stop at twice the calendar width on wide tablets",
+            (card.right - card.left).value * 2f, (monthlyEvents.right - monthlyEvents.left).value, 1f)
+        assertTrue("Keep at least 12 dp at the outer edges", (card.left - content.left).value >= 11.5f)
         assertEquals(12f, (monthlyEvents.left - card.right).value, 1f)
-        assertEquals(12f, (content.right - monthlyEvents.right).value, 1f)
+        assertEquals("Center the columns when the monthly events width is capped",
+            (card.left - content.left).value, (content.right - monthlyEvents.right).value, 1f)
         compose.onNode(hasContentDescription("Saturday, 5 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithText("September 5, 2026").assertIsDisplayed()
         compose.onNode(hasText("Virgo (Earth · Mercury)", substring = true)).assertIsDisplayed()

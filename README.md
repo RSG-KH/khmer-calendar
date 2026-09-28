@@ -67,8 +67,9 @@ Same-day event lists show timed personal events first, then untimed personal eve
 - **Dynamic Light & Dark Previews**: Embedded PNG preview thumbnails (`res/drawable/` and `res/drawable-night/`) reflect the system theme in the Android widget picker. The in-app chooser adjusts its previews to the current app theme.
 
 ### 📱 Adaptive Multi-Form-Factor UI
+- **Stable Calendar Width**: Four-, five- and six-row months keep the same calendar and event-list widths in portrait and landscape. Only calendar height changes; screen size and font settings still adapt the layout.
 - **Phone Landscape Experience**: Navigation rail tabs dynamically expand across the entire vertical height (`weight(1f)`), delivering ergonomic tap targets without empty dead space.
-- **Tablet Landscape 2-Column Layout**: Left column keeps the month grid's width-to-height limit and a consolidated lunar/Gregorian date card. The monthly event list fills the remaining width, with small outer margins and a gap between columns.
+- **Tablet Landscape 2-Column Layout**: Left column uses a fixed five-row reference width and a consolidated lunar/Gregorian date card. The monthly event list expands up to 2.0× the calendar width. Both columns stay centered together, with small outer margins and a gap between them.
 - **Responsive Month Picker**: Jump between months with a 6-column by 2-row layout in landscape mode.
 - **Intelligent Scrollbars**: Clean, canvas-based vertical scrollbars appear strictly when content overflows dialog containers.
 - **Optical Geometry Balancing**: Event markers (holiday circles, holy day triangles, observance squares) are normalized by minimum dimension for uniform visual balance.
@@ -134,6 +135,7 @@ KhmerCalendar/
 │   │   │   └── ui/
 │   │   │       ├── AstrologyDetails.kt  # Big 3/Ganzhi popups, sign details and AI queries
 │   │   │       ├── CalendarApp.kt       # Main screens, responsive nav & widget settings
+│   │   │       ├── CalendarLayout.kt    # Stable month widths, column caps & grid sizing
 │   │   │       ├── CopyTextButton.kt    # Copy icon with copied confirmation feedback
 │   │   │       ├── CustomEventEditor.kt # Personal event editor with native pickers
 │   │   │       ├── EventRepeatEditor.kt # Repeat choices, end date, switches & preview

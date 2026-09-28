@@ -65,22 +65,27 @@ data class NotificationAccess(val canPost: Boolean = true, val exact: Boolean = 
             }
         }
         if (fullyGranted) {
+            SettingsDivider()
             SettingSwitch(L.text("notifications.push_custom", k), L.text("notifications.push_custom_subtitle", k), checked = settings.pushCustomEvents) {
                 onChange(settings.copy(pushCustomEvents = it))
             }
+            SettingsDivider()
             SettingSwitch(L.text("notifications.push_holidays", k), L.text("notifications.push_holidays_subtitle", k), checked = settings.pushHolidays) {
                 onChange(settings.copy(pushHolidays = it))
             }
             if (settings.showObservances) {
+                SettingsDivider()
                 SettingSwitch(L.text("notifications.push_observances", k), L.text("notifications.push_observances_subtitle", k), checked = settings.pushObservances) {
                     onChange(settings.copy(pushObservances = it))
                 }
             }
             if (settings.showHolyDaysInEvents) {
+                SettingsDivider()
                 SettingSwitch(L.text("notifications.push_holy_days", k), L.text("notifications.push_holy_days_subtitle", k), checked = settings.pushHolyDays) {
                     onChange(settings.copy(pushHolyDays = it))
                 }
             }
+            SettingsDivider()
             SettingsRow(L.text("ui.push_time.8421c3", k),
                 L.text("ui.time_to_deliver_daily_reminders.7806df", k)) {
                 TextButton(onClick = { timePicker = true },
@@ -88,6 +93,7 @@ data class NotificationAccess(val canPost: Boolean = true, val exact: Boolean = 
                     Text(LocalTime.of(settings.pushMinutes / 60, settings.pushMinutes % 60).toString(), fontSize = 13.readableSp)
                 }
             }
+            SettingsDivider()
             SettingsRow(L.text("ui.remind_every.a38a5d", k),
                 L.text("ui.repeat_interval_throughout_the_day.46e808", k)) {
                 SettingDropdown(settings.repeatHours, listOf(0, 2, 4, 6, 8, 12), ::intervalLabel,

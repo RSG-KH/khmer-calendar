@@ -12,6 +12,14 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class CalendarUiTest : CalendarUiScenarios() {
+    @Test fun monthNavigationKeepsFirstFrameLayout() =
+        checkMonthNavigationLayoutFrames(com.rsgkh.calendar.data.AppSettings(khmer = false))
+
+    @Test fun khmerMonthNavigationKeepsFirstFrameLayoutWithLargeFonts() =
+        checkMonthNavigationLayoutFrames(com.rsgkh.calendar.data.AppSettings(khmer = true,
+            fontScale = com.rsgkh.calendar.data.FontScale.PERCENT_150, mondayFirst = true,
+            showLongerWeekdayNames = true, theme = com.rsgkh.calendar.data.ThemeMode.DARK))
+
     @Test fun ganzhiTableUsesEmojiAndEnglishAnimalNamesOnDevice() {
         start(com.rsgkh.calendar.data.AppSettings(khmer = false, useEmojiForGanzhiAnimals = true))
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()

@@ -39,6 +39,15 @@ Current behavior is maintained in [UI and responsive design](ui-and-responsive-d
 The [stability review](stability-and-performance.md#astrology-popup-follow-up)
 records the later 242-test local suite, 29-test emulator run and final font-size checks.
 
+Calendar sizing was subsequently centralized around a fixed five-row reference.
+Four-, five- and six-row months now retain identical widths in both orientations;
+only their visible heights change. The tablet monthly list can expand to 2.0×
+the calendar width, with centered columns and at least 12 dp side margins.
+Settings rows also gained separators matching the event list. See the current
+[layout rules](ui-and-responsive-design.md#grouped-event-lists-and-calendar-width),
+[settings separators](ui-and-responsive-design.md#settings-row-separators), and
+[246-test local / two-scenario tablet verification](stability-and-performance.md#equal-widths-across-four--five--and-six-row-months).
+
 ## Original verification
 
 This section records the September 27 sync checks; counts and artifact names

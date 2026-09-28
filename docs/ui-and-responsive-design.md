@@ -45,7 +45,11 @@ The day/weekday column is 42 dp wide through 110% app font size. It grows by 5% 
 
 Today's group in the monthly and Events lists uses only **2% primary accent over the normal surface**. The separate selected-day list stays untinted. Today uses the existing configured-zone foreground refresh.
 
-The month card width is at most **1.25 times its natural height**, including the legend and excluding the header/summary. Native row heights stay unchanged. The initial unconstrained measure provides the cap once per month/settings/window/font change, so legend wrapping cannot oscillate the width. The calendar header, summary and selected-day list share the calendar's width. Tablet landscape fills the available content width: the calendar takes no more than half the space between the margins and column gap, subject to its existing ratio cap, and the monthly event list takes the remainder. Both outer margins and the gap between columns are 12 dp. Phone landscape retains its centered equal columns.
+The calendar tab uses a **fixed five-row reference height** to set its width cap at **1.25× that reference**, including weekday headings, card padding, the divider and the standard legend, and excluding the header/summary. This applies in portrait and landscape. Four-, five- and six-row months keep identical widths and horizontal positions for the calendar, header, summary and event list at the same window size and settings. Only the visible card height changes with the actual week count; no empty week rows are added. A month's personal-event legend item can change visible height but never the reference width. Window size, orientation, language and font/display settings still adapt the layout.
+
+`CalendarContentLayout` resolves width caps and centering during measurement, before placing visible content. Its lightweight, unplaced sizing slot reuses weekday headings, row metrics, padding and the standard legend with a spacer for exactly five rows at the uncapped column width. It does not compose dates or artwork. No measured height is written back into Compose state, so a month change never draws an uncapped frame before shrinking. The sizing and visible slots have fixed identities; cycling months does not accumulate retained layouts. Visible legend wrapping cannot feed back into the width cap, and decorative artwork never determines the card height.
+
+In tablet landscape, the calendar takes no more than half the space between the margins and column gap, subject to its fixed reference cap. The monthly event list expands into the remaining space up to **2.0 times the calendar width**. The gap between columns is 12 dp, and both outer margins are at least 12 dp. Once the event-list cap is reached, the two columns are centered together, sharing any extra space equally between the outer margins. Phone landscape retains its centered equal columns.
 
 ### Custom event repeats
 
@@ -92,7 +96,7 @@ The application uses configuration metrics (`smallestScreenWidthDp` and `orienta
 | **Phone Portrait** | Bottom Navigation Bar (64 dp) | Vertical scroll: Header → Month Grid → Today's Events / Details |
 | **Phone Landscape** | Navigation Rail (full vertical distribution) | 2 Columns: Calendar (left, weight 1.0) + Monthly Events list (right, weight 1.0) |
 | **Tablet Portrait** | Bottom Navigation Bar (64 dp) | Centered spacious grid with extended event preview cards |
-| **Tablet Landscape** | Compact Navigation Rail (top-aligned) | Calendar & Date Info Card capped at left; Month Events list fills remaining width at right, with 12 dp margins and gap |
+| **Tablet Landscape** | Compact Navigation Rail (top-aligned) | Calendar & Date Info Card capped at left; Month Events list expands at right up to 2.0× calendar width; centered together with at least 12 dp outer margins and a 12 dp gap |
 
 ---
 
@@ -216,6 +220,15 @@ Settings shows the version on a separate line and groups clickable Android and P
 ---
 
 ## 2. Custom Components
+
+### Settings row separators
+
+Appearance, Calendar, Astrology & Zodiac, Notifications and Widgets use 1 dp
+separators between visible setting rows, matching the event list's
+`outlineVariant` color in both themes. Lines align with the card's 16 dp content
+inset. Conditional rows bring their separator with them, so collapsed groups
+and the single-row time-zone card have no extra top or bottom line. The About
+card retains its paragraph spacing.
 
 ### Dynamic Vertical Scrollbars (`Scrollbars.kt`)
 
