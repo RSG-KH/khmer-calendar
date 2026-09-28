@@ -107,6 +107,7 @@ import java.time.temporal.ChronoUnit
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 private val CardShape = RoundedCornerShape(24.dp)
 internal val DetailSymbolSlot = 24.dp
@@ -567,14 +568,22 @@ private fun CalendarScreen(
                 (settings.showObservances || it.kind != EventKind.OBSERVANCE)
         }
     }
-    BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+    BoxWithConstraints(Modifier.fillMaxSize().testTag("calendar-content"), contentAlignment = Alignment.TopCenter) {
         val density = LocalDensity.current
         var naturalCardHeight by remember(month, settings, maxWidth, maxHeight, density.fontScale) { mutableStateOf<Int?>(null) }
         val columnCap = naturalCardHeight?.let { with(density) { it.toDp() * 1.25f } } ?: maxWidth
         val measureCard: (Int) -> Unit = { if (naturalCardHeight == null) naturalCardHeight = it }
         if (isLandscape) {
-            Row(Modifier.widthIn(max = columnCap * 2 + 12.dp).fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
+            val sideMargin = if (isTablet) 12.dp else 0.dp
+            val columnGap = 12.dp
+            val rowModifier = if (isTablet) Modifier.fillMaxSize().padding(horizontal = sideMargin)
+                else Modifier.widthIn(max = columnCap * 2 + columnGap).fillMaxSize()
+            val calendarWidth = minOf(columnCap,
+                ((maxWidth - sideMargin * 2 - columnGap) / 2).coerceAtLeast(0.dp))
+            Row(rowModifier, horizontalArrangement = Arrangement.spacedBy(columnGap)) {
+                // Cap only the calendar on tablets; monthly events receive the remaining width.
+                val calendarModifier = if (isTablet) Modifier.width(calendarWidth) else Modifier.weight(1f)
+                Column(calendarModifier.fillMaxHeight().verticalScroll(rememberScrollState())) {
                     CalendarHeader(month, selected, today, k, onJump, onPrevious, onNext, onToday)
                     CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext, measureCard)
                     if (isTablet) {
@@ -642,7 +651,7 @@ private fun CalendarScreen(
                         }
                     }
                 }
-                LazyColumn(Modifier.weight(1f).fillMaxHeight().testTag("calendar-scroll"), contentPadding = PaddingValues(top = 4.dp, end = 12.dp, bottom = 6.dp)) {
+                LazyColumn(Modifier.weight(1f).fillMaxHeight().testTag("calendar-scroll"), contentPadding = PaddingValues(top = 4.dp, end = if (isTablet) 0.dp else 12.dp, bottom = 6.dp)) {
                     if (listEvents.isNotEmpty()) {
                         item {
                             Text(L.text("ui.all_events_in_month.ab923a", k, "month" to monthName(month, k)), Modifier.padding(start = 10.dp, top = 4.dp, bottom = 4.dp),
@@ -900,6 +909,8 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
 @Composable
 private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolean, first: Boolean, last: Boolean, onEvent: (CalendarEvent) -> Unit) {
     if (events.isEmpty()) return
+    val zoomSteps = ((LocalFontScaleMultiplier.current * 100).roundToInt() - 110).coerceAtLeast(0) / 10
+    val dateColumnWidth = 42.dp * (1f + zoomSteps * .05f)
     val background = if (today) MaterialTheme.colorScheme.primary.copy(alpha = .02f).compositeOver(MaterialTheme.colorScheme.surface)
         else MaterialTheme.colorScheme.surface
     val holiday = events.any { it.kind == EventKind.HOLIDAY }
@@ -908,8 +919,8 @@ private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolea
         modifier = Modifier.fillMaxWidth().testTag("event-day-" + events.first().date).semantics { isTraversalGroup = true }) {
         Column {
             events.forEachIndexed { index, event ->
-                if (index > 0) HorizontalDivider(Modifier.padding(start = 68.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                EventRow(event, k, showDate = index == 0, holiday = holiday) { onEvent(event) }
+                if (index > 0) HorizontalDivider(Modifier.padding(start = 14.dp + dateColumnWidth + 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                EventRow(event, k, dateColumnWidth, showDate = index == 0, holiday = holiday) { onEvent(event) }
             }
             if (!last) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         }
@@ -917,7 +928,7 @@ private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolea
 }
 
 @Composable
-private fun EventRow(event: CalendarEvent, k: Boolean, modifier: Modifier = Modifier, showDate: Boolean = true, holiday: Boolean = false, onClick: () -> Unit) {
+private fun EventRow(event: CalendarEvent, k: Boolean, dateColumnWidth: Dp, modifier: Modifier = Modifier, showDate: Boolean = true, holiday: Boolean = false, onClick: () -> Unit) {
     val color = eventColor(event.kind)
     val dateColor = if (holiday || event.kind == EventKind.HOLIDAY) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface
     Surface(onClick = onClick, modifier = modifier.semantics { contentDescription = listOf(event.title(k), dateLabel(event.date, k), number(event.date.year, k), kindLabel(event.kind, k), event.time?.toString()).filterNotNull().joinToString(", ") }, shape = RectangleShape, color = Color.Transparent) {
@@ -936,7 +947,7 @@ private fun EventRow(event: CalendarEvent, k: Boolean, modifier: Modifier = Modi
                 )
             }
             Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.width(42.dp).clearAndSetSemantics {}, horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.width(dateColumnWidth).clearAndSetSemantics {}, horizontalAlignment = Alignment.CenterHorizontally) {
                     if (showDate) {
                     Text(number(event.date.dayOfMonth, k), color = dateColor, fontSize = 21.readableSp, lineHeight = 21.readableSp, fontWeight = FontWeight.SemiBold)
                     Text(CalendarWords.weekday(event.date.dayOfWeek.value, k, "short"), modifier = Modifier.offset(y = (-3.5).dp),

@@ -68,7 +68,7 @@ Same-day event lists show timed personal events first, then untimed personal eve
 
 ### 📱 Adaptive Multi-Form-Factor UI
 - **Phone Landscape Experience**: Navigation rail tabs dynamically expand across the entire vertical height (`weight(1f)`), delivering ergonomic tap targets without empty dead space.
-- **Tablet Landscape 2-Column Layout**: Left column features the month grid and a consolidated 2-column lunar and Gregorian date card, leaving the right column for full-month event browsing.
+- **Tablet Landscape 2-Column Layout**: Left column keeps the month grid's width-to-height limit and a consolidated lunar/Gregorian date card. The monthly event list fills the remaining width, with small outer margins and a gap between columns.
 - **Responsive Month Picker**: Jump between months with a 6-column by 2-row layout in landscape mode.
 - **Intelligent Scrollbars**: Clean, canvas-based vertical scrollbars appear strictly when content overflows dialog containers.
 - **Optical Geometry Balancing**: Event markers (holiday circles, holy day triangles, observance squares) are normalized by minimum dimension for uniform visual balance.

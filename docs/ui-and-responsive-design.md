@@ -41,9 +41,11 @@ Opening an event above date details retains the parent's selected time/place and
 
 Calendar monthly/selected-day lists and the Events tab group visible results by day. Within each date: timed personal events in ascending order, untimed personal events, holidays, observances, then enabled Buddhist holy days. Equal-time personal events retain saved order. Only the first row shows the large day and weekday; a visible holiday colors that date even when a personal event comes first. Within-day separators begin at the category bar, while date boundaries span the list. Event colors, artwork, ripples and tap actions are preserved. The weekday offset is -3.5 dp, about 2 dp closer to the number.
 
+The day/weekday column is 42 dp wide through 110% app font size. It grows by 5% of that base for each step from 120%: 44.1 dp at 120%, 46.2 dp at 130%, 48.3 dp at 140%, and 50.4 dp at 150%. Continuation rows reserve the same width, and their inset separators move with the category bar. This applies to every in-app event list.
+
 Today's group in the monthly and Events lists uses only **2% primary accent over the normal surface**. The separate selected-day list stays untinted. Today uses the existing configured-zone foreground refresh.
 
-The month card width is at most **1.25 times its natural height**, including the legend and excluding the header/summary. Native row heights stay unchanged. The initial unconstrained measure provides the cap once per month/settings/window/font change, so legend wrapping cannot oscillate the width. Header/summary/list edges stay aligned; landscape uses centered equal columns.
+The month card width is at most **1.25 times its natural height**, including the legend and excluding the header/summary. Native row heights stay unchanged. The initial unconstrained measure provides the cap once per month/settings/window/font change, so legend wrapping cannot oscillate the width. The calendar header, summary and selected-day list share the calendar's width. Tablet landscape fills the available content width: the calendar takes no more than half the space between the margins and column gap, subject to its existing ratio cap, and the monthly event list takes the remainder. Both outer margins and the gap between columns are 12 dp. Phone landscape retains its centered equal columns.
 
 ### Custom event repeats
 
@@ -90,7 +92,7 @@ The application uses configuration metrics (`smallestScreenWidthDp` and `orienta
 | **Phone Portrait** | Bottom Navigation Bar (64 dp) | Vertical scroll: Header → Month Grid → Today's Events / Details |
 | **Phone Landscape** | Navigation Rail (full vertical distribution) | 2 Columns: Calendar (left, weight 1.0) + Monthly Events list (right, weight 1.0) |
 | **Tablet Portrait** | Bottom Navigation Bar (64 dp) | Centered spacious grid with extended event preview cards |
-| **Tablet Landscape** | Compact Navigation Rail (top-aligned) | 2 Columns: Calendar & Date Info Card (left, weight 1.0) + Month Events list (right, weight 1.0) |
+| **Tablet Landscape** | Compact Navigation Rail (top-aligned) | Calendar & Date Info Card capped at left; Month Events list fills remaining width at right, with 12 dp margins and gap |
 
 ---
 
@@ -173,7 +175,7 @@ On tablets in landscape mode, the left column displays the month grid followed i
 ```
 
 - **Left Side**: Traditional Khmer lunar date, Animal year, Sak, and Buddhist Era rendered in regular font weight (`13.readableSp`, line height `20.readableSp`).
-- **Right Side**: Gregorian date in secondary variant (`13.readableSp`) stacked above the Western Zodiac sign styled in the active theme accent color (`12.readableSp, FontWeight.Medium`). When enabled, the Ganzhi animal/clash summary follows at `11.readableSp`; all three use `20.readableSp` line height.
+- **Right Side**: Gregorian date in secondary variant (`13.readableSp`) stacked above the Western Zodiac sign styled in the active theme accent color (`12.readableSp, FontWeight.Medium`). When enabled, the Ganzhi animal/clash summary follows at `11.readableSp`, formatted as `☯️ (year/month/day emojis x clash emojis)` without the 干支 text; all three use `20.readableSp` line height.
 - **Interaction**: Tapping the card opens date details. Enabled events for the selected date appear below it.
 
 ---

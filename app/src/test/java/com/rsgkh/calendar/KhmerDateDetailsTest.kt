@@ -123,7 +123,7 @@ class KhmerDateDetailsTest {
 
     @Test fun ganzhiCalendarSummaryUsesThreeEmojiSignsAndClashes() {
         val details = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 11))
-        assertEquals("☯️ 干支 (🐴🐔🐭 x 🐭🐰🐴)", details.ganzhiEmojiSummary())
+        assertEquals("☯️ (🐴🐔🐭 x 🐭🐰🐴)", details.ganzhiEmojiSummary())
         assertNull(KhmerDateDetails.fromGregorian(LocalDate.of(1800, 9, 11)).ganzhiEmojiSummary())
     }
 }

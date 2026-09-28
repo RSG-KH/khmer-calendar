@@ -750,6 +750,14 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Config(qualifiers = "sw800dp-w1280dp-h800dp-land-xhdpi")
     fun tabletLandscapeDateInfoBlockDisplaysGregorianZodiacAndGanzhiBesideLunarDate() {
         start(AppSettings(khmer = false))
+        val content = compose.onNodeWithTag("calendar-content").getUnclippedBoundsInRoot()
+        val card = compose.onNodeWithTag("calendar-month-card").getUnclippedBoundsInRoot()
+        val monthlyEvents = compose.onNodeWithTag("calendar-scroll").getUnclippedBoundsInRoot()
+        assertTrue("Keep the calendar width/height cap", (card.right - card.left).value <= (card.bottom - card.top).value * 1.25f + 1f)
+        assertTrue("Monthly events should use the spare tablet width", monthlyEvents.right - monthlyEvents.left > card.right - card.left)
+        assertEquals(12f, (card.left - content.left).value, 1f)
+        assertEquals(12f, (monthlyEvents.left - card.right).value, 1f)
+        assertEquals(12f, (content.right - monthlyEvents.right).value, 1f)
         compose.onNode(hasContentDescription("Saturday, 5 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         compose.onNodeWithText("September 5, 2026").assertIsDisplayed()
         compose.onNode(hasText("Virgo (Earth · Mercury)", substring = true)).assertIsDisplayed()
@@ -757,7 +765,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
 
         compose.onNode(hasContentDescription("Friday, 11 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
         val ganzhi = compose.onNodeWithTag("date-summary-ganzhi", useUnmergedTree = true)
-            .performScrollTo().assertIsDisplayed().assertTextEquals("☯️ 干支 (🐴🐔🐭 x 🐭🐰🐴)")
+            .performScrollTo().assertIsDisplayed().assertTextEquals("☯️ (🐴🐔🐭 x 🐭🐰🐴)")
         val zodiac = compose.onNode(hasText("Virgo (Earth · Mercury)", substring = true), useUnmergedTree = true).assertIsDisplayed()
         assertTrue(ganzhi.getUnclippedBoundsInRoot().top >= zodiac.getUnclippedBoundsInRoot().bottom)
         screenshot("tablet-landscape-summary-ganzhi")

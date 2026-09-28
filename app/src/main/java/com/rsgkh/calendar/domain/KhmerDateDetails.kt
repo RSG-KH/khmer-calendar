@@ -63,7 +63,7 @@ data class KhmerDateDetails(
             )
             val animals = pillars.joinToString("") { it.branch.ganzhiAnimalLabel(false, useEmoji = true) }
             val clashes = pillars.joinToString("") { it.clashBranch.ganzhiAnimalLabel(false, useEmoji = true) }
-            "☯️ 干支 ($animals x $clashes)"
+            "☯️ ($animals x $clashes)"
         }.getOrNull()
     }
 
