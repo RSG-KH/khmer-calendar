@@ -76,11 +76,15 @@ internal fun astrologySearchQuery(
         Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).testTag("astrology-details-dialog")) {
                 background?.let { drawable ->
-                    Image(painterResource(drawable), contentDescription = null,
-                        modifier = Modifier.align(Alignment.BottomEnd).fillMaxWidth(.60f).aspectRatio(1f)
-                            .testTag("astrology-watermark"),
-                        contentScale = ContentScale.Fit, colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
-                        alpha = zodiacAlpha())
+                    // Fit all of the artwork within the content-sized popup, clear of its rounded corners.
+                    Box(Modifier.matchParentSize().padding(12.dp)) {
+                        Image(painterResource(drawable), contentDescription = null,
+                            modifier = Modifier.align(Alignment.BottomEnd).fillMaxWidth(.60f).fillMaxHeight()
+                                .testTag("astrology-watermark"),
+                            alignment = Alignment.BottomEnd, contentScale = ContentScale.Fit,
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                            alpha = zodiacAlpha())
+                    }
                 }
                 Column(Modifier.fillMaxWidth().padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 12.dp)) {
                     Text(L.text(kind.titleKey, khmer), Modifier.testTag("astrology-details-title"),

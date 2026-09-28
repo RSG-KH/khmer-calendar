@@ -56,6 +56,8 @@ The app retains its pinned MomentKH fixture and generator to catch consumer regr
 
 Shared UI scenarios in `app/src/sharedTest` run under Robolectric and on a device. Device screenshots capture the full display so open dialogs are included. Inspect changed screens when updating layout or source-dialog content.
 
+The astrology layout regression checks the actual dialog/action bounds and the watermark's **unclipped** bounds for both Big 3 and Ganzhi, English and Khmer, and 80%, 100% and 150% font sizes. `CalendarRenderTest.astrologyPopupFooterInsets*` covers phone/tablet portrait and landscape plus a short landscape window; `CalendarUiTest.astrologyPopupFooterInsetsOnDevice` runs the same assertions on the emulator's current orientation. The expected bottom inset is 12 dp, independent of the decorative watermark. The whole image viewport must fit inside the popup with a 12 dp inset from the rounded edges. Also inspect the screenshots to confirm that the complete artwork is visible, rather than merely checking footer spacing. Run the device case in both orientations when changing this layout.
+
 The bilingual About/Sources interaction check runs in `CalendarUiTest` on Android, covering real inline-link rendering, the engine link's destination and bundled licenses. Compose tests use the v2 test rules; alarm assertions use Robolectric's current accessors.
 
 For a focused activity-retention check:

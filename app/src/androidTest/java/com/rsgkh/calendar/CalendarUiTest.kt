@@ -12,6 +12,12 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class CalendarUiTest : CalendarUiScenarios() {
+    @Test fun astrologyPopupFooterInsetsOnDevice() {
+        val orientation = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+            .targetContext.resources.configuration.orientation
+        checkAstrologyPopupFooterInsets("device-$orientation")
+    }
+
     @Test fun monthNavigationKeepsFirstFrameLayout() =
         checkMonthNavigationLayoutFrames(com.rsgkh.calendar.data.AppSettings(khmer = false))
 

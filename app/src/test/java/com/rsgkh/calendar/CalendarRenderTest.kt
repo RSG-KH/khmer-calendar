@@ -38,6 +38,21 @@ import org.junit.Test
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @LooperMode(LooperMode.Mode.PAUSED)
 class CalendarRenderTest : CalendarUiScenarios() {
+    @Test @Config(qualifiers = "w411dp-h891dp-port-xhdpi")
+    fun astrologyPopupFooterInsetsInPhonePortrait() = checkAstrologyPopupFooterInsets("phone-portrait")
+
+    @Test @Config(qualifiers = "w891dp-h411dp-land-xhdpi")
+    fun astrologyPopupFooterInsetsInPhoneLandscape() = checkAstrologyPopupFooterInsets("phone-landscape")
+
+    @Test @Config(qualifiers = "w640dp-h320dp-land-xhdpi")
+    fun astrologyPopupFooterInsetsInShortLandscape() = checkAstrologyPopupFooterInsets("short-landscape")
+
+    @Test @Config(qualifiers = "sw800dp-w1280dp-h800dp-land-xhdpi")
+    fun astrologyPopupFooterInsetsInTabletLandscape() = checkAstrologyPopupFooterInsets("tablet-landscape")
+
+    @Test @Config(qualifiers = "sw800dp-w800dp-h1280dp-port-xhdpi")
+    fun astrologyPopupFooterInsetsInTabletPortrait() = checkAstrologyPopupFooterInsets("tablet-portrait")
+
     @Test @Config(qualifiers = "w320dp-h568dp-xhdpi")
     fun recurringEditorFitsSmallKhmerPhone() = checkRepeatLayout(FontScale.PERCENT_120, "phone")
 

@@ -153,6 +153,55 @@ abstract class CalendarUiScenarios {
 
     @Test fun khmerAstrologyDetailsKeepEmojiTablesAndLocalizedActions() = checkAstrologyDetails(true)
 
+    protected fun checkAstrologyPopupFooterInsets(profile: String) {
+        val settings = mutableStateOf(AppSettings(khmer = false, theme = ThemeMode.LIGHT))
+        val kind = mutableStateOf(com.rsgkh.calendar.ui.AstrologyDetail.GANZHI)
+        val info = com.rsgkh.calendar.domain.KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 28))
+        val signs = com.rsgkh.calendar.domain.WesternBig3Signs(
+            com.rsgkh.calendar.engine.western.WesternZodiacSign.LIBRA,
+            com.rsgkh.calendar.engine.western.WesternZodiacSign.ARIES,
+            com.rsgkh.calendar.engine.western.WesternZodiacSign.CANCER,
+        )
+        compose.setContent {
+            CalendarTheme(settings.value) {
+                com.rsgkh.calendar.ui.AstrologyDetailsDialog(kind.value, info, signs,
+                    com.rsgkh.calendar.ui.ganzhiColumns(info, java.time.LocalTime.NOON, settings.value.khmer),
+                    settings.value.khmer, settings.value.khmer, settings.value.khmer, 24.dp, onDismiss = {})
+            }
+        }
+        for (khmer in listOf(false, true)) {
+            for (scale in listOf(FontScale.PERCENT_100, FontScale.PERCENT_80, FontScale.PERCENT_150)) {
+                for (popup in listOf(com.rsgkh.calendar.ui.AstrologyDetail.GANZHI, com.rsgkh.calendar.ui.AstrologyDetail.BIG_3)) {
+                    compose.runOnIdle {
+                        settings.value = settings.value.copy(khmer = khmer, fontScale = scale,
+                            theme = if (khmer) ThemeMode.DARK else ThemeMode.LIGHT)
+                        kind.value = popup
+                    }
+                    compose.onNodeWithTag("astrology-close").assertIsDisplayed()
+                    compose.onNodeWithTag("astrology-ask-ai").assertIsDisplayed()
+                    val dialog = compose.onNodeWithTag("astrology-details-dialog").getUnclippedBoundsInRoot()
+                    val actions = compose.onNodeWithTag("astrology-details-actions").getUnclippedBoundsInRoot()
+                    if (scale == FontScale.PERCENT_100) screenshot("astrology-footer-$profile-${popup.name.lowercase()}-$khmer")
+                    org.junit.Assert.assertEquals(
+                        "$profile $popup khmer=$khmer font=$scale: decoration must not add space below the actions",
+                        12f, (dialog.bottom - actions.bottom).value, 0.6f)
+                    val watermark = compose.onNodeWithTag("astrology-watermark", useUnmergedTree = true)
+                        .getUnclippedBoundsInRoot()
+                    org.junit.Assert.assertTrue(
+                        "$profile $popup khmer=$khmer font=$scale: the whole watermark must fit inside the popup; image=$watermark dialog=$dialog",
+                        watermark.left >= dialog.left && watermark.top >= dialog.top &&
+                            watermark.right <= dialog.right && watermark.bottom <= dialog.bottom)
+                    org.junit.Assert.assertTrue(
+                        "Keep the watermark clear of rounded corners without changing the footer inset",
+                        (watermark.left - dialog.left).value >= 11.4f &&
+                            (watermark.top - dialog.top).value >= 11.4f &&
+                            (dialog.right - watermark.right).value >= 11.4f &&
+                            (dialog.bottom - watermark.bottom).value >= 11.4f)
+                }
+            }
+        }
+    }
+
     private fun checkAstrologyDetails(k: Boolean) {
         start(AppSettings(khmer = k, useEmojiForWesternZodiac = k, useEmojiForGanzhiAnimals = k))
         val date = LocalDate.of(2026, 9, 24)
