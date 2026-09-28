@@ -1073,7 +1073,7 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                         SettingsDivider()
                         SettingsRow(L.text("ui.location_for_rising_sign", k), L.text("ui.location_for_rising_sign_subtitle", k)) {
                             TextButton(onClick = { astrologyPicker = LocationPickerMode.LOCATION }, modifier = Modifier.widthIn(max = 144.dp).testTag("astrology-default-location")) {
-                                Text(settings.risingPlace.label, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                Text(rememberBirthplaceLabel(settings.risingPlace, k), maxLines = 2, overflow = TextOverflow.Ellipsis)
                             }
                         }
                     }

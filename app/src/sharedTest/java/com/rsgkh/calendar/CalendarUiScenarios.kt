@@ -44,6 +44,111 @@ import java.time.ZoneId
 abstract class CalendarUiScenarios {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun deletingCatalogLocationChipsPreservesCurrentInputs() = assertChipDeletionPreservesDraft(manual = false)
+
+    @Test fun deletingCustomLocationChipsPreservesEditedInputs() = assertChipDeletionPreservesDraft(manual = true)
+
+    private fun assertChipDeletionPreservesDraft(manual: Boolean) {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val prefs = context.getSharedPreferences("birthplaces", android.content.Context.MODE_PRIVATE)
+        val previous = prefs.getString("places", null)
+        val saved = com.rsgkh.calendar.data.SavedBirthplaces(context)
+        val selected = if (manual) Birthplace("manual", "Chip location", "Chip location", "", 11.57, 104.92, "Asia/Phnom_Penh")
+            else Birthplace.DEFAULT
+        val other = selected.copy(id = "00000000-0000-0000-0000-000000000001", label = "Other saved place")
+        val mode = mutableStateOf(com.rsgkh.calendar.ui.LocationPickerMode.BOTH)
+        val open = mutableStateOf(true)
+        var result: Pair<java.time.LocalTime, Birthplace?>? = null
+        val initialTime = java.time.LocalTime.of(8, 35)
+        try {
+            prefs.edit().putString("places", "[]").commit()
+            saved.save(selected); saved.save(other)
+            compose.setContent {
+                CalendarTheme(AppSettings(khmer = false)) {
+                    if (open.value) androidx.compose.runtime.key(mode.value) {
+                        com.rsgkh.calendar.ui.TimeAndLocationDialog(initialTime, selected, false, mode.value,
+                            onDismiss = { open.value = false }, onSave = { time, place -> result = time to place; open.value = false })
+                    }
+                }
+            }
+            for (pickerMode in listOf(com.rsgkh.calendar.ui.LocationPickerMode.BOTH, com.rsgkh.calendar.ui.LocationPickerMode.LOCATION)) {
+                compose.runOnIdle {
+                    prefs.edit().putString("places", "[]").commit()
+                    saved.save(selected); saved.save(other)
+                    mode.value = pickerMode; open.value = true; result = null
+                }
+                val tags = if (manual) listOf("location-name", "location-latitude", "location-longitude", "location-zone")
+                    else listOf("location-country", "location-adm1", "location-lower")
+                compose.waitUntil(10_000) {
+                    runCatching { compose.onNodeWithTag(tags.last()).fetchSemanticsNode()
+                        .config[androidx.compose.ui.semantics.SemanticsProperties.EditableText].text.isNotEmpty() }.getOrDefault(false)
+                }
+                if (manual) compose.onNodeWithTag("location-name").performScrollTo().performTextReplacement("Edited location")
+                fun inputs() = tags.map { compose.onNodeWithTag(it).fetchSemanticsNode()
+                    .config[androidx.compose.ui.semantics.SemanticsProperties.EditableText].text }
+                val before = inputs()
+                for (chip in listOf(other, selected)) {
+                    compose.onNodeWithContentDescription("Delete ${chip.label}").performScrollTo().performClick()
+                    compose.onNodeWithContentDescription("Delete ${chip.label}").assertDoesNotExist()
+                    org.junit.Assert.assertEquals(before, inputs())
+                    org.junit.Assert.assertFalse(saved.read().any { it.source == chip.source && it.id == chip.id })
+                    compose.onNodeWithTag("location-save").assertIsEnabled()
+                }
+                if (pickerMode == com.rsgkh.calendar.ui.LocationPickerMode.BOTH) {
+                    compose.onNodeWithTag("location-time").assertTextContains("08:35", substring = true)
+                    compose.onNodeWithTag("location-save").performClick()
+                    org.junit.Assert.assertEquals(initialTime, result?.first)
+                    org.junit.Assert.assertEquals(if (manual) selected.copy(id = "Edited location", label = "Edited location") else selected, result?.second)
+                } else {
+                    compose.onNodeWithTag("location-cancel").performClick()
+                    org.junit.Assert.assertNull(result)
+                    org.junit.Assert.assertTrue(saved.read().isEmpty())
+                }
+            }
+        } finally {
+            prefs.edit().apply { if (previous == null) remove("places") else putString("places", previous) }.commit()
+        }
+    }
+
+    @Test fun settingsRisingLocationFollowsLanguageWithoutChangingSavedPlace() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val document = com.rsgkh.calendar.data.BirthplaceCatalog(context).divisions("KH")
+        val defaultDivision = document.divisions.single { it.id == Birthplace.DEFAULT.id }
+        val anotherDivision = document.divisions.first {
+            it.id != defaultDivision.id && it.nameKm.isNotBlank() && document.selection(it, false) != null
+        }
+        val state = mutableStateOf(AppSettings(khmer = true, risingPlace = Birthplace.DEFAULT))
+        compose.setContent {
+            CalendarApp(state.value, LocalDate.of(2026, 9, 28)) { state.value = it }
+        }
+        compose.onNodeWithText(L.text("ui.settings.0e0a4f", true)).performClick()
+        fun assertLabel(expected: String) {
+            compose.onNodeWithTag("settings-scroll").performScrollToNode(hasTestTag("astrology-default-location"))
+            compose.waitUntil(5_000) {
+                compose.onAllNodes(hasTestTag("astrology-default-location") and hasText(expected)).fetchSemanticsNodes().size == 1
+            }
+            compose.onNodeWithTag("astrology-default-location").assertTextEquals(expected)
+        }
+        assertLabel(defaultDivision.nameKm)
+        screenshot("settings-rising-location-khmer")
+        compose.runOnIdle { org.junit.Assert.assertEquals(Birthplace.DEFAULT, state.value.risingPlace) }
+        for (savedInKhmer in listOf(false, true)) {
+            val place = Birthplace.fromJson(document.selection(anotherDivision, savedInKhmer)!!.toJson())!!
+            compose.runOnIdle { state.value = state.value.copy(risingPlace = place) }
+            for (khmer in listOf(false, true)) {
+                compose.runOnIdle { state.value = state.value.copy(khmer = khmer) }
+                assertLabel(anotherDivision.label(khmer))
+                compose.runOnIdle { org.junit.Assert.assertEquals(place, state.value.risingPlace) }
+            }
+        }
+        val manual = Birthplace.DEFAULT.copy(source = "manual", label = "My Cambodian home")
+        compose.runOnIdle { state.value = state.value.copy(risingPlace = manual) }
+        assertLabel(manual.label)
+        val missing = Birthplace.DEFAULT.copy(id = "00000000-0000-0000-0000-000000000000", label = "Saved place")
+        compose.runOnIdle { state.value = state.value.copy(risingPlace = missing) }
+        assertLabel(missing.label)
+    }
+
     @Test fun astrologyTablesOpenDetailsAndPreserveTheSelectedTime() = checkAstrologyDetails(false)
 
     @Test fun khmerAstrologyDetailsKeepEmojiTablesAndLocalizedActions() = checkAstrologyDetails(true)

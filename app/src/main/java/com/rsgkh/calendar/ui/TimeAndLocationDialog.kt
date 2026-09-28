@@ -110,8 +110,6 @@ internal fun placeFlag(code: String): String = if (code.matches(Regex("[A-Z]{2}"
     var pickingTime by rememberSaveable { mutableStateOf(false) }
     var manual by rememberSaveable { mutableStateOf(initialPlace?.source == "manual") }
     var placeJson by rememberSaveable { mutableStateOf(initialPlace?.takeUnless { it.source == "manual" }?.toJson()) }
-    var catalogRemoved by rememberSaveable { mutableStateOf(false) }
-    var manualRemoved by rememberSaveable { mutableStateOf(false) }
     var editingManualId by rememberSaveable { mutableStateOf(initialPlace?.takeIf { it.source == "manual" }?.id) }
     val place = remember(placeJson) { Birthplace.fromJson(placeJson) }
     var country by rememberSaveable { mutableStateOf(initialPlace?.countryCode.orEmpty()) }
@@ -166,20 +164,14 @@ internal fun placeFlag(code: String): String = if (code.matches(Regex("[A-Z]{2}"
         focus.clearFocus(); selectionProblem = null
         if (value.source == "manual") {
             name = value.label; latitude = value.latitude.toString(); longitude = value.longitude.toString(); zone = value.timeZone
-            editingManualId = value.id; manualRemoved = false
+            editingManualId = value.id
         } else {
-            placeJson = value.toJson(); country = value.countryCode; catalogRemoved = false
+            placeJson = value.toJson(); country = value.countryCode
         }
     }
     fun removeSaved(value: Birthplace) {
+        // Saved chips are shortcuts; deleting one must not change the active draft.
         saved.remove(value); chips = saved.read()
-        if (value.source == "manual" && editingManualId == value.id) {
-            name = ""; latitude = ""; longitude = ""; zone = ""
-            editingManualId = null; manualRemoved = true
-        } else if (value.source == place?.source && value.id == place.id) {
-            placeJson = null; country = ""; countryText = ""; adm1 = ""; adm1Text = ""; lowerText = ""
-            catalogRemoved = true
-        }
     }
     val adm1Choices = remember(document, k) { administrativeOptions(document, null, k) }
     val lowerChoices = remember(document, adm1, k) { if (adm1.isEmpty()) emptyList() else administrativeOptions(document, adm1, k) }
@@ -187,10 +179,7 @@ internal fun placeFlag(code: String): String = if (code.matches(Regex("[A-Z]{2}"
     val lon = parseCoordinate(longitude, false)
     val time = parseTimeInput(timeText)
     val manualValid = name.isNotBlank() && name.length <= 160 && lat != null && lon != null && runCatching { ZoneId.of(zone) }.isSuccess
-    val manualCleared = manualRemoved && listOf(name, latitude, longitude, zone).all { it.isBlank() }
-    val canClearOverride = mode == LocationPickerMode.BOTH
-    val locationValid = !withLocation || if (manual) manualValid || (canClearOverride && manualCleared)
-        else place != null || (canClearOverride && catalogRemoved)
+    val locationValid = !withLocation || if (manual) manualValid else place != null
     val valid = locationValid && (!withTime || time != null)
     val title = when (mode) {
         LocationPickerMode.BOTH -> timeAndLocationTitle(k)
@@ -234,8 +223,8 @@ internal fun placeFlag(code: String): String = if (code.matches(Regex("[A-Z]{2}"
                     // Reserve all three field slots while country data loads or choices are cleared.
                     Column(Modifier.heightIn(min = 204.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         PlaceSearch(L.text("location.country", k), "location-country", countryText, countryChoices, k,
-                            onEdit = { countryText = it; country = ""; adm1 = ""; adm1Text = ""; lowerText = ""; placeJson = null; catalogRemoved = false; selectionProblem = null },
-                            onSelect = { country = it.id; countryText = it.label; adm1 = ""; adm1Text = ""; lowerText = ""; placeJson = null; catalogRemoved = false; selectionProblem = null })
+                            onEdit = { countryText = it; country = ""; adm1 = ""; adm1Text = ""; lowerText = ""; placeJson = null; selectionProblem = null },
+                            onSelect = { country = it.id; countryText = it.label; adm1 = ""; adm1Text = ""; lowerText = ""; placeJson = null; selectionProblem = null })
                         if (adm1Choices.isNotEmpty()) PlaceSearch(L.text(if (country == "KH") "location.capital_province" else "location.province_state", k),
                             "location-adm1", adm1Text, adm1Choices, k,
                             onEdit = { adm1Text = it; adm1 = ""; lowerText = ""; placeJson = null; selectionProblem = null },
@@ -269,7 +258,7 @@ internal fun placeFlag(code: String): String = if (code.matches(Regex("[A-Z]{2}"
         }) {
             TextButton(onClick = onDismiss, modifier = Modifier.testTag("location-cancel")) { Text(L.text("ui.cancel.5bf834", k)) }
             TextButton(enabled = valid, onClick = {
-                val selection = if (!withLocation) initialPlace else if (!manual) place else if (manualCleared) null
+                val selection = if (!withLocation) initialPlace else if (!manual) place
                     else Birthplace("manual", name.trim(), name.trim(), "", lat!!, lon!!, zone.trim())
                 if (withLocation && selection != null) saved.save(selection, if (manual) editingManualId else null)
                 onSave(if (withTime) time!! else initialTime, selection)

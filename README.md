@@ -26,7 +26,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 - Calendar algorithms, source references and validation are documented in the [engine project](https://github.com/RSG-KH/khmer-calendar-engine#verification-and-accuracy). Android supplies the interface, translations, personal events and reminders.
 - Date details can show Western zodiac signs, elements and ruling bodies, plus a Chinese Ganzhi (干支) table with Year, Month and Day signs and clash animals. The Rising sign and Hour pillar use the selected time; Today starts with the current time in the Today follows zone; other dates start at the saved time (12:00 initially).
 - Tapping either astrology table opens its own detail popup. Big 3 adds Sun/Moon/Rising sign descriptions; both popups include matching sign artwork and an **Ask AI** browser action.
-- Rising sign uses a chosen location and its IANA time zone. The offline picker includes Cambodian provinces/districts/communes and GeoNames administrative divisions worldwide, with saved places and a custom coordinate/time-zone option. The initial location is Sangkat Voat Phnum, Phnom Penh. Changing location does not shift the displayed clock.
+- Rising sign uses a chosen location and its IANA time zone. The offline picker includes Cambodian provinces/districts/communes and GeoNames administrative divisions worldwide, with saved places and a custom coordinate/time-zone option. The initial location is Sangkat Voat Phnum, Phnom Penh. Changing location does not shift the displayed clock. Deleting a saved-location chip leaves the current location inputs and edits untouched.
 
 ### 🌸 Buddhist Holy Days (*Thngai Seil*)
 
@@ -134,6 +134,7 @@ KhmerCalendar/
 │   │   │   │   └── WidgetStrings.kt     # Localized string formatters & Khmer time
 │   │   │   └── ui/
 │   │   │       ├── AstrologyDetails.kt  # Big 3/Ganzhi popups, sign details and AI queries
+│   │   │       ├── BirthplaceLabels.kt  # Catalog location names in the current language
 │   │   │       ├── CalendarApp.kt       # Main screens, responsive nav & widget settings
 │   │   │       ├── CalendarLayout.kt    # Stable month widths, column caps & grid sizing
 │   │   │       ├── CopyTextButton.kt    # Copy icon with copied confirmation feedback
