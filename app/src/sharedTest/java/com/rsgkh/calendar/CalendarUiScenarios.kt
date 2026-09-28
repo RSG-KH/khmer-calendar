@@ -31,6 +31,7 @@ import com.rsgkh.calendar.data.Birthplace
 import com.rsgkh.calendar.data.FontScale
 import com.rsgkh.calendar.i18n.L
 import com.rsgkh.calendar.ui.CalendarApp
+import com.rsgkh.calendar.ui.CalendarEngineVersion
 import com.rsgkh.calendar.ui.CalendarTheme
 import com.rsgkh.calendar.ui.NotificationAccess
 import com.rsgkh.calendar.ui.SavedLocationChips
@@ -123,11 +124,16 @@ abstract class CalendarUiScenarios {
         }
         compose.onNodeWithText(L.text("ui.settings.0e0a4f", true)).performClick()
         fun assertLabel(expected: String) {
+            val display = com.rsgkh.calendar.ui.truncateSettingLabel(expected, state.value.khmer)
             compose.onNodeWithTag("settings-scroll").performScrollToNode(hasTestTag("astrology-default-location"))
             compose.waitUntil(5_000) {
-                compose.onAllNodes(hasTestTag("astrology-default-location") and hasText(expected)).fetchSemanticsNodes().size == 1
+                compose.onAllNodes(hasTestTag("astrology-default-location") and hasText(display)).fetchSemanticsNodes().size == 1
             }
-            compose.onNodeWithTag("astrology-default-location").assertTextEquals(expected)
+            compose.onNodeWithTag("astrology-default-location").assertTextEquals(display)
+            val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+            compose.onNode(hasText(display) and hasAnyAncestor(hasTestTag("astrology-default-location")), useUnmergedTree = true)
+                .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(layouts) }
+            org.junit.Assert.assertEquals(1, layouts.single().lineCount)
         }
         assertLabel(defaultDivision.nameKm)
         screenshot("settings-rising-location-khmer")
@@ -227,6 +233,8 @@ abstract class CalendarUiScenarios {
         }
         popup("big3-detail-sun").assertTextEquals("♎️ Libra (Air · Venus)")
         popup("astrology-watermark").assertExists()
+        val expectedCalculations = if (k) "ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។" else "Calculations by Khmer Calendar Engine v0.6.0."
+        popup("astrology-engine-calculations").assertTextEquals(expectedCalculations)
         compose.onNodeWithText(if (k) "សួរ AI" else "Ask AI").assertIsDisplayed()
         screenshot("big3-details-$k")
         popup("astrology-close").performClick()
@@ -237,6 +245,7 @@ abstract class CalendarUiScenarios {
         tags.drop(3).forEach { popup(it).assertTextEquals(original.getValue(it)) }
         popup("big3-detail-sun").assertDoesNotExist()
         popup("astrology-watermark").assertExists()
+        popup("astrology-engine-calculations").assertTextEquals(expectedCalculations)
         screenshot("ganzhi-details-$k")
         popup("astrology-close").performClick()
         compose.onNodeWithTag("date-details-time-chip").assertTextContains("08:35", substring = true)
@@ -756,7 +765,7 @@ abstract class CalendarUiScenarios {
         val title = EventRepository.forDate(LocalDate.of(2031, 1, 1)).single { it.id == "new_year_day" }.titleEn
         compose.onNodeWithText(title).performScrollTo().performClick()
         compose.onNode(hasText(L.text("rules.calculated_label", false)) and hasAnyAncestor(isDialog())).assertIsDisplayed()
-        compose.onNodeWithText(L.text("events.engine_calculations", false)).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(L.text("events.engine_calculations", false, "version" to CalendarEngineVersion)).performScrollTo().assertIsDisplayed()
         compose.onNodeWithText(L.text("about.source_link", false)).assertDoesNotExist()
         screenshot("calculated-event-details")
         compose.onNodeWithText(L.text("ui.close.7df7dc", false)).performClick()

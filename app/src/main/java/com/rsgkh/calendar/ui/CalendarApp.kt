@@ -110,6 +110,7 @@ import kotlin.math.roundToInt
 
 private val CardShape = RoundedCornerShape(24.dp)
 internal val DetailSymbolSlot = 24.dp
+internal const val CalendarEngineVersion = "0.6.0"
 private val DetailSymbolGap = 6.dp
 internal fun timeZoneLabel(choice: TodayTimeZone, k: Boolean) = if (choice == TodayTimeZone.LOCAL)
     L.text("ui.local_time.541b44", k) else L.text("ui.cambodia_time_utc_7.6b9f2d", k)
@@ -658,7 +659,7 @@ private fun CalendarScreen(
                 LazyColumn(Modifier.weight(1f).fillMaxHeight().testTag("calendar-scroll"), contentPadding = PaddingValues(top = 4.dp, end = if (isTablet) 0.dp else 12.dp, bottom = 6.dp)) {
                     if (listEvents.isNotEmpty()) {
                         item {
-                            Text(L.text("ui.all_events_in_month.ab923a", k, "month" to monthName(month, k)), Modifier.padding(start = 10.dp, top = 4.dp, bottom = 4.dp),
+                            Text(L.text("ui.all_events_in_month.ab923a", k, "month" to monthName(month, k), "count" to number(listEvents.size, k)), Modifier.padding(start = 10.dp, top = 4.dp, bottom = 4.dp),
                                 fontSize = 12.readableSp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         val days = listEvents.groupBy { it.date }.values.toList()
@@ -1072,8 +1073,19 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
                     if (settings.showWesternZodiac) {
                         SettingsDivider()
                         SettingsRow(L.text("ui.location_for_rising_sign", k), L.text("ui.location_for_rising_sign_subtitle", k)) {
-                            TextButton(onClick = { astrologyPicker = LocationPickerMode.LOCATION }, modifier = Modifier.widthIn(max = 144.dp).testTag("astrology-default-location")) {
-                                Text(rememberBirthplaceLabel(settings.risingPlace, k), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            val birthplaceLabel = rememberBirthplaceLabel(settings.risingPlace, k)
+                            TextButton(
+                                onClick = { astrologyPicker = LocationPickerMode.LOCATION },
+                                modifier = Modifier.widthIn(max = LocalSettingsControlMaxWidth.current).testTag("astrology-default-location")
+                                    .semantics { contentDescription = birthplaceLabel },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                            ) {
+                                Text(
+                                    truncateSettingLabel(birthplaceLabel, k),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    softWrap = false,
+                                )
                             }
                         }
                     }
@@ -1894,12 +1906,12 @@ private fun Modifier.openAstrologyDetails(label: String, onOpen: (() -> Unit)?):
                             event.kind == EventKind.HOLIDAY && event.basis == DateBasis.OFFICIAL ->
                                 L.text("ui.listed_in_cambodia_s_official_year_holiday_calendar.044398", k, "year" to number(event.date.year, k)) to false
                             else ->
-                                L.text("events.engine_calculations", k) to true
+                                L.text("events.engine_calculations", k, "version" to CalendarEngineVersion) to true
                         }
                         Text(
                             description,
-                            fontSize = if (isEngine) 12.readableSp else 14.readableSp,
-                            lineHeight = if (isEngine) 18.readableSp else 23.readableSp,
+                            fontSize = if (isEngine) 10.readableSp else 14.readableSp,
+                            lineHeight = if (isEngine) 16.readableSp else 23.readableSp,
                             color = if (isEngine) MaterialTheme.colorScheme.onSurfaceVariant else LocalContentColor.current,
                         )
                         if (event.kind == EventKind.HOLIDAY) {
@@ -1958,7 +1970,7 @@ private fun Modifier.openAstrologyDetails(label: String, onOpen: (() -> Unit)?):
 @Composable private fun SourcesDialog(k: Boolean, onDismiss: () -> Unit) {
     val context = LocalContext.current
     var license by rememberSaveable { mutableStateOf(false) }
-    var urlDialogData by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var urlDialogData by remember { mutableStateOf<Pair<String, List<String>>?>(null) }
     val appLicenseText = remember {
         val notice = context.assets.open("NOTICE.txt").bufferedReader().use { it.readText() }
         val license = context.assets.open("app-LICENSE.txt").bufferedReader().use { it.readText() }
@@ -1978,7 +1990,7 @@ private fun Modifier.openAstrologyDetails(label: String, onOpen: (() -> Unit)?):
         "https://library.ncdd.gov.kh/",
         "https://www.ocm.gov.kh/",
         "https://www.nbc.gov.kh/",
-    ).joinToString("\n")
+    )
     val engineText = L.text("about.calendar_engine", k)
     val engineName = "Khmer Calendar Engine"
     val engineUrl = "https://github.com/RSG-KH/khmer-calendar-engine"
@@ -2052,7 +2064,7 @@ private fun Modifier.openAstrologyDetails(label: String, onOpen: (() -> Unit)?):
                         "https://en.wikipedia.org/wiki/Provinces_of_Cambodia",
                         "https://en.wikipedia.org/wiki/List_of_districts,_municipalities_and_sections_in_Cambodia",
                         "https://en.wikipedia.org/wiki/List_of_communes_in_Cambodia", "https://openadmindata.org/api/kh/"
-                    ).joinToString("\n")
+                    )
                 }
             )) { append(locationLink) }
             append(if (k) "។" else ".")
@@ -2165,28 +2177,45 @@ private fun Modifier.openAstrologyDetails(label: String, onOpen: (() -> Unit)?):
         }
     }, confirmButton = { TextButton(onClick = onDismiss) { Text(L.text("ui.close.7df7dc", k)) } })
 
-    urlDialogData?.let { (title, urlText) ->
+    urlDialogData?.let { (title, urls) ->
+        val numericUrlText = remember(urls) {
+            urls.mapIndexed { index, url -> "${index + 1}. $url" }.joinToString("\n")
+        }
         CalendarAlertDialog(
             onDismissRequest = { urlDialogData = null },
             title = { Text(title, fontSize = 16.sp, lineHeight = 22.sp) },
             text = {
                 SelectionContainer {
                     Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        urlText.lines().forEach { url ->
-                            Text(
-                                url,
-                                fontSize = 14.readableSp,
-                                lineHeight = 20.readableSp,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Medium,
-                            )
+                        urls.forEachIndexed { index, url ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.Top,
+                            ) {
+                                Text(
+                                    "${index + 1}.",
+                                    fontSize = 14.readableSp,
+                                    lineHeight = 20.readableSp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                                Text(
+                                    url,
+                                    modifier = Modifier.weight(1f),
+                                    fontSize = 14.readableSp,
+                                    lineHeight = 20.readableSp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                            }
                         }
                     }
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
-                    if (copyToClipboard(context, title, urlText)) {
+                    if (copyToClipboard(context, title, numericUrlText)) {
                         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                             Toast.makeText(context, L.text("ui.url_copied", k), Toast.LENGTH_SHORT).show()
                         }

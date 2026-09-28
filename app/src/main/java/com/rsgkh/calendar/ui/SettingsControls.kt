@@ -15,23 +15,46 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable internal fun SettingsDivider() {
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 }
 
+internal val LocalSettingsControlMaxWidth = compositionLocalOf { 280.dp }
+
+internal fun truncateSettingLabel(text: String, khmer: Boolean): String =
+    truncateSettingLabel(text, if (khmer) 16 else 12)
+
+internal fun truncateSettingLabel(text: String, maxChars: Int = 12): String {
+    if (text.length <= maxChars) return text
+    var truncated = text.take(maxChars).trimEnd()
+    if (truncated.endsWith('\u17D2')) {
+        truncated = truncated.dropLast(1)
+    }
+    if (truncated.isNotEmpty() && truncated.last().isHighSurrogate()) {
+        truncated = truncated.dropLast(1)
+    }
+    return "$truncated..."
+}
+
 /** Shared title style, control alignment and row spacing for every preference. */
 @Composable internal fun SettingsRow(title: String, subtitle: String? = null, enabled: Boolean = true, control: @Composable () -> Unit) {
     val hasSubtitle = !subtitle.isNullOrBlank()
-    Row(Modifier.fillMaxWidth().heightIn(min = if (hasSubtitle) 64.dp else 48.dp).padding(vertical = if (hasSubtitle) 8.dp else 4.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            SettingsTitle(title, enabled)
-            subtitle?.let { Text(it, fontSize = 11.readableSp, lineHeight = 17.readableSp,
-                color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface.copy(alpha = .38f)) }
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val maxControlWidth = (maxWidth - 148.dp).coerceIn(120.dp, 280.dp)
+        CompositionLocalProvider(LocalSettingsControlMaxWidth provides maxControlWidth) {
+            Row(Modifier.fillMaxWidth().heightIn(min = if (hasSubtitle) 64.dp else 48.dp).padding(vertical = if (hasSubtitle) 8.dp else 4.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    SettingsTitle(title, enabled)
+                    subtitle?.let { Text(it, fontSize = 11.readableSp, lineHeight = 17.readableSp,
+                        color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface.copy(alpha = .38f)) }
+                }
+                control()
+            }
         }
-        control()
     }
 }
 
@@ -68,11 +91,12 @@ import androidx.compose.ui.unit.dp
     var expanded by remember(enabled) { mutableStateOf(false) }
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     Box {
-        TextButton(onClick = { expanded = true }, enabled = enabled, modifier = Modifier.testTag(tag).widthIn(max = 192.dp)
+        TextButton(onClick = { expanded = true }, enabled = enabled, modifier = Modifier.testTag(tag).widthIn(max = LocalSettingsControlMaxWidth.current)
             .semantics { contentDescription = description }, contentPadding = PaddingValues(horizontal = 8.dp)) {
             Text(label(value), fontSize = 13.readableSp, modifier = Modifier.weight(1f, fill = false),
                 color = itemColor?.invoke(value, isDark) ?: Color.Unspecified,
-                fontWeight = if (itemColor != null) FontWeight.Medium else FontWeight.Normal)
+                fontWeight = if (itemColor != null) FontWeight.Medium else FontWeight.Normal,
+                maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false)
         }
         CalendarDropdownMenu(
             expanded = enabled && expanded,

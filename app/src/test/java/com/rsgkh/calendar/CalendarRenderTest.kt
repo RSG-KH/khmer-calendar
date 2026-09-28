@@ -166,6 +166,8 @@ class CalendarRenderTest : CalendarUiScenarios() {
             compose.onNodeWithTag("astrology-ask-ai").assertIsDisplayed()
             compose.onNodeWithTag("astrology-close").assertIsDisplayed()
             if (tag == "western-zodiac-table") compose.onNodeWithTag("big3-detail-rising").performScrollTo().assertIsDisplayed()
+            val expectedCalculations = if (settings.khmer) "ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។" else "Calculations by Khmer Calendar Engine v0.6.0."
+            compose.onNodeWithTag("astrology-engine-calculations").performScrollTo().assertIsDisplayed().assertTextEquals(expectedCalculations)
             screenshot("astrology-popup-$tag-${settings.khmer}")
             compose.onNodeWithTag("astrology-close").performClick()
         }
@@ -1219,9 +1221,9 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("date-details-time-chip").performClick()
         compose.onNodeWithTag("location-name").assertTextContains("Brussels test")
         compose.onNodeWithContentDescription("Delete Brussels test").performClick()
-        compose.onNodeWithTag("location-name").assertTextEquals("Location name", "")
+        compose.onNodeWithTag("location-name").assertTextContains("Brussels test")
         compose.onNodeWithTag("location-save").assertIsEnabled().performClick()
-        compose.onNodeWithTag("western-sign-rising", useUnmergedTree = true).assertTextEquals("—")
+        compose.onNodeWithTag("western-sign-rising", useUnmergedTree = true).assertTextContains("Scorpio")
         compose.onNodeWithTag("date-details-time-chip").assertTextContains("12:00", substring = true)
         compose.onAllNodesWithText("Close").onLast().performClick()
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
@@ -1242,7 +1244,16 @@ class CalendarRenderTest : CalendarUiScenarios() {
             }
         }
         compose.onNodeWithText("Settings").performClick()
+        compose.onNodeWithTag("settings-scroll").performScrollToNode(hasTestTag("today-time-zone"))
+        val timeZoneLayouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+        compose.onNode(hasAnyAncestor(hasTestTag("today-time-zone")), useUnmergedTree = true)
+            .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(timeZoneLayouts) }
+        assertEquals(1, timeZoneLayouts.single().lineCount)
         compose.onNodeWithTag("settings-scroll").performScrollToNode(hasTestTag("astrology-default-location"))
+        val locationLayouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+        compose.onNode(hasText("Sangkat Voat...") and hasAnyAncestor(hasTestTag("astrology-default-location")), useUnmergedTree = true)
+            .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(locationLayouts) }
+        assertEquals(1, locationLayouts.single().lineCount)
         compose.onNodeWithTag("astrology-default-location").performClick()
         compose.onNodeWithTag("location-time").assertDoesNotExist()
         compose.onNodeWithTag("location-country").performTextReplacement("Belgium")

@@ -48,6 +48,8 @@ Settings rows also gained separators matching the event list. See the current
 [settings separators](ui-and-responsive-design.md#settings-row-separators), and
 [246-test local / two-scenario tablet verification](stability-and-performance.md#equal-widths-across-four--five--and-six-row-months).
 
+Settings controls were also updated with single-line labels (`softWrap = false`, `maxLines = 1`) and dynamic width allocation (`LocalSettingsControlMaxWidth`), truncating Rising location labels to 16 characters for Khmer and 12 characters for English/other with trailing `...` while preserving full accessibility descriptions. In-app calculation attributions across event and astrology popups were standardized to “Calculations by Khmer Calendar Engine v0.6.0.” / “ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។” at `10.readableSp`. Monthly event list headers gained the month prefix `ខែ` and event count, and Sources dialog URLs are now presented and copied as numbered lists.
+
 ## Original verification
 
 This section records the September 27 sync checks; counts and artifact names

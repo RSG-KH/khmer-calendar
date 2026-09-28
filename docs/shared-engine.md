@@ -69,4 +69,6 @@ Supported date coverage and passing regression tests are not a claim of independ
 
 The app bundles the released engine's Apache 2.0 [license](../app/src/main/assets/engine-LICENSE.txt) and upstream MIT [notices](../app/src/main/assets/engine-NOTICE.txt), alongside app and catalog attribution in [NOTICE.txt](../app/src/main/assets/NOTICE.txt). Settings → Sources and licenses links to the engine and displays these partitioned texts offline. Upstream author and library references remain in those notices and in test fixtures where they identify the comparison source.
 
+In-app calculation attributions in built-in event dialogs and astrology child popups credit the engine with “Calculations by Khmer Calendar Engine v0.6.0.” in English and “ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។” in Khmer (referencing `CalendarEngineVersion = "0.6.0"` and rendered at `10.readableSp` with `16.readableSp` line height).
+
 The offline location catalogs and their attribution/provenance are bundled under `app/src/main/assets/birthplaces`. The source gzip files match PWA 0.12.1; Android asset merging expands them to `.json` paths inside the APK. Geographic data licenses are separate from the application and engine licenses.

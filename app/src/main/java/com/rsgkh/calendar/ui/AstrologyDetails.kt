@@ -113,6 +113,14 @@ internal fun astrologySearchQuery(
                             }
                             AstrologyDetail.GANZHI -> GanzhiTable(info, pillars, khmer, useGanzhiEmoji, symbolSlot)
                         }
+                        Spacer(Modifier.height(14.dp))
+                        Text(
+                            L.text("astrology.engine_calculations", khmer, "version" to CalendarEngineVersion),
+                            fontSize = 10.readableSp,
+                            lineHeight = 16.readableSp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.testTag("astrology-engine-calculations")
+                        )
                     }
                     Spacer(Modifier.height(10.dp))
                     FlowRow(Modifier.fillMaxWidth().testTag("astrology-details-actions"),

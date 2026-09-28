@@ -122,6 +122,10 @@ shorter and six-row May taller than five-row March. All **246 local tests** and
 The updated app was installed. Logs are `calendar-stable-width-reproduction.log`,
 `calendar-stable-width-full-check.log` and `calendar-stable-width-device-check.log`.
 
+### Settings layout and attribution follow-up
+
+Settings controls dynamically constrain control width (`LocalSettingsControlMaxWidth`) and truncate Rising location button text to 16 characters for Khmer and 12 characters for English/other with trailing `...`, keeping full text in accessibility descriptions and dropdowns on a single line. In-app calculation attribution was consolidated to “Calculations by Khmer Calendar Engine v0.6.0.” / “ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។” at `10.readableSp` (`16.readableSp` line height). Monthly event lists format headers with `ខែ` prefix and event count in parentheses. All 246 local tests and translation tooling tests passed.
+
 ## Memory and performance limits
 
 No retained activity was detected in the device scenario. Resource review also

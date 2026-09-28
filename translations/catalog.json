@@ -1181,16 +1181,20 @@
       "id": "events.engine_calculations",
       "section": "interface",
       "context": "Calendar calculation attribution in built-in event popups",
-      "en": "Calendar calculations by Khmer Calendar Engine.",
-      "km": "ការគណនាប្រតិទិនធ្វើឡើងដោយ Khmer Calendar Engine។",
+      "en": "Calculations by Khmer Calendar Engine v{version}.",
+      "km": "ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ {version} ។",
       "original": {
-        "en": "Calendar calculations by Khmer Calendar Engine.",
-        "km": "ការគណនាប្រតិទិនធ្វើឡើងដោយ Khmer Calendar Engine។"
+        "en": "Calculations by Khmer Calendar Engine v{version}.",
+        "km": "ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ {version} ។"
       },
-      "reviewed": false,
+      "reviewed": true,
       "required": {
-        "en": [],
-        "km": []
+        "en": [
+          "version"
+        ],
+        "km": [
+          "version"
+        ]
       }
     },
     {
@@ -35560,18 +35564,20 @@
       "id": "ui.all_events_in_month.ab923a",
       "section": "interface",
       "context": "CalendarApp.kt",
-      "en": "All events in {month}",
-      "km": "ព្រឹត្តិការណ៍ទាំងអស់ក្នុង{month}",
+      "en": "All events in {month} ({count})",
+      "km": "ព្រឹត្តិការណ៍ទាំងអស់ក្នុងខែ{month} ({count})",
       "original": {
-        "en": "All events in {month}",
-        "km": "ព្រឹត្តិការណ៍ទាំងអស់ក្នុង{month}"
+        "en": "All events in {month} ({count})",
+        "km": "ព្រឹត្តិការណ៍ទាំងអស់ក្នុងខែ{month} ({count})"
       },
       "reviewed": true,
       "required": {
         "en": [
+          "count",
           "month"
         ],
         "km": [
+          "count",
           "month"
         ]
       }
@@ -36988,10 +36994,10 @@
       "id": "ui.could_not_copy_urls",
       "section": "interface",
       "context": "CalendarApp.kt",
-      "km": "មិនអាចចម្លងបានទេ។ សូមជ្រើសរើសអាសយដ្ឋានប្រភព ដើម្បីចម្លងដោយខ្លួនឯង។",
+      "km": "មិនអាចចម្លងបានទេ។ សូមជ្រើសរើសប្រភព URL ដើម្បីចម្លងដោយខ្លួនឯង។",
       "en": "Could not copy. Select the source URLs to copy them manually.",
       "original": {
-        "km": "មិនអាចចម្លងបានទេ។ សូមជ្រើសរើសអាសយដ្ឋានប្រភព ដើម្បីចម្លងដោយខ្លួនឯង។",
+        "km": "មិនអាចចម្លងបានទេ។ សូមជ្រើសរើសប្រភព URL ដើម្បីចម្លងដោយខ្លួនឯង។",
         "en": "Could not copy. Select the source URLs to copy them manually."
       },
       "reviewed": true,
@@ -37357,10 +37363,10 @@
       "section": "interface",
       "context": "Location attribution URL dialog title",
       "en": "Source URLs",
-      "km": "អាសយដ្ឋានប្រភព",
+      "km": "ប្រភព URL",
       "original": {
         "en": "Source URLs",
-        "km": "អាសយដ្ឋានប្រភព"
+        "km": "ប្រភព URL"
       },
       "reviewed": true,
       "required": {
@@ -37417,6 +37423,26 @@
         ],
         "km": [
           "details"
+        ]
+      }
+    },
+    {
+      "id": "astrology.engine_calculations",
+      "section": "interface",
+      "context": "Calculation attribution in Western astrology and Ganzhi popups",
+      "en": "Calculations by Khmer Calendar Engine v{version}.",
+      "km": "ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ {version} ។",
+      "original": {
+        "en": "Calculations by Khmer Calendar Engine v{version}.",
+        "km": "ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ {version} ។"
+      },
+      "reviewed": true,
+      "required": {
+        "en": [
+          "version"
+        ],
+        "km": [
+          "version"
         ]
       }
     }

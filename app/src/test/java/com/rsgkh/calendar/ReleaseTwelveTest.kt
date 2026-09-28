@@ -138,4 +138,29 @@ class ReleaseTwelveTest {
         val missingChoices = administrativeOptions(cambodia.copy(divisions = cambodia.divisions.map { if (it.id == commune.id) missingPoint else it }), district.parentId, true)
         assertEquals("គ្មានកូអរដោនេ; សូមប្រើទីកន្លែងផ្ទាល់ខ្លួន", missingChoices.single { it.id == commune.id }.detail)
     }
+
+    @Test fun sourceUrlsTranslationMatchesCatalog() {
+        assertEquals("ប្រភព URL", com.rsgkh.calendar.i18n.L.text("about.source_urls_title", true))
+        assertEquals("Source URLs", com.rsgkh.calendar.i18n.L.text("about.source_urls_title", false))
+        assertEquals("មិនអាចចម្លងបានទេ។ សូមជ្រើសរើសប្រភព URL ដើម្បីចម្លងដោយខ្លួនឯង។", com.rsgkh.calendar.i18n.L.text("ui.could_not_copy_urls", true))
+        assertEquals("ព្រឹត្តិការណ៍ទាំងអស់ក្នុងខែវិច្ឆិកា (៥)", com.rsgkh.calendar.i18n.L.text("ui.all_events_in_month.ab923a", true, "month" to "វិច្ឆិកា", "count" to "៥"))
+        assertEquals("All events in November (5)", com.rsgkh.calendar.i18n.L.text("ui.all_events_in_month.ab923a", false, "month" to "November", "count" to 5))
+        assertEquals("Calculations by Khmer Calendar Engine v0.6.0.", com.rsgkh.calendar.i18n.L.text("events.engine_calculations", false, "version" to "0.6.0"))
+        assertEquals("ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។", com.rsgkh.calendar.i18n.L.text("events.engine_calculations", true, "version" to "0.6.0"))
+        assertEquals("Calculations by Khmer Calendar Engine v0.6.0.", com.rsgkh.calendar.i18n.L.text("astrology.engine_calculations", false, "version" to "0.6.0"))
+        assertEquals("ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។", com.rsgkh.calendar.i18n.L.text("astrology.engine_calculations", true, "version" to "0.6.0"))
+    }
+
+    @Test fun truncateSettingLabelLimitsLengthToTwelveCharsAndAppendsThreeDots() {
+        assertEquals("Sangkat Voat...", com.rsgkh.calendar.ui.truncateSettingLabel("Sangkat Voat Phnum", khmer = false))
+        assertEquals("Phnom Penh", com.rsgkh.calendar.ui.truncateSettingLabel("Phnom Penh", khmer = false))
+        assertEquals("123456789012", com.rsgkh.calendar.ui.truncateSettingLabel("123456789012", khmer = false))
+        assertEquals("123456789012...", com.rsgkh.calendar.ui.truncateSettingLabel("1234567890123", khmer = false))
+
+        val watPhnomKm = "សង្កាត់ វត្ដភ្នំ" // 16 characters
+        assertEquals(16, watPhnomKm.length)
+        assertEquals(watPhnomKm, com.rsgkh.calendar.ui.truncateSettingLabel(watPhnomKm, khmer = true))
+        assertEquals("1234567890123456", com.rsgkh.calendar.ui.truncateSettingLabel("1234567890123456", khmer = true))
+        assertEquals("1234567890123456...", com.rsgkh.calendar.ui.truncateSettingLabel("12345678901234567", khmer = true))
+    }
 }
