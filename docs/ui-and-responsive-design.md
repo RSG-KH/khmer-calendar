@@ -72,7 +72,7 @@ asterisk; Notes has no optional suffix and occupies two lines,
 followed by a divider and Repeat, without an enclosing border.
 
 None hides repeat inputs and the schedule preview. Days defaults to 3 in an outlined
-number field with a floating label; Weekly, Monthly and Yearly share the required End by field. The
+number field with a floating label; every repeat mode shares the required End by field. The
 end-date picker excludes dates before the start. Missing month-end options appear
 only when affected dates fall within the chosen interval. Independent switches
 include day 30 or February's last day; leaving them off skips those missing dates.
@@ -339,19 +339,19 @@ This ensures legibility for elderly users or small screens while preserving fixe
 ### Widget Design & Responsive Layouts
 Khmer Calendar provides five home screen widgets. Month, Productivity, Focus, and Glance use Jetpack Glance (`1.2.0`); Planner uses Android RemoteViews:
 
-- **Month Widget (4×3 Target Size, Extendable to 4×4)**:
+- **Month Widget (4×3 Target Size)**:
   - **Header Badges & Quick Action**: Left-aligned solar month name badge (`📅 មេសា` / `📅 Apr`), traditional year & BE year chip (`🐎 ឆ្នាំមមី · អដ្ឋស័ក · ព.ស. ២៥៧០`), mini timezone badge (shows full text on wide displays, collapses to emoji only `🇰🇭` / `🌐` on compact/phone displays to eliminate truncation ellipses), and right-aligned quick refresh action button.
   - **Full Calendar Table**: 7-column grid with traditional Khmer weekday colors (`អា`, `ច`, `អ`, `ពិ`, `ព្រ`, `សុ`, `ស`), Gregorian day numbers, holy-day lotus watermarks (`0.25f` opacity), and event markers (`●` holiday, `▲` holy day, `■` observance, `★` personal).
   - **Year Animal Background**: Mirrors the in-app calendar with a centered animal watermark across standard months, and dual-animal transition watermarks (old animal at top-start, new animal at bottom-end) during April (Khmer New Year).
-  - **Footer Footnote Legend**: Centered footnote row (`● ថ្ងៃឈប់សម្រាក`, `▲ ថ្ងៃសីល`, `■ ពិធី និងទិវា`, `★ ផ្ទាល់ខ្លួន`). Automatically hides when available height is $< 195\,\text{dp}$ to preserve calendar grid legibility.
+  - **Footer Footnote Legend**: Centered footnote row (`● ថ្ងៃឈប់សម្រាក`, `▲ ថ្ងៃសីល`, `■ ពិធី និងទិវា`, `★ ផ្ទាល់ខ្លួន`). Automatically hides when available height is $\le 195\,\text{dp}$ to preserve calendar grid legibility.
   - **Aspect Ratio Constraint**: Width is capped at a maximum of $1.25\times$ height (`WidgetPolicy.monthCardMaxWidth`), preventing extreme horizontal stretching in tablet landscape mode. There is no absolute width ceiling — tall portrait widgets widen proportionally like landscape ones; a 456 dp default applies only when the launcher reports no usable height.
   - **Height-Adaptive Layout**: Automatically detects compact landscape heights ($\le 250\,\text{dp}$) to tighten outer padding, dividers, header margins, and day number/marker offsets so numerals and markers never clip or overlap.
   - **Dynamic Zoom Gap**: Starting from 110% widget font size, the vertical gap between the day number and event markers dynamically expands by $+10\%$ per 10% zoom step.
-  - **Resizability**: Horizontally resizable, and vertically extendable by +1 grid up to 4 rows (`android:resizeMode="horizontal|vertical"`).
+  - **Resizability**: Horizontally and vertically resizable with no fixed row ceiling (`android:resizeMode="horizontal|vertical"`, minimum resize height 180 dp); the height-adaptive compact layout above keeps short heights legible.
 - **Productivity Widget (4×2 Target Size)**:
   - **Left Card (Date Details)**: Prominent big day number, short weekday, short month, Khmer lunar month and day, Buddhist Era year, optional Western zodiac sign, and a Holy Day or Shaving Day label when applicable. Event titles appear in the right card, not in this Buddhist day slot.
   - **Right Card (Events Overview)**: Dual 2-block layout for Today's and Tomorrow's event lists.
-  - **Compact Width Adaptation**: When widget width is < 330dp, the right detail list (lunar month, zodiac, etc.) is hidden to cleanly display a centered weekday and big day number without text clipping.
+  - **Compact Width Adaptation**: When widget width is < 330dp (or height < 120dp), the right detail list (lunar month, zodiac, etc.) is hidden to cleanly display a centered weekday and big day number without text clipping.
   - **Width Freezing on Expansion**: When widget width reaches $\ge 330\,\text{dp}$ (step 2, standard 4-column phone/tablet width), the date details card freezes at its ideal width ($\approx 152\,\text{dp} \times \text{scale}$), routing all further horizontal resizing width directly to the event lists to display longer event titles without truncation.
 - **Focus Widget (4×2 Target Size)**:
   - **Header Badges**: Lunar date, month, and BE year chip, timezone badge, and a quick refresh action button.
@@ -364,7 +364,7 @@ Khmer Calendar provides five home screen widgets. Month, Productivity, Focus, an
   - **Interactions and Resizing**: Event chips open event details; other day-row areas open date details. The widget resizes horizontally and vertically, and additional event chips flow to continuation rows as width changes. Its initial scroll position uses the current orientation's height and estimated row heights to keep today near the top across grid sizes; a resize refreshes that position immediately.
 - **Glance Widget (4×1 Target Size, 2×1 Minimum, Up to Two Rows Tall)**:
   - **Today at a Glance**: A compact date tile shows a short weekday above the large Gregorian day number and the selected timezone emoji below it at every widget width. At 4×1, the lines beside it show solar month/year with Buddhist Era year, lunar day/month with traditional animal year and Sak, and optional badges. A faint yearly animal watermark uses 60% of the smaller available dimension at the bottom right, with an inset from the card edges. The refresh button sits at the upper right like the other widgets.
-  - **Badges**: A lotus appears on Buddhist holy days when either holy-day setting is on; the Western zodiac glyph follows **Show Western zodiac signs**; the Year, Month, and Day animal emojis and their three clash animals follow **Show Chinese Ganzhi** for dates in the supported 1900–2100 year/month range. The two Ganzhi badges read `[year month day] × [clash year month day]`, with × outside both badges. Whenever the third row would otherwise be empty, it shows the localized app name and current version.
+  - **Badges**: A lotus appears on Buddhist holy days when either holy-day setting is on; the Western zodiac glyph follows the astrology master switch and **Show Western zodiac signs**; the Year, Month, and Day animal emojis and their three clash animals follow the master switch and **Show Chinese Ganzhi** for dates in the supported 1900–2100 year/month range. The two Ganzhi badges read `[year month day] × [clash year month day]`, with × outside both badges. Whenever the third row would otherwise be empty, it shows the localized app name and current version.
   - **Width and Height**: The widget can shrink horizontally to two launcher columns and grow vertically to two rows (`android:resizeMode="horizontal|vertical"`, maximum resize height 140dp). At 2×1, the solar line uses a short month, omits the Gregorian year and Buddhist Era prefix, the lunar line shows day and month, and the third line shows traditional animal year and Sak. Western zodiac and Ganzhi badges are hidden at this width; the holy-day lotus remains available.
 
 ### App Settings & System Integration

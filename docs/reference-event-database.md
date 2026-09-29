@@ -38,7 +38,7 @@ At runtime the repository prefers a bundled record — tagged official, `ម៉�
 
 Each `holidayCalendars` year carries `coverage` (`complete` for all bundled years) and `holidays` with `id`, bilingual `names`, explicit `dates`, `status` (`cancelled` entries are skipped), `sourceIds` and an optional `eventId` linking a catalog event — used to resolve `{anniversary}` counts. Years 2016–2027 are bundled; 283 official days in total (110 days for 2016–2019 and 173 days for 2020–2027), each carrying a subdecree or ministry citation.
 
-`overrides` pin a specific `eventId`/`year` to explicit `dates`, with a mandatory `sourceId` and `reason`. They preserve reviewed differences between captured records and the calculation — the 2005–2019 three-day King Sihamoni birthday holiday blocks (where the rule yields only May 14) and 3 Chinese festival parity overrides (Qingming 2009 & 2029, Zongzi 2013). Overridden occurrences use `DateBasis.CORRECTED`.
+`overrides` pin a specific `eventId`/`year` to explicit `dates`, with a mandatory `sourceId` and `reason`. They preserve reviewed differences between captured records and the calculation — the 2005–2019 three-day King Sihamoni birthday holiday blocks (where the rule yields only May 14), 3 Chinese festival parity overrides (Qingming 2009 & 2029, Zongzi 2013) and 4 International Day of Peace overrides (1998–2001), where UN General Assembly opening dates moved the observance off its third-Tuesday rule. Overridden occurrences use `DateBasis.CORRECTED`.
 
 ### Event knowledge companion
 

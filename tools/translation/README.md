@@ -15,7 +15,7 @@ Keep placeholders such as `{anniversary}`, `{time}`, and `{zone}`. Their positio
 
 ## How the app uses this
 
-The source of truth is **`translations/catalog.json` inside the Android project**. The tool's `config.json` identifies that project; this folder does not maintain a second editable catalog.
+The source of truth is **`translations/catalog.json` inside the Android project**. By default the tool edits the Android repository that contains this folder; an optional, uncommitted `config.json` (or the `--project` argument) can point it at another checkout. This folder does not maintain a second editable catalog.
 
 Each save regenerates:
 
