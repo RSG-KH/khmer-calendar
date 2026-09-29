@@ -20,6 +20,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
+import com.rsgkh.calendar.ui.eventListKindLabel
 import com.rsgkh.calendar.ui.eventTimeSubtitle
 import com.rsgkh.calendar.ui.isLocalTimeDifferentFromCambodia
 import com.rsgkh.calendar.ui.localTimeOffsetLabel
@@ -152,9 +153,9 @@ class ReleaseTwelveTest {
         assertEquals("ព្រឹត្តិការណ៍ទាំងអស់ក្នុងខែវិច្ឆិកា (៥)", com.rsgkh.calendar.i18n.L.text("ui.all_events_in_month.ab923a", true, "month" to "វិច្ឆិកា", "count" to "៥"))
         assertEquals("All events in November (5)", com.rsgkh.calendar.i18n.L.text("ui.all_events_in_month.ab923a", false, "month" to "November", "count" to 5))
         assertEquals("Calculations by Khmer Calendar Engine v0.6.0.", com.rsgkh.calendar.i18n.L.text("events.engine_calculations", false, "version" to "0.6.0"))
-        assertEquals("ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។", com.rsgkh.calendar.i18n.L.text("events.engine_calculations", true, "version" to "0.6.0"))
+        assertEquals("គណនាដោយ Khmer Calendar Engine កំណែ 0.6.0 ។", com.rsgkh.calendar.i18n.L.text("events.engine_calculations", true, "version" to "0.6.0"))
         assertEquals("Calculations by Khmer Calendar Engine v0.6.0.", com.rsgkh.calendar.i18n.L.text("astrology.engine_calculations", false, "version" to "0.6.0"))
-        assertEquals("ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។", com.rsgkh.calendar.i18n.L.text("astrology.engine_calculations", true, "version" to "0.6.0"))
+        assertEquals("គណនាដោយ Khmer Calendar Engine កំណែ 0.6.0 ។", com.rsgkh.calendar.i18n.L.text("astrology.engine_calculations", true, "version" to "0.6.0"))
         assertEquals("Observance (Calculated)", com.rsgkh.calendar.i18n.L.text("rules.calculated_label", false))
         assertEquals("ពិធី និងទិវា (តាមការគណនា)", com.rsgkh.calendar.i18n.L.text("rules.calculated_label", true))
     }
@@ -282,5 +283,57 @@ class ReleaseTwelveTest {
         val revRow2En = "$cambodiaTime · Cambodia time (UTC+7)$revCambodiaSuffixEn"
         assertEquals("23:00 · Local time (UTC+2) · Sep 29", revRow1En)
         assertEquals("04:00 · Cambodia time (UTC+7)", revRow2En)
+    }
+
+    @Test fun eventListKindLabelFormatsHolidayAsObservanceHolidayInEnglishAndKhmer() {
+        assertEquals("Observance · Holiday", eventListKindLabel(EventKind.HOLIDAY, k = false))
+        assertEquals("ពិធី និងទិវា · ថ្ងៃឈប់សម្រាក", eventListKindLabel(EventKind.HOLIDAY, k = true))
+
+        assertEquals("Observance", eventListKindLabel(EventKind.OBSERVANCE, k = false))
+        assertEquals("ពិធី និងទិវា", eventListKindLabel(EventKind.OBSERVANCE, k = true))
+
+        assertEquals("Buddhist holy day", eventListKindLabel(EventKind.HOLY_DAY, k = false))
+        assertEquals("ថ្ងៃសីល", eventListKindLabel(EventKind.HOLY_DAY, k = true))
+
+        assertEquals("Personal", eventListKindLabel(EventKind.CUSTOM, k = false))
+        assertEquals("ផ្ទាល់ខ្លួន", eventListKindLabel(EventKind.CUSTOM, k = true))
+    }
+
+    @Test fun eventsTabObservancesFilterIncludesBothObservancesAndPromotedHolidays() {
+        val events2026 = EventRepository.forYear(2026)
+        val holidays = events2026.filter { it.kind == EventKind.HOLIDAY }
+        val observances = events2026.filter { it.kind == EventKind.OBSERVANCE }
+        assertTrue(holidays.isNotEmpty())
+        assertTrue(observances.isNotEmpty())
+
+        val filterHolidays = events2026.filter { it.kind == EventKind.HOLIDAY }
+        assertEquals(holidays.size, filterHolidays.size)
+
+        val filterObservances = events2026.filter { it.kind == EventKind.OBSERVANCE || it.kind == EventKind.HOLIDAY }
+        assertEquals(holidays.size + observances.size, filterObservances.size)
+        assertTrue(filterObservances.any { it.kind == EventKind.HOLIDAY })
+        assertTrue(filterObservances.any { it.kind == EventKind.OBSERVANCE })
+    }
+
+    enum class DayNumberColorTarget { HOLIDAY, CUSTOM, ON_SURFACE }
+
+    @Test fun personalEventListsApplyPersonalColorToBigDayNumber() {
+        val date = LocalDate.of(2026, 9, 29)
+        val customEvent = CalendarEvent("custom-1", date, "Meeting", "Meeting", EventKind.CUSTOM, DateBasis.USER)
+        val holidayEvent = CalendarEvent("holiday-1", date, "Holiday", "Holiday", EventKind.HOLIDAY, DateBasis.OFFICIAL)
+        val observanceEvent = CalendarEvent("obs-1", date, "Observance", "Observance", EventKind.OBSERVANCE, DateBasis.CALCULATED)
+
+        fun resolveDateColorTarget(event: CalendarEvent, groupEvents: List<CalendarEvent>): DayNumberColorTarget {
+            val holiday = groupEvents.any { it.kind == EventKind.HOLIDAY }
+            return when {
+                event.kind == EventKind.CUSTOM -> DayNumberColorTarget.CUSTOM
+                holiday || event.kind == EventKind.HOLIDAY -> DayNumberColorTarget.HOLIDAY
+                else -> DayNumberColorTarget.ON_SURFACE
+            }
+        }
+
+        assertEquals(DayNumberColorTarget.CUSTOM, resolveDateColorTarget(customEvent, listOf(customEvent)))
+        assertEquals(DayNumberColorTarget.HOLIDAY, resolveDateColorTarget(holidayEvent, listOf(holidayEvent)))
+        assertEquals(DayNumberColorTarget.ON_SURFACE, resolveDateColorTarget(observanceEvent, listOf(observanceEvent)))
     }
 }

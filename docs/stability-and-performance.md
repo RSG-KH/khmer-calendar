@@ -124,7 +124,7 @@ The updated app was installed. Logs are `calendar-stable-width-reproduction.log`
 
 ### Settings layout and attribution follow-up
 
-Settings controls dynamically constrain control width (`LocalSettingsControlMaxWidth`) and truncate Rising location button text to 16 characters for Khmer and 12 characters for English/other with trailing `...`, keeping full text in accessibility descriptions and dropdowns on a single line. In-app calculation attribution was consolidated to “Calculations by Khmer Calendar Engine v0.6.0.” / “ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។” at `10.readableSp` (`16.readableSp` line height). Monthly event lists format headers with `ខែ` prefix and event count in parentheses. All 246 local tests and translation tooling tests passed.
+Settings controls dynamically constrain control width (`LocalSettingsControlMaxWidth`) and truncate Rising location button text to 16 characters for Khmer and 12 characters for English/other with trailing `...`, keeping full text in accessibility descriptions and dropdowns on a single line. In-app calculation attribution was consolidated to “Calculations by Khmer Calendar Engine v0.6.0.” / “គណនាដោយ Khmer Calendar Engine កំណែ 0.6.0 ។” at `10.readableSp` (`16.readableSp` line height). Monthly event lists format headers with `ខែ` prefix and event count in parentheses. Event list subtitles display “Observance · Holiday” / “ពិធី និងទិវា · ថ្ងៃឈប់សម្រាក” for official holidays, the Events tab Observances filter includes promoted holidays, and personal event day groups highlight the big day number with the personal event accent color. All local tests and translation tooling tests passed.
 
 ## Memory and performance limits
 

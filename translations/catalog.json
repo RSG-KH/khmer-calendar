@@ -1182,10 +1182,10 @@
       "section": "interface",
       "context": "Calendar calculation attribution in built-in event popups",
       "en": "Calculations by Khmer Calendar Engine v{version}.",
-      "km": "ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ {version} ។",
+      "km": "គណនាដោយ Khmer Calendar Engine កំណែ {version} ។",
       "original": {
         "en": "Calculations by Khmer Calendar Engine v{version}.",
-        "km": "ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ {version} ។"
+        "km": "គណនាដោយ Khmer Calendar Engine កំណែ {version} ។"
       },
       "reviewed": true,
       "required": {
@@ -37431,10 +37431,10 @@
       "section": "interface",
       "context": "Calculation attribution in Western astrology and Ganzhi popups",
       "en": "Calculations by Khmer Calendar Engine v{version}.",
-      "km": "ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ {version} ។",
+      "km": "គណនាដោយ Khmer Calendar Engine កំណែ {version} ។",
       "original": {
         "en": "Calculations by Khmer Calendar Engine v{version}.",
-        "km": "ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ {version} ។"
+        "km": "គណនាដោយ Khmer Calendar Engine កំណែ {version} ។"
       },
       "reviewed": true,
       "required": {

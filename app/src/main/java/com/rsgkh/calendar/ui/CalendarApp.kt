@@ -167,6 +167,12 @@ private fun kindLabel(kind: EventKind, k: Boolean) = when (kind) {
     EventKind.HOLY_DAY -> L.text("ui.buddhist_holy_day.829195", k)
     EventKind.CUSTOM -> L.text("ui.custom.917053", k)
 }
+internal fun eventListKindLabel(kind: EventKind, k: Boolean) = when (kind) {
+    EventKind.HOLIDAY -> "${L.text("ui.observance.5b9a87", k)} · ${L.text("ui.holiday.253332", k)}"
+    EventKind.OBSERVANCE -> L.text("ui.observance.5b9a87", k)
+    EventKind.HOLY_DAY -> L.text("ui.buddhist_holy_day.829195", k)
+    EventKind.CUSTOM -> L.text("ui.custom.917053", k)
+}
 private val CustomEventRed = Color(0xFFE53935)
 private val CustomEventRedDark = Color(0xFFFF5252)
 
@@ -866,7 +872,7 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
         (builtInEvents + custom.filter { it.date.year == year }).filter { event ->
             (settings.showHolyDaysInEvents || event.kind != EventKind.HOLY_DAY) &&
                 (settings.showObservances || event.kind != EventKind.OBSERVANCE) &&
-                (filter == 0 || (filter == 1 && event.kind == EventKind.HOLIDAY) || (filter == 2 && event.kind == EventKind.OBSERVANCE) || (filter == 3 && event.kind == EventKind.HOLY_DAY) || (filter == 4 && event.kind == EventKind.CUSTOM)) &&
+                (filter == 0 || (filter == 1 && event.kind == EventKind.HOLIDAY) || (filter == 2 && (event.kind == EventKind.OBSERVANCE || event.kind == EventKind.HOLIDAY)) || (filter == 3 && event.kind == EventKind.HOLY_DAY) || (filter == 4 && event.kind == EventKind.CUSTOM)) &&
                 (query.isBlank() || searchText("${event.titleEn} ${event.titleKm} ${event.date} ${event.notes}").contains(normalizedQuery))
         }.sortedWith(calendarEventOrder)
     }
@@ -980,9 +986,13 @@ private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolea
 @Composable
 private fun EventRow(event: CalendarEvent, k: Boolean, dateColumnWidth: Dp, modifier: Modifier = Modifier, showDate: Boolean = true, holiday: Boolean = false, todayTimeZone: TodayTimeZone = LocalTodayTimeZone.current, onClick: () -> Unit) {
     val color = eventColor(event.kind)
-    val dateColor = if (holiday || event.kind == EventKind.HOLIDAY) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface
+    val dateColor = when {
+        event.kind == EventKind.CUSTOM -> color
+        holiday || event.kind == EventKind.HOLIDAY -> MaterialTheme.colorScheme.tertiary
+        else -> MaterialTheme.colorScheme.onSurface
+    }
     val timeSubtitle = eventTimeSubtitle(event, todayTimeZone, k)
-    Surface(onClick = onClick, modifier = modifier.semantics { contentDescription = listOf(event.title(k), dateLabel(event.date, k), number(event.date.year, k), (kindLabel(event.kind, k) + timeSubtitle).trim()).filter { it.isNotBlank() }.joinToString(", ") }, shape = RectangleShape, color = Color.Transparent) {
+    Surface(onClick = onClick, modifier = modifier.semantics { contentDescription = listOf(event.title(k), dateLabel(event.date, k), number(event.date.year, k), (eventListKindLabel(event.kind, k) + timeSubtitle).trim()).filter { it.isNotBlank() }.joinToString(", ") }, shape = RectangleShape, color = Color.Transparent) {
         Box(Modifier.fillMaxWidth()) {
             if (event.kind == EventKind.CUSTOM) {
                 Image(
@@ -1008,7 +1018,7 @@ private fun EventRow(event: CalendarEvent, k: Boolean, dateColumnWidth: Dp, modi
                 Box(Modifier.padding(horizontal = 12.dp).width(3.dp).height(28.dp).background(color.copy(alpha = .65f), CircleShape))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(event.title(k), fontWeight = FontWeight.Medium, fontSize = 13.readableSp, lineHeight = 19.readableSp)
-                    Text(kindLabel(event.kind, k) + timeSubtitle, color = color, fontSize = 11.readableSp, lineHeight = 14.readableSp)
+                    Text(eventListKindLabel(event.kind, k) + timeSubtitle, color = color, fontSize = 11.readableSp, lineHeight = 14.readableSp)
                 }
                 Text("›", Modifier.padding(start = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 20.sp)
             }
@@ -1554,7 +1564,7 @@ internal fun WidgetSettingsCard(
                                             Spacer(Modifier.width(12.dp))
                                             Column(Modifier.weight(1f)) {
                                                 Text(event.title(k), fontSize = 14.readableSp, lineHeight = 20.readableSp, fontWeight = FontWeight.Medium)
-                                                Text(kindLabel(event.kind, k) + eventTimeSubtitle(event, todayTimeZone, k), fontSize = 12.readableSp, lineHeight = 16.readableSp, color = eventColor(event.kind))
+                                                Text(eventListKindLabel(event.kind, k) + eventTimeSubtitle(event, todayTimeZone, k), fontSize = 12.readableSp, lineHeight = 16.readableSp, color = eventColor(event.kind))
                                             }
                                             Text("›", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }

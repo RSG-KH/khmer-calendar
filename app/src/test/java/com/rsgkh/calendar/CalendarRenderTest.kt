@@ -166,7 +166,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
             compose.onNodeWithTag("astrology-ask-ai").assertIsDisplayed()
             compose.onNodeWithTag("astrology-close").assertIsDisplayed()
             if (tag == "western-zodiac-table") compose.onNodeWithTag("big3-detail-rising").performScrollTo().assertIsDisplayed()
-            val expectedCalculations = if (settings.khmer) "ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។" else "Calculations by Khmer Calendar Engine v0.6.0."
+            val expectedCalculations = if (settings.khmer) "គណនាដោយ Khmer Calendar Engine កំណែ 0.6.0 ។" else "Calculations by Khmer Calendar Engine v0.6.0."
             compose.onNodeWithTag("astrology-engine-calculations").performScrollTo().assertIsDisplayed().assertTextEquals(expectedCalculations)
             screenshot("astrology-popup-$tag-${settings.khmer}")
             compose.onNodeWithTag("astrology-close").performClick()

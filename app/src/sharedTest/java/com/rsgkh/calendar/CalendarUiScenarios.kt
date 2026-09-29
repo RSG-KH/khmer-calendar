@@ -233,7 +233,7 @@ abstract class CalendarUiScenarios {
         }
         popup("big3-detail-sun").assertTextEquals("♎️ Libra (Air · Venus)")
         popup("astrology-watermark").assertExists()
-        val expectedCalculations = if (k) "ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។" else "Calculations by Khmer Calendar Engine v0.6.0."
+        val expectedCalculations = if (k) "គណនាដោយ Khmer Calendar Engine កំណែ 0.6.0 ។" else "Calculations by Khmer Calendar Engine v0.6.0."
         popup("astrology-engine-calculations").assertTextEquals(expectedCalculations)
         compose.onNodeWithText(if (k) "សួរ AI" else "Ask AI").assertIsDisplayed()
         screenshot("big3-details-$k")
