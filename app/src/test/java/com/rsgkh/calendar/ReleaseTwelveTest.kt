@@ -11,6 +11,13 @@ import com.rsgkh.calendar.ui.copyToClipboard
 import com.rsgkh.calendar.ui.administrativeOptions
 import com.rsgkh.calendar.ui.countryOptions
 import com.rsgkh.calendar.ui.PlaceSearchIndex
+import com.rsgkh.calendar.ui.PlaceSearchPositionProvider
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -144,6 +151,33 @@ class ReleaseTwelveTest {
         val missingPoint = commune.copy(latitude = null)
         val missingChoices = administrativeOptions(cambodia.copy(divisions = cambodia.divisions.map { if (it.id == commune.id) missingPoint else it }), district.parentId, true)
         assertEquals("គ្មានកូអរដោនេ; សូមប្រើទីកន្លែងផ្ទាល់ខ្លួន", missingChoices.single { it.id == commune.id }.detail)
+    }
+
+    @Test fun placeSearchPositionProviderPopsAboveKeyboardAndNeverBlocksKeyboard() {
+        val density = Density(1f)
+        val windowSize = IntSize(1080, 2400)
+        val popupSize = IntSize(500, 400)
+
+        // Case 1: No keyboard (imeBottom = 0). Field has room below (e.g. anchor at y=800..900).
+        val noKeyboardProvider = PlaceSearchPositionProvider(density, null)
+        val anchorUpper = IntRect(left = 50, top = 800, right = 550, bottom = 900)
+        val posNoKeyboard = noKeyboardProvider.calculatePosition(anchorUpper, windowSize, LayoutDirection.Ltr, popupSize)
+        assertEquals(anchorUpper.bottom, posNoKeyboard.y)
+
+        // Case 2: Soft keyboard visible (imeBottom = 1000px, so visibleBottom is 2400 - 1000 - 8 = 1392px).
+        // Field is at y=1100..1200. A 400px popup does NOT fit below (1200 + 400 = 1600 > 1392).
+        val imeInsets = WindowInsets(0, 0, 0, 1000)
+        val keyboardProvider = PlaceSearchPositionProvider(density, imeInsets)
+        val anchorLower = IntRect(left = 50, top = 1100, right = 550, bottom = 1200)
+        val posWithKeyboard = keyboardProvider.calculatePosition(anchorLower, windowSize, LayoutDirection.Ltr, popupSize)
+
+        // Must pop ABOVE the input field: anchorLower.top (1100) - popupSize.height (400) = 700
+        assertEquals(anchorLower.top - popupSize.height, posWithKeyboard.y)
+        assertEquals(700, posWithKeyboard.y)
+        // Verify it is completely above the keyboard (pos.y + popupSize.height <= 2400 - 1000)
+        assertTrue(posWithKeyboard.y + popupSize.height <= 1400)
+        // And above the input field
+        assertTrue(posWithKeyboard.y + popupSize.height <= anchorLower.top)
     }
 
     @Test fun sourceUrlsTranslationMatchesCatalog() {

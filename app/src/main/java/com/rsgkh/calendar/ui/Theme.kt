@@ -30,6 +30,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
@@ -141,7 +143,8 @@ fun CalendarDatePickerDialog(
 
 private class DropdownMenuEndPositionProvider(
     private val density: Density,
-    private val offset: DpOffset = DpOffset(0.dp, 0.dp)
+    private val offset: DpOffset = DpOffset(0.dp, 0.dp),
+    private val imeInsets: WindowInsets? = null
 ) : PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
@@ -152,6 +155,8 @@ private class DropdownMenuEndPositionProvider(
         val margin = with(density) { 8.dp.roundToPx() }
         val offsetX = with(density) { offset.x.roundToPx() }
         val offsetY = with(density) { offset.y.roundToPx() }
+        val imeBottom = imeInsets?.getBottom(density) ?: 0
+        val visibleBottom = (windowSize.height - imeBottom - margin).coerceAtLeast(margin)
 
         val targetX = if (layoutDirection == LayoutDirection.Ltr) {
             anchorBounds.right - popupContentSize.width + offsetX
@@ -161,7 +166,7 @@ private class DropdownMenuEndPositionProvider(
         val x = targetX.coerceIn(margin, (windowSize.width - popupContentSize.width - margin).coerceAtLeast(margin))
 
         val yBelow = anchorBounds.bottom + offsetY
-        val y = if (yBelow + popupContentSize.height <= windowSize.height - margin) {
+        val y = if (yBelow + popupContentSize.height <= visibleBottom) {
             yBelow
         } else {
             (anchorBounds.top - popupContentSize.height - offsetY).coerceAtLeast(margin)
@@ -187,7 +192,8 @@ fun CalendarDropdownMenu(
 ) {
     if (expanded) {
         val density = LocalDensity.current
-        val positionProvider = remember(density, offset) { DropdownMenuEndPositionProvider(density, offset) }
+        val imeInsets = WindowInsets.ime
+        val positionProvider = remember(density, offset, imeInsets) { DropdownMenuEndPositionProvider(density, offset, imeInsets) }
         Popup(
             onDismissRequest = onDismissRequest,
             popupPositionProvider = positionProvider,

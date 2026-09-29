@@ -42,6 +42,34 @@ internal fun timeAndLocationTitle(k: Boolean) = L.text("location.title", k)
 internal fun placeFlag(code: String): String = if (code.matches(Regex("[A-Z]{2}")))
     code.map { String(Character.toChars(0x1F1E6 + it.code - 'A'.code)) }.joinToString("") else "📍"
 
+internal class PlaceSearchPositionProvider(
+    private val density: Density,
+    private val imeInsets: WindowInsets? = null,
+) : PopupPositionProvider {
+    override fun calculatePosition(
+        anchorBounds: IntRect,
+        windowSize: IntSize,
+        layoutDirection: LayoutDirection,
+        popupContentSize: IntSize,
+    ): IntOffset {
+        val margin = with(density) { 8.dp.roundToPx() }
+        val imeBottom = imeInsets?.getBottom(density) ?: 0
+        val visibleBottom = (windowSize.height - imeBottom - margin).coerceAtLeast(margin)
+        val x = anchorBounds.left.coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
+        val fitsBelow = anchorBounds.bottom + popupContentSize.height <= visibleBottom
+        val spaceAbove = anchorBounds.top - margin
+        val spaceBelow = visibleBottom - anchorBounds.bottom
+        val y = if (fitsBelow) {
+            anchorBounds.bottom
+        } else if (anchorBounds.top - popupContentSize.height >= margin || spaceAbove >= spaceBelow) {
+            (anchorBounds.top - popupContentSize.height).coerceAtLeast(margin)
+        } else {
+            anchorBounds.bottom.coerceAtMost((visibleBottom - popupContentSize.height).coerceAtLeast(margin))
+        }
+        return IntOffset(x, y)
+    }
+}
+
 /** Bounded lazy suggestions anchored above or below the focused field. */
 @Composable private fun PlaceSearch(
     label: String, tag: String, value: String, choices: List<PlaceOption>, k: Boolean,
@@ -59,14 +87,9 @@ internal fun placeFlag(code: String): String = if (code.matches(Regex("[A-Z]{2}"
     val needle = if (edited) normalizedPlaceSearch(value) else ""
     val prepared = remember(choices) { PlaceSearchIndex(choices) }
     val matches = remember(prepared, needle) { prepared.matching(needle) }
-    val provider = remember { object : PopupPositionProvider {
-        override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
-            val x = anchorBounds.left.coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
-            val y = if (anchorBounds.bottom + popupContentSize.height <= windowSize.height) anchorBounds.bottom
-                else (anchorBounds.top - popupContentSize.height).coerceAtLeast(0)
-            return IntOffset(x, y)
-        }
-    } }
+    val density = LocalDensity.current
+    val imeInsets = WindowInsets.ime
+    val provider = remember(density, imeInsets) { PlaceSearchPositionProvider(density, imeInsets) }
     Box(Modifier.fillMaxWidth().onGloballyPositioned { anchorWidth[0] = it.size.width }) {
         OutlinedTextField(value, {
             edited = true; expanded = true; onEdit(it)
@@ -190,8 +213,8 @@ internal fun placeFlag(code: String): String = if (code.matches(Regex("[A-Z]{2}"
     // from repeatedly remeasuring text fields at alternating widths.
     val dialogWidth = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() - 32.dp }
         .coerceIn(1.dp, 560.dp)
-    CalendarAlertDialog(onDismissRequest = onDismiss, modifier = Modifier.width(dialogWidth),
-        properties = DialogProperties(usePlatformDefaultWidth = false),
+    CalendarAlertDialog(onDismissRequest = onDismiss, modifier = Modifier.width(dialogWidth).imePadding(),
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
         title = { Text(title, fontSize = 16.readableSp) }, text = {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).testTag("time-location-content"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             HorizontalDivider()
