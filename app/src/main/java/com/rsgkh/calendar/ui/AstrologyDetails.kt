@@ -27,7 +27,10 @@ import com.rsgkh.calendar.domain.WesternBig3Signs
 import com.rsgkh.calendar.domain.ZodiacSign
 import com.rsgkh.calendar.domain.ganzhiAnimalLabel
 import com.rsgkh.calendar.engine.western.WesternZodiacSign
+import com.rsgkh.calendar.i18n.CalendarWords
 import com.rsgkh.calendar.i18n.L
+import java.time.LocalDate
+import java.time.LocalTime
 
 internal enum class AstrologyDetail(val titleKey: String) {
     BIG_3("ui.zodiac_big3_title"), GANZHI("ui.chinese_ganzhi_title")
@@ -44,27 +47,118 @@ internal fun astrologyBackground(kind: AstrologyDetail, horoscope: WesternBig3Si
     }
 
 internal fun astrologySearchQuery(
-    kind: AstrologyDetail, horoscope: WesternBig3Signs?, pillars: List<GanzhiColumn>, khmer: Boolean,
+    kind: AstrologyDetail,
+    horoscope: WesternBig3Signs?,
+    pillars: List<GanzhiColumn>,
+    khmer: Boolean,
+    date: LocalDate? = null,
+    time: LocalTime? = null,
 ): String {
-    val details = when (kind) {
-        AstrologyDetail.BIG_3 -> listOf(
-            "ui.western_sun" to horoscope?.sun,
-            "ui.western_moon" to horoscope?.moon,
-            "ui.western_rising_sign" to horoscope?.rising,
-        ).mapNotNull { (key, sign) -> sign?.let { "${L.text(key, khmer)}: ${it.englishName}" } }
-        AstrologyDetail.GANZHI -> pillars.mapNotNull { column -> column.pillar?.let {
-            "${column.label}: ${it.nameZh} ${it.branch.ganzhiAnimalLabel(khmer, false)} " +
-                "(${L.text("ui.ganzhi_clash", khmer)}: ${it.clashBranch.ganzhiAnimalLabel(khmer, false)})"
-        } }
-    }.joinToString("; ")
-    return L.text("ui.astrology_ai_query", khmer,
-        "details" to "${L.text(kind.titleKey, khmer)}: $details")
+    return when (kind) {
+        AstrologyDetail.BIG_3 -> {
+            if (khmer) {
+                val targetLabelKm = if (horoscope?.rising != null) "នៃធាតុសំខាន់ទាំង ៣ (Big 3)" else "នៃព្រះអាទិត្យ និងព្រះចន្ទ (Sun and Moon)"
+                val header = if (date != null) {
+                    val dayStr = CalendarWords.number(date.dayOfMonth, true)
+                    val monthStr = CalendarWords.month(date.monthValue, true)
+                    val yearStr = CalendarWords.number(date.year, true)
+                    val timeStr = if (time != null) {
+                        val hourKm = time.hour.toString().padStart(2, '0').map { ('\u17E0' + (it - '0')) }.joinToString("")
+                        val minuteKm = time.minute.toString().padStart(2, '0').map { ('\u17E0' + (it - '0')) }.joinToString("")
+                        " ម៉ោង $hourKm:$minuteKm"
+                    } else ""
+                    "ចូរពន្យល់ពីអត្ថន័យតាមក្បួនហោរាសាស្ត្រលោកខាងលិច $targetLabelKm សម្រាប់ថ្ងៃទី $dayStr $monthStr ឆ្នាំ $yearStr$timeStr (ទីតាំងមិនបានបញ្ជាក់)៖"
+                } else {
+                    "ចូរពន្យល់ពីអត្ថន័យតាមក្បួនហោរាសាស្ត្រលោកខាងលិច $targetLabelKm៖"
+                }
+                val items = listOfNotNull(
+                    horoscope?.sun?.let { "ព្រះអាទិត្យ (Sun)៖ ${it.englishName}" },
+                    horoscope?.moon?.let { "ព្រះចន្ទ (Moon)៖ ${it.englishName}" },
+                    horoscope?.rising?.let { "រះ (Rising)៖ ${it.englishName}" },
+                )
+                val lines = items.mapIndexed { index, text ->
+                    val suffix = if (index == items.size - 1) " ។" else ""
+                    "- $text$suffix"
+                }
+                if (lines.isEmpty()) header else "$header\n${lines.joinToString("\n")}"
+            } else {
+                val targetLabelEn = if (horoscope?.rising != null) "the Big 3 (Sun, Moon, and Rising)" else "the Sun and Moon"
+                val header = if (date != null) {
+                    val monthStr = CalendarWords.month(date.monthValue, false)
+                    val timeStr = if (time != null) {
+                        val hourStr = time.hour.toString().padStart(2, '0')
+                        val minuteStr = time.minute.toString().padStart(2, '0')
+                        ", at $hourStr:$minuteStr"
+                    } else ""
+                    "Please explain the traditional astrological meanings of $targetLabelEn for $monthStr ${date.dayOfMonth}, ${date.year}$timeStr (unspecified location):"
+                } else {
+                    "Please explain the traditional astrological meanings of $targetLabelEn:"
+                }
+                val items = listOfNotNull(
+                    horoscope?.sun?.let { "Sun: ${it.englishName}" },
+                    horoscope?.moon?.let { "Moon: ${it.englishName}" },
+                    horoscope?.rising?.let { "Rising: ${it.englishName}" },
+                )
+                val lines = items.mapIndexed { index, text ->
+                    val suffix = if (index == items.size - 1) "." else ";"
+                    "- $text$suffix"
+                }
+                if (lines.isEmpty()) header else "$header\n${lines.joinToString("\n")}"
+            }
+        }
+        AstrologyDetail.GANZHI -> {
+            val available = pillars.filter { it.pillar != null }
+            if (khmer) {
+                val header = if (date != null) {
+                    val dayStr = CalendarWords.number(date.dayOfMonth, true)
+                    val monthStr = CalendarWords.month(date.monthValue, true)
+                    val yearStr = CalendarWords.number(date.year, true)
+                    val timeStr = if (time != null) {
+                        val hourStr = CalendarWords.number(time.hour, true)
+                        val minuteStr = CalendarWords.number(time.minute, true)
+                        " ម៉ោង $hourStr និង $minuteStr នាទី"
+                    } else ""
+                    "ចូរពន្យល់អត្ថន័យតាមហោរាសាស្ត្រចិន(干支) ដែលត្រូវនឹងថ្ងៃទី $dayStr $monthStr ឆ្នាំ $yearStr$timeStr៖"
+                } else {
+                    "ចូរពន្យល់អត្ថន័យតាមហោរាសាស្ត្រចិន(干支)៖"
+                }
+                val lines = available.mapIndexed { index, column ->
+                    val pillar = column.pillar!!
+                    val animal = pillar.branch.ganzhiAnimalLabel(true, false)
+                    val clash = pillar.clashBranch.ganzhiAnimalLabel(true, false)
+                    val suffix = if (index == available.size - 1) "។" else ""
+                    "- ${column.label}៖ ${pillar.nameZh} $animal (ឆុង៖ $clash)$suffix"
+                }
+                if (lines.isEmpty()) header else "$header\n${lines.joinToString("\n")}"
+            } else {
+                val header = if (date != null) {
+                    val monthStr = CalendarWords.month(date.monthValue, false)
+                    val timeStr = if (time != null) {
+                        val hourStr = time.hour.toString().padStart(2, '0')
+                        val minuteStr = time.minute.toString().padStart(2, '0')
+                        ", at $hourStr:$minuteStr"
+                    } else ""
+                    "Please explain the traditional astrological meanings of the Chinese Ganzhi (干支) for $monthStr ${date.dayOfMonth}, ${date.year}$timeStr:"
+                } else {
+                    "Please explain the traditional astrological meanings of the Chinese Ganzhi (干支):"
+                }
+                val lines = available.mapIndexed { index, column ->
+                    val pillar = column.pillar!!
+                    val animal = pillar.branch.ganzhiAnimalLabel(false, false)
+                    val clash = pillar.clashBranch.ganzhiAnimalLabel(false, false)
+                    val suffix = if (index == available.size - 1) "." else ";"
+                    "- ${column.label}: ${pillar.nameZh} $animal (Clash: $clash)$suffix"
+                }
+                if (lines.isEmpty()) header else "$header\n${lines.joinToString("\n")}"
+            }
+        }
+    }
 }
 
 @Composable internal fun AstrologyDetailsDialog(
     kind: AstrologyDetail, info: KhmerDateDetails, horoscope: WesternBig3Signs?,
     pillars: List<GanzhiColumn>, khmer: Boolean, useWesternEmoji: Boolean,
-    useGanzhiEmoji: Boolean, symbolSlot: Dp, onDismiss: () -> Unit,
+    useGanzhiEmoji: Boolean, symbolSlot: Dp, time: LocalTime? = null, onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
     val background = astrologyBackground(kind, horoscope, pillars)
@@ -126,7 +220,7 @@ internal fun astrologySearchQuery(
                     FlowRow(Modifier.fillMaxWidth().testTag("astrology-details-actions"),
                         horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         AskAiButton(khmer, Modifier.testTag("astrology-ask-ai")) {
-                            launchAiSearch(context, astrologySearchQuery(kind, horoscope, pillars, khmer), khmer)
+                            launchAiSearch(context, astrologySearchQuery(kind, horoscope, pillars, khmer, info.date, time), khmer)
                         }
                         TextButton(onClick = onDismiss, modifier = Modifier.testTag("astrology-close")) {
                             Text(L.text("ui.close.7df7dc", khmer))

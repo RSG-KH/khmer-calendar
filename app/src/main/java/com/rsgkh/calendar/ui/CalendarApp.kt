@@ -1592,7 +1592,7 @@ internal fun WidgetSettingsCard(
     }
     astrologyDetail?.takeIf { if (it == AstrologyDetail.BIG_3) showWesternZodiac else showGanzhi }?.let { kind ->
         AstrologyDetailsDialog(kind, info, horoscope, pillars, k,
-            useEmojiForWesternZodiac, useEmojiForGanzhiAnimals, symbolSlot) { astrologyDetail = null }
+            useEmojiForWesternZodiac, useEmojiForGanzhiAnimals, symbolSlot, time = customTime) { astrologyDetail = null }
     }
     if (hasAstrology && showTimePicker) {
         val initialTime = customTime ?: LocalTime.now(todayTimeZone.zone()).truncatedTo(ChronoUnit.MINUTES)

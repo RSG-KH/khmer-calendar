@@ -129,7 +129,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
             val intent = Shadows.shadowOf(ApplicationProvider.getApplicationContext<Application>()).nextStartedActivity
             assertEquals(Intent.ACTION_VIEW, intent.action)
             val query = intent.data!!.getQueryParameter("q")!!
-            assertTrue(query.contains(title))
+            assertTrue(query.contains(if (tag == "western-zodiac-table") "Big 3" else title))
             if (tag == "western-zodiac-table") {
                 assertTrue(query.contains("Sun: Libra"))
                 assertTrue(query.contains("Moon: Pisces"))
