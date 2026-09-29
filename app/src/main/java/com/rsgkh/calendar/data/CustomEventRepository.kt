@@ -50,7 +50,8 @@ data class CustomEvent(
     private fun calendarOccurrence(sourceDate: LocalDate, displayed: ZonedDateTime) = CalendarEvent(
         "custom:$id" + if (repeat != null) "@$sourceDate" else "", displayed.toLocalDate(), title, title,
         EventKind.CUSTOM, DateBasis.USER, displayed.toLocalTime().withSecond(0).withNano(0), notes,
-        customSeriesId = if (repeat != null) id else null, repeat = repeat)
+        customSeriesId = if (repeat != null) id else null, repeat = repeat,
+        instant = displayed.toInstant())
 }
 
 class CustomEventRepository(context: Context) : SQLiteOpenHelper(context.applicationContext, "custom-events.db", null, 3) {

@@ -7,6 +7,7 @@ import com.rsgkh.calendar.domain.khmerNumber
 import com.rsgkh.calendar.engine.EventDateOverride
 import com.rsgkh.calendar.engine.GregorianDate
 import com.rsgkh.calendar.i18n.L
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
@@ -44,6 +45,7 @@ data class CalendarEvent(
     val customSeriesId: String? = null,
     val repeat: EventRepeat? = null,
     val anniversaryBase: Int? = null,
+    val instant: Instant? = null,
 ) {
     fun title(khmer: Boolean) = if (khmer) titleKm else titleEn
     val key get() = "$id:$date"

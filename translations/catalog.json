@@ -35515,12 +35515,12 @@
     {
       "id": "rules.calculated_label",
       "section": "interface",
-      "context": "Calculated event list and details label",
-      "en": "Calculated observance",
-      "km": "ព្រឹត្តិការណ៍តាមការគណនា",
+      "context": "Calculated event details popup label",
+      "en": "Observance (Calculated)",
+      "km": "ពិធី និងទិវា (តាមការគណនា)",
       "original": {
-        "en": "Calculated observance",
-        "km": "ព្រឹត្តិការណ៍តាមការគណនា"
+        "en": "Observance (Calculated)",
+        "km": "ពិធី និងទិវា (តាមការគណនា)"
       },
       "reviewed": true,
       "required": {

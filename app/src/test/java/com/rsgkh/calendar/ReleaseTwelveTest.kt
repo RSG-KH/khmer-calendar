@@ -16,8 +16,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
+import com.rsgkh.calendar.ui.eventTimeSubtitle
+import com.rsgkh.calendar.ui.isLocalTimeDifferentFromCambodia
+import com.rsgkh.calendar.ui.localTimeOffsetLabel
+import com.rsgkh.calendar.ui.shortDayExtension
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [32])
@@ -149,6 +155,8 @@ class ReleaseTwelveTest {
         assertEquals("ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។", com.rsgkh.calendar.i18n.L.text("events.engine_calculations", true, "version" to "0.6.0"))
         assertEquals("Calculations by Khmer Calendar Engine v0.6.0.", com.rsgkh.calendar.i18n.L.text("astrology.engine_calculations", false, "version" to "0.6.0"))
         assertEquals("ការគណនាធ្វើឡើងដោយ Khmer Calendar Engine កំណែ 0.6.0 ។", com.rsgkh.calendar.i18n.L.text("astrology.engine_calculations", true, "version" to "0.6.0"))
+        assertEquals("Observance (Calculated)", com.rsgkh.calendar.i18n.L.text("rules.calculated_label", false))
+        assertEquals("ពិធី និងទិវា (តាមការគណនា)", com.rsgkh.calendar.i18n.L.text("rules.calculated_label", true))
     }
 
     @Test fun truncateSettingLabelLimitsLengthToTwelveCharsAndAppendsThreeDots() {
@@ -162,5 +170,117 @@ class ReleaseTwelveTest {
         assertEquals(watPhnomKm, com.rsgkh.calendar.ui.truncateSettingLabel(watPhnomKm, khmer = true))
         assertEquals("1234567890123456", com.rsgkh.calendar.ui.truncateSettingLabel("1234567890123456", khmer = true))
         assertEquals("1234567890123456...", com.rsgkh.calendar.ui.truncateSettingLabel("12345678901234567", khmer = true))
+    }
+
+    @Test fun isLocalTimeDifferentFromCambodiaDetectsOffsetDiscrepancies() {
+        val summerInstant = Instant.parse("2026-07-01T12:00:00Z")
+        assertTrue(isLocalTimeDifferentFromCambodia(summerInstant, ZoneId.of("Europe/Paris")))
+        assertTrue(isLocalTimeDifferentFromCambodia(summerInstant, ZoneId.of("America/New_York")))
+        assertTrue(isLocalTimeDifferentFromCambodia(summerInstant, ZoneId.of("UTC")))
+        assertFalse(isLocalTimeDifferentFromCambodia(summerInstant, ZoneId.of("Asia/Phnom_Penh")))
+        assertFalse(isLocalTimeDifferentFromCambodia(summerInstant, ZoneId.of("Asia/Bangkok")))
+    }
+
+    @Test fun eventTimeSubtitleAddsTimezoneClarityOnlyWhenLocalTimeDiffersFromCambodia() {
+        val date = LocalDate.of(2026, 9, 29)
+        val instant = date.atTime(14, 0).atZone(CAMBODIA_ZONE).toInstant()
+        val cambodiaEvent = CalendarEvent(
+            id = "custom:1", date = date, titleKm = "ផ្ទាល់ខ្លួន", titleEn = "Personal",
+            kind = EventKind.CUSTOM, basis = DateBasis.USER, time = LocalTime.of(14, 0), instant = instant
+        )
+        val localEvent = CalendarEvent(
+            id = "custom:1", date = date, titleKm = "ផ្ទាល់ខ្លួន", titleEn = "Personal",
+            kind = EventKind.CUSTOM, basis = DateBasis.USER, time = LocalTime.of(9, 0), instant = instant
+        )
+        val untimedEvent = CalendarEvent(
+            id = "obs:1", date = date, titleKm = "ពិធីបុណ្យ", titleEn = "Observance",
+            kind = EventKind.OBSERVANCE, basis = DateBasis.OFFICIAL, time = null
+        )
+
+        val parisZone = ZoneId.of("Europe/Paris") // UTC+2 in September
+        val phnomPenhZone = ZoneId.of("Asia/Phnom_Penh") // UTC+7
+
+        // Untimed events have no subtitle suffix regardless of timezone
+        assertEquals("", eventTimeSubtitle(untimedEvent, TodayTimeZone.CAMBODIA, k = false, localZone = parisZone))
+        assertEquals("", eventTimeSubtitle(untimedEvent, TodayTimeZone.CAMBODIA, k = true, localZone = parisZone))
+
+        // When local zone == Cambodia time (UTC+7), no timezone suffix is appended
+        assertEquals(" · 14:00", eventTimeSubtitle(cambodiaEvent, TodayTimeZone.CAMBODIA, k = false, localZone = phnomPenhZone))
+        assertEquals(" · 14:00", eventTimeSubtitle(cambodiaEvent, TodayTimeZone.CAMBODIA, k = true, localZone = phnomPenhZone))
+
+        // When local zone != Cambodia time (e.g. Paris UTC+2), timezone clarity is appended
+        assertEquals(" · 14:00 · Cambodia time (UTC+7)", eventTimeSubtitle(cambodiaEvent, TodayTimeZone.CAMBODIA, k = false, localZone = parisZone))
+        assertEquals(" · 14:00 · ម៉ោងកម្ពុជា (UTC+7)", eventTimeSubtitle(cambodiaEvent, TodayTimeZone.CAMBODIA, k = true, localZone = parisZone))
+
+        assertEquals(" · 09:00 · Local time (UTC+2)", eventTimeSubtitle(localEvent, TodayTimeZone.LOCAL, k = false, localZone = parisZone))
+        assertEquals(" · 09:00 · ម៉ោងក្នុងតំបន់ (UTC+2)", eventTimeSubtitle(localEvent, TodayTimeZone.LOCAL, k = true, localZone = parisZone))
+    }
+
+    @Test fun shortDayExtensionFormatsCorrectlyInEnglishAndKhmer() {
+        val sep30 = LocalDate.of(2026, 9, 30)
+        assertEquals("Sep 30", shortDayExtension(sep30, k = false))
+        assertEquals("៣០ កញ្ញា", shortDayExtension(sep30, k = true))
+
+        val jan1 = LocalDate.of(2027, 1, 1)
+        assertEquals("Jan 1", shortDayExtension(jan1, k = false))
+        assertEquals("១ មករា", shortDayExtension(jan1, k = true))
+
+        val dec31 = LocalDate.of(2026, 12, 31)
+        assertEquals("Dec 31", shortDayExtension(dec31, k = false))
+        assertEquals("៣១ ធ្នូ", shortDayExtension(dec31, k = true))
+    }
+
+    @Test fun eventDetailsDateFormatMatchesFullSpecificationInEnglishAndKhmer() {
+        val date = LocalDate.of(2026, 9, 29)
+        val info = com.rsgkh.calendar.domain.KhmerDateDetails.fromGregorian(date)
+
+        val englishFormatted = "${com.rsgkh.calendar.i18n.CalendarWords.weekday(date.dayOfWeek.value, false)}, ${info.gregorianLabel}"
+        assertEquals("Tuesday, September 29, 2026", englishFormatted)
+
+        val khmerFormatted = "${com.rsgkh.calendar.i18n.CalendarWords.date(date, true)} ${com.rsgkh.calendar.i18n.CalendarWords.number(date.year, true)}"
+        assertEquals("ថ្ងៃអង្គារ ទី២៩ ខែកញ្ញា ២០២៦", khmerFormatted)
+    }
+
+    @Test fun crossingMidnightAppendsShortDayExtensionToTheAlteredDayRow() {
+        // Local is Europe/Paris (UTC+2) at 23:00 on 2026-09-29.
+        // Instant is 2026-09-29T21:00:00Z.
+        // In Cambodia (UTC+7), it is 2026-09-30 at 04:00 (crosses midnight into next day).
+        val instant = Instant.parse("2026-09-29T21:00:00Z")
+        val localZone = ZoneId.of("Europe/Paris")
+        val eventDate = LocalDate.of(2026, 9, 29) // Event listed under local date
+
+        val localZoned = instant.atZone(localZone)
+        val localDate = localZoned.toLocalDate()
+        val localTime = localZoned.toLocalTime().withSecond(0).withNano(0)
+        val localOffset = localTimeOffsetLabel(instant, localZone)
+        val localSuffixEn = if (localDate != eventDate) " · ${shortDayExtension(localDate, false)}" else ""
+        val localSuffixKm = if (localDate != eventDate) " · ${shortDayExtension(localDate, true)}" else ""
+
+        val cambodiaZoned = instant.atZone(CAMBODIA_ZONE)
+        val cambodiaDate = cambodiaZoned.toLocalDate()
+        val cambodiaTime = cambodiaZoned.toLocalTime().withSecond(0).withNano(0)
+        val cambodiaSuffixEn = if (cambodiaDate != eventDate) " · ${shortDayExtension(cambodiaDate, false)}" else ""
+        val cambodiaSuffixKm = if (cambodiaDate != eventDate) " · ${shortDayExtension(cambodiaDate, true)}" else ""
+
+        // English rows
+        val row1En = "$localTime · Local time ($localOffset)$localSuffixEn"
+        val row2En = "$cambodiaTime · Cambodia time (UTC+7)$cambodiaSuffixEn"
+        assertEquals("23:00 · Local time (UTC+2)", row1En)
+        assertEquals("04:00 · Cambodia time (UTC+7) · Sep 30", row2En)
+
+        // Khmer rows
+        val row1Km = "$localTime · ម៉ោងក្នុងតំបន់ ($localOffset)$localSuffixKm"
+        val row2Km = "$cambodiaTime · ម៉ោងកម្ពុជា (UTC+7)$cambodiaSuffixKm"
+        assertEquals("23:00 · ម៉ោងក្នុងតំបន់ (UTC+2)", row1Km)
+        assertEquals("04:00 · ម៉ោងកម្ពុជា (UTC+7) · ៣០ កញ្ញា", row2Km)
+
+        // Reverse case: Viewing in Cambodia time where event.date is 2026-09-30
+        val eventDateCambodia = LocalDate.of(2026, 9, 30)
+        val revLocalSuffixEn = if (localDate != eventDateCambodia) " · ${shortDayExtension(localDate, false)}" else ""
+        val revCambodiaSuffixEn = if (cambodiaDate != eventDateCambodia) " · ${shortDayExtension(cambodiaDate, false)}" else ""
+        val revRow1En = "$localTime · Local time ($localOffset)$revLocalSuffixEn"
+        val revRow2En = "$cambodiaTime · Cambodia time (UTC+7)$revCambodiaSuffixEn"
+        assertEquals("23:00 · Local time (UTC+2) · Sep 29", revRow1En)
+        assertEquals("04:00 · Cambodia time (UTC+7)", revRow2En)
     }
 }

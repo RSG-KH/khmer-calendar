@@ -101,7 +101,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithText(L.text("ui.save.1b0623", false)).performScrollTo().performClick()
         compose.onAllNodesWithText("Every 14-day Event").onFirst().performClick()
         compose.onNode(hasText("Every 14-day Event") and hasAnyAncestor(isDialog())).assertIsDisplayed()
-        compose.onNodeWithText("09:00 · Local time", substring = true).assertIsDisplayed()
+        compose.onNode(hasText("09:00 · Local time", substring = true) and hasAnyAncestor(isDialog())).assertIsDisplayed()
         compose.onNodeWithText("Every 14 days · End by Dec 31, 2026", substring = true).assertIsDisplayed()
     }
 

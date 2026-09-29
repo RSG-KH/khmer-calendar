@@ -102,6 +102,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
+import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -112,6 +114,45 @@ private val CardShape = RoundedCornerShape(24.dp)
 internal val DetailSymbolSlot = 24.dp
 internal const val CalendarEngineVersion = "0.6.0"
 private val DetailSymbolGap = 6.dp
+internal val LocalTodayTimeZone = compositionLocalOf { TodayTimeZone.LOCAL }
+
+internal fun isLocalTimeDifferentFromCambodia(
+    instant: Instant = Instant.now(),
+    localZone: ZoneId = ZoneId.systemDefault()
+): Boolean {
+    val localOffset = localZone.rules.getOffset(instant)
+    val cambodiaOffset = CAMBODIA_ZONE.rules.getOffset(instant)
+    return localOffset != cambodiaOffset
+}
+
+internal fun localTimeOffsetLabel(
+    instant: Instant = Instant.now(),
+    localZone: ZoneId = ZoneId.systemDefault()
+): String = TodayTimeZone.LOCAL.offsetLabel(instant, localZone)
+
+internal fun eventTimeSubtitle(
+    event: CalendarEvent,
+    todayTimeZone: TodayTimeZone,
+    k: Boolean,
+    localZone: ZoneId = ZoneId.systemDefault()
+): String {
+    val time = event.time ?: return ""
+    val eventInstant = event.instant ?: event.date.atTime(time).atZone(todayTimeZone.zone(localZone)).toInstant()
+    if (!isLocalTimeDifferentFromCambodia(eventInstant, localZone)) return " · $time"
+    val zoneText = if (todayTimeZone == TodayTimeZone.CAMBODIA) {
+        L.text("ui.cambodia_time_utc_7.6b9f2d", k)
+    } else {
+        "${L.text("ui.local_time.541b44", k)} (${localTimeOffsetLabel(eventInstant, localZone)})"
+    }
+    return " · $time · $zoneText"
+}
+
+internal fun shortDayExtension(date: LocalDate, k: Boolean): String {
+    val month = CalendarWords.month(date.monthValue, k, short = true)
+    val day = CalendarWords.number(date.dayOfMonth, k)
+    return if (k) "$day $month" else "$month $day"
+}
+
 internal fun timeZoneLabel(choice: TodayTimeZone, k: Boolean) = if (choice == TodayTimeZone.LOCAL)
     L.text("ui.local_time.541b44", k) else L.text("ui.cambodia_time_utc_7.6b9f2d", k)
 internal fun timeSelectionZoneLabel(choice: TodayTimeZone, k: Boolean) = if (choice == TodayTimeZone.LOCAL)
@@ -208,7 +249,8 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
     openWidgetEventRequest: com.rsgkh.calendar.widgets.WidgetEventRequest? = null,
     onSettings: (AppSettings) -> Unit) {
     CalendarTheme(settings) {
-        var page by rememberSaveable { mutableIntStateOf(0) }
+        CompositionLocalProvider(LocalTodayTimeZone provides settings.todayTimeZone) {
+            var page by rememberSaveable { mutableIntStateOf(0) }
         var selectedText by rememberSaveable { mutableStateOf(today.coerceIn(KhmerCalendar.minDate, KhmerCalendar.maxDate).toString()) }
         val selected = LocalDate.parse(selectedText)
         var monthText by rememberSaveable { mutableStateOf(YearMonth.from(selected).toString()) }
@@ -387,11 +429,13 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
         }
         detail?.let { original ->
             val event = if (original.kind == EventKind.CUSTOM) allCustom.firstOrNull { it.id == original.id } ?: original else original
-            EventDialog(event, k, timeZoneLabel(settings.todayTimeZone, k), settings.showCopyButtons, settings.enableAstrologyAndZodiac && settings.showWesternZodiac, onEdit = {
-            editingId = event.customSeriesId ?: event.id.removePrefix("custom:"); detail = null; dateDetailText = null
-        }, onDelete = {
-            onDeleteCustom(event.customSeriesId ?: event.id.removePrefix("custom:")); detail = null
-        }) { detail = null } }
+            EventDialog(event, k, timeZoneLabel(settings.todayTimeZone, k), settings.showCopyButtons, settings.enableAstrologyAndZodiac && settings.showWesternZodiac, todayTimeZone = settings.todayTimeZone, onEdit = {
+                editingId = event.customSeriesId ?: event.id.removePrefix("custom:"); detail = null; dateDetailText = null
+            }, onDelete = {
+                onDeleteCustom(event.customSeriesId ?: event.id.removePrefix("custom:")); detail = null
+            }) { detail = null }
+        }
+        }
     }
 }
 
@@ -934,10 +978,11 @@ private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolea
 }
 
 @Composable
-private fun EventRow(event: CalendarEvent, k: Boolean, dateColumnWidth: Dp, modifier: Modifier = Modifier, showDate: Boolean = true, holiday: Boolean = false, onClick: () -> Unit) {
+private fun EventRow(event: CalendarEvent, k: Boolean, dateColumnWidth: Dp, modifier: Modifier = Modifier, showDate: Boolean = true, holiday: Boolean = false, todayTimeZone: TodayTimeZone = LocalTodayTimeZone.current, onClick: () -> Unit) {
     val color = eventColor(event.kind)
     val dateColor = if (holiday || event.kind == EventKind.HOLIDAY) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface
-    Surface(onClick = onClick, modifier = modifier.semantics { contentDescription = listOf(event.title(k), dateLabel(event.date, k), number(event.date.year, k), kindLabel(event.kind, k), event.time?.toString()).filterNotNull().joinToString(", ") }, shape = RectangleShape, color = Color.Transparent) {
+    val timeSubtitle = eventTimeSubtitle(event, todayTimeZone, k)
+    Surface(onClick = onClick, modifier = modifier.semantics { contentDescription = listOf(event.title(k), dateLabel(event.date, k), number(event.date.year, k), (kindLabel(event.kind, k) + timeSubtitle).trim()).filter { it.isNotBlank() }.joinToString(", ") }, shape = RectangleShape, color = Color.Transparent) {
         Box(Modifier.fillMaxWidth()) {
             if (event.kind == EventKind.CUSTOM) {
                 Image(
@@ -963,8 +1008,7 @@ private fun EventRow(event: CalendarEvent, k: Boolean, dateColumnWidth: Dp, modi
                 Box(Modifier.padding(horizontal = 12.dp).width(3.dp).height(28.dp).background(color.copy(alpha = .65f), CircleShape))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(event.title(k), fontWeight = FontWeight.Medium, fontSize = 13.readableSp, lineHeight = 19.readableSp)
-                    Text((if (event.basis == DateBasis.CALCULATED) L.text("rules.calculated_label", k) else kindLabel(event.kind, k)) +
-                        (event.time?.let { " · $it" } ?: ""), color = color, fontSize = 11.readableSp, lineHeight = 14.readableSp)
+                    Text(kindLabel(event.kind, k) + timeSubtitle, color = color, fontSize = 11.readableSp, lineHeight = 14.readableSp)
                 }
                 Text("›", Modifier.padding(start = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 20.sp)
             }
@@ -1510,7 +1554,7 @@ internal fun WidgetSettingsCard(
                                             Spacer(Modifier.width(12.dp))
                                             Column(Modifier.weight(1f)) {
                                                 Text(event.title(k), fontSize = 14.readableSp, lineHeight = 20.readableSp, fontWeight = FontWeight.Medium)
-                                                Text(kindLabel(event.kind, k) + (event.time?.let { " · $it" } ?: ""), fontSize = 12.readableSp, lineHeight = 16.readableSp, color = eventColor(event.kind))
+                                                Text(kindLabel(event.kind, k) + eventTimeSubtitle(event, todayTimeZone, k), fontSize = 12.readableSp, lineHeight = 16.readableSp, color = eventColor(event.kind))
                                             }
                                             Text("›", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
@@ -1781,6 +1825,8 @@ private fun Modifier.openAstrologyDetails(label: String, onOpen: (() -> Unit)?):
     zoneLabel: String,
     showCopyButtons: Boolean,
     showWesternZodiac: Boolean = true,
+    todayTimeZone: TodayTimeZone = LocalTodayTimeZone.current,
+    localZone: ZoneId = ZoneId.systemDefault(),
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onDismiss: () -> Unit
@@ -1834,6 +1880,7 @@ private fun Modifier.openAstrologyDetails(label: String, onOpen: (() -> Unit)?):
                             Text(
                                 event.title(k),
                                 color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
                                 fontSize = 18.readableSp,
                                 lineHeight = 26.readableSp,
                                 onTextLayout = { isSingleLine = it.lineCount == 1 }
@@ -1855,18 +1902,48 @@ private fun Modifier.openAstrologyDetails(label: String, onOpen: (() -> Unit)?):
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(if (event.kind == EventKind.CUSTOM) 14.dp else 4.dp)) {
-                            Text("${dateLabel(event.date, k)} ${number(event.date.year, k)}", fontWeight = FontWeight.Medium)
+                            val eventDateLabel = if (k) "${dateLabel(event.date, true)} ${number(event.date.year, true)}"
+                                else "${CalendarWords.weekday(event.date.dayOfWeek.value, false)}, ${info.gregorianLabel}"
+                            Text(eventDateLabel, fontWeight = FontWeight.Medium)
                             Text(
                                 "${info.lunarSummary(k)}\n${L.text("ui.buddhist_era.ea617c", k)} ${number(lunar.buddhistYear, k)}",
                                 lineHeight = 22.readableSp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            event.time?.let {
-                                Text(
-                                    "$it · $zoneLabel",
-                                    fontWeight = FontWeight.Medium,
-                                    color = if (event.kind == EventKind.CUSTOM) eventColor(event.kind) else LocalContentColor.current
-                                )
+                            event.time?.let { time ->
+                                val eventInstant = event.instant ?: event.date.atTime(time).atZone(todayTimeZone.zone(localZone)).toInstant()
+                                val isDiff = isLocalTimeDifferentFromCambodia(eventInstant, localZone)
+                                if (isDiff) {
+                                    val localZoned = eventInstant.atZone(localZone)
+                                    val localDate = localZoned.toLocalDate()
+                                    val localTime = localZoned.toLocalTime().withSecond(0).withNano(0)
+                                    val localOffset = localTimeOffsetLabel(eventInstant, localZone)
+                                    val localDaySuffix = if (localDate != event.date) " · ${shortDayExtension(localDate, k)}" else ""
+
+                                    val cambodiaZoned = eventInstant.atZone(CAMBODIA_ZONE)
+                                    val cambodiaDate = cambodiaZoned.toLocalDate()
+                                    val cambodiaTime = cambodiaZoned.toLocalTime().withSecond(0).withNano(0)
+                                    val cambodiaDaySuffix = if (cambodiaDate != event.date) " · ${shortDayExtension(cambodiaDate, k)}" else ""
+
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text(
+                                            "$localTime · ${L.text("ui.local_time.541b44", k)} ($localOffset)$localDaySuffix",
+                                            fontWeight = FontWeight.Medium,
+                                            color = if (event.kind == EventKind.CUSTOM) eventColor(event.kind) else LocalContentColor.current
+                                        )
+                                        Text(
+                                            "$cambodiaTime · ${L.text("ui.cambodia_time_utc_7.6b9f2d", k)}$cambodiaDaySuffix",
+                                            fontWeight = FontWeight.Medium,
+                                            color = if (event.kind == EventKind.CUSTOM) eventColor(event.kind) else LocalContentColor.current
+                                        )
+                                    }
+                                } else {
+                                    Text(
+                                        "$time · $zoneLabel",
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (event.kind == EventKind.CUSTOM) eventColor(event.kind) else LocalContentColor.current
+                                    )
+                                }
                             }
                             if (event.notes.isNotBlank()) Text(event.notes)
                             event.repeat?.let { repeat ->
