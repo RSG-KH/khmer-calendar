@@ -144,7 +144,7 @@ Khmer Calendar provides five home screen app widgets. Month, Productivity, Focus
 
 All widgets follow the dedicated **Font size** setting in the Widgets section of app settings (`widgetFontScale`, 80%–200%), decoupled from the in-app font size. At large zoom levels the adaptive layouts drop optional detail rows and collapse non-essential text to safeguard against home screen clipping.
 
-The **Add widgets** action in settings opens a swipeable in-app chooser with theme-adjusted previews, widget names and target sizes. It uses Android's widget pinning request for the selected widget when the launcher supports that flow.
+The **Add widgets** action in settings opens a swipeable in-app chooser with widget names, target sizes and previews matching the current app theme. `WidgetAddDialog` loads the supplied light/dark PNG through a resource context whose night mode matches the app appearance, independently of the device theme. No color-inversion filter is applied. It uses Android's widget pinning request for the selected widget when the launcher supports that flow.
 
 `WidgetDataSource` builds the full-month lunar grid only for the Month widget; other widgets load the dates they need. Each snapshot reads personal events once, expands the necessary date window and groups occurrences by date. Month markers reuse that snapshot, including yesterday/tomorrow across month and year boundaries.
 

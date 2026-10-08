@@ -12,11 +12,15 @@
 
 A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose. Browse Khmer lunar dates, Buddhist holy days, holidays and observances, and manage personal events with local reminders.
 
+<a href="https://play.google.com/store/apps/details?id=com.rsgkh.calendar">
+  <img src="docs/images/playstore_download.png" alt="Get Khmer Calendar on Google Play" width="220" />
+</a>
+
 **[Live Web (PWA) Calendar](https://rsg-kh.github.io/khmer-calendar-pwa/)** — Open the web version in your browser on phones, tablets, and desktops.
 
-</div>
-
 <img src="docs/images/cover.jpg" alt="Khmer Calendar Cover" />
+
+</div>
 
 ## Key Features
 
@@ -43,7 +47,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 - **Cambodian Holidays & Festivals**: Browse public holidays and traditional festivals, including Khmer New Year, Pchum Ben, Water Festival and Royal Ploughing.
 - **National & International Observances**: Includes commemorations and UN observances alongside Buddhist holy days.
 
-Same-day event lists show timed personal events first, then untimed personal events, holidays, observances and enabled Buddhist holy days. Each day has one date label; today has a 2% accent tint without changing event-type colors.
+Same-day event lists show timed personal events first, then untimed personal events, holidays, observances and enabled Buddhist holy days. Each day has one date label; today has a 2% accent tint without changing event-type colors. Events-tab filters show matching totals for the selected year, search and visibility settings, using localized digits.
 
 ### ⏰ Personal Events & Precision Notifications
 - **Local SQLite Persistence**: Create, edit, and delete personal events with titles, dates, times, and notes.
@@ -67,6 +71,7 @@ Same-day event lists show timed personal events first, then untimed personal eve
 - **Dynamic Light & Dark Previews**: Embedded PNG preview thumbnails (`res/drawable/` and `res/drawable-night/`) reflect the system theme in the Android widget picker. The in-app chooser adjusts its previews to the current app theme.
 
 ### 📱 Adaptive Multi-Form-Factor UI
+- **Return to Today**: The calendar header selects today, returns to its month, and scrolls the calendar and event list back to the top, including when already viewing the current month.
 - **Stable Calendar Width**: Four-, five- and six-row months keep the same calendar and event-list widths in portrait and landscape. Only calendar height changes; screen size and font settings still adapt the layout.
 - **Phone Landscape Experience**: Navigation rail tabs dynamically expand across the entire vertical height (`weight(1f)`), delivering ergonomic tap targets without empty dead space.
 - **Tablet Landscape 2-Column Layout**: Left column uses a fixed five-row reference width and a consolidated lunar/Gregorian date card. The monthly event list expands up to 2.0× the calendar width. Both columns stay centered together, with small outer margins and a gap between them.

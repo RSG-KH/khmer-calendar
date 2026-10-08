@@ -47,14 +47,18 @@ Connected tests require a running emulator or device listed by `adb devices`.
 | Today refresh | Visible-only polling, immediate refresh on return, midnight, clock jumps and device time-zone changes |
 | Memory and lifecycle | Twelve-year event cache eviction, two-country location cache bounds, full-range arithmetic repeat previews, and on-device collection of destroyed activities after recreation and background/foreground cycles |
 | Date details | Today-zone clock snapshot, saved default time/place, header-only time/location picker, clickable astrology tables with detail popups and Ask AI queries, nested popup state, grouped event ordering, and master/individual astrology visibility |
-| Compose UI | Phone/tablet layouts, both languages, dialogs, font scaling and settings |
-| Home screen widgets | Date rollover and event-filter policies, tap navigation into date or event details, hidden personal-event details, Glance labels and badges, Planner week boundaries and scroll targets, snapshots following saved widget choices, appearance-following palettes, and English Western zodiac names in both app languages |
+| Compose UI | Phone/tablet layouts, both languages, dialogs, font scaling, settings, first-layout event-title sizing, localized filter counts and Today auto-scroll |
+| Home screen widgets | Date rollover and event-filter policies, tap navigation into date or event details, hidden personal-event details, Glance labels and badges, Planner week boundaries and scroll targets, snapshots following saved widget choices, appearance-following palettes, English Western zodiac names in both app languages, and in-app preview themes when device and app appearances differ |
 | System window behavior | Light/dark edge-to-edge configuration on API 31, 34 and 35 |
 | Translation tools | Catalog validation, export, backups and conflicting saves |
 
 The app retains its pinned MomentKH fixture and generator to catch consumer regressions. Agreement with that fixture is a compatibility check; it is not independent historical validation. Calendar algorithms and their evidence are maintained and tested in the engine project, linked from the [integration guide](shared-engine.md).
 
 Shared UI scenarios in `app/src/sharedTest` run under Robolectric and on a device. Device screenshots capture the full display so open dialogs are included. Inspect changed screens when updating layout or source-dialog content.
+
+`CalendarUiScenarios.eventPopupTitleKeepsItsFirstMeasuredHeight` checks short/wrapped titles with copy buttons on/off in English and Khmer at 80%, 100% and 150% font sizes. Filter-count coverage exercises year, search, visibility, language and personal-event changes. Today auto-scroll coverage checks the current and another month in both languages, with a separate landscape case in `CalendarRenderTest`.
+
+`WidgetPreviewTest` renders all five chooser pages with both light and dark app themes on light and dark device configurations. Pixel-brightness assertions catch loading the wrong image or applying a second dark-mode conversion. Inspect the actual Glance and Productivity widgets on a launcher when changing their spacing, corner radius or column alignment.
 
 The astrology layout regression checks the actual dialog/action bounds and the watermark's **unclipped** bounds for both Big 3 and Ganzhi, English and Khmer, and 80%, 100% and 150% font sizes. `CalendarRenderTest.astrologyPopupFooterInsets*` covers phone/tablet portrait and landscape plus a short landscape window; `CalendarUiTest.astrologyPopupFooterInsetsOnDevice` runs the same assertions on the emulator's current orientation. The expected bottom inset is 12 dp, independent of the decorative watermark. The whole image viewport must fit inside the popup with a 12 dp inset from the rounded edges. Also inspect the screenshots to confirm that the complete artwork is visible, rather than merely checking footer spacing. Run the device case in both orientations when changing this layout.
 
