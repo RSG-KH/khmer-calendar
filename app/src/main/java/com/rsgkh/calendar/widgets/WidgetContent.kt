@@ -215,10 +215,13 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Row(
+                        GlanceModifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         // Sub-col 1 (Left): Weekday on top (without "tngai") + Big day number below
                         Column(
+                            if (showDetailsList) GlanceModifier.width(56.dp * scale)
+                            else GlanceModifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
@@ -233,7 +236,7 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                             Spacer(GlanceModifier.width(8.dp))
 
                             // Sub-col 2 (Right): 5 items
-                            Column {
+                            Column(GlanceModifier.defaultWeight()) {
                                 // 1. Month (short form)
                                 val rawMonth = CalendarWords.month(date.monthValue, s.khmer, short = true)
                                 val monthClean = if (s.khmer) rawMonth.removePrefix("ខែ") else rawMonth

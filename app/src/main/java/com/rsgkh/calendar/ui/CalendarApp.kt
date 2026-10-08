@@ -85,6 +85,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.annotation.DrawableRes
@@ -110,7 +111,10 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-private val CardShape = RoundedCornerShape(24.dp)
+private val CardCornerRadius = 24.dp
+private val CardShape = RoundedCornerShape(CardCornerRadius)
+private val EventRowSidePadding = 14.dp
+private val EventHeadingSidePadding = 10.dp
 internal val DetailSymbolSlot = 24.dp
 internal const val CalendarEngineVersion = "0.6.0"
 private val DetailSymbolGap = 6.dp
@@ -222,7 +226,7 @@ internal fun westernZodiacDrawable(sign: ZodiacSign): Int = when (sign) {
 }
 
 @Composable
-internal fun zodiacAlpha(): Float = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) 0.03f else 0.05f
+internal fun zodiacAlpha(): Float = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) 0.05f else 0.07f
 
 @Composable
 private fun BoxScope.DetailsZodiacBackground(info: KhmerDateDetails, showWesternZodiac: Boolean = true) {
@@ -610,6 +614,14 @@ private fun CalendarScreen(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val isTablet = configuration.smallestScreenWidthDp >= 600
+    val calendarListState = rememberLazyListState()
+    val calendarPaneScroll = rememberScrollState()
+    val scope = rememberCoroutineScope()
+    val returnToToday: () -> Unit = {
+        onToday()
+        scope.launch { calendarListState.animateScrollToItem(0) }
+        if (isLandscape) scope.launch { calendarPaneScroll.animateScrollTo(0) }
+    }
     val allMonthEvents = remember(month, custom) {
         (EventRepository.forMonth(month) + custom.filter { YearMonth.from(it.date) == month })
             .sortedWith(calendarEventOrder)
@@ -638,8 +650,8 @@ private fun CalendarScreen(
         if (isLandscape) {
             Row(Modifier.width(contentWidth).fillMaxHeight().padding(horizontal = if (isTablet) CalendarSideMargin else 0.dp),
                 horizontalArrangement = Arrangement.spacedBy(CalendarColumnGap)) {
-                Column(Modifier.width(calendarWidth).fillMaxHeight().verticalScroll(rememberScrollState())) {
-                    CalendarHeader(month, selected, today, k, onJump, onPrevious, onNext, onToday)
+                Column(Modifier.width(calendarWidth).fillMaxHeight().verticalScroll(calendarPaneScroll).testTag("calendar-pane-scroll")) {
+                    CalendarHeader(month, selected, today, k, onJump, onPrevious, onNext, returnToToday)
                     CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext)
                     if (isTablet) {
                         val selectedEvents = remember(selected, listEvents) { listEvents.filter { it.date == selected } }
@@ -706,7 +718,7 @@ private fun CalendarScreen(
                         }
                     }
                 }
-                LazyColumn(Modifier.weight(1f).fillMaxHeight().testTag("calendar-scroll"), contentPadding = PaddingValues(top = 4.dp, end = if (isTablet) 0.dp else 12.dp, bottom = 6.dp)) {
+                LazyColumn(Modifier.weight(1f).fillMaxHeight().testTag("calendar-scroll"), state = calendarListState, contentPadding = PaddingValues(top = 4.dp, end = if (isTablet) 0.dp else 12.dp, bottom = 6.dp)) {
                     if (listEvents.isNotEmpty()) {
                         item {
                             Text(L.text("ui.all_events_in_month.ab923a", k, "month" to monthName(month, k), "count" to number(listEvents.size, k)), Modifier.padding(start = 10.dp, top = 4.dp, bottom = 4.dp),
@@ -721,8 +733,8 @@ private fun CalendarScreen(
             }
         } else {
             Column(Modifier.width(contentWidth).fillMaxHeight()) {
-                CalendarHeader(month, selected, today, k, onJump, onPrevious, onNext, onToday)
-                LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag("calendar-scroll"), contentPadding = PaddingValues(10.dp, 0.dp, 10.dp, 24.dp)) {
+                CalendarHeader(month, selected, today, k, onJump, onPrevious, onNext, returnToToday)
+                LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag("calendar-scroll"), state = calendarListState, contentPadding = PaddingValues(10.dp, 0.dp, 10.dp, 24.dp)) {
                     item {
                         CalendarMonthCard(month, selected, today, gridEvents, settings, onSelect, onPrevious, onNext)
                     }
@@ -818,7 +830,7 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
                         ) {
                             if (settings.showHolyDaysInCalendar && lunar.isHolyDay) {
                                 Image(painterResource(holyDayLotusDrawable(lunar)), contentDescription = null,
-                                    modifier = Modifier.matchParentSize().padding(1.dp).scale(if (isPhoneLandscape) 0.90f else 1.0f), contentScale = ContentScale.Fit, alpha = 0.25f)
+                                    modifier = Modifier.matchParentSize().padding(1.dp).scale(if (isPhoneLandscape) 0.90f else 1.0f), contentScale = ContentScale.Fit, alpha = 0.30f)
                             }
                             Column(Modifier.fillMaxWidth().offset(y = if (isPhoneLandscape) (-0.5).dp else (-1.0).dp).padding(vertical = if (isPhoneLandscape) 0.5.dp else 1.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(0.dp)) {
@@ -851,6 +863,15 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
     }
 }
 
+private fun matchesEventFilter(kind: EventKind, filter: Int): Boolean = when (filter) {
+    0 -> true
+    1 -> kind == EventKind.HOLIDAY
+    2 -> kind == EventKind.OBSERVANCE || kind == EventKind.HOLIDAY
+    3 -> kind == EventKind.HOLY_DAY
+    4 -> kind == EventKind.CUSTOM
+    else -> false
+}
+
 @Composable
 private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, custom: List<CalendarEvent>, customFocus: Int, onYear: (Int) -> Unit, onEvent: (CalendarEvent) -> Unit, onAdd: () -> Unit) {
     val k = settings.khmer
@@ -868,14 +889,21 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
     LaunchedEffect(settings.showObservances) { if (!settings.showObservances && filter == 2) filter = 0 }
     val builtInEvents = remember(year) { EventRepository.forYear(year) }
     val normalizedQuery = remember(query) { searchText(query) }
-    val events = remember(year, query, filter, settings.showHolyDaysInEvents, settings.showObservances, custom) {
+    val matchingEvents = remember(year, normalizedQuery, settings.showHolyDaysInEvents, settings.showObservances, custom) {
         (builtInEvents + custom.filter { it.date.year == year }).filter { event ->
             (settings.showHolyDaysInEvents || event.kind != EventKind.HOLY_DAY) &&
                 (settings.showObservances || event.kind != EventKind.OBSERVANCE) &&
-                (filter == 0 || (filter == 1 && event.kind == EventKind.HOLIDAY) || (filter == 2 && (event.kind == EventKind.OBSERVANCE || event.kind == EventKind.HOLIDAY)) || (filter == 3 && event.kind == EventKind.HOLY_DAY) || (filter == 4 && event.kind == EventKind.CUSTOM)) &&
-                (query.isBlank() || searchText("${event.titleEn} ${event.titleKm} ${event.date} ${event.notes}").contains(normalizedQuery))
+                (normalizedQuery.isEmpty() || searchText("${event.titleEn} ${event.titleKm} ${event.date} ${event.notes}").contains(normalizedQuery))
         }.sortedWith(calendarEventOrder)
     }
+    val filterCounts = remember(matchingEvents) {
+        (0..4).associateWith { id -> matchingEvents.count { matchesEventFilter(it.kind, id) } }
+    }
+    val events = remember(matchingEvents, filter) { matchingEvents.filter { matchesEventFilter(it.kind, filter) } }
+    val dateColumnWidth = eventDateColumnWidth()
+    val dateColumnWidthPx = with(LocalDensity.current) { dateColumnWidth.roundToPx() }
+    val monthTitleStyle = LocalTextStyle.current.copy(fontSize = 18.readableSp, fontWeight = FontWeight.SemiBold)
+    val monthTitleMeasurer = rememberTextMeasurer()
     if (showYearPicker) {
         EventYearPicker(year, today.year, k, onDismiss = { showYearPicker = false }) {
             onYear(it)
@@ -896,7 +924,7 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
             LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag("events-scroll"), state = eventsListState, contentPadding = PaddingValues(10.dp, 0.dp, 10.dp, 112.dp)) {
                 item {
                     MaterialTheme(typography = MaterialTheme.typography.copy(bodyLarge = MaterialTheme.typography.bodyLarge.copy(fontSize = 14.readableSp, lineHeight = 16.readableSp))) {
-                        OutlinedTextField(value = query, onValueChange = { query = it }, modifier = Modifier.fillMaxWidth().testTag("event-search").focusRequester(searchFocus).padding(bottom = 16.dp), singleLine = true,
+                        OutlinedTextField(value = query, onValueChange = { query = it }, modifier = Modifier.fillMaxWidth().testTag("event-search").focusRequester(searchFocus).padding(bottom = 4.dp), singleLine = true,
                             textStyle = LocalTextStyle.current.copy(fontSize = 14.readableSp, lineHeight = 16.readableSp),
                             label = { Text(L.text("ui.search_events.08c608", k)) }, shape = RoundedCornerShape(16.dp),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -908,13 +936,14 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
                     }
                 }
                 item {
-                    Row(Modifier.padding(bottom = 16.dp).testTag("event-filters").horizontalScroll(filterScroll), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(Modifier.padding(bottom = 4.dp).testTag("event-filters").horizontalScroll(filterScroll), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         val filters = listOf(0 to L.text("ui.all.c10205", k), 4 to L.text("ui.custom.917053", k), 1 to L.text("ui.holidays.8a894c", k), 2 to L.text("ui.observances.e4454c", k), 3 to L.text("ui.holy_days.9569a6", k))
                         filters.forEach { (id, text) ->
                             if ((settings.showHolyDaysInEvents || id != 3) && (settings.showObservances || id != 2)) SelectionChip(
                                 selected = filter == id,
                                 onClick = { filter = id },
-                                label = { Text(text) },
+                                modifier = Modifier.testTag("event-filter-$id"),
+                                label = { Text("$text (${number(filterCounts.getValue(id), k)})") },
                             )
                         }
                     }
@@ -922,12 +951,17 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
                 if (events.isEmpty()) item { EmptyEvents(k) }
                 events.groupBy { it.date.month }.values.forEachIndexed { index, monthEvents ->
                     item(key = "month:${monthEvents.first().date.monthValue}") {
+                        val monthTitle = monthName(YearMonth.from(monthEvents.first().date), k)
+                        val fitsDateColumn = monthTitleMeasurer.measure(monthTitle, monthTitleStyle, softWrap = false).size.width <= dateColumnWidthPx
                         Row(
-                            Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = if (index == 0) 8.dp else 16.dp, bottom = 16.dp),
+                            Modifier.fillMaxWidth().padding(start = EventHeadingSidePadding, end = EventHeadingSidePadding, top = if (index == 0) 8.dp else 16.dp, bottom = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(monthName(YearMonth.from(monthEvents.first().date), k), fontSize = 18.readableSp, fontWeight = FontWeight.SemiBold)
+                            Text(monthTitle,
+                                modifier = if (fitsDateColumn) Modifier.padding(start = EventRowSidePadding - EventHeadingSidePadding).width(dateColumnWidth) else Modifier,
+                                textAlign = if (fitsDateColumn) TextAlign.Center else TextAlign.Start,
+                                style = monthTitleStyle)
                             Text(number(monthEvents.size, k), fontSize = 14.readableSp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
@@ -963,19 +997,26 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
 }
 
 @Composable
+private fun eventDateColumnWidth(): Dp {
+    val zoomSteps = ((LocalFontScaleMultiplier.current * 100).roundToInt() - 110).coerceAtLeast(0) / 10
+    return 42.dp * (1f + zoomSteps * .05f)
+}
+
+@Composable
 private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolean, first: Boolean, last: Boolean, onEvent: (CalendarEvent) -> Unit) {
     if (events.isEmpty()) return
-    val zoomSteps = ((LocalFontScaleMultiplier.current * 100).roundToInt() - 110).coerceAtLeast(0) / 10
-    val dateColumnWidth = 42.dp * (1f + zoomSteps * .05f)
+    val dateColumnWidth = eventDateColumnWidth()
     val background = if (today) MaterialTheme.colorScheme.primary.copy(alpha = .02f).compositeOver(MaterialTheme.colorScheme.surface)
         else MaterialTheme.colorScheme.surface
     val holiday = events.any { it.kind == EventKind.HOLIDAY }
-    Surface(shape = RoundedCornerShape(topStart = if (first) 16.dp else 0.dp, topEnd = if (first) 16.dp else 0.dp,
-        bottomStart = if (last) 16.dp else 0.dp, bottomEnd = if (last) 16.dp else 0.dp), color = background,
+    val topRadius = if (first) CardCornerRadius else 0.dp
+    val bottomRadius = if (last) CardCornerRadius else 0.dp
+    Surface(shape = RoundedCornerShape(topStart = topRadius, topEnd = topRadius,
+        bottomStart = bottomRadius, bottomEnd = bottomRadius), color = background,
         modifier = Modifier.fillMaxWidth().testTag("event-day-" + events.first().date).semantics { isTraversalGroup = true }) {
         Column {
             events.forEachIndexed { index, event ->
-                if (index > 0) HorizontalDivider(Modifier.padding(start = 14.dp + dateColumnWidth + 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                if (index > 0) HorizontalDivider(Modifier.padding(start = EventRowSidePadding + dateColumnWidth + 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
                 EventRow(event, k, dateColumnWidth, showDate = index == 0, holiday = holiday) { onEvent(event) }
             }
             if (!last) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -994,20 +1035,30 @@ private fun EventRow(event: CalendarEvent, k: Boolean, dateColumnWidth: Dp, modi
     val timeSubtitle = eventTimeSubtitle(event, todayTimeZone, k)
     Surface(onClick = onClick, modifier = modifier.semantics { contentDescription = listOf(event.title(k), dateLabel(event.date, k), number(event.date.year, k), (eventListKindLabel(event.kind, k) + timeSubtitle).trim()).filter { it.isNotBlank() }.joinToString(", ") }, shape = RectangleShape, color = Color.Transparent) {
         Box(Modifier.fillMaxWidth()) {
-            if (event.kind == EventKind.CUSTOM) {
+            val backgroundDrawable = when (event.kind) {
+                EventKind.CUSTOM -> R.drawable.custom_event_star
+                EventKind.HOLY_DAY -> remember(event.date) { holyDayLotusDrawable(KhmerCalendar.fromGregorian(event.date)) }
+                else -> null
+            }
+            if (backgroundDrawable != null) {
                 Image(
-                    painter = painterResource(R.drawable.custom_event_star),
+                    painter = painterResource(backgroundDrawable),
                     contentDescription = null,
                     alignment = Alignment.CenterEnd,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .matchParentSize()
-                        .padding(top = 2.dp, bottom = 2.dp, end = 21.dp),
-                    colorFilter = ColorFilter.tint(color, BlendMode.Modulate),
-                    alpha = 0.05f
+                        .padding(top = 2.dp, bottom = 2.dp, end = 29.dp),
+                    // Keep the lotus's petal colors and detail visible; only personal stars use the event tint.
+                    colorFilter = if (event.kind == EventKind.CUSTOM) ColorFilter.tint(color, BlendMode.Modulate) else null,
+                    alpha = when {
+                        event.kind == EventKind.CUSTOM -> if (MaterialTheme.colorScheme.surface.luminance() < .5f) 0.10f else 0.08f
+                        MaterialTheme.colorScheme.surface.luminance() < .5f -> 0.15f
+                        else -> 0.20f
+                    }
                 )
             }
-            Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = EventRowSidePadding, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.width(dateColumnWidth).clearAndSetSemantics {}, horizontalAlignment = Alignment.CenterHorizontally) {
                     if (showDate) {
                     Text(number(event.date.dayOfMonth, k), color = dateColor, fontSize = 21.readableSp, lineHeight = 21.readableSp, fontWeight = FontWeight.SemiBold)
@@ -1196,7 +1247,8 @@ private fun SettingsScreen(settings: AppSettings, onChange: (AppSettings) -> Uni
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(title, Modifier.padding(start = 10.dp), fontSize = 11.readableSp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Surface(shape = CardShape, color = MaterialTheme.colorScheme.surface) {
-            Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(if (spacedContent) 12.dp else 0.dp), content = content)
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = if (spacedContent) 16.dp else 0.dp),
+                verticalArrangement = Arrangement.spacedBy(if (spacedContent) 12.dp else 0.dp), content = content)
         }
     }
 }
@@ -1276,7 +1328,7 @@ internal fun WidgetSettingsCard(
             SettingsDivider()
             OutlinedButton(
                 onClick = { showWidgetChooser = true },
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp).testTag("browse-widgets"),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp).testTag("browse-widgets"),
             ) {
                 Text(if (k) "បន្ថែមវីដជិត" else "Add widgets")
             }
@@ -1829,6 +1881,38 @@ private fun Modifier.openAstrologyDetails(label: String, onOpen: (() -> Unit)?):
     }
 }
 
+@Composable
+internal fun EventDialogTitle(title: String, k: Boolean, showCopyButtons: Boolean, modifier: Modifier = Modifier) {
+    val titleStyle = LocalTextStyle.current.copy(
+        color = MaterialTheme.colorScheme.primary,
+        fontWeight = FontWeight.Bold,
+        fontSize = 18.readableSp,
+        lineHeight = 26.readableSp,
+    )
+    val measurer = rememberTextMeasurer()
+    val copyButtonGap = 4.dp
+    val copyButtonWidth = with(LocalDensity.current) {
+        if (showCopyButtons) CopyTextButtonSize.roundToPx() + copyButtonGap.roundToPx() else 0
+    }
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val titleWidth = (constraints.maxWidth - copyButtonWidth).coerceAtLeast(0)
+        // Resolve wrapping before laying out the header. Updating state in onTextLayout
+        // would increase the spacer by 10 dp on the next frame while the dialog opens.
+        val isSingleLine = !showCopyButtons || measurer.measure(title, titleStyle,
+            constraints = Constraints(maxWidth = titleWidth)).lineCount == 1
+        Column {
+            Row(horizontalArrangement = Arrangement.spacedBy(copyButtonGap)) {
+                SelectionContainer(Modifier.weight(1f)) {
+                    Text(title, style = titleStyle)
+                }
+                if (showCopyButtons) CopyTextButton(title, L.text("ui.copy_event_title", k), L.text("ui.event_title_copied", k),
+                    firstLineHeight = titleStyle.lineHeight, errorMessage = L.text("ui.could_not_copy_event_title", k))
+            }
+            Spacer(Modifier.height(if (showCopyButtons && isSingleLine) 2.dp else 12.dp))
+        }
+    }
+}
+
 @Composable private fun EventDialog(
     event: CalendarEvent,
     k: Boolean,
@@ -1884,22 +1968,7 @@ private fun Modifier.openAstrologyDetails(label: String, onOpen: (() -> Unit)?):
                         .fillMaxWidth()
                         .padding(24.dp)
                 ) {
-                    var isSingleLine by remember(event.title(k)) { mutableStateOf(true) }
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        SelectionContainer(Modifier.weight(1f)) {
-                            Text(
-                                event.title(k),
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.readableSp,
-                                lineHeight = 26.readableSp,
-                                onTextLayout = { isSingleLine = it.lineCount == 1 }
-                            )
-                        }
-                        if (showCopyButtons) CopyTextButton(event.title(k), L.text("ui.copy_event_title", k), L.text("ui.event_title_copied", k),
-                            firstLineHeight = 26.readableSp, errorMessage = L.text("ui.could_not_copy_event_title", k))
-                    }
-                    Spacer(Modifier.height(if (showCopyButtons && isSingleLine) 2.dp else 12.dp))
+                    EventDialogTitle(event.title(k), k, showCopyButtons)
                     HorizontalDivider()
                     Spacer(Modifier.height(14.dp))
                     val scrollState = rememberScrollState()
@@ -1972,8 +2041,10 @@ private fun Modifier.openAstrologyDetails(label: String, onOpen: (() -> Unit)?):
                             }
                         }
                         HorizontalDivider()
-                        Text(if (event.basis == DateBasis.CALCULATED) L.text("rules.calculated_label", k) else kindLabel(event.kind, k),
-                            color = eventColor(event.kind), fontWeight = FontWeight.SemiBold)
+                        if (event.kind != EventKind.HOLY_DAY) {
+                            Text(if (event.basis == DateBasis.CALCULATED) L.text("rules.calculated_label", k) else kindLabel(event.kind, k),
+                                color = eventColor(event.kind), fontWeight = FontWeight.SemiBold)
+                        }
                         if (event.kind != EventKind.CUSTOM) {
                             val translatedTitle = if (k) event.titleEn else event.titleKm
                             val titleWithOriginYear = event.anniversaryBase

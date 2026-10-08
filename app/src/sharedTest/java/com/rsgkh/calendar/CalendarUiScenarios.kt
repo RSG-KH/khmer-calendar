@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.platform.testTag
@@ -27,12 +28,15 @@ import com.rsgkh.calendar.data.AppSettings
 import com.rsgkh.calendar.data.ThemeMode
 import com.rsgkh.calendar.data.CustomEvent
 import com.rsgkh.calendar.data.EventRepository
+import com.rsgkh.calendar.data.EventKind
 import com.rsgkh.calendar.data.Birthplace
 import com.rsgkh.calendar.data.FontScale
 import com.rsgkh.calendar.i18n.L
 import com.rsgkh.calendar.ui.CalendarApp
 import com.rsgkh.calendar.ui.CalendarEngineVersion
 import com.rsgkh.calendar.ui.CalendarTheme
+import com.rsgkh.calendar.ui.CalendarBasicAlertDialog
+import com.rsgkh.calendar.ui.EventDialogTitle
 import com.rsgkh.calendar.ui.NotificationAccess
 import com.rsgkh.calendar.ui.SavedLocationChips
 import org.junit.Rule
@@ -509,6 +513,66 @@ abstract class CalendarUiScenarios {
         }
     }
 
+    @Test fun eventPopupTitleKeepsItsFirstMeasuredHeight() {
+        val scenario = mutableStateOf<Pair<AppSettings, String>?>(null)
+        val measuredSizes = mutableListOf<androidx.compose.ui.unit.IntSize>()
+        compose.setContent {
+            scenario.value?.let { (settings, title) ->
+                CalendarTheme(settings) {
+                    CalendarBasicAlertDialog(onDismissRequest = {}, modifier = Modifier.width(320.dp),
+                        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
+                        androidx.compose.runtime.key(settings, title) {
+                            Surface {
+                                Column(Modifier.padding(24.dp)) {
+                                    EventDialogTitle(title, settings.khmer, settings.showCopyButtons,
+                                        Modifier.testTag("event-title-header").onSizeChanged { measuredSizes.add(it) })
+                                    androidx.compose.material3.HorizontalDivider()
+                                    Text("Details")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (khmer in listOf(false, true)) {
+            for (scale in listOf(FontScale.PERCENT_80, FontScale.PERCENT_100, FontScale.PERCENT_150)) {
+                for (copy in listOf(false, true)) {
+                    for (wrapped in listOf(false, true)) {
+                        val title = if (wrapped) {
+                            if (khmer) "ពិធីជួបជុំគ្រួសារ និងមិត្តភក្តិ ដើម្បីអបអរសាទរពិធីបុណ្យចូលឆ្នាំថ្មីប្រពៃណីជាតិខ្មែរ"
+                            else "Family and friends gathering to celebrate the traditional Khmer New Year together"
+                        } else if (khmer) "ជួបគ្នា" else "Meeting"
+                        val settings = AppSettings(khmer = khmer, fontScale = scale, showCopyButtons = copy)
+                        compose.runOnIdle {
+                            measuredSizes.clear()
+                            scenario.value = settings to title
+                        }
+                        compose.waitForIdle()
+                        val sizes = compose.runOnIdle { measuredSizes.toList() }
+                        org.junit.Assert.assertTrue("The title must have been measured", sizes.isNotEmpty())
+                        org.junit.Assert.assertEquals(
+                            "Popup title must have its final height on the first layout: khmer=$khmer scale=$scale copy=$copy wrapped=$wrapped; sizes=$sizes",
+                            listOf(sizes.first()), sizes.distinct())
+                        val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+                        val text = compose.onNodeWithText(title, useUnmergedTree = true).assertIsDisplayed()
+                        text.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+                        org.junit.Assert.assertEquals("Exercise the expected title wrapping", wrapped, layouts.single().lineCount > 1)
+                        val headerHeight = compose.onNodeWithTag("event-title-header").getUnclippedBoundsInRoot().height
+                        val textHeight = text.getUnclippedBoundsInRoot().height
+                        val rowHeight = if (copy) maxOf(textHeight, 48.dp) else textHeight
+                        org.junit.Assert.assertEquals("Preserve the title's spacing above the divider",
+                            (rowHeight + if (copy && !wrapped) 2.dp else 12.dp).value, headerHeight.value,
+                            1f / compose.density.density) // Allow rounding the spacer to a whole device pixel.
+                        if (scale == FontScale.PERCENT_100 && copy && wrapped) {
+                            screenshot("event-title-wrapped-$khmer")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     protected fun start(settings: AppSettings = AppSettings(khmer = false, theme = ThemeMode.LIGHT), now: Instant? = null,
         notificationAccess: NotificationAccess = NotificationAccess(),
         customEvents: List<CustomEvent> = emptyList(), uriHandler: UriHandler? = null) {
@@ -579,6 +643,45 @@ abstract class CalendarUiScenarios {
         compose.onNode(hasText(label, substring = true) and hasAnyAncestor(isPopup())).performClick()
         compose.onNodeWithTag("today-time-zone").assertTextContains(label, substring = true)
     }
+    @Test fun todayReturnsCalendarToTopFromSameAndOtherMonths() = checkTodayReturnsCalendarToTop()
+
+    protected fun checkTodayReturnsCalendarToTop() {
+        val state = mutableStateOf(AppSettings(khmer = false, theme = ThemeMode.LIGHT))
+        val today = LocalDate.of(2026, 9, 10)
+        val custom = listOf(9, 10).flatMap { month -> (1..28).map { day ->
+            CustomEvent(title = "Scroll event $month/$day", date = LocalDate.of(2026, month, day), time = java.time.LocalTime.NOON)
+        } }
+        compose.setContent { CalendarApp(state.value, today, customEvents = custom) { state.value = it } }
+        fun scrollPosition(tag: String) = compose.onNodeWithTag(tag).fetchSemanticsNode()
+            .config[androidx.compose.ui.semantics.SemanticsProperties.VerticalScrollAxisRange].value()
+        for (k in listOf(false, true)) {
+            compose.runOnIdle { state.value = state.value.copy(khmer = k) }
+            for (differentMonth in listOf(false, true)) {
+                if (differentMonth) compose.onNodeWithContentDescription(L.text("ui.next_month.d2d40f", k)).performClick()
+                compose.onNodeWithTag("calendar-scroll").performScrollToIndex(8)
+                org.junit.Assert.assertTrue(scrollPosition("calendar-scroll") > 0f)
+                val landscape = compose.onAllNodesWithTag("calendar-pane-scroll").fetchSemanticsNodes().isNotEmpty()
+                if (landscape) {
+                    val pane = compose.onNodeWithTag("calendar-pane-scroll")
+                    val range = pane.fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.VerticalScrollAxisRange]
+                    if (range.maxValue() > 0f) {
+                        pane.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 4f) }
+                        org.junit.Assert.assertTrue(scrollPosition("calendar-pane-scroll") > 0f)
+                    }
+                } else {
+                    compose.onNodeWithTag("month-grid").assertIsNotDisplayed()
+                }
+                compose.onNode(hasText(L.text("ui.today.d71ac6", k)) and hasClickAction()).assertIsDisplayed().performClick()
+                compose.onNodeWithTag("month-grid").assertIsDisplayed()
+                org.junit.Assert.assertEquals(0f, scrollPosition("calendar-scroll"), .01f)
+                if (landscape) org.junit.Assert.assertEquals(0f, scrollPosition("calendar-pane-scroll"), .01f)
+                compose.onNode(hasContentDescription(com.rsgkh.calendar.i18n.CalendarWords.date(today, k), substring = true)
+                    and hasAnyAncestor(hasTestTag("month-grid"))).assertIsSelected()
+            }
+            screenshot("calendar-today-scroll-$k")
+        }
+    }
+
     @Test fun monthNavigationAndToday() {
         start()
         screenshot("calendar-light")
@@ -633,10 +736,60 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithText("2025").assertIsDisplayed()
         selected("Monday, 1 December")
     }
+    @Test fun eventFilterCountsFollowYearSearchSettingsAndLanguage() {
+        val state = mutableStateOf(AppSettings(khmer = false, theme = ThemeMode.LIGHT, showHolyDaysInEvents = true))
+        val personal = CustomEvent(id = "count-one", title = "Filter count one", date = LocalDate.of(2026, 9, 10), time = java.time.LocalTime.NOON)
+        val custom = listOf(personal, personal.copy(id = "count-two", title = "Filter count two"),
+            personal.copy(id = "count-next-year", date = LocalDate.of(2027, 9, 10)))
+        compose.setContent {
+            CalendarApp(state.value, LocalDate.of(2026, 9, 10), customEvents = custom) { state.value = it }
+        }
+        compose.onNodeWithText("Events").performClick()
+        val labels = mapOf(0 to "ui.all.c10205", 4 to "ui.custom.917053", 1 to "ui.holidays.8a894c",
+            2 to "ui.observances.e4454c", 3 to "ui.holy_days.9569a6")
+        fun assertCounts(expected: Map<Int, Int>) {
+            expected.forEach { (id, count) ->
+                val k = state.value.khmer
+                compose.onNodeWithTag("event-filter-$id").assertTextEquals(
+                    "${L.text(labels.getValue(id), k)} (${com.rsgkh.calendar.i18n.CalendarWords.number(count, k)})")
+            }
+        }
+        fun yearCounts(year: Int, personalCount: Int): Map<Int, Int> {
+            val builtIn = EventRepository.forYear(year)
+            val holidays = builtIn.count { it.kind == EventKind.HOLIDAY }
+            return mapOf(0 to builtIn.size + personalCount, 4 to personalCount, 1 to holidays,
+                2 to holidays + builtIn.count { it.kind == EventKind.OBSERVANCE },
+                3 to builtIn.count { it.kind == EventKind.HOLY_DAY })
+        }
+        val counts2026 = yearCounts(2026, 2)
+        assertCounts(counts2026)
+        screenshot("event-filter-counts-english")
+        compose.onNodeWithTag("event-filter-4").performClick().assertIsSelected()
+        assertCounts(counts2026)
+        compose.onNodeWithTag("event-search").performTextReplacement("Filter count")
+        assertCounts(mapOf(0 to 2, 4 to 2, 1 to 0, 2 to 0, 3 to 0))
+        compose.onNodeWithTag("event-filter-1").performScrollTo().performClick().assertIsSelected()
+        assertCounts(mapOf(0 to 2, 4 to 2, 1 to 0, 2 to 0, 3 to 0))
+        compose.onNodeWithTag("event-search").performTextReplacement("unmatched count search")
+        assertCounts((0..4).associateWith { 0 })
+        compose.onNodeWithTag("event-search").performTextReplacement("")
+        compose.onNodeWithContentDescription("Next year").performClick()
+        val counts2027 = yearCounts(2027, 1)
+        assertCounts(counts2027)
+        compose.runOnIdle { state.value = state.value.copy(showHolyDaysInEvents = false, showObservances = false) }
+        val visibleCounts = mapOf(0 to counts2027.getValue(1) + 1, 4 to 1, 1 to counts2027.getValue(1))
+        assertCounts(visibleCounts)
+        compose.onNodeWithTag("event-filter-2").assertDoesNotExist()
+        compose.onNodeWithTag("event-filter-3").assertDoesNotExist()
+        compose.runOnIdle { state.value = state.value.copy(khmer = true, theme = ThemeMode.DARK, showHolyDaysInEvents = true, showObservances = true) }
+        compose.onNodeWithTag("event-filter-0").performScrollTo().performClick()
+        assertCounts(counts2027)
+        screenshot("event-filter-counts-khmer")
+    }
     @Test fun searchFiltersAndEventDetails() {
         start()
         compose.onNodeWithText("Events").performClick()
-        compose.onNodeWithText("Holidays").performClick()
+        compose.onNodeWithTag("event-filter-1").performScrollTo().performClick()
         compose.onNodeWithText("Search events").performTextInput("Constitution")
         compose.onNodeWithText("Constitution Day · 33rd").assertIsDisplayed().performClick()
         compose.onNodeWithText("Delete").assertDoesNotExist()
@@ -653,9 +806,9 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithText("Go").performClick()
         compose.onNodeWithTag("event-year").assertTextEquals("2028")
         compose.onNodeWithText("Search events").assertTextContains("Constitution")
-        compose.onNodeWithText("Holidays").assertIsSelected()
+        compose.onNodeWithTag("event-filter-1").assertIsSelected()
         compose.onNodeWithText("No matching events. Try another filter or search.").assertIsDisplayed()
-        compose.onNodeWithText("Observances").performClick()
+        compose.onNodeWithTag("event-filter-2").performScrollTo().performClick()
         compose.onNodeWithText("Constitution Day · 35th").assertIsDisplayed()
     }
     @Test fun themeAndLanguageCanBeChanged() {
@@ -769,9 +922,9 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithText(L.text("about.source_link", false)).assertDoesNotExist()
         screenshot("calculated-event-details")
         compose.onNodeWithText(L.text("ui.close.7df7dc", false)).performClick()
-        compose.onNodeWithText(L.text("ui.holidays.8a894c", false)).performScrollTo().performClick()
+        compose.onNodeWithTag("event-filter-1").performScrollTo().performClick()
         compose.onNodeWithText(L.text("ui.no_matching_events_try_another_filter_or_search.57812b", false)).performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText(L.text("ui.observances.e4454c", false)).performScrollTo().performClick()
+        compose.onNodeWithTag("event-filter-2").performScrollTo().performClick()
         compose.onNodeWithText(title).performScrollTo().assertIsDisplayed()
         screenshot("calculated-events-2031")
     }
@@ -809,7 +962,7 @@ abstract class CalendarUiScenarios {
     @Test fun customEventsCanBeAddedInThePastEditedToTheFutureAndDeleted() {
         start()
         compose.onNodeWithText("Events").performClick()
-        compose.onNode(hasText("Personal") and hasClickAction()).assertIsDisplayed().performClick()
+        compose.onNodeWithTag("event-filter-4").assertTextEquals("Personal (0)").assertIsDisplayed().performClick()
         compose.onNodeWithText("No matching events. Try another filter or search.").assertIsDisplayed()
         compose.onNodeWithContentDescription("Add event").performClick()
         compose.onNodeWithTag("custom-title").performTextInput("Archive note")
@@ -829,7 +982,7 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithTag("custom-time").performTextReplacement("23:45")
         compose.onNodeWithText("Save").performScrollTo().performClick()
         compose.onNodeWithText("2099").assertIsDisplayed()
-        compose.onNode(hasText("Personal") and hasClickAction()).assertIsDisplayed().assertIsSelected()
+        compose.onNodeWithTag("event-filter-4").assertTextEquals("Personal (1)").assertIsDisplayed().assertIsSelected()
         screenshot("custom-events")
         compose.onNodeWithText("Archive note").performClick()
         compose.onNodeWithText("Delete").performClick()
@@ -839,6 +992,7 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithText("Delete").performClick()
         compose.onNodeWithText("Delete").performClick()
         compose.onNodeWithText("Archive note").assertDoesNotExist()
+        compose.onNodeWithTag("event-filter-4").assertTextEquals("Personal (0)")
         compose.onNodeWithText("No matching events. Try another filter or search.").assertIsDisplayed()
     }
     @Test fun customEventEditorFollowsTheSelectedTimeZoneInEnglishAndKhmer() {

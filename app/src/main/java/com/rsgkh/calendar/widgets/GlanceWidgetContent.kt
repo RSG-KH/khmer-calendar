@@ -46,14 +46,16 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
     val scale = snapshot.settings.widgetFontScale.multiplier
     val labels = glanceLabels(snapshot, strings, compact)
     val open = WidgetNavigation.openDate(context, id, date)
-    val animalSide = (minOf(size.width.value, size.height.value) - 16f).coerceAtLeast(0f) * 0.6f
+    val cornerRadius = 22.dp
+    val contentInset = if (compact) 6.dp else 8.dp
+    val animalSide = (minOf(size.width.value, size.height.value) - 16f).coerceAtLeast(0f)
 
     Box(
         GlanceModifier.fillMaxSize().appWidgetBackground().background(palette.background)
-            .cornerRadius(22.dp).clickable(open),
+            .cornerRadius(cornerRadius).clickable(open),
     ) {
         snapshot.details?.let { details ->
-            Box(GlanceModifier.fillMaxSize().padding(end = 8.dp, bottom = 8.dp),
+            Box(GlanceModifier.fillMaxSize().padding(8.dp),
                 contentAlignment = Alignment.BottomEnd) {
                 Image(ImageProvider(zodiacDrawable(details.animalYear, compact = true)),
                     contentDescription = null,
@@ -64,13 +66,12 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
             }
         }
         Row(
-            GlanceModifier.fillMaxSize().padding(
-                horizontal = if (compact) 6.dp else 8.dp, vertical = 4.dp),
+            GlanceModifier.fillMaxSize().padding(contentInset),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
                 GlanceModifier.width((size.width.value * 0.24f).coerceIn(48f, 96f).dp).fillMaxHeight()
-                    .background(palette.surfaceVariant).cornerRadius(14.dp),
+                    .background(palette.surfaceVariant).cornerRadius(cornerRadius),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalAlignment = Alignment.CenterVertically,
             ) {

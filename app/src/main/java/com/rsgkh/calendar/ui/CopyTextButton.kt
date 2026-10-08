@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import com.rsgkh.calendar.R
 import kotlinx.coroutines.delay
 
+internal val CopyTextButtonSize = 48.dp
+
 internal fun copyToClipboard(context: Context, label: String, text: String): Boolean = runCatching {
     val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return false
     clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
@@ -42,7 +44,7 @@ internal fun CopyTextButton(text: String, label: String, copiedMessage: String, 
             copied = false
         }
     }
-    val buttonOffsetY = with(LocalDensity.current) { (firstLineHeight.toDp() - 48.dp) / 2 }
+    val buttonOffsetY = with(LocalDensity.current) { (firstLineHeight.toDp() - CopyTextButtonSize) / 2 }
     IconButton(
         onClick = {
             if (copyToClipboard(context, label, text)) {
@@ -58,7 +60,7 @@ internal fun CopyTextButton(text: String, label: String, copiedMessage: String, 
             }
         },
         // Move the whole button so the icon, ripple and touch target share one center.
-        modifier = Modifier.offset(x = 12.dp, y = buttonOffsetY).size(48.dp).semantics {
+        modifier = Modifier.offset(x = 12.dp, y = buttonOffsetY).size(CopyTextButtonSize).semantics {
             if (copied) {
                 stateDescription = copiedMessage
                 liveRegion = LiveRegionMode.Polite

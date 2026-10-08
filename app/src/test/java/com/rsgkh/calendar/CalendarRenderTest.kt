@@ -234,7 +234,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNode(hasText(eventTitle) and hasAnyAncestor(isDialog())).assertIsDisplayed()
         compose.onAllNodesWithText("Close").onLast().performClick()
         compose.onNodeWithText("Events").performClick()
-        compose.onNodeWithText("Observances").performClick()
+        compose.onNodeWithTag("event-filter-2").performScrollTo().performClick()
         compose.onNodeWithText("Settings").performClick()
         val title = L.text("ui.show_observances", false)
         assertEquals("Show observances", title)
@@ -242,7 +242,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("settings-scroll").performScrollToNode(hasContentDescription(title))
         compose.onNodeWithContentDescription(title).assertIsOn().performClick().assertIsOff()
         compose.onNodeWithText("Events").performClick()
-        compose.onNodeWithText("Observances").assertDoesNotExist()
+        compose.onNodeWithTag("event-filter-2").assertDoesNotExist()
         compose.onNodeWithText("Search events").performTextInput(eventTitle)
         compose.onNodeWithText("No matching events. Try another filter or search.").assertIsDisplayed()
         compose.onNodeWithTag("event-search").performTextReplacement("")
@@ -729,6 +729,10 @@ class CalendarRenderTest : CalendarUiScenarios() {
 
     @Test
     @Config(qualifiers = "w891dp-h411dp-land-xhdpi")
+    fun landscapeTodayReturnsCalendarToTopFromSameAndOtherMonths() = checkTodayReturnsCalendarToTop()
+
+    @Test
+    @Config(qualifiers = "w891dp-h411dp-land-xhdpi")
     fun landscapeCalendarScreenshot() {
         start()
         screenshot("landscape-calendar")
@@ -928,7 +932,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
 
         // Switch to Events tab and filter by Personal (no personal events exist)
         compose.onNodeWithText("Events").performClick()
-        compose.onNode(hasText("Personal") and hasClickAction()).performClick()
+        compose.onNodeWithTag("event-filter-4").performClick()
 
         // Verify "No matching events. Try another filter or search." DOES exist on Events tab
         compose.onNodeWithText(L.text("ui.no_matching_events_try_another_filter_or_search.57812b", false)).assertIsDisplayed()

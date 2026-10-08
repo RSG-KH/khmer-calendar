@@ -4,6 +4,7 @@ package com.rsgkh.calendar.ui
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
+import android.content.res.Configuration
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -22,14 +23,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -56,15 +56,6 @@ private val widgetChoices = listOf(
         R.drawable.widget_productivity, 4, 2),
 )
 
-// Reverse neutral tones for dark mode while retaining each preview's accent and event colors.
-// Alpha is untouched, so the screenshots' rounded transparent corners remain transparent.
-private val darkPreviewFilter = ColorFilter.colorMatrix(ColorMatrix(floatArrayOf(
-    0.30236f, -1.00128f, -0.10108f, 0f, 229.5f,
-    -0.29764f, -0.40128f, -0.10108f, 0f, 229.5f,
-    -0.29764f, -1.00128f, 0.49892f, 0f, 229.5f,
-    0f, 0f, 0f, 1f, 0f,
-)))
-
 @Composable
 internal fun WidgetAddDialog(khmer: Boolean, onDismiss: () -> Unit) {
     val context = LocalContext.current
@@ -73,9 +64,17 @@ internal fun WidgetAddDialog(khmer: Boolean, onDismiss: () -> Unit) {
     val canPin = remember(manager) { runCatching { manager.isRequestPinAppWidgetSupported }.getOrDefault(false) }
     val pagerState = rememberPagerState(pageCount = { widgetChoices.size })
     val scope = rememberCoroutineScope()
-    val screenHeight = LocalConfiguration.current.screenHeightDp
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp
     val previewHeight = (screenHeight * 0.27f).coerceIn(100f, 260f).dp
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    // Resolve drawable/drawable-night against the app theme, even when the device theme differs.
+    val previewResources = remember(context, configuration, dark) {
+        context.createConfigurationContext(Configuration(configuration).apply {
+            uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
+                if (dark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+        }).resources
+    }
 
     CalendarBasicAlertDialog(
         onDismissRequest = onDismiss,
@@ -96,15 +95,17 @@ internal fun WidgetAddDialog(khmer: Boolean, onDismiss: () -> Unit) {
                     val choice = widgetChoices[page]
                     Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center) {
-                        val preview = painterResource(choice.preview)
-                        val ratio = preview.intrinsicSize.width / preview.intrinsicSize.height
+                        val preview = remember(previewResources, choice.preview) {
+                            ImageBitmap.imageResource(previewResources, choice.preview)
+                        }
+                        val ratio = preview.width.toFloat() / preview.height
                         BoxWithConstraints(Modifier.fillMaxWidth()) {
                             val imageHeight = minOf(previewHeight, (maxWidth - 24.dp) / ratio)
                             Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
-                                Image(painter = preview, contentDescription = null,
-                                    modifier = Modifier.fillMaxWidth().padding(12.dp).height(imageHeight),
-                                    contentScale = ContentScale.Fit,
-                                    colorFilter = if (dark) darkPreviewFilter else null)
+                                Image(bitmap = preview, contentDescription = null,
+                                    modifier = Modifier.fillMaxWidth().padding(12.dp).height(imageHeight)
+                                        .testTag("widget-preview-$page"),
+                                    contentScale = ContentScale.Fit)
                             }
                         }
                         Spacer(Modifier.height(12.dp))
