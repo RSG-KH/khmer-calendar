@@ -29,8 +29,11 @@ import java.time.LocalTime
 import java.time.ZoneId
 import com.rsgkh.calendar.ui.eventListKindLabel
 import com.rsgkh.calendar.ui.eventTimeSubtitle
+import com.rsgkh.calendar.ui.eventTimeZoneSubtitle
+import com.rsgkh.calendar.ui.eventTitleWithTime
 import com.rsgkh.calendar.ui.isLocalTimeDifferentFromCambodia
 import com.rsgkh.calendar.ui.localTimeOffsetLabel
+import com.rsgkh.calendar.domain.KhmerCalendar
 import com.rsgkh.calendar.ui.shortDayExtension
 
 @RunWith(RobolectricTestRunner::class)
@@ -251,6 +254,39 @@ class ReleaseTwelveTest {
         assertEquals(" · 09:00 · ម៉ោងក្នុងតំបន់ (UTC+2)", eventTimeSubtitle(localEvent, TodayTimeZone.LOCAL, k = true, localZone = parisZone))
     }
 
+    @Test fun eventTimeZoneSubtitleKeepsOnlyTimezoneWhenMovingTimeToTitle() {
+        val date = LocalDate.of(2026, 9, 29)
+        val instant = date.atTime(14, 0).atZone(CAMBODIA_ZONE).toInstant()
+        val cambodiaEvent = CalendarEvent(
+            id = "custom:1", date = date, titleKm = "ផ្ទាល់ខ្លួន", titleEn = "Personal",
+            kind = EventKind.CUSTOM, basis = DateBasis.USER, time = LocalTime.of(14, 0), instant = instant
+        )
+        val localEvent = CalendarEvent(
+            id = "custom:1", date = date, titleKm = "ផ្ទាល់ខ្លួន", titleEn = "Personal",
+            kind = EventKind.CUSTOM, basis = DateBasis.USER, time = LocalTime.of(9, 0), instant = instant
+        )
+        val untimedEvent = CalendarEvent(
+            id = "obs:1", date = date, titleKm = "ពិធីបុណ្យ", titleEn = "Observance",
+            kind = EventKind.OBSERVANCE, basis = DateBasis.OFFICIAL, time = null
+        )
+
+        val parisZone = ZoneId.of("Europe/Paris")
+        val phnomPenhZone = ZoneId.of("Asia/Phnom_Penh")
+
+        // Title contains event time and title if present: {time} {title}
+        assertEquals("14:00 Personal", eventTitleWithTime(cambodiaEvent, k = false))
+        assertEquals("14:00 ផ្ទាល់ខ្លួន", eventTitleWithTime(cambodiaEvent, k = true))
+        assertEquals("Observance", eventTitleWithTime(untimedEvent, k = false))
+
+        // Subtitle keeps only the timezone info without the time
+        assertEquals("", eventTimeZoneSubtitle(untimedEvent, TodayTimeZone.CAMBODIA, k = false, localZone = parisZone))
+        assertEquals("", eventTimeZoneSubtitle(cambodiaEvent, TodayTimeZone.CAMBODIA, k = false, localZone = phnomPenhZone))
+        assertEquals(" · Cambodia time (UTC+7)", eventTimeZoneSubtitle(cambodiaEvent, TodayTimeZone.CAMBODIA, k = false, localZone = parisZone))
+        assertEquals(" · ម៉ោងកម្ពុជា (UTC+7)", eventTimeZoneSubtitle(cambodiaEvent, TodayTimeZone.CAMBODIA, k = true, localZone = parisZone))
+        assertEquals(" · Local time (UTC+2)", eventTimeZoneSubtitle(localEvent, TodayTimeZone.LOCAL, k = false, localZone = parisZone))
+        assertEquals(" · ម៉ោងក្នុងតំបន់ (UTC+2)", eventTimeZoneSubtitle(localEvent, TodayTimeZone.LOCAL, k = true, localZone = parisZone))
+    }
+
     @Test fun shortDayExtensionFormatsCorrectlyInEnglishAndKhmer() {
         val sep30 = LocalDate.of(2026, 9, 30)
         assertEquals("Sep 30", shortDayExtension(sep30, k = false))
@@ -351,23 +387,132 @@ class ReleaseTwelveTest {
 
     enum class DayNumberColorTarget { HOLIDAY, CUSTOM, ON_SURFACE }
 
-    @Test fun personalEventListsApplyPersonalColorToBigDayNumber() {
+    @Test fun eventListDayNumberColorUsesHolidayColorOrOnSurfaceWithoutPersonalEventColoring() {
         val date = LocalDate.of(2026, 9, 29)
         val customEvent = CalendarEvent("custom-1", date, "Meeting", "Meeting", EventKind.CUSTOM, DateBasis.USER)
         val holidayEvent = CalendarEvent("holiday-1", date, "Holiday", "Holiday", EventKind.HOLIDAY, DateBasis.OFFICIAL)
         val observanceEvent = CalendarEvent("obs-1", date, "Observance", "Observance", EventKind.OBSERVANCE, DateBasis.CALCULATED)
 
-        fun resolveDateColorTarget(event: CalendarEvent, groupEvents: List<CalendarEvent>): DayNumberColorTarget {
+        fun resolveDateColorTarget(groupEvents: List<CalendarEvent>): DayNumberColorTarget {
             val holiday = groupEvents.any { it.kind == EventKind.HOLIDAY }
             return when {
-                event.kind == EventKind.CUSTOM -> DayNumberColorTarget.CUSTOM
-                holiday || event.kind == EventKind.HOLIDAY -> DayNumberColorTarget.HOLIDAY
+                holiday -> DayNumberColorTarget.HOLIDAY
                 else -> DayNumberColorTarget.ON_SURFACE
             }
         }
 
-        assertEquals(DayNumberColorTarget.CUSTOM, resolveDateColorTarget(customEvent, listOf(customEvent)))
-        assertEquals(DayNumberColorTarget.HOLIDAY, resolveDateColorTarget(holidayEvent, listOf(holidayEvent)))
-        assertEquals(DayNumberColorTarget.ON_SURFACE, resolveDateColorTarget(observanceEvent, listOf(observanceEvent)))
+        // Personal event without holiday gets ON_SURFACE (no custom color on day number)
+        assertEquals(DayNumberColorTarget.ON_SURFACE, resolveDateColorTarget(listOf(customEvent)))
+        // Holiday gets HOLIDAY color
+        assertEquals(DayNumberColorTarget.HOLIDAY, resolveDateColorTarget(listOf(holidayEvent)))
+        // Personal event alongside holiday still gets HOLIDAY color
+        assertEquals(DayNumberColorTarget.HOLIDAY, resolveDateColorTarget(listOf(customEvent, holidayEvent)))
+        // Observance gets ON_SURFACE
+        assertEquals(DayNumberColorTarget.ON_SURFACE, resolveDateColorTarget(listOf(observanceEvent)))
+    }
+
+    @Test fun calendarCellDayNumberColorUsesHolidayColorOrOnSurfaceWithoutPersonalEventColoring() {
+        val customEvent = CalendarEvent("custom-1", LocalDate.of(2026, 10, 10), "Meeting", "Meeting", EventKind.CUSTOM, DateBasis.USER)
+        val holidayEvent = CalendarEvent("holiday-1", LocalDate.of(2026, 10, 10), "Holiday", "Holiday", EventKind.HOLIDAY, DateBasis.OFFICIAL)
+        val regularEvent = CalendarEvent("obs-1", LocalDate.of(2026, 10, 10), "Observance", "Observance", EventKind.OBSERVANCE, DateBasis.CALCULATED)
+
+        fun resolveCalendarCellNumberColorTarget(isHoliday: Boolean): DayNumberColorTarget {
+            return if (isHoliday) DayNumberColorTarget.HOLIDAY else DayNumberColorTarget.ON_SURFACE
+        }
+
+        // Cell with personal event (no holiday) gets ON_SURFACE (no custom color on day number)
+        assertEquals(DayNumberColorTarget.ON_SURFACE, resolveCalendarCellNumberColorTarget(isHoliday = false))
+
+        // Cell with holiday (even if it also has custom events) gets HOLIDAY color
+        assertEquals(DayNumberColorTarget.HOLIDAY, resolveCalendarCellNumberColorTarget(isHoliday = true))
+
+        // Regular cell (no holiday) gets ON_SURFACE, no accent override
+        assertEquals(DayNumberColorTarget.ON_SURFACE, resolveCalendarCellNumberColorTarget(isHoliday = false))
+    }
+
+    @Test fun lunarCompactLabelUsesSingleLetterInitialWithSpaceWhenKhmer() {
+        // Oct 24, 2026 is 13 Koeut (Waxing)
+        val oct24Lunar = KhmerCalendar.fromGregorian(LocalDate.of(2026, 10, 24))
+        assertEquals("១៣កើត", oct24Lunar.shortLabel(true))
+        assertEquals("១៣ ក", oct24Lunar.compactLabel(true))
+        assertEquals("13K", oct24Lunar.shortLabel(false))
+        assertEquals("13K", oct24Lunar.compactLabel(false))
+
+        // Oct 10, 2026 is 14 Roach (Waning)
+        val oct10Lunar = KhmerCalendar.fromGregorian(LocalDate.of(2026, 10, 10))
+        assertEquals("១៤រោច", oct10Lunar.shortLabel(true))
+        assertEquals("១៤ រ", oct10Lunar.compactLabel(true))
+        assertEquals("14R", oct10Lunar.shortLabel(false))
+        assertEquals("14R", oct10Lunar.compactLabel(false))
+
+        // Sep 21, 2026 is 10 Koeut (Waxing)
+        val sep21Lunar = KhmerCalendar.fromGregorian(LocalDate.of(2026, 9, 21))
+        assertEquals("១០កើត", sep21Lunar.shortLabel(true))
+        assertEquals("១០ ក", sep21Lunar.compactLabel(true))
+
+        // Single digit day: Sep 12, 2026 is 1 Koeut
+        val sep12Lunar = KhmerCalendar.fromGregorian(LocalDate.of(2026, 9, 12))
+        assertEquals("១កើត", sep12Lunar.shortLabel(true))
+        assertEquals("១ ក", sep12Lunar.compactLabel(true))
+    }
+
+    @Test fun adaptiveLunarTextSelectionAppliesToEntireTableIfAnyCellExceedsAvailableWidth() {
+        fun resolveTableUsesCompactLunar(
+            datesInMonth: List<Pair<Int, String>>,
+            textWidthMap: Map<String, Float>,
+            availableWidth: Float,
+            k: Boolean
+        ): Boolean {
+            if (!k) return false
+            var overflow = false
+            for ((day, label) in datesInMonth) {
+                if (day >= 10) {
+                    val width = textWidthMap[label] ?: 0f
+                    if (width > availableWidth) {
+                        overflow = true
+                        break
+                    }
+                }
+            }
+            return overflow
+        }
+
+        val textWidths = mapOf(
+            "១កើត" to 26f,
+            "១០កើត" to 42f,
+            "១៣កើត" to 47f,
+            "១៤រោច" to 43f,
+        )
+
+        val monthDates = listOf(
+            1 to "១កើត",
+            10 to "១០កើត",
+            13 to "១៣កើត",
+            14 to "១៤រោច",
+        )
+
+        // Narrow cell (45px): day 13 (47px) overflows -> whole table uses compact!
+        assertTrue(resolveTableUsesCompactLunar(monthDates, textWidths, availableWidth = 45f, k = true))
+
+        // Wide cell (80px): no dates overflow -> whole table keeps full labels!
+        assertFalse(resolveTableUsesCompactLunar(monthDates, textWidths, availableWidth = 80f, k = true))
+
+        // English mode: never uses compact
+        assertFalse(resolveTableUsesCompactLunar(monthDates, textWidths, availableWidth = 45f, k = false))
+    }
+
+    @Test fun eventDialogTitleColorUsesHolidayAndCustomColorRespectively() {
+        fun resolveDialogTitleColor(kind: EventKind, primary: String, holiday: String, custom: String): String {
+            return when (kind) {
+                EventKind.CUSTOM -> custom
+                EventKind.HOLIDAY -> holiday
+                else -> primary
+            }
+        }
+
+        assertEquals("red", resolveDialogTitleColor(EventKind.CUSTOM, primary = "blue", holiday = "gold", custom = "red"))
+        assertEquals("gold", resolveDialogTitleColor(EventKind.HOLIDAY, primary = "blue", holiday = "gold", custom = "red"))
+        assertEquals("blue", resolveDialogTitleColor(EventKind.OBSERVANCE, primary = "blue", holiday = "gold", custom = "red"))
+        assertEquals("blue", resolveDialogTitleColor(EventKind.HOLY_DAY, primary = "blue", holiday = "gold", custom = "red"))
     }
 }

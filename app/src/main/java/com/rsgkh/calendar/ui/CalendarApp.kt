@@ -80,11 +80,13 @@ import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -134,7 +136,10 @@ internal fun localTimeOffsetLabel(
     localZone: ZoneId = ZoneId.systemDefault()
 ): String = TodayTimeZone.LOCAL.offsetLabel(instant, localZone)
 
-internal fun eventTimeSubtitle(
+internal fun eventTitleWithTime(event: CalendarEvent, k: Boolean): String =
+    if (event.time != null) "${event.time} ${event.title(k)}" else event.title(k)
+
+internal fun eventTimeZoneSubtitle(
     event: CalendarEvent,
     todayTimeZone: TodayTimeZone,
     k: Boolean,
@@ -142,13 +147,23 @@ internal fun eventTimeSubtitle(
 ): String {
     val time = event.time ?: return ""
     val eventInstant = event.instant ?: event.date.atTime(time).atZone(todayTimeZone.zone(localZone)).toInstant()
-    if (!isLocalTimeDifferentFromCambodia(eventInstant, localZone)) return " · $time"
+    if (!isLocalTimeDifferentFromCambodia(eventInstant, localZone)) return ""
     val zoneText = if (todayTimeZone == TodayTimeZone.CAMBODIA) {
         L.text("ui.cambodia_time_utc_7.6b9f2d", k)
     } else {
         "${L.text("ui.local_time.541b44", k)} (${localTimeOffsetLabel(eventInstant, localZone)})"
     }
-    return " · $time · $zoneText"
+    return " · $zoneText"
+}
+
+internal fun eventTimeSubtitle(
+    event: CalendarEvent,
+    todayTimeZone: TodayTimeZone,
+    k: Boolean,
+    localZone: ZoneId = ZoneId.systemDefault()
+): String {
+    val time = event.time ?: return ""
+    return " · $time${eventTimeZoneSubtitle(event, todayTimeZone, k, localZone)}"
 }
 
 internal fun shortDayExtension(date: LocalDate, k: Boolean): String {
@@ -332,7 +347,11 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                             .testTag("bottom-navigation"),
                             windowInsets = WindowInsets(0, 0, 0, 0), containerColor = MaterialTheme.colorScheme.background, tonalElevation = 0.dp) {
                             listOf(L.text("ui.calendar.ee8bd9", k), L.text("ui.events.11d867", k), L.text("ui.settings.0e0a4f", k)).forEachIndexed { index, title ->
-                                NavigationBarItem(selected = page == index, onClick = { jump = false; creating = false; editingId = null; page = index },
+                                NavigationBarItem(selected = page == index, onClick = {
+                                    jump = false; creating = false; editingId = null
+                                    if (index == 1 && page != 1) customFocus = 0
+                                    page = index
+                                },
                                     icon = { AppIcon(index) }, label = { Text(title, modifier = Modifier.offset(y = (-2).dp), fontSize = 12.readableSp) },
                                     colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.primaryContainer,
                                         selectedIconColor = MaterialTheme.colorScheme.primary, selectedTextColor = MaterialTheme.colorScheme.primary))
@@ -367,7 +386,11 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                             NavigationRailItem(
                                 modifier = if (!isTablet) Modifier.weight(1f) else Modifier.padding(vertical = 12.dp),
                                 selected = page == index,
-                                onClick = { jump = false; creating = false; editingId = null; page = index },
+                                onClick = {
+                                    jump = false; creating = false; editingId = null
+                                    if (index == 1 && page != 1) customFocus = 0
+                                    page = index
+                                },
                                 icon = { AppIcon(index) },
                                 label = { Text(title, fontSize = 11.readableSp) },
                                 colors = NavigationRailItemDefaults.colors(
@@ -384,7 +407,10 @@ fun CalendarApp(settings: AppSettings, today: LocalDate,
                     onCancel = { creating = false; editingId = null },
                     onSave = { event ->
                         onSaveCustom(event); creating = false; editingId = null; detail = null; dateDetailText = null
-                        eventYear = event.asCalendarEvent(displayZone).date.year.coerceIn(1800, 2200); page = 1; customFocus++
+                        eventYear = event.asCalendarEvent(displayZone).date.year.coerceIn(1800, 2200)
+                        if (page == 1) {
+                            customFocus++
+                        }
                     })
                 else when (page) {
                     0 -> CalendarScreen(settings, today, month, selected, allCustom,
@@ -807,12 +833,39 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
     val cellHeight = calendarCellHeight()
     val firstOffset = calendarFirstDayOffset(month, settings.mondayFirst)
     val byDate = remember(events) { events.groupBy { it.date } }
-    Column(Modifier.testTag("month-grid").pointerInput(month) {
+    BoxWithConstraints(Modifier.testTag("month-grid").pointerInput(month) {
         var drag = 0f
         detectHorizontalDragGestures(onDragStart = { drag = 0f }, onHorizontalDrag = { change, amount -> change.consume(); drag += amount }, onDragEnd = {
             if (abs(drag) > 80.dp.toPx()) { if (drag < 0) onNext() else onPrevious() }
         })
     }) {
+        val density = LocalDensity.current
+        val cellAvailableWidthPx = with(density) { (maxWidth / 7 - CalendarCellPadding * 2).toPx() }
+        val lunarMeasurer = rememberTextMeasurer()
+        val lunarFontSize = (if (isPhoneLandscape) 8 else 10).readableSp
+        val lunarLineHeight = (if (isPhoneLandscape) 10 else 12).readableSp
+        val lunarTextStyle = LocalTextStyle.current.copy(fontSize = lunarFontSize, lineHeight = lunarLineHeight)
+        val safetyPaddingPx = with(density) { 1.dp.toPx() }
+        val useCompactLunar = remember(month, k, cellAvailableWidthPx, lunarTextStyle) {
+            if (!k) false
+            else {
+                val maxAvailablePx = cellAvailableWidthPx - safetyPaddingPx
+                var overflow = false
+                val len = month.lengthOfMonth()
+                for (day in 1..len) {
+                    val lunar = KhmerCalendar.fromGregorian(month.atDay(day))
+                    if (lunar.day >= 10) {
+                        val text = lunar.shortLabel(true)
+                        if (lunarMeasurer.measure(text, lunarTextStyle, softWrap = false, maxLines = 1).size.width > maxAvailablePx) {
+                            overflow = true
+                            break
+                        }
+                    }
+                }
+                overflow
+            }
+        }
+        Column {
         CalendarWeekdayHeader(settings)
         repeat(calendarWeekCount(month, settings.mondayFirst)) { week ->
             Row(Modifier.fillMaxWidth()) {
@@ -850,10 +903,19 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
                             }
                             Column(Modifier.fillMaxWidth().offset(y = if (isPhoneLandscape) (-0.5).dp else (-1.0).dp).padding(vertical = if (isPhoneLandscape) 0.5.dp else 1.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                                Text(number(day, k), color = if (isToday) colors.primary else if (isHoliday) colors.tertiary else colors.onSurface,
+                                Text(number(day, k), color = if (isHoliday) colors.tertiary else colors.onSurface,
                                     fontSize = (if (isPhoneLandscape) 13 else 16).readableSp, lineHeight = (if (isPhoneLandscape) 15 else 17).sp, maxLines = 1, fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium)
-                                if (settings.showLunar) Text(lunar.shortLabel(k), modifier = Modifier.offset(y = if (isPhoneLandscape) (-1.5).dp else (-1).dp), color = if (isToday) colors.primary.copy(alpha = .85f) else colors.onSurfaceVariant,
-                                    fontSize = (if (isPhoneLandscape) 8 else 10).readableSp, lineHeight = (if (isPhoneLandscape) 10 else 12).readableSp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                if (settings.showLunar) {
+                                    Text(
+                                        if (useCompactLunar) lunar.compactLabel(k) else lunar.shortLabel(k),
+                                        modifier = Modifier.offset(y = if (isPhoneLandscape) (-1.5).dp else (-1).dp),
+                                        color = colors.onSurfaceVariant,
+                                        fontSize = lunarFontSize,
+                                        lineHeight = lunarLineHeight,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                                 val markSize = when {
                                     isTablet && isLandscape -> 7.0.dp
                                     isTablet -> 8.5.dp
@@ -877,6 +939,7 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
             }
         }
     }
+}
 }
 
 private fun matchesEventFilter(kind: EventKind, filter: Int): Boolean = when (filter) {
@@ -1065,16 +1128,13 @@ private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolea
     val dayDate = events.first().date
     val firstEvent = events.first()
     val color = eventColor(firstEvent.kind)
-    val dateColor = when {
-        firstEvent.kind == EventKind.CUSTOM -> color
-        holiday || firstEvent.kind == EventKind.HOLIDAY -> colors.tertiary
-        else -> colors.onSurface
-    }
+    val dateColor = if (holiday) colors.tertiary else colors.onSurface
     val topRadius = if (first) CardCornerRadius else 0.dp
     val bottomRadius = if (last) CardCornerRadius else 0.dp
     val timelineStartOffset = EventRowSidePadding + dateColumnWidth + TimelineLeftSpacing
     val dateColumnTotalWidth = timelineStartOffset + TimelineLineWidth / 2
     val timelineNodeOffset = dateColumnTotalWidth - TimelineNodeSize / 2
+    val timelineLineColor = colors.primary.copy(alpha = 0.5f)
 
     Surface(shape = RoundedCornerShape(topStart = topRadius, topEnd = topRadius,
         bottomStart = bottomRadius, bottomEnd = bottomRadius), color = background,
@@ -1130,7 +1190,7 @@ private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolea
                         .padding(start = timelineStartOffset)
                         .width(TimelineLineWidth)
                         .fillMaxHeight()
-                        .background(colors.primary)
+                        .background(timelineLineColor)
                 )
                 if (today) {
                     Box(
@@ -1145,7 +1205,7 @@ private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolea
 
             // Bottom horizontal divider between days
             if (!last) {
-                val dividerColor = if (today || highlightBottomDivider) colors.primary else colors.outlineVariant
+                val dividerColor = if (today || highlightBottomDivider) timelineLineColor else colors.outlineVariant
                 if (showDividerNode) {
                     Box(
                         Modifier
@@ -1164,7 +1224,7 @@ private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolea
                                 .padding(start = timelineStartOffset)
                                 .width(TimelineLineWidth)
                                 .fillMaxHeight()
-                                .background(colors.primary)
+                                .background(timelineLineColor)
                         )
                         // 3. Circle node (on top of timeline line and divider)
                         Box(
@@ -1187,7 +1247,7 @@ private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolea
                                 .padding(start = timelineStartOffset)
                                 .width(TimelineLineWidth)
                                 .height(1.dp)
-                                .background(colors.primary)
+                                .background(timelineLineColor)
                         )
                     }
                 }
@@ -1199,8 +1259,13 @@ private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolea
 @Composable
 private fun EventRow(event: CalendarEvent, k: Boolean, modifier: Modifier = Modifier, todayTimeZone: TodayTimeZone = LocalTodayTimeZone.current, onClick: () -> Unit) {
     val color = eventColor(event.kind)
-    val timeSubtitle = eventTimeSubtitle(event, todayTimeZone, k)
-    Surface(onClick = onClick, modifier = modifier.semantics { contentDescription = listOf(event.title(k), dateLabel(event.date, k), number(event.date.year, k), (eventListKindLabel(event.kind, k) + timeSubtitle).trim()).filter { it.isNotBlank() }.joinToString(", ") }, shape = RectangleShape, color = Color.Transparent) {
+    val timeSubtitle = eventTimeZoneSubtitle(event, todayTimeZone, k)
+    val titleText = eventTitleWithTime(event, k)
+    val titleColor = when (event.kind) {
+        EventKind.CUSTOM, EventKind.HOLIDAY -> color
+        else -> Color.Unspecified
+    }
+    Surface(onClick = onClick, modifier = modifier.semantics { contentDescription = listOf(titleText, dateLabel(event.date, k), number(event.date.year, k), (eventListKindLabel(event.kind, k) + timeSubtitle).trim()).filter { it.isNotBlank() }.joinToString(", ") }, shape = RectangleShape, color = Color.Transparent) {
         Box(Modifier.fillMaxWidth()) {
             val backgroundDrawable = when (event.kind) {
                 EventKind.CUSTOM -> R.drawable.custom_event_star
@@ -1227,8 +1292,17 @@ private fun EventRow(event: CalendarEvent, k: Boolean, modifier: Modifier = Modi
             }
             Row(Modifier.fillMaxWidth().padding(start = TimelineCenterOffsetToEvent, end = EventRowSidePadding, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(event.title(k), fontWeight = FontWeight.Medium, fontSize = 13.readableSp, lineHeight = 19.readableSp)
-                    Text(eventListKindLabel(event.kind, k) + timeSubtitle, color = color, fontSize = 11.readableSp, lineHeight = 14.readableSp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        if (event.time != null) {
+                            Text("${event.time}", color = titleColor, fontWeight = FontWeight.Medium, fontSize = 13.readableSp, lineHeight = 19.readableSp)
+                        }
+                        Text(event.title(k), modifier = Modifier.weight(1f, fill = false), color = titleColor, fontWeight = FontWeight.Medium, fontSize = 13.readableSp, lineHeight = 19.readableSp)
+                    }
+                    Text(eventListKindLabel(event.kind, k) + timeSubtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.readableSp, lineHeight = 12.readableSp)
                 }
                 Text("›", Modifier.padding(start = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 20.sp)
             }
@@ -1774,8 +1848,12 @@ internal fun WidgetSettingsCard(
                                             EventMark(event.kind, eventColor(event.kind), small = false)
                                             Spacer(Modifier.width(12.dp))
                                             Column(Modifier.weight(1f)) {
-                                                Text(event.title(k), fontSize = 14.readableSp, lineHeight = 20.readableSp, fontWeight = FontWeight.Medium)
-                                                Text(eventListKindLabel(event.kind, k) + eventTimeSubtitle(event, todayTimeZone, k), fontSize = 12.readableSp, lineHeight = 16.readableSp, color = eventColor(event.kind))
+                                                val eventTitleColor = when (event.kind) {
+                                                    EventKind.CUSTOM, EventKind.HOLIDAY -> eventColor(event.kind)
+                                                    else -> Color.Unspecified
+                                                }
+                                                Text(event.title(k), color = eventTitleColor, fontSize = 14.readableSp, lineHeight = 20.readableSp, fontWeight = FontWeight.Medium)
+                                                Text(eventListKindLabel(event.kind, k) + eventTimeSubtitle(event, todayTimeZone, k), fontSize = 12.readableSp, lineHeight = 16.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                             Text("›", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
@@ -2041,9 +2119,21 @@ private fun Modifier.openAstrologyDetails(label: String, onOpen: (() -> Unit)?):
 }
 
 @Composable
-internal fun EventDialogTitle(title: String, k: Boolean, showCopyButtons: Boolean, modifier: Modifier = Modifier) {
+internal fun eventDialogTitleColor(kind: EventKind): Color = when (kind) {
+    EventKind.CUSTOM, EventKind.HOLIDAY -> eventColor(kind)
+    else -> MaterialTheme.colorScheme.primary
+}
+
+@Composable
+internal fun EventDialogTitle(
+    title: String,
+    k: Boolean,
+    showCopyButtons: Boolean,
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary,
+) {
     val titleStyle = LocalTextStyle.current.copy(
-        color = MaterialTheme.colorScheme.primary,
+        color = color,
         fontWeight = FontWeight.Bold,
         fontSize = 18.readableSp,
         lineHeight = 26.readableSp,
@@ -2127,7 +2217,7 @@ internal fun EventDialogTitle(title: String, k: Boolean, showCopyButtons: Boolea
                         .fillMaxWidth()
                         .padding(24.dp)
                 ) {
-                    EventDialogTitle(event.title(k), k, showCopyButtons)
+                    EventDialogTitle(event.title(k), k, showCopyButtons, color = eventDialogTitleColor(event.kind))
                     HorizontalDivider()
                     Spacer(Modifier.height(14.dp))
                     val scrollState = rememberScrollState()

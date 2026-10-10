@@ -1503,4 +1503,52 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("date-details-title").assertDoesNotExist()
         compose.onAllNodesWithText("Victory Over Genocide Day · 47th").onLast().assertIsDisplayed()
     }
+
+    @Test fun addingEventFromCalendarTabStaysOnCalendarTabAndEventsTabDefaultsToAllFilter() {
+        start(AppSettings(khmer = false), now = Instant.parse("2026-09-10T12:00:00Z"))
+        // 1. Open date details on calendar tab and click Add event
+        compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        compose.onNodeWithTag("date-details-title").assertIsDisplayed()
+        compose.onNodeWithText(L.text("ui.add_event.bf2f10", false)).performClick()
+
+        // 2. Custom event editor opens
+        compose.onNodeWithTag("custom-title").performTextInput("My Calendar Event")
+        compose.onNodeWithText(L.text("ui.save.1b0623", false)).performScrollTo().performClick()
+
+        // 3. Must stay on the Calendar tab, not auto switch to Events tab
+        compose.onNodeWithTag("month-grid").assertIsDisplayed()
+        compose.onNodeWithTag("events-content").assertDoesNotExist()
+
+        // 4. When switching to Events tab, filter must default to "All" (0), NOT "Personal" (4)
+        compose.onNodeWithText("Events").performClick()
+        compose.onNodeWithTag("events-content").assertIsDisplayed()
+        compose.onNodeWithTag("event-filter-0").assertIsSelected()
+        compose.onNodeWithTag("event-filter-4").assertIsNotSelected()
+
+        // 5. Clicking personal filter displays the newly created custom event
+        compose.onNodeWithTag("event-filter-4").performClick().assertIsSelected()
+        compose.onAllNodesWithText("My Calendar Event").onFirst().assertIsDisplayed()
+    }
+
+    @Test fun personalEventDisplaysTimeInTitleAndKeepsTimezoneInSubtitle() {
+        val date = LocalDate.of(2026, 9, 10)
+        val customEvent = CustomEvent(
+            id = "custom-test-1",
+            title = "Test",
+            date = date,
+            time = LocalTime.of(9, 0),
+            zoneId = "Europe/Paris"
+        )
+        start(AppSettings(khmer = true, todayTimeZone = TodayTimeZone.LOCAL), customEvents = listOf(customEvent), now = Instant.parse("2026-09-10T07:00:00Z"))
+        compose.onNodeWithText(L.text("ui.events.11d867", true)).performClick()
+        compose.onNodeWithTag("event-filter-4").performClick().assertIsSelected()
+
+        // 1. Title displays "Test" and time "09:00" in title row
+        compose.onAllNodesWithText("Test").onFirst().assertIsDisplayed()
+        compose.onAllNodesWithText("09:00").onFirst().assertIsDisplayed()
+
+        // 2. Subtitle displays "ផ្ទាល់ខ្លួន · ម៉ោងក្នុងតំបន់ (UTC+2)"
+        compose.onNode(hasText("ផ្ទាល់ខ្លួន · ម៉ោងក្នុងតំបន់ (UTC+2)", substring = true)).assertIsDisplayed()
+    }
 }
+
