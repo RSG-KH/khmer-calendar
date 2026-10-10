@@ -108,4 +108,38 @@ class TodayRefreshTest {
             assertEquals(LocalDate.of(2026, 9, 15), displayed)
         } finally { scope.cancel() }
     }
+
+    @Test fun testShouldHighlightBottomDividerWhenTodayHasNoEvents() {
+        val today = LocalDate.of(2026, 10, 17)
+        val oct10 = LocalDate.of(2026, 10, 10)
+        val oct15 = LocalDate.of(2026, 10, 15)
+        val oct23 = LocalDate.of(2026, 10, 23)
+        val oct28 = LocalDate.of(2026, 10, 28)
+
+        // Case: Today (17 Oct) has no events. Separator between latest day before (15 Oct) and earliest day after (23 Oct) is highlighted.
+        assertFalse(com.rsgkh.calendar.ui.shouldHighlightBottomDivider(oct10, oct15, today, todayInDays = false, isTodayMonth = true))
+        assertTrue(com.rsgkh.calendar.ui.shouldHighlightBottomDivider(oct15, oct23, today, todayInDays = false, isTodayMonth = true))
+        assertFalse(com.rsgkh.calendar.ui.shouldHighlightBottomDivider(oct23, oct28, today, todayInDays = false, isTodayMonth = true))
+        assertFalse(com.rsgkh.calendar.ui.shouldHighlightBottomDivider(oct28, null, today, todayInDays = false, isTodayMonth = true))
+
+        // When viewing a different month, divider is not highlighted
+        assertFalse(com.rsgkh.calendar.ui.shouldHighlightBottomDivider(oct15, oct23, today, todayInDays = false, isTodayMonth = false))
+
+        // Case: Today (17 Oct) HAS events. Divider before today (e.g. 15 Oct -> 17 Oct) is highlighted.
+        assertTrue(com.rsgkh.calendar.ui.shouldHighlightBottomDivider(oct15, today, today, todayInDays = true, isTodayMonth = true))
+        assertFalse(com.rsgkh.calendar.ui.shouldHighlightBottomDivider(oct10, oct15, today, todayInDays = true, isTodayMonth = true))
+
+        // Test divider node visibility:
+        // When today (17 Oct) has no events, only the separator between 15 and 23 shows the circle node.
+        assertFalse(com.rsgkh.calendar.ui.shouldShowDividerNode(oct10, oct15, today, todayInDays = false, isTodayMonth = true))
+        assertTrue(com.rsgkh.calendar.ui.shouldShowDividerNode(oct15, oct23, today, todayInDays = false, isTodayMonth = true))
+        assertFalse(com.rsgkh.calendar.ui.shouldShowDividerNode(oct23, oct28, today, todayInDays = false, isTodayMonth = true))
+
+        // When today HAS events (e.g. today is 11 Oct), NO separator divider node is shown!
+        val todayOct11 = LocalDate.of(2026, 10, 11)
+        val oct09 = LocalDate.of(2026, 10, 9)
+        assertFalse(com.rsgkh.calendar.ui.shouldShowDividerNode(oct09, oct10, todayOct11, todayInDays = true, isTodayMonth = true))
+        assertFalse(com.rsgkh.calendar.ui.shouldShowDividerNode(oct10, todayOct11, todayOct11, todayInDays = true, isTodayMonth = true))
+    }
 }
+

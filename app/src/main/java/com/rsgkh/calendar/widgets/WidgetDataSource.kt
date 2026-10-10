@@ -153,7 +153,7 @@ internal object WidgetDataSource {
                     hasPersonal = hasPersonal,
                     lotusRes = if (isHoly) {
                         // Day 8 and its shaving day use the bud; phase-end holy days use the blossom.
-                        if ((lunar?.day ?: 0) <= 8) R.drawable.holy_day_lotus else R.drawable.holy_day_lotus_blossom
+                        if (lunar.day <= 8) R.drawable.holy_day_lotus else R.drawable.holy_day_lotus_blossom
                     } else null,
                 )
             }

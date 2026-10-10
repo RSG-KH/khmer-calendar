@@ -19,8 +19,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
 abstract class CalendarWidgetReceiver : GlanceAppWidgetReceiver() {
-    override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
-        super.onUpdate(context, manager, ids)
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        super.onUpdate(context, appWidgetManager, appWidgetIds)
         WidgetUpdater.requestUpdate(context)
     }
 

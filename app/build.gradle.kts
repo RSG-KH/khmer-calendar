@@ -70,8 +70,8 @@ tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
 
 dependencies {
     // Home screen widgets (Glance versions are not managed by the Compose BOM).
-    implementation("androidx.glance:glance-appwidget:1.2.0")
-    implementation("androidx.work:work-runtime-ktx:2.11.2")
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.calendar.engine)
     add(calendarEngineVerification.name, libs.calendar.engine)
     implementation(libs.androidx.core)

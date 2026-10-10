@@ -1488,4 +1488,19 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("ganzhi-sign-day", useUnmergedTree = true).assertExists()
         compose.onNodeWithText(L.text("ui.ganzhi_solar_range", false)).assertIsDisplayed()
     }
+
+    @Test fun clickingDateColumnInEventsListOpensDateDetailsDialog() {
+        start(AppSettings(khmer = false), now = Instant.parse("2026-01-07T12:00:00Z"))
+        compose.onNodeWithText("Events").performClick()
+        // 1. Clicking date column opens date details dialog
+        compose.onNodeWithTag("event-date-column-2026-01-07").performClick()
+        compose.onNodeWithTag("date-details-title").assertIsDisplayed()
+        compose.onAllNodesWithText("Close").onLast().performClick()
+        compose.onNodeWithTag("date-details-title").assertDoesNotExist()
+
+        // 2. Clicking the event row opens the event details dialog
+        compose.onNodeWithText("Victory Over Genocide Day · 47th").performClick()
+        compose.onNodeWithTag("date-details-title").assertDoesNotExist()
+        compose.onAllNodesWithText("Victory Over Genocide Day · 47th").onLast().assertIsDisplayed()
+    }
 }

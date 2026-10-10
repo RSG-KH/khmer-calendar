@@ -94,7 +94,13 @@ class MainActivity : ComponentActivity() {
                 onDeleteCustom = { customRepository.delete(it); customRevision++; EventNotifications.clearDisplayedAsync(this); changed() },
                 notificationAccess = access,
                 onOpenNotificationSettings = { requestNotificationAccess() },
-                onAllowExact = { startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, "package:$packageName".toUri())) },
+                onAllowExact = {
+                    try {
+                        startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, "package:$packageName".toUri()))
+                    } catch (_: Exception) {
+                        openAppNotificationSettings()
+                    }
+                },
                 openDateRequest = openDateRequest,
                 openWidgetEventRequest = openWidgetEventRequest,
             ) { updateSettings(it) }
