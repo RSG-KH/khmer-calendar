@@ -730,7 +730,7 @@ private fun CalendarScreen(
                         if (selectedEvents.isNotEmpty()) {
                             Text(L.text("ui.events_on_the_day.a174fc", k), Modifier.padding(start = 10.dp, top = 4.dp, bottom = 4.dp),
                                 fontSize = 12.readableSp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            EventDayGroup(selectedEvents, k, selected == today, true, true, onEvent, onOpenDateDetails)
+                            EventDayGroup(selectedEvents, settings, selected == today, true, true, onEvent, onOpenDateDetails)
                         }
                     }
                 }
@@ -745,7 +745,7 @@ private fun CalendarScreen(
                         val isTodayMonth = YearMonth.from(today) == month
                         itemsIndexed(days, key = { _, events -> events.first().date }) { index, events ->
                             val nextDate = days.getOrNull(index + 1)?.first()?.date
-                            EventDayGroup(events, k, events.first().date == today, index == 0, index == days.lastIndex, onEvent, onOpenDateDetails,
+                            EventDayGroup(events, settings, events.first().date == today, index == 0, index == days.lastIndex, onEvent, onOpenDateDetails,
                                 highlightBottomDivider = shouldHighlightBottomDivider(events.first().date, nextDate, today, todayInDays, isTodayMonth),
                                 showDividerNode = shouldShowDividerNode(events.first().date, nextDate, today, todayInDays, isTodayMonth))
                         }
@@ -764,13 +764,23 @@ private fun CalendarScreen(
                     val isTodayMonth = YearMonth.from(today) == month
                     itemsIndexed(days, key = { _, events -> events.first().date }) { index, events ->
                         val nextDate = days.getOrNull(index + 1)?.first()?.date
-                        EventDayGroup(events, k, events.first().date == today, index == 0, index == days.lastIndex, onEvent, onOpenDateDetails,
+                        EventDayGroup(events, settings, events.first().date == today, index == 0, index == days.lastIndex, onEvent, onOpenDateDetails,
                             highlightBottomDivider = shouldHighlightBottomDivider(events.first().date, nextDate, today, todayInDays, isTodayMonth),
                             showDividerNode = shouldShowDividerNode(events.first().date, nextDate, today, todayInDays, isTodayMonth))
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun weekdayLabelColor(day: DayOfWeek, settings: AppSettings): Color {
+    val colors = MaterialTheme.colorScheme
+    return when {
+        settings.highlightWeekdayNames -> weekdayNameColor(day, colors.surface.luminance() < 0.5f)
+        settings.highlightSunday && day == DayOfWeek.SUNDAY -> colors.tertiary
+        else -> colors.onSurfaceVariant
     }
 }
 
@@ -791,17 +801,11 @@ private fun CalendarWeekdayHeader(settings: AppSettings, includeTestTags: Boolea
             val available = with(LocalDensity.current) { (maxWidth / 7 - 2.dp).toPx() }.coerceAtLeast(1f)
             preferredSize * (available / widest).coerceAtMost(1f)
         } else preferredSize
-        val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
         Row(Modifier.fillMaxWidth()) {
             ordered.forEachIndexed { index, it ->
                 val weekday = DayOfWeek.of(if (settings.mondayFirst) index + 1 else if (index == 0) 7 else index)
-                val headerColor = when {
-                    settings.highlightWeekdayNames -> weekdayNameColor(weekday, dark)
-                    settings.highlightSunday && weekday == DayOfWeek.SUNDAY -> MaterialTheme.colorScheme.tertiary
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant
-                }
                 Text(it, Modifier.weight(1f).then(if (includeTestTags) Modifier.testTag("weekday-header-${weekday.value}") else Modifier), textAlign = TextAlign.Center, fontSize = headerSize,
-                    fontWeight = FontWeight.Medium, color = headerColor, maxLines = 1, softWrap = false)
+                    fontWeight = FontWeight.Medium, color = weekdayLabelColor(weekday, settings), maxLines = 1, softWrap = false)
             }
         }
     }
@@ -1050,7 +1054,7 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
                     val isTodayMonth = YearMonth.from(today) == month
                     itemsIndexed(days, key = { _, events -> events.first().date }) { index, events ->
                         val nextDate = days.getOrNull(index + 1)?.first()?.date
-                        EventDayGroup(events, k, events.first().date == today, index == 0, index == days.lastIndex, onEvent, onOpenDateDetails,
+                        EventDayGroup(events, settings, events.first().date == today, index == 0, index == days.lastIndex, onEvent, onOpenDateDetails,
                             highlightBottomDivider = shouldHighlightBottomDivider(events.first().date, nextDate, today, todayInDays, isTodayMonth),
                             showDividerNode = shouldShowDividerNode(events.first().date, nextDate, today, todayInDays, isTodayMonth))
                     }
@@ -1118,8 +1122,9 @@ private val TimelineCenterOffsetFromDate = TimelineLeftSpacing + TimelineLineWid
 private val TimelineCenterOffsetToEvent = TimelineLineWidth / 2 + TimelineRightSpacing
 
 @Composable
-private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolean, first: Boolean, last: Boolean, onEvent: (CalendarEvent) -> Unit, onOpenDateDetails: (LocalDate) -> Unit, highlightBottomDivider: Boolean = false, showDividerNode: Boolean = false) {
+private fun EventDayGroup(events: List<CalendarEvent>, settings: AppSettings, today: Boolean, first: Boolean, last: Boolean, onEvent: (CalendarEvent) -> Unit, onOpenDateDetails: (LocalDate) -> Unit, highlightBottomDivider: Boolean = false, showDividerNode: Boolean = false) {
     if (events.isEmpty()) return
+    val k = settings.khmer
     val dateColumnWidth = eventDateColumnWidth()
     val colors = MaterialTheme.colorScheme
     val background = if (today) colors.primary.copy(alpha = .02f).compositeOver(colors.surface)
@@ -1168,7 +1173,7 @@ private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolea
                     ) {
                         Text(number(dayDate.dayOfMonth, k), color = dateColor, fontSize = 21.readableSp, lineHeight = 21.readableSp, fontWeight = FontWeight.SemiBold)
                         Text(CalendarWords.weekday(dayDate.dayOfWeek.value, k, "short"), modifier = Modifier.offset(y = (-3.5).dp),
-                            fontSize = 10.readableSp, lineHeight = 12.readableSp, color = colors.onSurfaceVariant)
+                            fontSize = 10.readableSp, lineHeight = 12.readableSp, color = weekdayLabelColor(dayDate.dayOfWeek, settings))
                     }
 
                     // Right column: Events for this day (covers from timeline line to end)
@@ -1259,10 +1264,7 @@ private fun EventRow(event: CalendarEvent, k: Boolean, modifier: Modifier = Modi
     val color = eventColor(event.kind)
     val timeSubtitle = eventTimeZoneSubtitle(event, todayTimeZone, k)
     val titleText = eventTitleWithTime(event, k)
-    val titleColor = when (event.kind) {
-        EventKind.CUSTOM, EventKind.HOLIDAY -> color
-        else -> Color.Unspecified
-    }
+    val titleColor = MaterialTheme.colorScheme.onSurface
     Surface(onClick = onClick, modifier = modifier.semantics { contentDescription = listOf(titleText, dateLabel(event.date, k), number(event.date.year, k), (eventListKindLabel(event.kind, k) + timeSubtitle).trim()).filter { it.isNotBlank() }.joinToString(", ") }, shape = RectangleShape, color = Color.Transparent) {
         Box(Modifier.fillMaxWidth()) {
             val backgroundDrawable = when (event.kind) {
@@ -1300,7 +1302,7 @@ private fun EventRow(event: CalendarEvent, k: Boolean, modifier: Modifier = Modi
                         }
                         Text(event.title(k), modifier = Modifier.weight(1f, fill = false), color = titleColor, fontWeight = FontWeight.Medium, fontSize = 13.readableSp, lineHeight = 19.readableSp)
                     }
-                    Text(eventListKindLabel(event.kind, k) + timeSubtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.readableSp, lineHeight = 12.readableSp)
+                    Text(eventListKindLabel(event.kind, k) + timeSubtitle, color = color, fontSize = 10.readableSp, lineHeight = 12.readableSp)
                 }
                 Text("›", Modifier.padding(start = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 20.sp)
             }
@@ -1690,7 +1692,7 @@ internal fun WidgetSettingsCard(
                 symbols.maxOf { it.height }.toDp() + 4.dp)
         }
     }
-    val title = if (k) info.gregorianLabel else "${CalendarWords.weekday(date.dayOfWeek.value, false)}, ${info.gregorianLabel}"
+    val title = info.gregorianLabel
     val events = remember(date, custom, showHolyDays, showObservances) {
         (EventRepository.forDate(date) + custom.filter { it.date == date })
             .filter { (showHolyDays || it.kind != EventKind.HOLY_DAY) && (showObservances || it.kind != EventKind.OBSERVANCE) }
@@ -1764,13 +1766,16 @@ internal fun WidgetSettingsCard(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        val fullDate = if (k) info.fullKhmerDate() else info.fullEnglishDate()
+                        val fullDate = if (k) info.fullKhmerDate()
+                            else "${CalendarWords.weekday(date.dayOfWeek.value, false)}\n${info.fullEnglishDate()}"
+                        val dateFontSize = (if (k) 18 else 16).readableSp
+                        val dateLineHeight = (if (k) 32 else 28).readableSp
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             SelectionContainer(Modifier.weight(1f)) {
-                                Text(fullDate, fontSize = 18.readableSp, lineHeight = 32.readableSp, color = MaterialTheme.colorScheme.onSurface)
+                                Text(fullDate, fontSize = dateFontSize, lineHeight = dateLineHeight, color = MaterialTheme.colorScheme.onSurface)
                             }
                             if (showCopyButtons) CopyTextButton(fullDate, L.text("ui.copy_full_date", k), L.text("ui.full_date_copied", k),
-                                firstLineHeight = 32.readableSp, errorMessage = L.text("ui.could_not_copy_date", k))
+                                firstLineHeight = dateLineHeight, errorMessage = L.text("ui.could_not_copy_date", k))
                         }
                         if (hasHolyDay || hasAstrology) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1846,10 +1851,7 @@ internal fun WidgetSettingsCard(
                                             EventMark(event.kind, eventColor(event.kind), small = false)
                                             Spacer(Modifier.width(12.dp))
                                             Column(Modifier.weight(1f)) {
-                                                val eventTitleColor = when (event.kind) {
-                                                    EventKind.CUSTOM, EventKind.HOLIDAY -> eventColor(event.kind)
-                                                    else -> Color.Unspecified
-                                                }
+                                                val eventTitleColor = MaterialTheme.colorScheme.onSurface
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
                                                     verticalAlignment = Alignment.Top,
@@ -1860,7 +1862,7 @@ internal fun WidgetSettingsCard(
                                                     }
                                                     Text(event.title(k), modifier = Modifier.weight(1f, fill = false), color = eventTitleColor, fontWeight = FontWeight.Medium, fontSize = 14.readableSp, lineHeight = 20.readableSp)
                                                 }
-                                                Text(eventListKindLabel(event.kind, k) + eventTimeZoneSubtitle(event, todayTimeZone, k), fontSize = 12.readableSp, lineHeight = 16.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                Text(eventListKindLabel(event.kind, k) + eventTimeZoneSubtitle(event, todayTimeZone, k), fontSize = 12.readableSp, lineHeight = 16.readableSp, color = eventColor(event.kind))
                                             }
                                             Text("›", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }

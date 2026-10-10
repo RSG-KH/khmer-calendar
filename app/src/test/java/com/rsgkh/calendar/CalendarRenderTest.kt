@@ -320,12 +320,33 @@ class CalendarRenderTest : CalendarUiScenarios() {
     }
 
     @Test fun weekdayColorsFollowTheDayAcrossWeekStartLanguageAndThemeChanges() {
-        start(AppSettings(khmer = false, theme = ThemeMode.LIGHT, highlightSunday = false, highlightWeekdayNames = false, showLongerWeekdayNames = false))
-        fun colors() = (1..7).map { day ->
-            val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
-            compose.onNodeWithTag("weekday-header-$day").performSemanticsAction(
-                androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(layouts) }
-            layouts.single().layoutInput.style.color
+        val sampleDates = listOf(LocalDate.of(2026, 9, 10), LocalDate.of(2026, 9, 13))
+        start(AppSettings(khmer = false, theme = ThemeMode.LIGHT, highlightSunday = false, highlightWeekdayNames = false, showLongerWeekdayNames = false),
+            customEvents = sampleDates.map { CustomEvent(title = "Weekday sample $it", date = it, time = LocalTime.NOON) })
+        fun colors(k: Boolean = false): List<androidx.compose.ui.graphics.Color> {
+            fun textColor(node: SemanticsNodeInteraction): androidx.compose.ui.graphics.Color {
+                val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+                node.performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(layouts) }
+                return layouts.single().layoutInput.style.color
+            }
+            val headerColors = (1..7).map { textColor(compose.onNodeWithTag("weekday-header-$it")) }
+            fun checkList(scrollTag: String) {
+                for (date in sampleDates) {
+                    val column = hasTestTag("event-date-column-$date")
+                    compose.onNodeWithTag(scrollTag).performScrollToNode(column)
+                    val label = compose.onNode(hasText(CalendarWords.weekday(date.dayOfWeek.value, k, "short"))
+                        and hasAnyAncestor(column), useUnmergedTree = true)
+                    assertEquals("List weekday must follow the calendar color for $date",
+                        headerColors[date.dayOfWeek.value - 1], textColor(label))
+                }
+                if (headerColors.distinct().size == 7) screenshot("event-weekday-colors-$scrollTag-$k")
+            }
+            checkList("calendar-scroll")
+            compose.onNodeWithText(L.text("ui.events.11d867", k)).performClick()
+            checkList("events-scroll")
+            compose.onNode(hasText(if (k) "ប្រតិទិន" else "Calendar") and hasClickAction()).performClick()
+            compose.onNodeWithTag("calendar-scroll").performScrollToIndex(0)
+            return headerColors
         }
         fun toggle(key: String, khmer: Boolean = false) {
             val title = L.text(key, khmer)
@@ -355,7 +376,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNodeWithTag("settings-scroll").performScrollToNode(hasText("ខ្មែរ"))
         compose.onNodeWithText("ខ្មែរ").performClick()
         compose.onNode(hasText("ប្រតិទិន") and hasClickAction()).performClick()
-        val darkColors = colors()
+        val darkColors = colors(true)
         assertEquals(7, darkColors.distinct().size)
         org.junit.Assert.assertTrue(lightColors.zip(darkColors).all { (light, dark) -> light != dark })
         compose.onNodeWithTag("weekday-header-4").assertTextEquals("ព្រហស្បតិ៍")
@@ -363,12 +384,12 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNode(hasText(L.text("ui.settings.0e0a4f", true)) and hasClickAction()).performClick()
         toggle("ui.highlight_weekday_names", true)
         compose.onNode(hasText("ប្រតិទិន") and hasClickAction()).performClick()
-        assertEquals(1, colors().distinct().size)
+        assertEquals(1, colors(true).distinct().size)
         compose.onNode(hasText(L.text("ui.settings.0e0a4f", true)) and hasClickAction()).performClick()
         toggle("ui.highlight_sunday_column.549462", true)
         compose.onNode(hasText("ប្រតិទិន") and hasClickAction()).performClick()
-        assertEquals(2, colors().distinct().size)
-        assertEquals(1, colors().take(6).distinct().size)
+        assertEquals(2, colors(true).distinct().size)
+        assertEquals(1, colors(true).take(6).distinct().size)
     }
 
     @Test
@@ -439,7 +460,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
         toggleCopyButtons(true)
         openDate()
         pressCopyButton("Copy full date description", "date-copy-buttons-english")
-        assertClipboardText(KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 24)).fullEnglishDate())
+        assertClipboardText("Thursday\n" + KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 24)).fullEnglishDate())
         assertCopyConfirmation("Copy full date description", "Date description copied", "date-copy-buttons-english", retry = true)
         openEvent()
         pressCopyButton("Copy event title", "event-copy-buttons-english")

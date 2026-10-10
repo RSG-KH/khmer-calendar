@@ -839,7 +839,8 @@ abstract class CalendarUiScenarios {
     @Test fun dateGridOpensDetailsAndReturnsFromEventDetails() {
         start()
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
-        compose.onNodeWithTag("date-details-title").assertIsDisplayed().assertTextEquals("Thursday, September 10, 2026")
+        compose.onNodeWithTag("date-details-title").assertIsDisplayed().assertTextEquals("September 10, 2026")
+        compose.onNodeWithText("Thursday\n", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Year of the Horse", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Buddhist Shaving Day").assertIsDisplayed()
         screenshot("date-details-shaving-day")
@@ -849,7 +850,7 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithText(L.text("ui.listed_in_cambodia_s_official_year_holiday_calendar.044398", false, "year" to 2026)).assertIsDisplayed()
         compose.onNode(hasText("(១៩៩៣)", substring = true) and hasAnyAncestor(isDialog())).assertIsDisplayed()
         compose.onAllNodesWithText("Close").onLast().performClick()
-        compose.onNodeWithTag("date-details-title").assertIsDisplayed().assertTextEquals("Thursday, September 24, 2026")
+        compose.onNodeWithTag("date-details-title").assertIsDisplayed().assertTextEquals("September 24, 2026")
         compose.onAllNodesWithText("Close").onLast().performClick()
         screenshot("calendar-today-and-selected-holiday")
         compose.onNode(hasContentDescription("Thursday, 24 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).assertIsSelected().performClick()

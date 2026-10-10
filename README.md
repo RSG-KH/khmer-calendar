@@ -47,7 +47,7 @@ A privacy-first, ad-free Android calendar built with Kotlin and Jetpack Compose.
 - **Cambodian Holidays & Festivals**: Browse public holidays and traditional festivals, including Khmer New Year, Pchum Ben, Water Festival and Royal Ploughing.
 - **National & International Observances**: Includes commemorations and UN observances alongside Buddhist holy days.
 
-Same-day event lists show timed personal events first (with start time placed directly in the title row as `{time} {title}`), then untimed personal events, holidays, observances and enabled Buddhist holy days. Each day has one date label; today has a 2% accent tint without changing event-type colors. The Events tab supports horizontal swipe gestures to browse between years. Events-tab filters show matching totals for the selected year, search and visibility settings, using localized digits.
+Same-day event lists show timed personal events first (with start time placed directly in the title row as `{time} {title}`), then untimed personal events, holidays, observances and enabled Buddhist holy days. Each day has one date label; today has a 2% accent tint without changing event-type colors. In the calendar lists and Events tab, titles and times use normal text color while subtitles carry the event-category color. The Events tab supports horizontal swipe gestures to browse between years. Events-tab filters show matching totals for the selected year, search and visibility settings, using localized digits.
 
 ### ⏰ Personal Events & Precision Notifications
 - **Local SQLite Persistence**: Create, edit, and delete personal events with titles, dates, times, and notes.
