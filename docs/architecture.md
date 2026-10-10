@@ -60,6 +60,7 @@ The [bundled data guide](reference-event-database.md) describes the event catalo
 | `repeat_interval` | Number of days for a Days series; defaults to 3 |
 | `include_thirty` / `include_february` | Independent fallback choices for missing month-end dates |
 | `remind_after` | Save instant; earlier occurrences cannot send retrospective reminders |
+| `reminder_minutes_before` | Per-event advance reminder, 0–180 minutes; defaults to 0 |
 
 Database version 3 adds nullable recurrence metadata to existing rows, preserving
 their dates, saved offsets, notes and reminder eligibility. One row represents a
@@ -67,6 +68,23 @@ whole series. `EventRepeat` generates civil dates lazily from the original ancho
 February and 30-day fallbacks never shift later months. All repeat modes require
 an end date within 1800–2200. Yearly February 29 series can skip non-leap years or
 include February 28.
+
+Database version 4 adds `reminder_minutes_before` with a zero default, preserving
+existing event times and reminder behavior. The editor validates this value and
+keeps it when editing an event or series; storage also rejects out-of-range values.
+
+Upgrades from database versions 1, 2 and 3 apply the missing migrations in order,
+without recreating the event table. Existing IDs, notes, reminder eligibility,
+saved time zones/offsets and recurrence rules are retained; version 1 events keep
+their original Cambodia-time interpretation. Existing events receive no advance
+alert until the user chooses a positive value. App replacement reschedules the
+single next alarm using the existing receiver and notification channel, retaining
+the stale-alarm and duplicate-delivery guards.
+
+This is forward upgrade compatibility. Installing an older APK over an upgraded
+installation is unsupported: older repository helpers have no downgrade handler
+and cannot open a version 4 database. Do not clear or recreate user data to work
+around that limitation.
 
 Daily and weekly previews use an arithmetic, indexed date list: the editor can
 read the exact count, first dates and last date without allocating every occurrence.
@@ -124,9 +142,9 @@ Settings changes reschedule alarms only when reminder enablement, event categori
   - `Local Time`: Follows the device's current time zone and adjusts automatically during travel or daylight saving time.
   - `Cambodia (UTC+7)`: Fixed to Phnom Penh time regardless of device location.
 - **Built-in Events**: Reminders trigger at the configured daily push time in the zone selected by **Today follows**: the device's local zone or Cambodia (UTC+7). Changing this setting or the device time zone reschedules the next alarm.
-- **Custom Events**: Reminders trigger at the exact instant intended in the time zone where the event was created, converting cleanly if the user switches display time zones.
+- **Custom Events**: Every eligible event has an event-time alert. A positive **Remind me before** value adds one alert 1–180 elapsed minutes earlier, converting cleanly if the user switches display time zones. Zero means only at event time. Event dates and times in lists, notifications and navigation remain the original appointment time, even when an advance alert falls on the previous day. An advance time that has already passed is skipped; the event-time alert remains. Messages use localized “Starts in X minutes” and “Starting now” wording. Delayed delivery uses the remaining minutes, or a neutral “Event reminder” once the event is more than a minute past, instead of making an inaccurate countdown claim.
 - **Custom series**: Each date resolves in the saved zone, keeping its wall time across DST. Future gaps move forward by the gap; future folds choose the first offset. The original occurrence retains its saved offset. The planner lazily searches from the current day for the next eligible occurrence, including distant leap years, while retaining the single-alarm queue. Past anchors can have future reminders, but occurrences at or before the save instant are suppressed.
-- **Repeats**: Configurable periodic repeats (**Off**, 2, 4, 6, 8, or 12 hours) use elapsed hours and stop at midnight in the selected zone for built-in events, or the saved event zone for custom events. Daylight-saving gaps move a nonexistent push time forward by the gap; repeated clock times use the first occurrence for the initial reminder.
+- **Repeats**: Configurable periodic repeats (**Off**, 2, 4, 6, 8, or 12 hours) use elapsed hours from the daily push time for built-ins or the event time for custom events, and stop at midnight ending the event day in the corresponding zone. An advance alert is sent once and does not shift this repeat schedule. Daylight-saving gaps move a nonexistent push time forward by the gap; repeated clock times use the first occurrence for the initial reminder.
 
 The UI reads today's date immediately when the activity becomes visible and every 30 seconds while its lifecycle is at least `STARTED`, including visible multi-window use. Polling stops when the activity is hidden and restarts with an immediate read when it returns. This keeps the Today marker current across midnight or device clock changes without hidden UI polling. Date details takes a separate one-time current-time snapshot on opening Today's popup and does not refresh it while open. Reminder delivery is independent: `AlarmManager` invokes its receiver, and the manifest-registered restore receiver recalculates the next alarm after system date/time or time-zone changes, reboot, app replacement and exact-alarm access changes.
 
@@ -146,7 +164,7 @@ All widgets follow the dedicated **Font size** setting in the Widgets section of
 
 The **Add widgets** action in settings opens a swipeable in-app chooser with widget names, target sizes and previews matching the current app theme. `WidgetAddDialog` loads the supplied light/dark PNG through a resource context whose night mode matches the app appearance, independently of the device theme. No color-inversion filter is applied. It uses Android's widget pinning request for the selected widget when the launcher supports that flow.
 
-`WidgetDataSource` builds the full-month lunar grid only for the Month widget; other widgets load the dates they need. Each snapshot reads personal events once, expands the necessary date window and groups occurrences by date. Month markers reuse that snapshot, including yesterday/tomorrow across month and year boundaries.
+`WidgetDataSource` builds the full-month lunar grid only for the Month widget; other widgets load the dates they need. Each snapshot reads personal events once, expands the necessary date window and groups occurrences by date. Month markers reuse that snapshot, including yesterday/tomorrow across month and year boundaries. Today's public-holiday flag is captured before event filtering during the same background load, so Glance and Productivity day coloring needs no repository access during composition and still works when holiday event details are hidden.
 
 ### Lifecycle & Background Refresh
 - **`WidgetUpdater`**: Manages WorkManager (`WidgetRefreshWorker`) periodic hourly updates, immediate background updates, and `AlarmManager`'s inexact midnight triggers (`RTC_WAKEUP`). Every refresh path re-reads the **Enable widgets** setting and skips work while it is off; turning it off cancels the queued, periodic and midnight refreshes. A refresh failure on one widget does not stop the remaining widgets.

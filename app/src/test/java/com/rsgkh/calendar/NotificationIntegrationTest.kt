@@ -12,6 +12,8 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import com.rsgkh.calendar.data.*
+import com.rsgkh.calendar.i18n.CalendarWords
+import com.rsgkh.calendar.i18n.L
 import com.rsgkh.calendar.notifications.*
 import org.junit.Assert.*
 import org.junit.Test
@@ -28,6 +30,61 @@ import java.util.concurrent.TimeUnit
 class NotificationIntegrationTest {
     private val context get() = ApplicationProvider.getApplicationContext<Application>()
     private val now = Instant.parse("2026-09-23T21:59:00Z")
+    @Test fun advanceAndEventTimeAlertsHaveDistinctEnglishMessages() = checkAdvanceAndEventTimeAlerts(false)
+
+    @Test fun advanceAndEventTimeAlertsHaveDistinctKhmerMessages() = checkAdvanceAndEventTimeAlerts(true)
+
+    private fun checkAdvanceAndEventTimeAlerts(k: Boolean) {
+        val event = CustomEvent(title = "After midnight", date = LocalDate.of(2026, 9, 24), time = LocalTime.of(0, 10),
+            reminderMinutesBefore = 15)
+        val due = Instant.parse("2026-09-23T16:55:00Z")
+        AppPreferences(context).write(AppSettings(notificationsEnabled = true, khmer = k,
+            pushHolidays = false, pushObservances = false, pushHolyDays = false, repeatHours = 0,
+            todayTimeZone = TodayTimeZone.CAMBODIA))
+        CustomEventRepository(context).use { it.save(event, due.minusSeconds(60)) }
+        EventNotifications.reschedule(context, due.minusSeconds(1))
+        val alarm = Shadows.shadowOf(context.getSystemService(AlarmManager::class.java))
+        assertEquals(due.toEpochMilli(), alarm.scheduledAlarms.single().triggerAtMs)
+        EventNotifications.deliver(context, due.toEpochMilli(), due)
+        val manager = context.getSystemService(NotificationManager::class.java)
+        val posted = manager.activeNotifications.single().notification
+        assertTrue(posted.extras.getCharSequence("android.bigText").toString().contains("00:10 · After midnight"))
+        assertTrue(posted.extras.getCharSequence("android.bigText").toString().contains(
+            L.text("notifications.starts_in_minutes", k, "minutes" to CalendarWords.number(15, k))))
+        assertEquals("2026-09-24", Shadows.shadowOf(posted.contentIntent).savedIntent.getStringExtra(EventNotifications.EXTRA_DATE))
+        assertEquals(event.instant.toEpochMilli(), alarm.scheduledAlarms.single().triggerAtMs)
+        EventNotifications.deliver(context, due.toEpochMilli(), due)
+        assertEquals(1, manager.activeNotifications.size)
+        assertSame(posted, manager.activeNotifications.single().notification)
+        EventNotifications.deliver(context, event.instant.toEpochMilli(), event.instant)
+        val starting = manager.activeNotifications.single().notification
+        assertNotSame(posted, starting)
+        assertTrue(starting.extras.getCharSequence("android.bigText").toString().contains(
+            "${L.text("notifications.starting_now", k)} · 00:10 · After midnight"))
+        assertTrue(alarm.scheduledAlarms.isEmpty())
+        EventNotifications.deliver(context, event.instant.toEpochMilli(), event.instant)
+        assertSame(starting, manager.activeNotifications.single().notification)
+    }
+
+    @Test fun delayedAdvanceUsesRemainingMinutesAndLateEventAlertDoesNotClaimStartingNow() {
+        val event = CustomEvent(title = "Appointment", date = LocalDate.of(2026, 9, 24), time = LocalTime.of(9, 0),
+            reminderMinutesBefore = 15)
+        val advance = event.instant.minusSeconds(900)
+        AppPreferences(context).write(AppSettings(notificationsEnabled = true, khmer = false,
+            pushHolidays = false, pushObservances = false, pushHolyDays = false, repeatHours = 0,
+            todayTimeZone = TodayTimeZone.CAMBODIA))
+        CustomEventRepository(context).use { it.save(event, advance.minusSeconds(60)) }
+        EventNotifications.reschedule(context, advance.minusSeconds(1))
+        EventNotifications.deliver(context, advance.toEpochMilli(), event.instant.minusSeconds(60))
+        val manager = context.getSystemService(NotificationManager::class.java)
+        assertTrue(manager.activeNotifications.single().notification.extras.getCharSequence("android.bigText")
+            .toString().contains("Starts in 1 minute · 09:00 · Appointment"))
+        EventNotifications.deliver(context, event.instant.toEpochMilli(), event.instant.plusSeconds(120))
+        val message = manager.activeNotifications.single().notification.extras.getCharSequence("android.bigText").toString()
+        assertTrue(message.contains("Event reminder · 09:00 · Appointment"))
+        assertFalse(message.contains("Starting now"))
+    }
+
     @Test fun recurringCustomAlarmsAdvanceThroughOccurrencesAndRespectSeriesDeletion() {
         val first = Instant.parse("2026-09-24T02:00:00Z")
         val series = CustomEvent(title = "Every three days", date = LocalDate.of(2026, 1, 3), time = LocalTime.of(9, 0),
@@ -68,7 +125,8 @@ class NotificationIntegrationTest {
             assertEquals(Instant.parse("2026-09-24T02:00:00Z"), saved.instant)
             assertEquals("Keep notes", saved.notes)
             assertTrue(saved.remindersEligible)
-            assertEquals(3, repository.readableDatabase.version)
+            assertEquals(4, repository.readableDatabase.version)
+            assertEquals(0, saved.reminderMinutesBefore)
         }
     }
     @Test fun localTimeAndRepeatedClockOffsetSurviveStorageAndDeterminePastEligibility() {

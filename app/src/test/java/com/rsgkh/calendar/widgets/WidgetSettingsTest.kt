@@ -102,11 +102,15 @@ class WidgetSettingsTest {
             assertEquals(LocalDate.of(2026, 9, 24), hidden.today)
             assertNull(hidden.holidayTitle)
             assertTrue(hidden.current.items.isEmpty())
+            assertTrue(hidden.isPublicHoliday)
+            assertTrue(WidgetPolicy.isTodayHoliday(hidden))
             assertFalse(hidden.monthDays.any { it.hasHoliday || it.hasObservance || it.hasPersonal })
 
             preferences.write(hiddenSettings.copy(widgetShowHolidays = true))
             val visible = WidgetDataSource.load(context, now = now, includeMonth = true)
             assertNotNull(visible.holidayTitle)
+            assertTrue(visible.isPublicHoliday)
+            assertTrue(WidgetPolicy.isTodayHoliday(visible))
             assertTrue(visible.current.items.any { it.kind == EventKind.HOLIDAY })
             assertTrue(visible.monthDays.first { it.dayNumber == 24 }.hasHoliday)
         } finally {

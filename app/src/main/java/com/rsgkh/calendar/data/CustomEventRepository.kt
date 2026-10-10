@@ -28,6 +28,7 @@ data class CustomEvent(
     val offsetSeconds: Int? = null,
     val repeat: EventRepeat? = null,
     val remindersAfter: Instant? = null,
+    val reminderMinutesBefore: Int = 0,
 ) {
     val zone: ZoneId get() = ZoneId.of(zoneId)
     val zonedDateTime: ZonedDateTime get() = ZonedDateTime.ofLocal(date.atTime(time), zone, offsetSeconds?.let(ZoneOffset::ofTotalSeconds))
@@ -54,10 +55,11 @@ data class CustomEvent(
         instant = displayed.toInstant())
 }
 
-class CustomEventRepository(context: Context) : SQLiteOpenHelper(context.applicationContext, "custom-events.db", null, 3) {
+class CustomEventRepository(context: Context) : SQLiteOpenHelper(context.applicationContext, "custom-events.db", null, 4) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE events (id TEXT PRIMARY KEY, title TEXT NOT NULL, date TEXT NOT NULL, time TEXT NOT NULL, notes TEXT NOT NULL, remind INTEGER NOT NULL, zone_id TEXT NOT NULL DEFAULT 'Asia/Phnom_Penh', offset_seconds INTEGER)")
         addRepeatColumns(db)
+        addReminderLeadColumn(db)
     }
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) {
@@ -66,6 +68,10 @@ class CustomEventRepository(context: Context) : SQLiteOpenHelper(context.applica
             db.execSQL("ALTER TABLE events ADD COLUMN offset_seconds INTEGER")
         }
         if (oldVersion < 3) addRepeatColumns(db)
+        if (oldVersion < 4) addReminderLeadColumn(db)
+    }
+    private fun addReminderLeadColumn(db: SQLiteDatabase) {
+        db.execSQL("ALTER TABLE events ADD COLUMN reminder_minutes_before INTEGER NOT NULL DEFAULT 0")
     }
     private fun addRepeatColumns(db: SQLiteDatabase) {
         db.execSQL("ALTER TABLE events ADD COLUMN repeat_frequency TEXT")
@@ -103,9 +109,11 @@ class CustomEventRepository(context: Context) : SQLiteOpenHelper(context.applica
         return CustomEvent(string("id"), string("title"), LocalDate.parse(string("date")), LocalTime.parse(string("time")),
             string("notes"), cursor.getInt(cursor.getColumnIndexOrThrow("remind")) == 1, string("zone_id"),
             if (cursor.isNull(offsetIndex)) null else cursor.getInt(offsetIndex), repeat,
-            optionalString("remind_after")?.let(Instant::parse)).also { event ->
+            optionalString("remind_after")?.let(Instant::parse),
+            cursor.getInt(cursor.getColumnIndexOrThrow("reminder_minutes_before"))).also { event ->
             require(event.id.isNotBlank() && event.title.isNotBlank() && event.date.year in 1800..2200)
             require(event.repeat?.isValid(event.date) != false)
+            require(event.reminderMinutesBefore in 0..180)
             val offsets = event.zone.rules.getValidOffsets(event.date.atTime(event.time))
             require(offsets.isNotEmpty())
             require(event.offsetSeconds == null || offsets.any { it.totalSeconds == event.offsetSeconds })
@@ -116,12 +124,14 @@ class CustomEventRepository(context: Context) : SQLiteOpenHelper(context.applica
         require(event.title.isNotBlank() && event.title.trim().length <= 120)
         require(event.notes.length <= 2000 && event.date.year in 1800..2200)
         require(event.repeat?.isValid(event.date) != false)
+        require(event.reminderMinutesBefore in 0..180)
         val saved = event.copy(time = event.time.withSecond(0).withNano(0))
         require(saved.zone.rules.getValidOffsets(saved.date.atTime(saved.time)).isNotEmpty())
         val data = ContentValues().apply {
             put("id", event.id); put("title", event.title.trim()); put("date", event.date.toString())
             put("time", saved.time.toString()); put("notes", event.notes.trim())
             put("zone_id", saved.zone.id); put("offset_seconds", saved.zonedDateTime.offset.totalSeconds)
+            put("reminder_minutes_before", saved.reminderMinutesBefore)
             // Saving a historical date must never create retrospective notifications.
             put("remind", if (saved.repeat != null || saved.instant > now) 1 else 0)
             put("repeat_frequency", saved.repeat?.frequency?.name)

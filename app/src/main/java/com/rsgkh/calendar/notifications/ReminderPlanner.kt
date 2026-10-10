@@ -22,7 +22,7 @@ object ReminderPlanner {
         var earliest: Instant? = null
         val due = mutableListOf<CalendarEvent>()
         val expirations = mutableMapOf<String, Instant>()
-        fun consider(event: CalendarEvent, start: ZonedDateTime) {
+        fun consider(event: CalendarEvent, start: ZonedDateTime, advance: Instant? = null) {
             val enabled = when (event.kind) {
                 EventKind.CUSTOM -> settings.pushCustomEvents
                 EventKind.HOLIDAY -> settings.pushHolidays
@@ -33,7 +33,9 @@ object ReminderPlanner {
             if (!enabled) return
             val end = start.toLocalDate().plusDays(1).atStartOfDay(start.zone).toInstant()
             if (end <= now) return
-            var at = start.toInstant()
+            // One advance alert, followed by the event-time alert and optional
+            // repeats anchored to the event time, never to the advance alert.
+            var at = advance?.takeIf { it > now } ?: start.toInstant()
             while (at < end) {
                 if (at > now) {
                     if (earliest == null || at < earliest) { earliest = at; due.clear(); expirations.clear() }
@@ -59,10 +61,15 @@ object ReminderPlanner {
             // series whose next occurrence is several years away without expanding it all.
             for (date in source.occurrenceDates(now.atZone(source.zone).toLocalDate().minusDays(1))) {
                 val start = source.atOccurrence(date)
-                if (source.remindersAfter?.let { start.toInstant() <= it } == true) continue
-                if (earliest?.let { start.toInstant() > it } == true) break
-                consider(source.asCalendarEvent(reminderZone, date), start)
-                if (start.toInstant() > now) break
+                val eventInstant = start.toInstant()
+                if (source.remindersAfter?.let { eventInstant <= it } == true) continue
+                val advance = if (source.reminderMinutesBefore > 0)
+                    eventInstant.minusSeconds(source.reminderMinutesBefore * 60L)
+                        .takeIf { source.remindersAfter == null || it > source.remindersAfter }
+                    else null
+                if (earliest?.let { (advance ?: eventInstant) > it } == true) break
+                consider(source.asCalendarEvent(reminderZone, date), start, advance)
+                if (eventInstant > now) break
             }
         }
         return earliest?.let { ReminderBatch(it, due.first().date, due.distinctBy { event -> event.key }, expirations.toMap()) }

@@ -12,6 +12,14 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class CalendarUiTest : CalendarUiScenarios() {
+    @Test fun englishEventPickersKeepLatinNumericEntry() = checkEventPickerLanguage(false)
+
+    @Test fun khmerEventPickersKeepLatinNumericEntry() = checkEventPickerLanguage(true)
+
+    @Test fun advanceReminderInputValidatesAndSurvivesEditing() = checkAdvanceReminder(false)
+
+    @Test fun khmerAdvanceReminderAcceptsKhmerDigitsAndSurvivesEditing() = checkAdvanceReminder(true)
+
     @Test fun astrologyPopupFooterInsetsOnDevice() {
         val orientation = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
             .targetContext.resources.configuration.orientation

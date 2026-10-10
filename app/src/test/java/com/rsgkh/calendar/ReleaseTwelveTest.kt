@@ -387,51 +387,6 @@ class ReleaseTwelveTest {
         assertTrue(filterObservances.any { it.kind == EventKind.OBSERVANCE })
     }
 
-    enum class DayNumberColorTarget { HOLIDAY, CUSTOM, ON_SURFACE }
-
-    @Test fun eventListDayNumberColorUsesHolidayColorOrOnSurfaceWithoutPersonalEventColoring() {
-        val date = LocalDate.of(2026, 9, 29)
-        val customEvent = CalendarEvent("custom-1", date, "Meeting", "Meeting", EventKind.CUSTOM, DateBasis.USER)
-        val holidayEvent = CalendarEvent("holiday-1", date, "Holiday", "Holiday", EventKind.HOLIDAY, DateBasis.OFFICIAL)
-        val observanceEvent = CalendarEvent("obs-1", date, "Observance", "Observance", EventKind.OBSERVANCE, DateBasis.CALCULATED)
-
-        fun resolveDateColorTarget(groupEvents: List<CalendarEvent>): DayNumberColorTarget {
-            val holiday = groupEvents.any { it.kind == EventKind.HOLIDAY }
-            return when {
-                holiday -> DayNumberColorTarget.HOLIDAY
-                else -> DayNumberColorTarget.ON_SURFACE
-            }
-        }
-
-        // Personal event without holiday gets ON_SURFACE (no custom color on day number)
-        assertEquals(DayNumberColorTarget.ON_SURFACE, resolveDateColorTarget(listOf(customEvent)))
-        // Holiday gets HOLIDAY color
-        assertEquals(DayNumberColorTarget.HOLIDAY, resolveDateColorTarget(listOf(holidayEvent)))
-        // Personal event alongside holiday still gets HOLIDAY color
-        assertEquals(DayNumberColorTarget.HOLIDAY, resolveDateColorTarget(listOf(customEvent, holidayEvent)))
-        // Observance gets ON_SURFACE
-        assertEquals(DayNumberColorTarget.ON_SURFACE, resolveDateColorTarget(listOf(observanceEvent)))
-    }
-
-    @Test fun calendarCellDayNumberColorUsesHolidayColorOrOnSurfaceWithoutPersonalEventColoring() {
-        val customEvent = CalendarEvent("custom-1", LocalDate.of(2026, 10, 10), "Meeting", "Meeting", EventKind.CUSTOM, DateBasis.USER)
-        val holidayEvent = CalendarEvent("holiday-1", LocalDate.of(2026, 10, 10), "Holiday", "Holiday", EventKind.HOLIDAY, DateBasis.OFFICIAL)
-        val regularEvent = CalendarEvent("obs-1", LocalDate.of(2026, 10, 10), "Observance", "Observance", EventKind.OBSERVANCE, DateBasis.CALCULATED)
-
-        fun resolveCalendarCellNumberColorTarget(isHoliday: Boolean): DayNumberColorTarget {
-            return if (isHoliday) DayNumberColorTarget.HOLIDAY else DayNumberColorTarget.ON_SURFACE
-        }
-
-        // Cell with personal event (no holiday) gets ON_SURFACE (no custom color on day number)
-        assertEquals(DayNumberColorTarget.ON_SURFACE, resolveCalendarCellNumberColorTarget(isHoliday = false))
-
-        // Cell with holiday (even if it also has custom events) gets HOLIDAY color
-        assertEquals(DayNumberColorTarget.HOLIDAY, resolveCalendarCellNumberColorTarget(isHoliday = true))
-
-        // Regular cell (no holiday) gets ON_SURFACE, no accent override
-        assertEquals(DayNumberColorTarget.ON_SURFACE, resolveCalendarCellNumberColorTarget(isHoliday = false))
-    }
-
     @Test fun lunarCompactLabelUsesSingleLetterInitialWithSpaceWhenKhmer() {
         // Oct 24, 2026 is 13 Koeut (Waxing)
         val oct24Lunar = KhmerCalendar.fromGregorian(LocalDate.of(2026, 10, 24))
@@ -456,66 +411,6 @@ class ReleaseTwelveTest {
         val sep12Lunar = KhmerCalendar.fromGregorian(LocalDate.of(2026, 9, 12))
         assertEquals("១កើត", sep12Lunar.shortLabel(true))
         assertEquals("១ ក", sep12Lunar.compactLabel(true))
-    }
-
-    @Test fun adaptiveLunarTextSelectionAppliesToEntireTableIfAnyCellExceedsAvailableWidth() {
-        fun resolveTableUsesCompactLunar(
-            datesInMonth: List<Pair<Int, String>>,
-            textWidthMap: Map<String, Float>,
-            availableWidth: Float,
-            k: Boolean
-        ): Boolean {
-            if (!k) return false
-            var overflow = false
-            for ((day, label) in datesInMonth) {
-                if (day >= 10) {
-                    val width = textWidthMap[label] ?: 0f
-                    if (width > availableWidth) {
-                        overflow = true
-                        break
-                    }
-                }
-            }
-            return overflow
-        }
-
-        val textWidths = mapOf(
-            "១កើត" to 26f,
-            "១០កើត" to 42f,
-            "១៣កើត" to 47f,
-            "១៤រោច" to 43f,
-        )
-
-        val monthDates = listOf(
-            1 to "១កើត",
-            10 to "១០កើត",
-            13 to "១៣កើត",
-            14 to "១៤រោច",
-        )
-
-        // Narrow cell (45px): day 13 (47px) overflows -> whole table uses compact!
-        assertTrue(resolveTableUsesCompactLunar(monthDates, textWidths, availableWidth = 45f, k = true))
-
-        // Wide cell (80px): no dates overflow -> whole table keeps full labels!
-        assertFalse(resolveTableUsesCompactLunar(monthDates, textWidths, availableWidth = 80f, k = true))
-
-        // English mode: never uses compact
-        assertFalse(resolveTableUsesCompactLunar(monthDates, textWidths, availableWidth = 45f, k = false))
-    }
-
-    @Test fun eventDialogTitleColorUsesHolidayAndCustomColorRespectively() {
-        fun resolveDialogTitleColor(kind: EventKind, primary: String, holiday: String, custom: String): String {
-            return when (kind) {
-                EventKind.CUSTOM -> custom
-                EventKind.HOLIDAY -> holiday
-                else -> primary
-            }
-        }
-
-        assertEquals("red", resolveDialogTitleColor(EventKind.CUSTOM, primary = "blue", holiday = "gold", custom = "red"))
-        assertEquals("gold", resolveDialogTitleColor(EventKind.HOLIDAY, primary = "blue", holiday = "gold", custom = "red"))
-        assertEquals("blue", resolveDialogTitleColor(EventKind.OBSERVANCE, primary = "blue", holiday = "gold", custom = "red"))
-        assertEquals("blue", resolveDialogTitleColor(EventKind.HOLY_DAY, primary = "blue", holiday = "gold", custom = "red"))
     }
 
     @Test fun showLongerWeekdayNamesIsOnByDefault() {

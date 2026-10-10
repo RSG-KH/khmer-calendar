@@ -23,15 +23,19 @@ import java.util.concurrent.TimeUnit
 /** Exercises the manifest receiver and real OS notification service, not shadows. */
 @RunWith(AndroidJUnit4::class)
 class NotificationDeviceTest {
-    @Test fun receiverPostsOneNotificationAndDisablingClearsIt() {
+    @Test fun receiverPostsOneNotificationAndDisablingClearsIt() = checkDelivery(0)
+
+    @Test fun receiverPostsAdvanceNotificationWithTheOriginalEventTime() = checkDelivery(15)
+
+    private fun checkDelivery(leadMinutes: Int) {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
         val preferences = AppPreferences(context)
         val original = preferences.read()
         val manager = context.getSystemService(NotificationManager::class.java)
         val due = Instant.now().truncatedTo(ChronoUnit.MINUTES)
-        val local = due.atZone(CAMBODIA_ZONE)
-        val event = CustomEvent(title = "Device reminder check", date = local.toLocalDate(), time = local.toLocalTime())
+        val local = due.plusSeconds(leadMinutes * 60L).atZone(CAMBODIA_ZONE)
+        val event = CustomEvent(title = "Device reminder check", date = local.toLocalDate(), time = local.toLocalTime(), reminderMinutesBefore = leadMinutes)
         fun fireDueAlarm() {
             val completed = CountDownLatch(1)
             // Ordered-broadcast completion waits for the receiver's goAsync work to finish.
@@ -50,6 +54,7 @@ class NotificationDeviceTest {
             CustomEventRepository(context).use { it.save(event, due.minusSeconds(1)) }
             // Recreate a due alarm without waiting for the wall clock or changing the device clock.
             EventNotifications.reschedule(context, due.minusSeconds(1))
+            context.getSharedPreferences("reminder-state", Context.MODE_PRIVATE).edit().remove("delivered").commit()
             fireDueAlarm()
             val deadline = SystemClock.elapsedRealtime() + 5000
             while (manager.activeNotifications.none { it.notification.extras.getCharSequence("android.bigText").toString().contains(event.title) } &&

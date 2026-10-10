@@ -255,7 +255,7 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
 
                                 val holy = when {
                                     snapshot.settings.showHolyDaysInCalendar && details?.lunar?.isHolyDay == true -> "${s(R.string.widget_holy_day)} 🪷"
-                                    snapshot.settings.showHolyDaysInCalendar && details?.lunar?.isShavingDay == true -> "${s(R.string.widget_shaving_day)} 🪒"
+                                    snapshot.settings.showHolyDaysInCalendar && details?.lunar?.isShavingDay == true -> "${s(R.string.widget_shaving_day)} 🙏"
                                     else -> null
                                 }
                                 if (holy != null) {
@@ -402,7 +402,8 @@ internal fun FocusWidgetContent(snapshot: WidgetSnapshot, id: Int) {
     val p = WidgetPalette(snapshot.settings)
     val scale = snapshot.settings.widgetFontScale.multiplier
     val effectiveScale = context.resources.configuration.fontScale * scale
-    val plan = WidgetPolicy.layout(size.width.value, size.height.value, effectiveScale)
+    val compact = size.height.value < 200f * effectiveScale
+    val sectionGap = if (compact) 4.dp else 6.dp
     val day = snapshot.current
     val animalAlpha = resolveAnimalAlpha(context, snapshot)
     val open = WidgetNavigation.openDate(context, id, snapshot.today)
@@ -439,7 +440,8 @@ internal fun FocusWidgetContent(snapshot: WidgetSnapshot, id: Int) {
 
         // --- 2. FOREGROUND CONTENT ---
         Column(
-            GlanceModifier.fillMaxSize().padding(start = 11.dp, top = 8.dp, end = 11.dp, bottom = 10.dp),
+            GlanceModifier.fillMaxSize().padding(start = 11.dp, top = if (compact) 6.dp else 8.dp,
+                end = 11.dp, bottom = if (compact) 6.dp else 10.dp),
         ) {
             // Header: [🌕 ៨កើត ខែភទ្របទ · ព.ស. ២៥៧០] [🌐 ក្នុងតំបន់]
             Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -452,7 +454,7 @@ internal fun FocusWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                         Box(
                             GlanceModifier.background(p.surfaceVariant)
                                 .cornerRadius(8.dp)
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                                .padding(horizontal = 8.dp, vertical = if (compact) 2.dp else 4.dp),
                         ) {
                             val lunarMonth = L.text("calendar.lunar_month.${d.lunar.month}", s.khmer)
                             val beYear = s(R.string.widget_buddhist_year, s.number(d.lunar.buddhistYear))
@@ -473,7 +475,7 @@ internal fun FocusWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                         Box(
                             GlanceModifier.background(p.surfaceVariant)
                                 .cornerRadius(8.dp)
-                                .padding(horizontal = tzPad, vertical = 4.dp),
+                                .padding(horizontal = tzPad, vertical = if (compact) 2.dp else 4.dp),
                         ) {
                             WText(tzText, p.secondary, 13f, scale, bold = false, lines = 1)
                         }
@@ -486,7 +488,7 @@ internal fun FocusWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                 }
             }
 
-            Spacer(GlanceModifier.height(6.dp))
+            Spacer(GlanceModifier.height(sectionGap))
 
             // Main Events Area: Scrollable LazyColumn!
             if (day.items.isEmpty()) {
@@ -509,20 +511,26 @@ internal fun FocusWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                 }
             }
 
-            Spacer(GlanceModifier.height(6.dp))
+            Spacer(GlanceModifier.height(sectionGap))
 
-            // Footer Sub-Cards: Yesterday & Tomorrow scrollable sub-cards
-            if (!plan.tiny || size.height.value >= 120f * effectiveScale) {
-                val footerHeight = (if (size.height.value >= 240f * effectiveScale) 100f else if (plan.expanded) 78f else 58f) * scale
+            // Compact spacing keeps all three days visible at the standard 4x2 size.
+            // Reserve a current-day row using the actual 30dp refresh-control height.
+            val spacingHeight = if (compact) 20f else 30f
+            val headerHeight = maxOf(30f, 26f * effectiveScale + if (compact) 4f else 8f)
+            val footerBudget = size.height.value - spacingHeight - headerHeight - 30f * effectiveScale
+            val minimumFooterHeight = 58f * effectiveScale
+            val preferredFooterHeight = (if (size.height.value >= 240f * effectiveScale) 100f else 58f) * effectiveScale
+            val footerHeight = minOf(preferredFooterHeight, footerBudget)
+            if (footerHeight >= minimumFooterHeight) {
                 Row(GlanceModifier.fillMaxWidth().height(footerHeight.dp)) {
                     AdjacentDayCard(
                         snapshot.yesterday, context, id,
-                        p, s, scale, GlanceModifier.defaultWeight().fillMaxHeight(),
+                        p, s, scale, GlanceModifier.defaultWeight().fillMaxHeight(), compact,
                     )
                     Spacer(GlanceModifier.width(8.dp))
                     AdjacentDayCard(
                         snapshot.tomorrow, context, id,
-                        p, s, scale, GlanceModifier.defaultWeight().fillMaxHeight(),
+                        p, s, scale, GlanceModifier.defaultWeight().fillMaxHeight(), compact,
                     )
                 }
             }
@@ -563,7 +571,7 @@ private fun EventCard(item: WidgetItem, action: Action, p: WidgetPalette, scale:
 @Composable
 private fun AdjacentDayCard(
     day: WidgetDay, context: Context, id: Int, p: WidgetPalette,
-    s: WidgetStrings, scale: Float, modifier: GlanceModifier,
+    s: WidgetStrings, scale: Float, modifier: GlanceModifier, compact: Boolean,
 ) {
     val dateLabel = s.number(day.date.dayOfMonth) + " " + CalendarWords.month(day.date.monthValue, s.khmer, short = true)
     Column(
@@ -571,7 +579,7 @@ private fun AdjacentDayCard(
             .background(p.surfaceVariant)
             .cornerRadius(12.dp)
             .clickable(WidgetNavigation.openDate(context, id, day.date))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .padding(horizontal = 10.dp, vertical = if (compact) 4.dp else 6.dp),
     ) {
         WText(dateLabel, p.accent, 12.5f, scale, bold = false)
         Spacer(GlanceModifier.height(2.dp))

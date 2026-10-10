@@ -38,6 +38,14 @@ import org.junit.Test
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @LooperMode(LooperMode.Mode.PAUSED)
 class CalendarRenderTest : CalendarUiScenarios() {
+    @Test fun englishEventPickersKeepLatinNumericEntry() = checkEventPickerLanguage(false)
+
+    @Test fun khmerEventPickersKeepLatinNumericEntry() = checkEventPickerLanguage(true)
+
+    @Test fun advanceReminderInputValidatesAndSurvivesEditing() = checkAdvanceReminder(false)
+
+    @Test fun khmerAdvanceReminderAcceptsKhmerDigitsAndSurvivesEditing() = checkAdvanceReminder(true)
+
     @Test @Config(qualifiers = "w411dp-h891dp-port-xhdpi")
     fun astrologyPopupFooterInsetsInPhonePortrait() = checkAstrologyPopupFooterInsets("phone-portrait")
 
@@ -1574,6 +1582,63 @@ class CalendarRenderTest : CalendarUiScenarios() {
         compose.onNode(hasText("ផ្ទាល់ខ្លួន · ម៉ោងក្នុងតំបន់ (UTC+2)", substring = true) and hasAnyAncestor(hasTestTag("date-details-events"))).assertIsDisplayed()
     }
 
+    @Test @Config(qualifiers = "w411dp-h891dp-xhdpi")
+    fun lunarLabelsRefitWhenFontSizeChangesWithoutChangingMonth() {
+        val settings = mutableStateOf(AppSettings(khmer = true, fontScale = FontScale.PERCENT_80))
+        val date = LocalDate.of(2026, 10, 10)
+        compose.setContent { CalendarApp(settings.value, date) { settings.value = it } }
+        val lunarDates = (1..31).map { com.rsgkh.calendar.domain.KhmerCalendar.fromGregorian(date.withDayOfMonth(it)) }
+        for (scale in listOf(FontScale.PERCENT_80, FontScale.PERCENT_150, FontScale.PERCENT_80)) {
+            compose.runOnIdle { settings.value = settings.value.copy(fontScale = scale) }
+            val compact = scale == FontScale.PERCENT_150
+            val expected = lunarDates.map { if (compact) it.compactLabel(true) else it.shortLabel(true) }.toSet()
+            for (label in expected) {
+                val nodes = compose.onAllNodes(hasText(label) and hasAnyAncestor(hasTestTag("month-grid")), useUnmergedTree = true)
+                assertTrue("Missing lunar label $label at $scale", nodes.fetchSemanticsNodes().isNotEmpty())
+                val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+                nodes.onFirst().performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(layouts) }
+                assertTrue("Clipped lunar label $label at $scale", layouts.none { it.isLineEllipsized(0) })
+            }
+        }
+    }
+
+    @Test fun holidayAndPersonalColorsReachCalendarEventRowsAndDialogs() {
+        val settings = AppSettings(khmer = false, theme = ThemeMode.LIGHT)
+        val holidayDate = LocalDate.of(2026, 1, 7)
+        val personalDate = holidayDate.plusDays(1)
+        val custom = listOf(
+            CustomEvent(id = "holiday-meeting", title = "Holiday meeting", date = holidayDate, time = LocalTime.NOON),
+            CustomEvent(id = "regular-meeting", title = "Regular meeting", date = personalDate, time = LocalTime.NOON),
+        )
+        lateinit var colors: androidx.compose.material3.ColorScheme
+        compose.setContent {
+            com.rsgkh.calendar.ui.CalendarTheme(settings) { colors = androidx.compose.material3.MaterialTheme.colorScheme }
+            CalendarApp(settings, holidayDate, customEvents = custom) {}
+        }
+        fun textColor(matcher: SemanticsMatcher): androidx.compose.ui.graphics.Color {
+            val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+            compose.onAllNodes(matcher, useUnmergedTree = true).onLast()
+                .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(layouts) }
+            return layouts.single().layoutInput.style.color
+        }
+        for ((date, expected) in listOf(holidayDate to colors.tertiary, personalDate to colors.onSurface)) {
+            val cell = hasContentDescription(CalendarWords.date(date, false), substring = true)
+            assertEquals(expected, textColor(hasText(date.dayOfMonth.toString()) and hasAnyAncestor(cell) and hasAnyAncestor(hasTestTag("month-grid"))))
+        }
+        compose.onNodeWithText("Events").performClick()
+        for ((date, expected) in listOf(holidayDate to colors.tertiary, personalDate to colors.onSurface)) {
+            compose.onNodeWithTag("events-scroll").performScrollToNode(hasTestTag("event-date-column-$date"))
+            assertEquals(expected, textColor(hasText(date.dayOfMonth.toString()) and hasAnyAncestor(hasTestTag("event-date-column-$date"))))
+        }
+        compose.onNodeWithText("Regular meeting").performClick()
+        assertEquals(androidx.compose.ui.graphics.Color(0xFFE53935), textColor(hasText("Regular meeting")))
+        compose.onAllNodesWithText("Close").onLast().performClick()
+        val holidayTitle = EventRepository.forDate(holidayDate).first { it.kind == EventKind.HOLIDAY }.title(false)
+        compose.onNodeWithTag("events-scroll").performScrollToNode(hasText(holidayTitle))
+        compose.onNodeWithText(holidayTitle).performClick()
+        assertEquals(colors.tertiary, textColor(hasText(holidayTitle)))
+    }
+
     @Test fun eventsTabSwipeLeftAndRightNavigatesYears() {
         start(AppSettings(khmer = false), now = Instant.parse("2026-09-10T07:00:00Z"))
         compose.onNodeWithText("Events").performClick()
@@ -1590,6 +1655,17 @@ class CalendarRenderTest : CalendarUiScenarios() {
         // Swipe right again -> go back to 2025
         compose.onNodeWithTag("events-content").performTouchInput { swipeRight() }
         compose.onNodeWithTag("event-year").assertTextEquals("2025")
+        compose.onNodeWithTag("events-scroll").performTouchInput { swipeUp() }
+        compose.onNodeWithTag("event-year").assertTextEquals("2025")
+        for (year in listOf(1800, 2200)) {
+            compose.onNodeWithContentDescription("Choose year").performClick()
+            compose.onNodeWithTag("event-year-input").performTextReplacement(year.toString())
+            compose.onNodeWithText("Go").performClick()
+            compose.onNodeWithTag("events-content").performTouchInput {
+                if (year == 1800) swipeRight() else swipeLeft()
+            }
+            compose.onNodeWithTag("event-year").assertTextEquals(year.toString())
+        }
     }
 }
 

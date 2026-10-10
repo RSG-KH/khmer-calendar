@@ -55,6 +55,8 @@ internal data class WidgetSnapshot(
     val holidayTitle: String?,
     val monthDays: List<MonthDayInfo> = emptyList(),
     val plannerDays: List<WidgetDay> = emptyList(),
+    // Day coloring is independent of whether holiday event details are visible.
+    val isPublicHoliday: Boolean = false,
 )
 
 /** Blocking reads; callers MUST run this on Dispatchers.IO, never in a composable body. */
@@ -88,6 +90,7 @@ internal object WidgetDataSource {
         }
         val personalByDate = personal.groupBy { it.date }
         var todayHoliday: String? = null
+        var isPublicHoliday = false
         val days = dates.map { date ->
             val supported = date.year in EventRepository.coveredYears
             var builtInsUnavailable = false
@@ -110,6 +113,7 @@ internal object WidgetDataSource {
             val events = if (includePlanner) WidgetPolicy.plannerSorted(visibleEvents, settings.khmer)
                 else WidgetPolicy.sorted(visibleEvents, settings.khmer)
             if (date == today) {
+                isPublicHoliday = builtIn.any { it.kind == EventKind.HOLIDAY }
                 todayHoliday = events.firstOrNull { it.kind == EventKind.HOLIDAY }?.title(settings.khmer)
             }
             WidgetDay(
@@ -161,7 +165,7 @@ internal object WidgetDataSource {
 
         val center = if (includePlanner) 14 else 1
         return WidgetSnapshot(settings, today, details, days[center - 1], days[center], days[center + 1],
-            todayHoliday, monthDays, if (includePlanner) days else emptyList())
+            todayHoliday, monthDays, if (includePlanner) days else emptyList(), isPublicHoliday)
     }
 
     internal fun displayItems(

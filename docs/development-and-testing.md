@@ -37,13 +37,20 @@ python -m unittest discover -s tools/translation -p "test_*.py"
 ```
 
 Connected tests require a running emulator or device listed by `adb devices`.
+Use a disposable emulator for `connectedDebugAndroidTest`: its cleanup can
+uninstall the target app and erase its data and launcher widgets. When testing an
+existing installation, first back up its app data, install APKs with
+`adb install -r`, and invoke only the required tests through `adb shell am instrument`.
+Remove only `com.rsgkh.calendar.test` afterward and verify that saved settings and
+events were preserved.
 
 | Checks | Android responsibility |
 | --- | --- |
 | Calendar adapters | Supported range, date conversion, localized year labels and festival results |
 | Pinned reference fixtures | Compatibility through the app adapters, including the reviewed 2012 correction |
 | Event repository and recurrence | Catalog coverage across 1800–2200, engine parity for calculated events and holy days, recorded date lists, official holiday calendars with citations, rule translation, captured-date comparisons and classification |
-| Reminder planner and delivery | Category controls, appearance changes preserving alarms, permissions, saved event instants, clock/time-zone broadcasts without an activity, daylight saving and repeats |
+| Reminder planner and delivery | Category controls, appearance changes preserving alarms, permissions, 0–180 minute advance and event-time alerts, duplicate delivery, saved event instants, clock/time-zone broadcasts without an activity, daylight saving and repeats |
+| Custom-event storage | Database versions 1–3 upgrading to version 4 with zero advance minutes; preserved event data, recurrence, saved offsets and reminder eligibility; invalid reminder values rejected |
 | Today refresh | Visible-only polling, immediate refresh on return, midnight, clock jumps and device time-zone changes |
 | Memory and lifecycle | Twelve-year event cache eviction, two-country location cache bounds, full-range arithmetic repeat previews, and on-device collection of destroyed activities after recreation and background/foreground cycles |
 | Date details | Today-zone clock snapshot, saved default time/place, header-only time/location picker, clickable astrology tables with detail popups and Ask AI queries, nested popup state, grouped event ordering, and master/individual astrology visibility |
@@ -55,6 +62,14 @@ Connected tests require a running emulator or device listed by `adb devices`.
 The app retains its pinned MomentKH fixture and generator to catch consumer regressions. Agreement with that fixture is a compatibility check; it is not independent historical validation. Calendar algorithms and their evidence are maintained and tested in the engine project, linked from the [integration guide](shared-engine.md).
 
 Shared UI scenarios in `app/src/sharedTest` run under Robolectric and on a device. Device screenshots capture the full display so open dialogs are included. Inspect changed screens when updating layout or source-dialog content.
+
+`CustomEventReminderStorageTest`, `CustomEventRepeatStorageTest` and
+`NotificationIntegrationTest` cover the database upgrade paths.
+`ReminderLeadTimeTest` checks zero versus positive lead times, both alert phases,
+recurring occurrences, midnight/year boundaries, daylight-saving changes and
+saving after the advance time has passed. Editor scenarios verify the reminder
+range, persistence, Khmer label/Latin input digits, and localized date/time pickers
+including native date text entry.
 
 `CalendarUiScenarios.eventPopupTitleKeepsItsFirstMeasuredHeight` checks short/wrapped titles with copy buttons on/off in English and Khmer at 80%, 100% and 150% font sizes. Filter-count coverage exercises year, search, visibility, language and personal-event changes. Today auto-scroll coverage checks the current and another month in both languages, with a separate landscape case in `CalendarRenderTest`.
 

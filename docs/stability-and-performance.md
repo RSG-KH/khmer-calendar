@@ -1,5 +1,118 @@
 # Stability and performance review
 
+## 10 October 2026 review
+
+Reviewed the four local commits `4433457`, `15f08e6`, `fd54d7a` and `7989eeb`
+against `4935a5f`, plus the corrective working-tree changes. The initial working
+tree was clean.
+
+- **Focus widget sizing:** The initial height cutoff hid yesterday and tomorrow
+  at the standard 4×2 size. It was corrected after launcher verification: compact
+  header/card padding and 58 dp adjacent panels now keep all three lists visible
+  while reserving a readable current-day row. Native-font layout checks require
+  three lists in both languages across seven height/font combinations, including
+  280 × 140 dp, app fonts through 200% and combined app/system font scaling.
+  The earlier 3 dp measurement used Robolectric's legacy text renderer and should
+  not be treated as a measured launcher result.
+- **Lunar label sizing:** A UI regression reproduced stale full labels after
+  changing from 80% to 150% font size without changing month. Sizing now observes
+  density and the text measurer, reuses one month's lunar-date calculations, and
+  skips text measurement when lunar labels are hidden. The regression verifies
+  switching to compact labels and back, with no ellipsis at 411 dp width.
+- **Widget rendering:** Public-holiday detection now uses a flag from the existing
+  background snapshot load, preserving day coloring when holiday event details
+  are hidden. Composition no longer queries the synchronized event repository or
+  catches every `Throwable` during this check.
+- **Translation consistency:** The generated Khmer Sunday subtitle differed from
+  its source catalog and failed the export-consistency test. The catalog now
+  preserves the corrected wording, and the generated resource checksum matches.
+- **Code and tests:** Removed unused imports/locals and four tests of copied
+  algorithms. Actual rendered UI checks now cover day and event-dialog colors,
+  font-size changes and widget list heights. Swipe coverage also verifies the
+  1800/2200 boundaries and that vertical scrolling does not change the year.
+
+Full verification before the subsequent Focus widget compact-layout correction:
+
+| Check | Result |
+| --- | --- |
+| JVM/Robolectric | 286 tests passed; zero failures, errors or skips |
+| Android emulator | All 38 tests passed on Pixel 10 Pro XL, Android 17/API 37 |
+| Activity retention | All nine destroyed activities were collected after eight recreation/background/foreground cycles and final closure |
+| Translation tools | All 7 tests passed, including generated-output consistency |
+| Builds | Debug and optimized unsigned release APKs built successfully |
+| Android lint | Zero errors; 49 warnings, unchanged from the initial review run |
+| Patch hygiene | `git diff --check` passed |
+
+The final combined Gradle verification completed in 6 minutes 38 seconds.
+Reports are under `app/build/reports`, `app/build/test-results/testDebugUnitTest`
+and `app/build/outputs/androidTest-results/connected/debug`. Existing lint
+warnings concern resources/previews, layout structure, the window-size API and
+available dependency updates. Dependency versions were not changed.
+
+After the 4×2 correction, the focused widget regression passed all fourteen
+native-font layout cases. Debug installation, optimized release build and lint
+passed again. The updated APK was installed on the running Pixel 10a/API 37
+emulator; both existing standard and enlarged Focus widgets visibly retained
+yesterday and tomorrow. The launcher capture is saved locally at
+`artifacts/focus-widget-followup/launcher.png`.
+
+The subsequent advance-reminder feature adds a per-event 0–180 minute setting,
+including recurring events, without changing appointment times. Database version
+4 preserves existing rows with a zero-minute default. Regression coverage checks
+versions 1–3 migrating to version 4, storage validation, both editor languages,
+Khmer digit input, midnight/year boundaries, DST gaps/folds, reminder ordering,
+recurrence progression, and saving after the selected advance time has passed.
+All 298 JVM/Robolectric tests across 33 suites and all 7 translation-tool tests
+passed. The optimized release build and lint passed with zero errors and the same
+49 warnings. Both actual notification receiver checks (at event time and 15
+minutes early) passed on Pixel 10a/API 37, preserving the event time in the alert.
+Both focused editor scenarios also passed on that device after moving their test
+entry points into the concrete JVM/device test classes for reliable method
+selection. A broader device UI run was stopped after the existing
+`deletingCatalogLocationChipsPreservesCurrentInputs` scenario stalled; it is not
+counted as a passing full-device run. The two focused JVM editor checks passed
+again after the test-entry-point change, and the debug app was reinstalled.
+The connected-test runner uninstalled the target app during cleanup, resetting
+the emulator's app data. The build was reinstalled, but prior emulator settings
+and widgets were not restored. Future connected runs should use a disposable
+emulator or preserve the target app's data before running.
+
+The follow-up simplifies the reminder input to one full-width field and adds an
+event-time alert after each positive advance reminder. Both phases have localized
+messages; optional hourly repeats remain anchored to the event time. All 48
+focused scheduling, notification and editor tests passed, including two alerts
+per recurring occurrence, DST, midnight, duplicate delivery and delayed-message
+wording. All 7 translation-tool tests, the debug/release builds and lint passed.
+The English, Khmer and narrow-phone renders were inspected. This update backed
+up the emulator's app data and installed in place; saved settings matched the
+backup afterward. No connected-test cleanup ran for this follow-up.
+
+The Khmer label follow-up uses **រំលឹកជាមុន (០–១៨០ នាទី)** with Latin digits
+in the input. Event and repeat-end date pickers now follow the app language;
+date/time pickers retain Latin numeric entry. Five focused editor/render tests,
+two direct emulator picker tests and seven translation-tool tests passed. Debug
+build and lint passed (0 errors, 49 existing warnings); Khmer reminder, date and
+time picker screenshots were inspected. App data was backed up before installing
+in place, and saved settings matched afterward. Only the test package was removed.
+
+The final compatibility check reran 42 tests across reminder storage, repeat
+storage, notification integration, advance timing, planning and time zones, with
+zero failures, errors or skips. These include migrations from all three earlier
+database formats, preservation of existing event data and the zero-minute default,
+and duplicate/obsolete-alarm handling. No production code changes were needed for
+this check. Forward upgrades are covered; downgrading to an older APK after the
+database reaches version 4 is unsupported.
+
+This review does not establish an overall speedup or prove that every possible
+memory leak is absent. It removes specific redundant calculations and rendering
+work. Extended physical-device heap analysis, frame-time/startup/battery
+benchmarks and launcher-specific widget checks remain outside this run. Very
+narrow calendar cells (observed at 360 dp with 150% text) can still ellipsize some
+compact Khmer labels; this review preserves the existing typography and overflow
+behavior.
+
+## Earlier verification records
+
 Reviewed on 28 September 2026 for Android 0.12.1 (27), engine 0.6.0.
 This is a dated verification record; [Development and testing](development-and-testing.md)
 contains the maintained commands.

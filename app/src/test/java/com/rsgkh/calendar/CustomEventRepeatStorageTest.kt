@@ -32,7 +32,8 @@ class CustomEventRepeatStorageTest {
         }
         CustomEventRepository(context).use {
             val saved = it.all().single()
-            assertEquals(3, it.readableDatabase.version)
+            assertEquals(4, it.readableDatabase.version)
+            assertEquals(0, saved.reminderMinutesBefore)
             assertEquals(Instant.parse("2026-10-25T01:30:00Z"), saved.instant)
             assertEquals("Keep notes", saved.notes)
             assertFalse(saved.remindersEligible)

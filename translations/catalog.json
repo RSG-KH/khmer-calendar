@@ -702,7 +702,7 @@
       "section": "interface",
       "context": "CalendarApp.kt",
       "en": "Show Sundays in red like holidays",
-      "km": "បង្ហាញថ្ងៃអាទិត្យជាពណ៌ក្រហម",
+      "km": "បង្ហាញពណ៌ក្រហមដូចថ្ងៃឈប់សម្រាក",
       "original": {
         "en": "Show Sundays in red like holidays",
         "km": "បង្ហាញថ្ងៃអាទិត្យជាពណ៌ក្រហម"
@@ -37444,6 +37444,100 @@
         "km": [
           "version"
         ]
+      }
+    },
+    {
+      "id": "event.remind_before",
+      "section": "interface",
+      "context": "Full-width advance reminder field label",
+      "en": "Remind me before ({zero}–{max} minute)",
+      "km": "រំលឹកជាមុន ({zero}–{max} នាទី)",
+      "original": {
+        "en": "Remind me before",
+        "km": "រំលឹកខ្ញុំជាមុន"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [
+          "zero",
+          "max"
+        ],
+        "km": [
+          "zero",
+          "max"
+        ]
+      }
+    },
+    {
+      "id": "notifications.starts_in_one",
+      "section": "interface",
+      "context": "Personal event notification timing",
+      "en": "Starts in {minutes} minute",
+      "km": "ចាប់ផ្ដើមក្នុងរយៈពេល {minutes} នាទី",
+      "original": {
+        "en": "Starts in {minutes} minute",
+        "km": "ចាប់ផ្ដើមក្នុងរយៈពេល {minutes} នាទី"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [
+          "minutes"
+        ],
+        "km": [
+          "minutes"
+        ]
+      }
+    },
+    {
+      "id": "notifications.starts_in_minutes",
+      "section": "interface",
+      "context": "Personal event notification timing",
+      "en": "Starts in {minutes} minutes",
+      "km": "ចាប់ផ្ដើមក្នុងរយៈពេល {minutes} នាទី",
+      "original": {
+        "en": "Starts in {minutes} minutes",
+        "km": "ចាប់ផ្ដើមក្នុងរយៈពេល {minutes} នាទី"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [
+          "minutes"
+        ],
+        "km": [
+          "minutes"
+        ]
+      }
+    },
+    {
+      "id": "notifications.starting_now",
+      "section": "interface",
+      "context": "Personal event notification timing",
+      "en": "Starting now",
+      "km": "ចាប់ផ្ដើមឥឡូវនេះ",
+      "original": {
+        "en": "Starting now",
+        "km": "ចាប់ផ្ដើមឥឡូវនេះ"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
+      }
+    },
+    {
+      "id": "notifications.event_reminder",
+      "section": "interface",
+      "context": "Personal event notification timing",
+      "en": "Event reminder",
+      "km": "ការរំលឹកព្រឹត្តិការណ៍",
+      "original": {
+        "en": "Event reminder",
+        "km": "ការរំលឹកព្រឹត្តិការណ៍"
+      },
+      "reviewed": false,
+      "required": {
+        "en": [],
+        "km": []
       }
     }
   ],

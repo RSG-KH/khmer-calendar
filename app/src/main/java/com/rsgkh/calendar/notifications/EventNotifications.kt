@@ -14,6 +14,7 @@ import androidx.core.net.toUri
 import com.rsgkh.calendar.MainActivity
 import com.rsgkh.calendar.R
 import com.rsgkh.calendar.data.*
+import com.rsgkh.calendar.i18n.CalendarWords
 import com.rsgkh.calendar.i18n.L
 import java.time.Duration
 import java.time.Instant
@@ -84,7 +85,21 @@ object EventNotifications {
                 val date = events.first().date
                 val k = settings.khmer
                 val multipleDates = events.any { it.date != date }
-                val lines = events.map { (if (multipleDates) "${it.date} · " else "") + (it.time?.let { time -> "$time · " } ?: "") + it.title(k) }
+                val lines = events.map { event ->
+                    val eventTime = event.instant?.takeIf { event.kind == EventKind.CUSTOM }
+                    val timing = when {
+                        eventTime == null -> ""
+                        now < eventTime -> {
+                            val minutes = ((Duration.between(now, eventTime).seconds + 59) / 60).toInt().coerceAtLeast(1)
+                            L.text(if (minutes == 1) "notifications.starts_in_one" else "notifications.starts_in_minutes", k,
+                                "minutes" to CalendarWords.number(minutes, k)) + " · "
+                        }
+                        at <= eventTime && now < eventTime.plusSeconds(60) -> L.text("notifications.starting_now", k) + " · "
+                        else -> L.text("notifications.event_reminder", k) + " · "
+                    }
+                    (if (multipleDates) "${event.date} · " else "") + timing +
+                        (event.time?.let { "$it · " } ?: "") + event.title(k)
+                }
                 val open = Intent(context, MainActivity::class.java).setData("khmercalendar://date/$date".toUri())
                     .putExtra(EXTRA_DATE, date.toString()).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 val content = PendingIntent.getActivity(context, 0, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)

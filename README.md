@@ -51,6 +51,7 @@ Same-day event lists show timed personal events first (with start time placed di
 
 ### ⏰ Personal Events & Precision Notifications
 - **Local SQLite Persistence**: Create, edit, and delete personal events with titles, dates, times, and notes.
+- **Advance Reminders**: Set **Remind me before** to 0–180 minutes for each personal event or series. Zero alerts at event time; a positive value adds an earlier alert and still alerts at event time, including across midnight and daylight-saving changes. Messages distinguish upcoming events from events starting now. Khmer labels and notification counts use Khmer numerals; the input uses English digits. Event notifications must be enabled in Settings.
 - **Repeating Events**: Repeat every X days, weekly, monthly or yearly, with a required end date and a preview. Choose whether to skip missing month-end or leap-day dates or include the available date. Edit or delete the whole series together.
 - **Time Zone Intelligence**:
   - **Display Time Zone**: Choose device local time or Cambodia time (UTC+7) for Today, event display and the daily reminder clock.
@@ -59,10 +60,14 @@ Same-day event lists show timed personal events first (with start time placed di
 - **Repeat Reminders**: Configure the daily reminder time and optional additional reminders every 2, 4, 6, 8 or 12 hours. These are separate from an event's repeat schedule.
 - **Event-Type Controls**: Choose reminders for personal events, holidays, observances, and Buddhist holy days independently.
 
+Updating from an older version preserves existing events with **0 minutes** of
+advance reminder. Returning to an older APK after the database upgrade is
+unsupported; see [storage compatibility](docs/architecture.md#events-and-storage).
+
 ### 📱 Home Screen Widgets
 - **Month Widget (4×3)**: Full-month calendar grid with Gregorian and Khmer lunar dates, Buddhist holy days, traditional weekday heading colors, 20% translucent today cell highlight preserving marker colors, event markers row (● holiday, ▲ holy, ■ observance, ★ personal), legend footnote, and interactive date-cell tapping that launches the app directly into that day's date details.
 - **Productivity Widget (4×2)**: Date details card featuring a prominent day number (holiday-colored on public holidays/highlighted Sundays), short weekday, short Gregorian month, Khmer lunar month and day, Buddhist Era year, optional Western zodiac sign, and a Holy Day or Shaving Day label when applicable. Today/Tomorrow event lists sit beside the date card, with personal event titles highlighted in personal color. Zodiac names remain in English in either app language. The card adapts to compact widths by hiding detail rows.
-- **Focus Widget (4×2)**: Daily events overview featuring full lunar date and BE year badges, a compacted scrollable list of today's events, and scrollable sub-cards for yesterday and tomorrow with individual event click navigation and category colors.
+- **Focus Widget (4×2)**: Daily events overview featuring full lunar date and BE year badges, a compacted scrollable list of today's events, and scrollable sub-cards for yesterday and tomorrow with individual event click navigation and category colors. Compact spacing keeps all three day lists visible at the standard 4×2 size; larger widgets give the lists more room.
 - **Planner Widget (4×2)**: Resizable 29-day agenda centered on today, with a date-range header, timezone and refresh badges, a scrollable day list, weekday-aware week dividers, and color-coded event chips. Timed events come first; tapping a chip opens its event, while tapping the rest of a row opens date details.
 - **Glance Widget (4×1, down to 2×1, up to two rows tall)**: Compact view of today's Gregorian and lunar dates, traditional animal year and Sak, timezone, and optional holy-day, Western zodiac and Ganzhi badges. The date tile places the weekday, day number (holiday-colored on public holidays/highlighted Sundays), and timezone emoji on separate lines. It has one refresh button and a yearly animal watermark; compact width keeps the date and traditional year details.
 - **App Settings Integration**: Master **Enable widgets** toggle switch under Settings → Widgets. Toggling off uses `PackageManager.setComponentEnabledSetting` to disable all five widget receivers and removes them from the widget picker; it also cancels queued, periodic and midnight widget refreshes. **Add widgets** opens a swipeable chooser with a preview, name and size for each widget, then asks the launcher to add the selected widget when supported.

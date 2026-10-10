@@ -80,13 +80,11 @@ import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -833,6 +831,9 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
     val cellHeight = calendarCellHeight()
     val firstOffset = calendarFirstDayOffset(month, settings.mondayFirst)
     val byDate = remember(events) { events.groupBy { it.date } }
+    val lunarDates = remember(month) {
+        (1..month.lengthOfMonth()).map { KhmerCalendar.fromGregorian(month.atDay(it)) }
+    }
     BoxWithConstraints(Modifier.testTag("month-grid").pointerInput(month) {
         var drag = 0f
         detectHorizontalDragGestures(onDragStart = { drag = 0f }, onHorizontalDrag = { change, amount -> change.consume(); drag += amount }, onDragEnd = {
@@ -846,91 +847,80 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
         val lunarLineHeight = (if (isPhoneLandscape) 10 else 12).readableSp
         val lunarTextStyle = LocalTextStyle.current.copy(fontSize = lunarFontSize, lineHeight = lunarLineHeight)
         val safetyPaddingPx = with(density) { 1.dp.toPx() }
-        val useCompactLunar = remember(month, k, cellAvailableWidthPx, lunarTextStyle) {
-            if (!k) false
-            else {
-                val maxAvailablePx = cellAvailableWidthPx - safetyPaddingPx
-                var overflow = false
-                val len = month.lengthOfMonth()
-                for (day in 1..len) {
-                    val lunar = KhmerCalendar.fromGregorian(month.atDay(day))
-                    if (lunar.day >= 10) {
-                        val text = lunar.shortLabel(true)
-                        if (lunarMeasurer.measure(text, lunarTextStyle, softWrap = false, maxLines = 1).size.width > maxAvailablePx) {
-                            overflow = true
-                            break
-                        }
-                    }
-                }
-                overflow
+        val useCompactLunar = remember(lunarDates, k, settings.showLunar, cellAvailableWidthPx, lunarTextStyle, density, lunarMeasurer) {
+            settings.showLunar && k && lunarDates.any { lunar ->
+                lunarMeasurer.measure(
+                    lunar.shortLabel(true), lunarTextStyle, softWrap = false, maxLines = 1
+                ).size.width > cellAvailableWidthPx - safetyPaddingPx
             }
         }
         Column {
-        CalendarWeekdayHeader(settings)
-        repeat(calendarWeekCount(month, settings.mondayFirst)) { week ->
-            Row(Modifier.fillMaxWidth()) {
-                repeat(7) { column ->
-                    val day = week * 7 + column - firstOffset + 1
-                    if (day !in 1..month.lengthOfMonth()) Spacer(Modifier.weight(1f)) else {
-                        val date = month.atDay(day)
-                        val lunar = remember(date) { KhmerCalendar.fromGregorian(date) }
-                        val entries = byDate[date].orEmpty()
-                        val active = date == selected
-                        val isToday = date == today
-                        val holiday = entries.any { it.kind == EventKind.HOLIDAY }
-                        val isSunday = date.dayOfWeek == DayOfWeek.SUNDAY
-                        val isHoliday = holiday || (settings.highlightSunday && isSunday)
-                        val colors = MaterialTheme.colorScheme
-                        Box(
-                            Modifier.weight(1f).padding(CalendarCellPadding).clip(RoundedCornerShape(if (isPhoneLandscape) 8.dp else 11.dp))
-                                .background(if (isToday) colors.primary.copy(alpha = 0.15f) else Color.Transparent)
-                                .then(if (active) Modifier.border(1.dp, colors.primary, RoundedCornerShape(if (isPhoneLandscape) 8.dp else 11.dp)) else Modifier)
-                                .clickable { onSelect(date) }
-                                .semantics(mergeDescendants = true) {
-                                    contentDescription = if (k) {
-                                        "${dateLabel(date, true)} ${lunar.fullLabel(true)}. ${entries.joinToString(" ") { it.title(true) }}"
-                                    } else {
-                                        "${dateLabel(date, false)}, ${lunar.fullLabel(false)}. ${entries.joinToString { it.title(false) }}"
+            CalendarWeekdayHeader(settings)
+            repeat(calendarWeekCount(month, settings.mondayFirst)) { week ->
+                Row(Modifier.fillMaxWidth()) {
+                    repeat(7) { column ->
+                        val day = week * 7 + column - firstOffset + 1
+                        if (day !in 1..month.lengthOfMonth()) Spacer(Modifier.weight(1f)) else {
+                            val date = month.atDay(day)
+                            val lunar = lunarDates[day - 1]
+                            val entries = byDate[date].orEmpty()
+                            val active = date == selected
+                            val isToday = date == today
+                            val holiday = entries.any { it.kind == EventKind.HOLIDAY }
+                            val isSunday = date.dayOfWeek == DayOfWeek.SUNDAY
+                            val isHoliday = holiday || (settings.highlightSunday && isSunday)
+                            val colors = MaterialTheme.colorScheme
+                            Box(
+                                Modifier.weight(1f).padding(CalendarCellPadding).clip(RoundedCornerShape(if (isPhoneLandscape) 8.dp else 11.dp))
+                                    .background(if (isToday) colors.primary.copy(alpha = 0.15f) else Color.Transparent)
+                                    .then(if (active) Modifier.border(1.dp, colors.primary, RoundedCornerShape(if (isPhoneLandscape) 8.dp else 11.dp)) else Modifier)
+                                    .clickable { onSelect(date) }
+                                    .semantics(mergeDescendants = true) {
+                                        contentDescription = if (k) {
+                                            "${dateLabel(date, true)} ${lunar.fullLabel(true)}. ${entries.joinToString(" ") { it.title(true) }}"
+                                        } else {
+                                            "${dateLabel(date, false)}, ${lunar.fullLabel(false)}. ${entries.joinToString { it.title(false) }}"
+                                        }
+                                        this.selected = active
                                     }
-                                    this.selected = active
+                                    .height(cellHeight),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                if (settings.showHolyDaysInCalendar && lunar.isHolyDay) {
+                                    Image(painterResource(holyDayLotusDrawable(lunar)), contentDescription = null,
+                                        modifier = Modifier.matchParentSize().padding(1.dp).scale(if (isPhoneLandscape) 0.90f else 1.0f), contentScale = ContentScale.Fit, alpha = 0.30f)
                                 }
-                                .height(cellHeight),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            if (settings.showHolyDaysInCalendar && lunar.isHolyDay) {
-                                Image(painterResource(holyDayLotusDrawable(lunar)), contentDescription = null,
-                                    modifier = Modifier.matchParentSize().padding(1.dp).scale(if (isPhoneLandscape) 0.90f else 1.0f), contentScale = ContentScale.Fit, alpha = 0.30f)
-                            }
-                            Column(Modifier.fillMaxWidth().offset(y = if (isPhoneLandscape) (-0.5).dp else (-1.0).dp).padding(vertical = if (isPhoneLandscape) 0.5.dp else 1.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                                Text(number(day, k), color = if (isHoliday) colors.tertiary else colors.onSurface,
-                                    fontSize = (if (isPhoneLandscape) 13 else 16).readableSp, lineHeight = (if (isPhoneLandscape) 15 else 17).sp, maxLines = 1, fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium)
-                                if (settings.showLunar) {
-                                    Text(
-                                        if (useCompactLunar) lunar.compactLabel(k) else lunar.shortLabel(k),
-                                        modifier = Modifier.offset(y = if (isPhoneLandscape) (-1.5).dp else (-1).dp),
-                                        color = colors.onSurfaceVariant,
-                                        fontSize = lunarFontSize,
-                                        lineHeight = lunarLineHeight,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                                val markSize = when {
-                                    isTablet && isLandscape -> 7.0.dp
-                                    isTablet -> 8.5.dp
-                                    isLandscape -> 5.5.dp
-                                    else -> 6.5.dp
-                                }
-                                val markRowHeight = when {
-                                    isTablet && isLandscape -> 8.0.dp
-                                    isTablet -> 9.5.dp
-                                    isLandscape -> 6.dp
-                                    else -> 7.dp
-                                }
-                                val markSpacing = if (isTablet) 2.5.dp else 2.dp
-                                Row(Modifier.height(markRowHeight), horizontalArrangement = Arrangement.spacedBy(markSpacing), verticalAlignment = Alignment.CenterVertically) {
-                                    entries.map { it.kind }.distinct().take(4).forEach { EventMark(it, eventColor(it), sizeDp = markSize) }
+                                Column(Modifier.fillMaxWidth().offset(y = if (isPhoneLandscape) (-0.5).dp else (-1.0).dp).padding(vertical = if (isPhoneLandscape) 0.5.dp else 1.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                                    Text(number(day, k), color = if (isHoliday) colors.tertiary else colors.onSurface,
+                                        fontSize = (if (isPhoneLandscape) 13 else 16).readableSp, lineHeight = (if (isPhoneLandscape) 15 else 17).sp, maxLines = 1, fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium)
+                                    if (settings.showLunar) {
+                                        Text(
+                                            if (useCompactLunar) lunar.compactLabel(k) else lunar.shortLabel(k),
+                                            modifier = Modifier.offset(y = if (isPhoneLandscape) (-1.5).dp else (-1).dp),
+                                            color = colors.onSurfaceVariant,
+                                            fontSize = lunarFontSize,
+                                            lineHeight = lunarLineHeight,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    val markSize = when {
+                                        isTablet && isLandscape -> 7.0.dp
+                                        isTablet -> 8.5.dp
+                                        isLandscape -> 5.5.dp
+                                        else -> 6.5.dp
+                                    }
+                                    val markRowHeight = when {
+                                        isTablet && isLandscape -> 8.0.dp
+                                        isTablet -> 9.5.dp
+                                        isLandscape -> 6.dp
+                                        else -> 7.dp
+                                    }
+                                    val markSpacing = if (isTablet) 2.5.dp else 2.dp
+                                    Row(Modifier.height(markRowHeight), horizontalArrangement = Arrangement.spacedBy(markSpacing), verticalAlignment = Alignment.CenterVertically) {
+                                        entries.map { it.kind }.distinct().take(4).forEach { EventMark(it, eventColor(it), sizeDp = markSize) }
+                                    }
                                 }
                             }
                         }
@@ -939,7 +929,6 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
             }
         }
     }
-}
 }
 
 private fun matchesEventFilter(kind: EventKind, filter: Int): Boolean = when (filter) {
@@ -1151,8 +1140,6 @@ private fun EventDayGroup(events: List<CalendarEvent>, k: Boolean, today: Boolea
         else colors.surface
     val holiday = events.any { it.kind == EventKind.HOLIDAY }
     val dayDate = events.first().date
-    val firstEvent = events.first()
-    val color = eventColor(firstEvent.kind)
     val dateColor = if (holiday) colors.tertiary else colors.onSurface
     val topRadius = if (first) CardCornerRadius else 0.dp
     val bottomRadius = if (last) CardCornerRadius else 0.dp

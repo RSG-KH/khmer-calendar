@@ -63,6 +63,17 @@ In tablet landscape, the calendar takes no more than half the space between the 
 
 ### Custom event repeats
 
+The Add/Edit event form places a full-width outlined field labeled **Remind me
+before (0–180 minute)** directly after the time input, with no helper text.
+Zero means at event time; positive values add an advance alert while retaining
+the event-time alert. Invalid or empty values disable Save. The Khmer label is
+**រំលឹកជាមុន (០–១៨០ នាទី)**. Its value uses Latin digits, like the date and time
+inputs; typed Khmer digits are accepted and converted to Latin digits. Each event
+or series retains its own value when reopened. The date label includes the
+localized 1800–2200 year range instead of a separate supporting line. Event and
+repeat-end date pickers follow the app language, including Khmer month names and
+controls. Date/time pickers keep Latin digits for consistent numeric entry.
+
 `SelectionChip` defines the shared appearance for Events filters and Repeat choices:
 unselected chips use the theme outline at 45% opacity, and selected chips use a 1 dp
 accent border with the accent container and label colors. Both screens use this
@@ -376,7 +387,7 @@ Khmer Calendar provides five home screen widgets. Month, Productivity, Focus, an
 - **Focus Widget (4×2 Target Size)**:
   - **Header Badges**: Lunar date, month, and BE year chip, timezone badge, and a quick refresh action button.
   - **Middle Content**: Scrollable `LazyColumn` for today's events with stable `itemId` keys for smooth list diffing and scroll position preservation on Android 12+. Event cards use a compacted row height footprint (~10% reduction via 20 dp icon, 5 dp vertical padding, and 5 dp item spacing). Holiday cards use a neutral `surfaceVariant` card background without red tinting, while preserving category icons and holiday color accents. Personal event titles are styled in the personal accent color.
-  - **Footer Sub-Cards**: Sub-cards for Yesterday and Tomorrow with event counts and full vertically scrollable `LazyColumn` lists. Each event item is individually clickable to navigate directly to its date or event details, featuring kind-specific icons (`🪷` holy day, `🎉` holiday, `⏰` personal, `📌` observance) and category foreground colors. Row heights are comfortably padded (2 dp vertical padding, ~10% increase) with responsive card heights (58 dp compact, 78 dp expanded, 100 dp large).
+  - **Footer Sub-Cards**: Sub-cards for Yesterday and Tomorrow with full vertically scrollable `LazyColumn` lists. Each event item is individually clickable to navigate directly to its date or event details, featuring kind-specific icons (`🪷` holy day, `🎉` holiday, `⏰` personal, `📌` observance) and category foreground colors. Cards use 58–100 dp heights adjusted for app and system font sizes. At the standard 4×2 size, compact header and card padding keep all three day lists visible while reserving a readable row for today. Exceptionally constrained sizes with large fonts may omit the adjacent cards when even the compact layout cannot fit. Rows retain 2 dp vertical padding.
   - **Full Horizontal Expansion**: Width expands dynamically with user resizing handles across all launcher grid widths without arbitrary caps, providing full width for long event titles and yesterday/tomorrow sub-cards.
 - **Planner Widget (4×2 Target Size)**:
   - **Header**: The 29-day solar date range, selected timezone, and refresh action.

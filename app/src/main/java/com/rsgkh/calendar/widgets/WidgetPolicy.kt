@@ -3,7 +3,6 @@ package com.rsgkh.calendar.widgets
 
 import com.rsgkh.calendar.data.CalendarEvent
 import com.rsgkh.calendar.data.EventKind
-import com.rsgkh.calendar.data.EventRepository
 import com.rsgkh.calendar.data.TodayTimeZone
 import java.time.Instant
 import java.time.DayOfWeek
@@ -17,21 +16,10 @@ import kotlin.math.floor
 /** Pure policies; never approximate a civil day as 24 hours (DST can change its length). */
 object WidgetPolicy {
 
-    internal fun isTodayHoliday(snapshot: WidgetSnapshot): Boolean {
-        val isSunday = snapshot.today.dayOfWeek == DayOfWeek.SUNDAY
-        val sundayHoliday = snapshot.settings.highlightSunday && isSunday
-        val builtInHoliday = try {
-            if (snapshot.today.year in EventRepository.coveredYears) {
-                EventRepository.forDate(snapshot.today).any { it.kind == EventKind.HOLIDAY }
-            } else false
-        } catch (_: Throwable) {
-            false
-        }
-        val hasHoliday = snapshot.current.items.any { it.kind == EventKind.HOLIDAY } ||
-            snapshot.holidayTitle != null ||
-            builtInHoliday
-        return hasHoliday || sundayHoliday
-    }
+    internal fun isTodayHoliday(snapshot: WidgetSnapshot): Boolean =
+        snapshot.isPublicHoliday || snapshot.holidayTitle != null ||
+            snapshot.current.items.any { it.kind == EventKind.HOLIDAY } ||
+            (snapshot.settings.highlightSunday && snapshot.today.dayOfWeek == DayOfWeek.SUNDAY)
 
     /**
      * Month widget card width ceiling: the calendar card never gets wider than 1.25x its height,
