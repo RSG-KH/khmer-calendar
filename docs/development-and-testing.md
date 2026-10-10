@@ -4,7 +4,7 @@
 
 - JDK 25, auto-provisioned by Gradle toolchain resolution if absent.
 - Android SDK Platform 37; the app targets API 37 and supports API 31+.
-- Gradle 9.6.0 through the wrapper, Android Gradle Plugin 9.4.1 and Kotlin 2.4.20.
+- Gradle 9.6.0 through the wrapper, Android Gradle Plugin 9.4.1 and Kotlin 2.4.21.
 
 AGP provides built-in Kotlin support. The root `build.gradle.kts` selects the Kotlin Gradle plugin version from `gradle/libs.versions.toml`, which also sets the Compose compiler version. Update that shared version to keep both compilers aligned. See Android's [built-in Kotlin configuration](https://developer.android.com/build/releases/agp-9-0-0-release-notes#runtime-dependency-on-kotlin-gradle-plugin).
 
@@ -94,6 +94,47 @@ qualification, also inspect heap dumps after extended navigation, location
 searches and widget resizing on representative devices. Test counts and device
 results in dated verification documents describe those specific runs.
 
+For a longer retention check on a disposable emulator with the debug and test
+APKs already installed, use an explicit serial and direct instrumentation:
+
+```powershell
+adb -s emulator-5580 shell am instrument -w -r -e timeout_msec 180000 -e lifecycleIterations 40 -e class com.rsgkh.calendar.LifecycleDeviceTest com.rsgkh.calendar.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+The default remains eight recreations; `lifecycleIterations` accepts 1–100.
+Forty recreations must release all 41 activity instances after final closure.
+Run the complete device suite with the same command without `-e class ...` or
+`-e lifecycleIterations ...`. Direct instrumentation leaves both packages
+installed. Inspect the final `OK (N tests)` result: adb's exit status alone does
+not establish that the tests passed.
+
+## Startup measurements
+
+[`tools/measure-android-startup.py`](../tools/measure-android-startup.py) records
+15 process-cold starts after two discarded warmups, raw `am start -W` output,
+median/p90 time to first display, device/build details, the APK checksum and a
+final memory snapshot. It requires an explicit device serial and verifies the
+installed APK against the supplied file. It stops the app between launches but
+does not clear its data, install packages or change device settings.
+
+Use an optimized release APK signed with a local test key on a disposable
+emulator, or a dedicated physical test device. Keep device configuration, app
+settings/data, compilation mode and background load the same between runs:
+
+```powershell
+adb -s emulator-5580 install -r artifacts/dependency-upgrade/after-release.apk
+adb -s emulator-5580 shell cmd package compile -m speed -f com.rsgkh.calendar
+python tools/measure-android-startup.py --serial emulator-5580 --apk artifacts/dependency-upgrade/after-release.apk --output artifacts/dependency-upgrade/startup-after.json
+```
+
+Pass `--adb` with the SDK executable path if it is not on PATH. The APK in this
+example is a locally test-signed release artifact, not a distribution package.
+Repeat in alternating build order before attributing small differences to a
+change. Filesystem caches remain warm, and first display is not fully drawn.
+Emulator timings are diagnostic samples, not physical-device release benchmarks;
+the memory snapshot does not identify retained objects. Frame timing, battery
+use and heap retention require separate measurements.
+
 ## Translations
 
 Edit [`translations/catalog.json`](../translations/catalog.json) through the local [translation editor](../tools/translation/README.md), or make an intentional catalog edit and export:
@@ -103,6 +144,12 @@ python tools/translation/server.py --export
 ```
 
 The catalog generates `translations.tsv` and launcher strings. Rebuild and reinstall to see changes. Do not hand-edit generated resources. License and notice texts remain verbatim assets outside the translation catalog.
+
+Archived event wording stays in the editable source catalog for reference and
+JSON export, but is excluded from the app's language file. Current catalog-event
+titles come from `khmer-calendar-data.json`; the Buddhist holy-day label remains
+an active translation. The translation tests verify that all literal Kotlin
+translation keys are present in the generated output, not merely in the source.
 
 ## Event resources
 

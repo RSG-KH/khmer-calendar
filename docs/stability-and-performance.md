@@ -111,6 +111,147 @@ narrow calendar cells (observed at 360 dp with 150% text) can still ellipsize so
 compact Khmer labels; this review preserves the existing typography and overflow
 behavior.
 
+## 10 October 2026 project-wide cleanup
+
+The follow-up inspected tracked source, resources, bundled data, translation
+exports, documentation references, tests and build configuration. A clean Git
+status was not treated as evidence that every file or declaration was used.
+
+- Removed 36 unused Android resource names: 28 strings in both languages, five
+  colors in both themes and three unused drawable files.
+- Removed 14 obsolete non-event translations. Preserved 125 historical event
+  templates in the translation editor's archive while excluding them from the
+  generated app language file. Current event titles remain in the event catalog.
+- Removed unused imports, the old time-subtitle and dot helpers, unused lunar
+  month lists and an obsolete Ganzhi text formatter. Existing tests now exercise
+  the current title/time-zone and Ganzhi formatting paths. Moved the New Year
+  reference adapter into test sources and kept the cache-reset test hook internal.
+- Kept `RefreshWidgetAction` as a documented compatibility entry point for
+  callback intents in widgets rendered by older versions. Framework callbacks,
+  Compose previews, licenses, reference fixtures and indexed country data remain.
+- Moved the ten light/dark widget preview PNGs into density-independent resource
+  folders and changed the chooser to use its actual window height. Removed the
+  leftover backup-rule template comments and updated documentation paths.
+
+All 252 indexed countries resolve to their bundled catalogs, including Cambodia's
+separate catalog. Local Markdown links resolve. No additional unreferenced active
+translation keys or ordinary unused imports were found by the reference scans;
+Compose delegated-property imports are required even without a literal call.
+
+Lint is down from 49 warnings to 7, with no errors or unused-resource warnings.
+Three remaining Planner XML warnings concern deliberate weighted watermark and
+badge layouts. The badge sizing regression verifies short and long dates at
+wide and narrow widget widths; a structural rewrite is outside this cleanup.
+Four other warnings flag newer dependencies, verified against official releases:
+
+| Dependency | Pinned | Available stable release |
+| --- | --- | --- |
+| AndroidX Core | 1.19.0 | [1.19.1](https://developer.android.com/jetpack/androidx/releases/core#1.19.1) |
+| AndroidX Browser | 1.8.0 | [1.10.0](https://developer.android.com/jetpack/androidx/releases/browser#1.10.0) |
+| WorkManager | 2.11.2 | [2.12.0](https://developer.android.com/jetpack/androidx/releases/work#2.12.0) |
+| Kotlin / Compose compiler | 2.4.20 | [2.4.21](https://kotlinlang.org/docs/releases.html) |
+
+Dependency versions are unchanged; their updates need their own integration
+checks. This audit does not prove that every possible dead path, memory leak or
+runtime issue has been eliminated.
+
+Final verification passed 301 JVM/Robolectric tests across 33 suites, all seven
+translation-tool tests, the debug and optimized release builds, JavaScript syntax
+checking and patch whitespace checks. There were no test failures, errors or
+skips. Widget preview checks covered all five pages in both app themes against
+both device themes; the moved PNG files are byte-for-byte unchanged. The generated
+language file decreased from 81,898 to 43,459 bytes. This cleanup did not run
+connected-device tests or modify emulator data.
+
+## 10 October 2026 dependency upgrade and verification follow-up
+
+Completed the four dependency updates identified by the cleanup:
+
+| Dependency | Previous | Updated |
+| --- | --- | --- |
+| AndroidX Core | 1.19.0 | [1.19.1](https://developer.android.com/jetpack/androidx/releases/core#1.19.1) |
+| AndroidX Browser | 1.8.0 | [1.10.0](https://developer.android.com/jetpack/androidx/releases/browser#1.10.0) |
+| WorkManager | 2.11.2 | [2.12.0](https://developer.android.com/jetpack/androidx/releases/work#2.12.0) |
+| Kotlin / Compose compiler | 2.4.20 | [2.4.21](https://kotlinlang.org/docs/releases.html) |
+
+The shared Kotlin version keeps AGP's Kotlin compiler and the Compose compiler
+aligned; release dependency resolution also confirms Kotlin stdlib 2.4.21.
+WorkManager's minimum API 24 remains below the app's minimum API 31. No app API
+level, database format or distribution signing configuration changed.
+
+The complete device runs exposed assumptions in the shared UI tests. The
+location-deletion check now waits for both independently loaded country and
+division fields before comparing the draft. Calendar checks accept the existing
+abbreviated month headers on narrow phones and scope month selection to the
+picker. The localized date-picker check selects its prerequisite Monthly option
+through the semantic action and asserts selection, avoiding an unreliable
+injected tap after keyboard/inset changes. Picker-language, numeric-entry,
+selected-date and draft-preservation assertions remain in place.
+
+| Final check | Result |
+| --- | --- |
+| JVM/Robolectric | 301 tests across 33 suites; zero failures, errors or skips |
+| Android 12 / API 31 | All 43 device tests passed on a disposable Pixel 4 emulator, 1080 × 2280 at 440 dpi |
+| Android 17 / API 37 | All 43 device tests passed on a disposable read-only Pixel 10 Pro XL emulator, 1344 × 2992 at 480 dpi |
+| Activity retention | Both full device runs used 40 recreation/background/foreground cycles and collected all 41 activities after closure |
+| Translation tools | All seven tests passed |
+| Builds | Debug APK, optimized unsigned release APK, release bundle and device-test APK built successfully |
+| Release compatibility | Locally test-signed optimized release installed and launched on API 31 |
+| Android lint | Zero errors, three existing Planner layout warnings; all four dependency warnings resolved |
+
+The formerly stalled catalog-location scenario passed in both complete device
+runs. The narrow calendar and Khmer date-picker device captures were inspected.
+Direct instrumentation targeted only the disposable emulators, preserving the
+existing Pixel 10a installation and its settings, events and widgets.
+`LifecycleDeviceTest` now accepts `lifecycleIterations` (1–100, default eight)
+for repeatable longer retention runs. Commands and the startup measurement tool
+are documented in [Development and testing](development-and-testing.md).
+
+Evidence is retained locally under `artifacts/dependency-upgrade/`, including
+`gradle-check.log`, `jvm-lint-final.log`, `device-api31-final.log`,
+`device-api37-final.log`, `verification.json` and `screenshots-api31/`.
+Earlier failed device logs are retained separately from those final passing runs.
+
+### Emulator startup samples
+
+The new `tools/measure-android-startup.py` recorded two alternating before/after
+comparisons on the API 37 emulator. Each batch discarded two warmups and retained
+15 process-cold launches (30 measured launches per build). Both APKs were optimized
+release builds signed with the same local test key and compiled with Android's
+`speed` mode. The emulator used two virtual CPU cores and 3072 MB RAM; window,
+transition and animator scales were zero. Builds and device tests had finished,
+and the disposable API 31 emulator was shut down before sampling.
+
+| Build / batch | Median first-display time | p90 |
+| --- | --- | --- |
+| Previous dependencies / 1 | 658 ms | 715 ms |
+| Updated dependencies / 1 | 594 ms | 649 ms |
+| Previous dependencies / 2 | 626 ms | 816 ms |
+| Updated dependencies / 2 | 649 ms | 682 ms |
+
+Only the disposable emulator's app data was cleared before each baseline batch;
+each following update was installed in place. The tool verifies the installed
+APK checksum, records raw launch output and saves a final memory snapshot in
+`startup-before-1.json`, `startup-after-1.json`, `startup-before-2.json` and
+`startup-after-2.json` under the evidence directory. These measure first display
+with warm filesystem caches, not fully drawn content or frame timing. The
+batch-to-batch variation, including a 1633 ms baseline outlier, prevents a reliable
+speedup claim. Physical-device measurements are still required.
+
+### Remaining release checks
+
+| Gap | Evidence still needed |
+| --- | --- |
+| Physical-device performance | Startup and frame-time traces on representative phones, with consistent thermal, compilation and workload conditions |
+| Extended heap retention | Heap comparisons after repeated dialog, country-search and widget use; activity collection alone does not cover other retained objects |
+| Battery and OEM background behavior | Measured idle/active battery use plus reminder and widget delivery through doze, reboot and vendor background restrictions on real devices |
+| Launcher coverage | Installation, refresh and resizing across multiple launchers; the existing Focus check covers only the recorded emulator launcher |
+| Narrow Khmer lunar labels | The existing 360 dp / 150% text ellipsis case still needs a typography/layout decision; these dependency updates preserve rendering behavior |
+| Planner layout structure | Three intentional weighted-layout/parent warnings remain; any rewrite must preserve badge sizing and the watermark's resize bounds |
+
+Only emulators were connected for this follow-up. These remaining checks are
+not counted as completed by the passing automated suites.
+
 ## Earlier verification records
 
 Reviewed on 28 September 2026 for Android 0.12.1 (27), engine 0.6.0.
@@ -246,6 +387,8 @@ confirmed scoped cursor/stream closure, application contexts for background
 storage work, a 12-year event cache and a two-country location cache. These checks
 do not prove the absence of every possible leak. Extended physical-device runs,
 heap analysis of repeated dialog/location/widget use, and OEM background behavior
-remain additional release checks. No frame-time, battery-life or startup-time
-benchmark was performed; the performance changes remove specific redundant
-work and allocation rather than claiming a measured overall speedup.
+remain additional release checks. The September review performed no frame-time,
+battery-life or startup-time benchmark. The October dependency follow-up adds
+emulator startup samples; physical-device performance and battery measurements
+remain open. Removing specific redundant work and allocation does not establish
+a measured overall speedup.

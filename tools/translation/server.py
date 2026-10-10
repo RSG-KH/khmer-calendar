@@ -15,8 +15,9 @@ from urllib.parse import urlsplit
 from xml.etree import ElementTree as ET
 
 TOKEN = re.compile(r'\{([A-Za-z][A-Za-z0-9_]*)}')
-SECTIONS = [dict(id=k, label=v) for k, v in [('events', 'Events'), ('interface', 'In-app text'),
-            ('calendar', 'Calendar & dates'), ('notifications', 'Notifications'), ('about', 'About & sources')]]
+SECTIONS = [dict(id=k, label=v) for k, v in [('interface', 'In-app text'), ('events', 'Calculated events'),
+            ('calendar', 'Calendar & dates'), ('notifications', 'Notifications'), ('about', 'About & sources'),
+            ('archive', 'Archived event wording')]]
 
 
 def encoded(text):
@@ -63,6 +64,8 @@ def exports(project, catalog, revision):
     words = []
     name = None
     for entry in catalog['entries']:
+        if entry['section'] == 'archive':
+            continue
         if entry['id'] == 'app.name':
             name = entry
         words.append((entry['id'], encoded(entry['km']), encoded(entry['en'])))

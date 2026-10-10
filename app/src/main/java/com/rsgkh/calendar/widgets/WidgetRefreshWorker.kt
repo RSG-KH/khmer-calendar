@@ -36,7 +36,7 @@ class WidgetRefreshWorker(context: Context, parameters: WorkerParameters) : Coro
     }
 }
 
-/** This action only refreshes. Activity launches use direct activity PendingIntents instead. */
+/** Kept for callback intents in widgets rendered by older app versions, until refreshed. */
 @Keep
 class RefreshWidgetAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {

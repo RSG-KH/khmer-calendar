@@ -32,6 +32,7 @@ import com.rsgkh.calendar.data.EventKind
 import com.rsgkh.calendar.data.Birthplace
 import com.rsgkh.calendar.data.FontScale
 import com.rsgkh.calendar.i18n.L
+import com.rsgkh.calendar.i18n.CalendarWords
 import com.rsgkh.calendar.ui.CalendarApp
 import com.rsgkh.calendar.ui.CalendarEngineVersion
 import com.rsgkh.calendar.ui.CalendarTheme
@@ -85,8 +86,11 @@ abstract class CalendarUiScenarios {
                 val tags = if (manual) listOf("location-name", "location-latitude", "location-longitude", "location-zone")
                     else listOf("location-country", "location-adm1", "location-lower")
                 compose.waitUntil(10_000) {
-                    runCatching { compose.onNodeWithTag(tags.last()).fetchSemanticsNode()
-                        .config[androidx.compose.ui.semantics.SemanticsProperties.EditableText].text.isNotEmpty() }.getOrDefault(false)
+                    // Country names and divisions load independently on background threads.
+                    tags.all { tag ->
+                        runCatching { compose.onNodeWithTag(tag).fetchSemanticsNode()
+                            .config[androidx.compose.ui.semantics.SemanticsProperties.EditableText].text.isNotEmpty() }.getOrDefault(false)
+                    }
                 }
                 if (manual) compose.onNodeWithTag("location-name").performScrollTo().performTextReplacement("Edited location")
                 fun inputs() = tags.map { compose.onNodeWithTag(it).fetchSemanticsNode()
@@ -688,21 +692,21 @@ abstract class CalendarUiScenarios {
         start()
         screenshot("calendar-light")
         compose.onNodeWithTag("month-grid").performTouchInput { swipeLeft() }
-        compose.onNodeWithText("October").assertIsDisplayed()
+        compose.onNode((hasText("October") or hasText("Oct")) and hasClickAction()).assertIsDisplayed()
         compose.onNode(hasContentDescription("Thursday, 1 October", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).assertIsSelected()
         screenshot("calendar-october-light")
         compose.onNode(hasText("Today") and hasClickAction()).performClick()
-        compose.onNodeWithText("September").assertIsDisplayed()
+        compose.onNode((hasText("September") or hasText("Sep")) and hasClickAction()).assertIsDisplayed()
         compose.onNodeWithText("BE 2570").assertIsDisplayed()
         compose.onNode(hasContentDescription("Thursday, 10 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).assertIsSelected()
         compose.onNodeWithTag("month-grid").performTouchInput { swipeRight() }
-        compose.onNodeWithText("August").assertIsDisplayed()
+        compose.onNode((hasText("August") or hasText("Aug")) and hasClickAction()).assertIsDisplayed()
         compose.onNode(hasContentDescription("Saturday, 1 August", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).assertIsSelected()
         compose.onNodeWithContentDescription("Next month").performClick()
-        compose.onNodeWithText("September").assertIsDisplayed()
+        compose.onNode((hasText("September") or hasText("Sep")) and hasClickAction()).assertIsDisplayed()
         compose.onNode(hasContentDescription("Tuesday, 1 September", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).assertIsSelected()
         compose.onNodeWithContentDescription("Previous month").performClick()
-        compose.onNodeWithText("August").assertIsDisplayed()
+        compose.onNode((hasText("August") or hasText("Aug")) and hasClickAction()).assertIsDisplayed()
         compose.onNode(hasContentDescription("Saturday, 1 August", substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).assertIsSelected()
     }
     @Test fun monthSwipesFromDay31SelectFirstDayAcrossShortMonthsAndYears() {
@@ -890,7 +894,7 @@ abstract class CalendarUiScenarios {
             compose.onNode(hasText("Calendar") and hasClickAction()).performClick()
             compose.onNodeWithContentDescription("Choose month and year").performClick()
             compose.onNode(hasSetTextAction()).performTextReplacement(year.toString())
-            compose.onNodeWithText("Jan").performClick()
+            compose.onNode(hasText("Jan") and hasAnyAncestor(hasTestTag("month-picker"))).performClick()
             compose.onNodeWithText("Go").performClick()
             if (year in 2000..2030) {
                 compose.onNodeWithText("New Year's Day").performScrollTo().assertIsDisplayed()
@@ -956,13 +960,13 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithText("Dec").performClick()
         compose.onNodeWithText("Go").performClick()
         compose.onNodeWithText("2200").assertIsDisplayed()
-        compose.onNodeWithText("December").assertIsDisplayed()
+        compose.onNode((hasText("December") or hasText("Dec")) and hasClickAction()).assertIsDisplayed()
         compose.onNodeWithTag("month-grid").performTouchInput { swipeLeft() }
-        compose.onNodeWithText("December").assertIsDisplayed()
+        compose.onNode((hasText("December") or hasText("Dec")) and hasClickAction()).assertIsDisplayed()
         compose.onNodeWithContentDescription("Next month").assertIsNotEnabled()
     }
-    protected fun checkEventPickerLanguage(k: Boolean) {
-        start(AppSettings(khmer = k, theme = ThemeMode.LIGHT))
+    protected fun checkEventPickerLanguage(k: Boolean, scale: FontScale = FontScale.PERCENT_100) {
+        start(AppSettings(khmer = k, theme = ThemeMode.LIGHT, fontScale = scale))
         compose.onNodeWithText(if (k) "ព្រឹត្តិការណ៍" else "Events").performClick()
         compose.onNodeWithContentDescription(L.text("ui.add_event.bf2f10", k)).performClick()
         val date = compose.onNodeWithTag("custom-date")
@@ -970,7 +974,8 @@ abstract class CalendarUiScenarios {
         val ok = L.text("ui.ok.04c4aa", k)
         date.performTextReplacement("2026-01-12")
         compose.onNode(hasText(pick) and hasAnyAncestor(hasTestTag("custom-date"))).performClick()
-        screenshot(if (k) "event-date-picker-khmer" else "event-date-picker-english")
+        screenshot(if (k) "event-date-picker-khmer-${scale.name}" else "event-date-picker-english")
+        if (k) assertKhmerPickerWeekdays()
         compose.onNodeWithText(if (k) "ជ្រើសរើស​កាលបរិច្ឆេទ" else "Select date").assertIsDisplayed()
         compose.onAllNodesWithText(if (k) "មករា" else "January", substring = true).onFirst().assertIsDisplayed()
         compose.onNode(hasText("13", substring = true) and hasClickAction()).performClick()
@@ -994,12 +999,40 @@ abstract class CalendarUiScenarios {
         compose.onNodeWithText(ok).performClick()
         compose.onNodeWithTag("custom-time").assertTextContains("10:01")
 
-        compose.onNodeWithTag("repeat-monthly").performScrollTo().performClick()
+        // Select the setup option through semantics: IME/inset changes after the
+        // native picker can move this nested scroll row during an injected tap.
+        compose.onNodeWithTag("custom-repeat").performScrollTo()
+        compose.onNodeWithTag("repeat-monthly").performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick).assertIsSelected()
         compose.onNodeWithTag("repeat-end").performScrollTo().performTextReplacement("2026-01-30")
         compose.onNode(hasText(pick) and hasAnyAncestor(hasTestTag("repeat-end"))).performClick()
         compose.onNodeWithText(if (k) "ជ្រើសរើស​កាលបរិច្ឆេទ" else "Select date").assertIsDisplayed()
+        if (k) {
+            assertKhmerPickerWeekdays()
+            compose.onNodeWithTag("picker-day-2026-01-13").assertIsNotEnabled()
+            compose.onNodeWithTag("picker-day-2026-01-14").assertIsEnabled()
+        }
         compose.onNodeWithText(ok).performClick()
         compose.onNodeWithTag("repeat-end").assertTextContains("2026-01-30")
+    }
+
+    private fun assertKhmerPickerWeekdays() {
+        val labels = listOf("អាទិត្យ", "ចន្ទ", "អង្គារ", "ពុធ", "ព្រហ", "សុក្រ", "សៅរ៍")
+        val dates = listOf(4, 5, 6, 7, 1, 2, 3) // January 2026, Sunday through Saturday.
+        labels.forEachIndexed { day, label ->
+            val node = compose.onNodeWithTag("picker-weekday-$day")
+            node.assertIsDisplayed().assertTextEquals(label)
+                .assertContentDescriptionEquals(CalendarWords.weekday(day, true))
+            val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+            node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+            org.junit.Assert.assertFalse("Weekday $label must fit its column", layouts.single().hasVisualOverflow)
+            val labelBounds = node.getUnclippedBoundsInRoot()
+            val dateBounds = compose.onNodeWithTag("picker-day-2026-01-${dates[day].toString().padStart(2, '0')}")
+                .getUnclippedBoundsInRoot()
+            org.junit.Assert.assertEquals("Weekday $label must align with its dates",
+                (labelBounds.left.value + labelBounds.right.value) / 2,
+                (dateBounds.left.value + dateBounds.right.value) / 2, 1f)
+        }
     }
 
     protected fun checkAdvanceReminder(k: Boolean) {

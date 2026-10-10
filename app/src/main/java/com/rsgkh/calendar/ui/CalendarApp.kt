@@ -18,7 +18,6 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.animation.AnimatedVisibility
@@ -63,7 +62,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.browser.customtabs.CustomTabsIntent
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.core.net.toUri
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.buildAnnotatedString
@@ -97,14 +95,12 @@ import com.rsgkh.calendar.domain.*
 import com.rsgkh.calendar.engine.ChineseZodiacCalculator
 import com.rsgkh.calendar.engine.GanzhiPillar
 import com.rsgkh.calendar.engine.western.WesternZodiacSign
-import com.rsgkh.calendar.widgets.WidgetUpdater
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -152,16 +148,6 @@ internal fun eventTimeZoneSubtitle(
         "${L.text("ui.local_time.541b44", k)} (${localTimeOffsetLabel(eventInstant, localZone)})"
     }
     return " · $zoneText"
-}
-
-internal fun eventTimeSubtitle(
-    event: CalendarEvent,
-    todayTimeZone: TodayTimeZone,
-    k: Boolean,
-    localZone: ZoneId = ZoneId.systemDefault()
-): String {
-    val time = event.time ?: return ""
-    return " · $time${eventTimeZoneSubtitle(event, todayTimeZone, k, localZone)}"
 }
 
 internal fun shortDayExtension(date: LocalDate, k: Boolean): String {
@@ -2721,7 +2707,6 @@ internal fun EventDialogTitle(
         }
     }
 }
-@Composable private fun Dot(color: Color, small: Boolean = false) { Box(Modifier.size(if (small) 4.dp else 6.dp).background(color, CircleShape)) }
 @Composable private fun Legend(kind: EventKind, label: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) { EventMark(kind, color, small = false); Text(label, fontSize = 10.readableSp, lineHeight = 14.readableSp, maxLines = 1, color = MaterialTheme.colorScheme.onSurfaceVariant) }
 }

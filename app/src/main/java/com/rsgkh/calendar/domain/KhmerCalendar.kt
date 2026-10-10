@@ -26,10 +26,6 @@ class LunarDate internal constructor(private val value: com.rsgkh.calendar.engin
         "short" to shortLabel(khmer), "day" to if (khmer) khmerNumber(day) else day.toString(),
         "phase" to L.text("calendar.phase.${if (waxing) "waxing" else "waning"}", khmer),
         "month" to L.text("calendar.lunar_month.$month", khmer))
-    companion object {
-        val MONTHS_KM get() = (0..13).map { L.text("calendar.lunar_month.$it", true) }
-        val MONTHS_EN get() = (0..13).map { L.text("calendar.lunar_month.$it", false) }
-    }
 }
 
 fun khmerNumber(value: Int): String = value.toString().map { if (it in '0'..'9') '០' + (it - '0') else it }.joinToString("")

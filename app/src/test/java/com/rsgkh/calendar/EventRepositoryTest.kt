@@ -33,7 +33,6 @@ class EventRepositoryTest {
     @Test fun dynamicCatalogCoverageSpansAllSupportedYearsFrom1800To2200() {
         assertEquals(1800..2200, EventRepository.coveredYears)
         for (year in listOf(1800, 1900, 1975, 2000, 2025, 2050, 2100, 2200)) {
-            assertTrue(EventRepository.hasBundledYear(year))
             val events = EventRepository.forYear(year)
             assertTrue(events.isNotEmpty())
             assertEquals("Unique keys in $year", events.size, events.map { it.key }.distinct().size)

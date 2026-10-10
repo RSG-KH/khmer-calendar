@@ -41,13 +41,6 @@ data class KhmerDateDetails(
         return if (animalYearChangesToday) "${L.text("calendar.animal.${Math.floorMod(animalYear - 1, 12)}", khmer)} → $current" else current
     }
 
-    /** Day pillar labels from the engine, e.g. "己亥 Jǐ Hài · Pig" / "己亥 · កុរ".
-     *  The engine's Khmer animal carries a romanization suffix for non-Khmer readers; drop it. */
-    fun ganzhiDayLabel(khmer: Boolean): String {
-        val animal = ganzhiDay.branch.ganzhiAnimalLabel(khmer, false)
-        return if (khmer) "${ganzhiDay.nameZh} · $animal" else "${ganzhiDay.nameZh} ${ganzhiDay.pinyin} · $animal"
-    }
-
     /**
      * Calendar summary Ganzhi in year–month–day order: signs, then their clashes.
      * The summary always uses emoji, independently of the Date details animal setting.

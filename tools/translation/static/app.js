@@ -1,7 +1,7 @@
 // Copyright (c) 2026 RSG-KH | Apache-2.0 License
 'use strict';
 const $ = id => document.getElementById(id);
-const state = {entries:[], baseline:new Map(), section:'events', page:0, size:30, query:'', filter:'all', revision:'', token:'', saving:false};
+const state = {entries:[], baseline:new Map(), section:'interface', page:0, size:30, query:'', filter:'all', revision:'', token:'', saving:false};
 const draftKey = 'khmer-calendar.translation-draft.v1';
 const signature = e => JSON.stringify([e.en,e.km,e.reviewed]);
 const dirty = e => signature(e) !== state.baseline.get(e.id);

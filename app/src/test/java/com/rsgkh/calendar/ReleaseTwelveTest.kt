@@ -14,7 +14,6 @@ import com.rsgkh.calendar.ui.PlaceSearchIndex
 import com.rsgkh.calendar.ui.PlaceSearchPositionProvider
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
@@ -28,7 +27,6 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import com.rsgkh.calendar.ui.eventListKindLabel
-import com.rsgkh.calendar.ui.eventTimeSubtitle
 import com.rsgkh.calendar.ui.eventTimeZoneSubtitle
 import com.rsgkh.calendar.ui.eventTitleWithTime
 import com.rsgkh.calendar.ui.isLocalTimeDifferentFromCambodia
@@ -219,41 +217,6 @@ class ReleaseTwelveTest {
         assertTrue(isLocalTimeDifferentFromCambodia(summerInstant, ZoneId.of("UTC")))
         assertFalse(isLocalTimeDifferentFromCambodia(summerInstant, ZoneId.of("Asia/Phnom_Penh")))
         assertFalse(isLocalTimeDifferentFromCambodia(summerInstant, ZoneId.of("Asia/Bangkok")))
-    }
-
-    @Test fun eventTimeSubtitleAddsTimezoneClarityOnlyWhenLocalTimeDiffersFromCambodia() {
-        val date = LocalDate.of(2026, 9, 29)
-        val instant = date.atTime(14, 0).atZone(CAMBODIA_ZONE).toInstant()
-        val cambodiaEvent = CalendarEvent(
-            id = "custom:1", date = date, titleKm = "ផ្ទាល់ខ្លួន", titleEn = "Personal",
-            kind = EventKind.CUSTOM, basis = DateBasis.USER, time = LocalTime.of(14, 0), instant = instant
-        )
-        val localEvent = CalendarEvent(
-            id = "custom:1", date = date, titleKm = "ផ្ទាល់ខ្លួន", titleEn = "Personal",
-            kind = EventKind.CUSTOM, basis = DateBasis.USER, time = LocalTime.of(9, 0), instant = instant
-        )
-        val untimedEvent = CalendarEvent(
-            id = "obs:1", date = date, titleKm = "ពិធីបុណ្យ", titleEn = "Observance",
-            kind = EventKind.OBSERVANCE, basis = DateBasis.OFFICIAL, time = null
-        )
-
-        val parisZone = ZoneId.of("Europe/Paris") // UTC+2 in September
-        val phnomPenhZone = ZoneId.of("Asia/Phnom_Penh") // UTC+7
-
-        // Untimed events have no subtitle suffix regardless of timezone
-        assertEquals("", eventTimeSubtitle(untimedEvent, TodayTimeZone.CAMBODIA, k = false, localZone = parisZone))
-        assertEquals("", eventTimeSubtitle(untimedEvent, TodayTimeZone.CAMBODIA, k = true, localZone = parisZone))
-
-        // When local zone == Cambodia time (UTC+7), no timezone suffix is appended
-        assertEquals(" · 14:00", eventTimeSubtitle(cambodiaEvent, TodayTimeZone.CAMBODIA, k = false, localZone = phnomPenhZone))
-        assertEquals(" · 14:00", eventTimeSubtitle(cambodiaEvent, TodayTimeZone.CAMBODIA, k = true, localZone = phnomPenhZone))
-
-        // When local zone != Cambodia time (e.g. Paris UTC+2), timezone clarity is appended
-        assertEquals(" · 14:00 · Cambodia time (UTC+7)", eventTimeSubtitle(cambodiaEvent, TodayTimeZone.CAMBODIA, k = false, localZone = parisZone))
-        assertEquals(" · 14:00 · ម៉ោងកម្ពុជា (UTC+7)", eventTimeSubtitle(cambodiaEvent, TodayTimeZone.CAMBODIA, k = true, localZone = parisZone))
-
-        assertEquals(" · 09:00 · Local time (UTC+2)", eventTimeSubtitle(localEvent, TodayTimeZone.LOCAL, k = false, localZone = parisZone))
-        assertEquals(" · 09:00 · ម៉ោងក្នុងតំបន់ (UTC+2)", eventTimeSubtitle(localEvent, TodayTimeZone.LOCAL, k = true, localZone = parisZone))
     }
 
     @Test fun eventTimeZoneSubtitleKeepsOnlyTimezoneWhenMovingTimeToTitle() {

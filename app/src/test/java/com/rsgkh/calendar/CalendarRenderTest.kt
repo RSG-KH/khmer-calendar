@@ -42,6 +42,12 @@ class CalendarRenderTest : CalendarUiScenarios() {
 
     @Test fun khmerEventPickersKeepLatinNumericEntry() = checkEventPickerLanguage(true)
 
+    @Test @Config(qualifiers = "w320dp-h640dp-xhdpi")
+    fun khmerPickerWeekdaysFitSmallPhone() = checkEventPickerLanguage(true, FontScale.PERCENT_120)
+
+    @Test @Config(qualifiers = "w360dp-h800dp-xhdpi")
+    fun khmerPickerWeekdaysFitLargeText() = checkEventPickerLanguage(true, FontScale.PERCENT_150)
+
     @Test fun advanceReminderInputValidatesAndSurvivesEditing() = checkAdvanceReminder(false)
 
     @Test fun khmerAdvanceReminderAcceptsKhmerDigitsAndSurvivesEditing() = checkAdvanceReminder(true)

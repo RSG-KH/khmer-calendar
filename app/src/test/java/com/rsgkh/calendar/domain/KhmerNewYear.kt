@@ -4,7 +4,7 @@ package com.rsgkh.calendar.domain
 import com.rsgkh.calendar.engine.ArrivalEstimate
 import java.time.LocalDate
 
-/** Traditional festival dates from the shared engine; official leave is separate event data. */
+/** Reference-test adapter for traditional festival dates; production uses catalog recurrence. */
 data class NewYearCelebration(
     val start: LocalDate,
     val days: Int,

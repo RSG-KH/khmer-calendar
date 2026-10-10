@@ -9,13 +9,16 @@ The engine's [API contract](https://github.com/RSG-KH/khmer-calendar-engine/blob
 | Android component | Responsibility |
 | --- | --- |
 | `domain/KhmerCalendar.kt` | Reuses one engine instance, converts civil dates and supplies localized lunar labels |
-| `domain/KhmerNewYear.kt` | Converts the engine's New Year dates to `LocalDate` and exposes traditional arrival estimate |
 | `domain/KhmerDateDetails.kt` | Formats lunar and traditional year labels, localizes Ganzhi animal names and calculates the Ganzhi day pillar only when needed |
 | `domain/WesternBig3.kt` | Resolves the selected civil time, place time zone and saved coordinates for Western Big 3 calculations |
 | `ui/CalendarApp.kt` | Presents the optional Ganzhi and Western Big 3 tables in date details, with a shared time picker and per-setting calculation guards |
 | `ui/AstrologyDetails.kt` | Reuses those calculated values in child popups, maps signs to the Android sign catalog and prepares user-initiated Ask AI queries |
 | `data/RecurringEvents.kt` | Parses the bundled event catalog, translates rule definitions into engine rules, and formats arrival time |
 | `data/EventRepository.kt` | Layers catalog rules, recorded dates, official holiday calendars and date overrides over engine results for each requested year |
+
+The `src/test` New Year adapter converts engine results for pinned reference and
+traditional-year boundary checks. Production festival dates come through the
+catalog recurrence path above; this test helper is not packaged in the app.
 
 The engine's lunar calendar operates on civil dates without a time zone. Android chooses the date for **Today follows**, supplies a selected clock hour to Ganzhi and time and offset inputs to Western astrology, and resolves reminder instants. Event definitions, effective years, translations, official holiday calendars and date overrides are app data in the bundled catalog; the engine release does not supply or update them.
 
@@ -31,7 +34,7 @@ ca791529a2f9d4175c342440ac4b15448c4af19f4a3df3742b6782c71c2baba6
 
 The first build needs network access. Gradle caches the dependency for later builds, including `--offline` builds once all dependencies are cached. The installed app remains offline and has no Internet permission.
 
-The release is resolved as an artifact without Maven metadata. Version 0.6.0's only runtime dependency is Kotlin stdlib, which the app already supplies through AGP's built-in Kotlin support. Both the app and engine produce Java 11 bytecode; the Android build uses JDK 25 and Kotlin 2.4.20.
+The release is resolved as an artifact without Maven metadata. Version 0.6.0's only runtime dependency is Kotlin stdlib, which the app already supplies through AGP's built-in Kotlin support. Both the app and engine produce Java 11 bytecode; the Android build uses JDK 25 and Kotlin 2.4.21.
 
 ## Updating the engine
 

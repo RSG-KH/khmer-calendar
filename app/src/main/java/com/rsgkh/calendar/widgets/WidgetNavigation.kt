@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.rsgkh.calendar.widgets
 
-import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri

@@ -98,13 +98,17 @@ class KhmerDateDetailsTest {
         assertEquals("Rat", jiazi.ganzhiDay.animal)
 
         val probe = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 22))
-        assertEquals("己亥 Jǐ Hài · Pig", probe.ganzhiDayLabel(false))
+        assertEquals("己亥", probe.ganzhiDay.nameZh)
+        assertEquals("Jǐ Hài", probe.ganzhiDay.pinyin)
+        assertEquals("Pig", probe.ganzhiDay.branch.ganzhiAnimalLabel(false, false))
         // The Khmer label drops the engine's romanization suffix, e.g. "កុរ (Kor)" → "កុរ".
-        assertEquals("己亥 · កុរ", probe.ganzhiDayLabel(true))
+        assertEquals("កុរ", probe.ganzhiDay.branch.ganzhiAnimalLabel(true, false))
 
         // The day pillar advances by exactly one step per civil day.
         val next = KhmerDateDetails.fromGregorian(LocalDate.of(2026, 9, 23))
-        assertEquals("庚子 Gēng Zǐ · Rat", next.ganzhiDayLabel(false))
+        assertEquals("庚子", next.ganzhiDay.nameZh)
+        assertEquals("Gēng Zǐ", next.ganzhiDay.pinyin)
+        assertEquals("Rat", next.ganzhiDay.branch.ganzhiAnimalLabel(false, false))
     }
 
     @Test fun ganzhiAnimalsUseTheRequestedEmojiOrderAndLocalizedNames() {

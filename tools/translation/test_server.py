@@ -46,13 +46,16 @@ class TranslationStoreTest(unittest.TestCase):
         self.assertEqual([original], [p.read_bytes() for p in self.store.backups.glob('*.json')])
         self.assertNotEqual(old['revision'], new['revision'])
 
-    def test_event_template_edit_reaches_android_and_preserves_occurrence_data(self):
+    def test_archived_event_edit_preserves_source_without_exporting_unused_templates(self):
         entry = next(e for e in self.catalog['entries'] if 'anniversary' in e['required']['km'])
+        self.assertEqual('archive', entry['section'])
         result = self.store.save(self.store.public()['revision'], [self.edit(entry, km='ខួប {anniversary} — កែសម្រួល', en='Edited anniversary {anniversary}')])
         templates = decoded_rows((self.project / 'app/src/main/resources/translations.tsv').read_bytes())
-        self.assertEqual(('ខួប {anniversary} — កែសម្រួល', 'Edited anniversary {anniversary}'), templates[entry['id']])
+        self.assertNotIn(entry['id'], templates)
         saved = json.loads(self.store.path.read_text(encoding='utf-8'))
         updated = next(e for e in saved['entries'] if e['id'] == entry['id'])
+        self.assertEqual('ខួប {anniversary} — កែសម្រួល', updated['km'])
+        self.assertEqual('Edited anniversary {anniversary}', updated['en'])
         self.assertEqual(entry['occurrences'], updated['occurrences'])
         self.assertEqual(entry['original'], updated['original'])
         self.assertEqual(len(entry['occurrences']), next(e for e in result['entries'] if e['id'] == entry['id'])['occurrenceCount'])
@@ -100,7 +103,9 @@ class TranslationStoreTest(unittest.TestCase):
     def test_current_catalog_and_static_android_keys_are_valid(self):
         validate(self.catalog)
         import re
-        keys = {e['id'] for e in self.catalog['entries']}
+        runtime = exports(PROJECT, self.catalog, 'validation')[PROJECT / 'app/src/main/resources/translations.tsv']
+        keys = set(decoded_rows(runtime))
+        self.assertTrue(all(e['id'] not in keys for e in self.catalog['entries'] if e['section'] == 'archive'))
         for path in (PROJECT / 'app/src/main/java').rglob('*.kt'):
             for key in re.findall(r'L\.text\("([a-z0-9_.]+)"', path.read_text(encoding='utf-8')):
                 self.assertIn(key, keys, str(path))

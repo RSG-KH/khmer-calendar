@@ -5,7 +5,7 @@
 # Khmer Calendar
 
 [![Android](https://img.shields.io/badge/Android-12%2B%20(API%2031%E2%80%9337)-3DDC84?logo=android&logoColor=white)](https://developer.android.com/)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.20-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Offline](https://img.shields.io/badge/Core%20Calendar-Offline-success)](docs/architecture.md)
 [![Privacy](https://img.shields.io/badge/Privacy-0%20Ads%20%7C%200%20Trackers-blue)](PRIVACY_POLICY.md)
@@ -73,7 +73,7 @@ unsupported; see [storage compatibility](docs/architecture.md#events-and-storage
 - **App Settings Integration**: Master **Enable widgets** toggle switch under Settings → Widgets. Toggling off uses `PackageManager.setComponentEnabledSetting` to disable all five widget receivers and removes them from the widget picker; it also cancels queued, periodic and midnight widget refreshes. **Add widgets** opens a swipeable chooser with a preview, name and size for each widget, then asks the launcher to add the selected widget when supported.
 - **Shared Appearance**: Widgets follow the app's language, theme, accent color, selected time zone and widget font size; changing any setting refreshes installed widgets immediately while the app is open.
 - **Global Event Filtering**: Expandable switches in App Settings control Personal events, Public holidays, Observances, and Hide personal event details across all widgets. Buddhist holy days follow app-wide Calendar and Event settings.
-- **Dynamic Light & Dark Previews**: Embedded PNG preview thumbnails (`res/drawable/` and `res/drawable-night/`) reflect the system theme in the Android widget picker. The in-app chooser adjusts its previews to the current app theme.
+- **Dynamic Light & Dark Previews**: Embedded PNG preview thumbnails (`res/drawable-nodpi/` and `res/drawable-night-nodpi/`) reflect the system theme in the Android widget picker. The in-app chooser adjusts its previews to the current app theme.
 
 ### 📱 Adaptive Multi-Form-Factor UI
 - **Return to Today**: The calendar header selects today, returns to its month, and scrolls the calendar and event list back to the top, including when already viewing the current month.
@@ -117,7 +117,6 @@ KhmerCalendar/
 │   │   │   │   ├── EventRepeat.kt       # Personal event repeat schedules & fallbacks
 │   │   │   │   ├── KhmerCalendar.kt     # Shared-engine date adapter & lunar labels
 │   │   │   │   ├── KhmerDateDetails.kt  # Engine results & Android formatting
-│   │   │   │   ├── KhmerNewYear.kt      # Shared-engine festival date adapter
 │   │   │   │   ├── WesternBig3.kt       # Selected time/place adapter for Sun, Moon and Rising
 │   │   │   │   ├── Coordinates.kt       # Decimal/DMS coordinate parsing
 │   │   │   │   └── Zodiac.kt            # Western zodiac signs & elements

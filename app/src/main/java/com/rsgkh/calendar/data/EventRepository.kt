@@ -115,9 +115,8 @@ object EventRepository {
         return CatalogNames(en = en, km = km)
     }
 
-    fun hasBundledYear(year: Int): Boolean = year in coveredYears
-
-    @Synchronized fun clearCache() {
+    /** Reset retained years between cache and concurrency regression tests. */
+    @Synchronized internal fun clearCache() {
         cache.clear()
     }
 

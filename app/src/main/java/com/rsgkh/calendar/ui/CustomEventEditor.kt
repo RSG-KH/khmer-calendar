@@ -102,7 +102,7 @@ import java.util.UUID
         }, dismissButton = { TextButton(onClick = { datePicker = false }) { Text(L.text("ui.cancel.5bf834", k)) } }) {
             EventDatePickerLocale(k) {
                 Column(Modifier.verticalScrollbar(pickerScrollState).verticalScroll(pickerScrollState)) {
-                    DatePicker(state)
+                    EventDatePicker(state, k)
                 }
             }
         }
@@ -125,7 +125,7 @@ import java.util.UUID
             }) { Text(L.text("ui.ok.04c4aa", k)) }
         }, dismissButton = { TextButton(onClick = { endPicker = false }) { Text(L.text("ui.cancel.5bf834", k)) } }) {
             EventDatePickerLocale(k) {
-                Column(Modifier.verticalScrollbar(scroll).verticalScroll(scroll)) { DatePicker(state) }
+                Column(Modifier.verticalScrollbar(scroll).verticalScroll(scroll)) { EventDatePicker(state, k) }
             }
         }
     }

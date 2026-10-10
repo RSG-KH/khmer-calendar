@@ -5,13 +5,13 @@ Python 3.10+ is the only requirement. Everything runs locally, with no account o
 
 ## Review and save
 
-1. Choose Events, In-app text, Calendar & dates, Notifications, or About & sources.
+1. Choose In-app text, Calculated events, Calendar & dates, Notifications, or About & sources. Archived event wording preserves older templates for reference.
 2. Search in English or Khmer. Edit either column and optionally mark the pair Reviewed.
 3. Click **Save changes** or press **Ctrl+S**. Saving writes into the Android project and creates a backup of the previous catalog in this tool's `backups` folder.
 
 Use the review filter to find unreviewed, edited, or unsaved entries. Unsaved edits survive tab changes and browser reloads on the same browser. **Undo edits** restores the last saved pair; **Restore original wording** restores the original imported pair. Export JSON downloads the complete saved catalog for keeping a copy.
 
-Keep placeholders such as `{anniversary}`, `{time}`, and `{zone}`. Their position can change, but deleting or renaming a required placeholder blocks saving. Event templates show example dates with the real stored values. Most event names displayed by the app come from the bundled event catalog (`khmer-calendar-data.json`); template edits here no longer expand into dated occurrence rows. Some traditional names use the same wording in both columns until you choose an English rendering.
+Keep placeholders such as `{anniversary}`, `{time}`, and `{zone}`. Their position can change, but deleting or renaming a required placeholder blocks saving. Archived event templates retain example dates and can still be edited or exported as JSON; their edits do not change the app's event names and are excluded from the generated Android language file. Current event names come from `khmer-calendar-data.json`; Calculated events contains the active Buddhist holy-day label.
 
 ## How the app uses this
 
@@ -19,7 +19,7 @@ The source of truth is **`translations/catalog.json` inside the Android project*
 
 Each save regenerates:
 
-- `app/src/main/resources/translations.tsv` — app labels, calendar names, date formats, notifications, and event wording.
+- `app/src/main/resources/translations.tsv` — active app labels, calendar names, date formats, notifications, and calculated-event wording; archive entries are excluded.
 - `app/src/main/res/values/strings.xml` and `values-km/strings.xml` — Android launcher names.
 
 **Rebuild and reinstall the APK to see saved corrections on a phone.** Saving does not change an already installed app. Kotlin reads these generated resources offline; builds do not need Python or this server. Generated text is encoded as UTF-8/base64 so Khmer, quotes, tabs and newlines are preserved. Do not edit the generated TSV directly.

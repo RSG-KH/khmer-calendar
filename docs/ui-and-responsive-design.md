@@ -74,14 +74,23 @@ localized 1800–2200 year range instead of a separate supporting line. Event an
 repeat-end date pickers follow the app language, including Khmer month names and
 controls. Date/time pickers keep Latin digits for consistent numeric entry.
 
+The Khmer event and repeat-end pickers use distinct weekday headings: **អាទិត្យ,
+ចន្ទ, អង្គារ, ពុធ, ព្រហ, សុក្រ, សៅរ៍**. These reuse the catalog's short names;
+screen readers receive the full names. `EventDatePicker` supplies the Khmer
+calendar grid because Material's built-in row always uses narrow names, producing
+duplicate letters. It retains Material date state, localized headers and numeric
+input, with month swiping, year selection and the same selectable-date limits.
+English uses the standard Material picker. Layout checks cover a 320 dp phone at
+120% text and a 360 dp phone at 150% text, including weekday/date alignment.
+
 `SelectionChip` defines the shared appearance for Events filters and Repeat choices:
 unselected chips use the theme outline at 45% opacity, and selected chips use a 1 dp
 accent border with the accent container and label colors. Both screens use this
 component so light and dark theme borders remain consistent.
 
-The event editor keeps Android's Material filter chips, switches, date picker and
-time selection dialog. Date is labeled without a fixed format; manual input still
-uses ISO dates, and Pick opens the existing calendar control. The selected date's
+The event editor uses Material filter chips, switches and date-picker dialogs,
+plus the time selection dialog. Date is labeled without a fixed format; manual input still
+uses ISO dates, and Pick opens the calendar control. The selected date's
 time-zone offset appears in accent color beside the title. Title and End by use an
 asterisk; Notes has no optional suffix and occupies two lines,
 followed by a divider and Repeat, without an enclosing border.
@@ -411,4 +420,4 @@ Khmer Calendar provides five home screen widgets. Month, Productivity, Focus, an
 - **Shared Appearance and Content**: Focus, Productivity, Month, Planner, and Glance reload the app's language, theme, accent color, and selected time zone. The Widgets category and privacy switches filter event lists, badges, and month markers consistently; when enabled, the Productivity widget keeps Western zodiac names in English in both language modes, matching Date details. Changing any setting refreshes installed widgets immediately while the app is open. Turning off widgets also cancels queued, periodic, and midnight refreshes.
 
 ### Preview Thumbnails
-- Static PNG preview thumbnails for Focus, Productivity, Month, Planner, and Glance are placed in `res/drawable/` (Light) and `res/drawable-night/` (Dark). Planner and Glance also declare XML preview layouts that display those supplied images on Android 12 and newer, while `previewImage` remains available as a fallback. The Android launcher selects previews using its system theme. The in-app chooser resolves the supplied light/dark image against the current app theme through a configuration-specific resource context, including when app and device themes differ. It preserves the original colors and transparency without an additional dark-mode filter.
+- Static PNG preview thumbnails for Focus, Productivity, Month, Planner, and Glance are placed in `res/drawable-nodpi/` (Light) and `res/drawable-night-nodpi/` (Dark). Planner and Glance also declare XML preview layouts that display those supplied images on Android 12 and newer, while `previewImage` remains available as a fallback. The Android launcher selects previews using its system theme. The in-app chooser resolves the supplied light/dark image against the current app theme through a configuration-specific resource context, including when app and device themes differ. It preserves the original colors and transparency without an additional dark-mode filter.

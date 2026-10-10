@@ -19,6 +19,10 @@ import org.junit.runner.RunWith
 class LifecycleDeviceTest {
     @Test fun recreatedAndClosedActivitiesAreReleased() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val recreations = InstrumentationRegistry.getArguments().getString("lifecycleIterations")?.let {
+            requireNotNull(it.toIntOrNull()) { "lifecycleIterations must be an integer" }
+        } ?: 8
+        require(recreations in 1..100) { "lifecycleIterations must be between 1 and 100" }
         val context = instrumentation.targetContext
         val preferences = AppPreferences(context)
         val original = preferences.read()
@@ -26,7 +30,7 @@ class LifecycleDeviceTest {
         try {
             preferences.write(original.copy(notificationsEnabled = false))
             ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-                repeat(8) {
+                repeat(recreations) {
                     scenario.onActivity { activity ->
                         destroyed.add(WeakReference(activity))
                         // Exercise repeated state changes and cancellation before recreation.

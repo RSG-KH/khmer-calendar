@@ -438,26 +438,6 @@
       }
     },
     {
-      "id": "ui.events_for_year_available_offline.be5b8f",
-      "section": "about",
-      "context": "CalendarApp.kt",
-      "en": "Events for {year} · available offline",
-      "km": "ព្រឹត្តិការណ៍ ឆ្នាំ{year} · រក្សាទុកក្នុងកម្មវិធី",
-      "original": {
-        "en": "Events for {year} · available offline",
-        "km": "ព្រឹត្តិការណ៍ ឆ្នាំ{year} · រក្សាទុកក្នុងកម្មវិធី"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [
-          "year"
-        ],
-        "km": [
-          "year"
-        ]
-      }
-    },
-    {
       "id": "ui.appearance.23e609",
       "section": "interface",
       "context": "CalendarApp.kt",
@@ -746,38 +726,6 @@
       }
     },
     {
-      "id": "ui.buddhist_holy_days.ad67f9",
-      "section": "interface",
-      "context": "CalendarApp.kt",
-      "en": "Buddhist holy days",
-      "km": "បង្ហាញថ្ងៃសីល",
-      "original": {
-        "en": "Buddhist holy days",
-        "km": "បង្ហាញថ្ងៃសីល"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
-      "id": "ui.show_in_the_calendar_and_events.2ce7f4",
-      "section": "interface",
-      "context": "CalendarApp.kt",
-      "en": "Show in the calendar and events",
-      "km": "បង្ហាញក្នុងប្រតិទិន និងព្រឹត្តិការណ៍",
-      "original": {
-        "en": "Show in the calendar and events",
-        "km": "បង្ហាញក្នុងប្រតិទិន និងព្រឹត្តិការណ៍"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
       "id": "ui.buddhist_holy_days_in_calendar.d1e9b6",
       "section": "interface",
       "context": "CalendarApp.kt",
@@ -882,22 +830,6 @@
       "original": {
         "en": "Set timezone",
         "km": "កំណត់តំបន់ម៉ោង"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
-      "id": "ui.cambodia_utc_7.458037",
-      "section": "interface",
-      "context": "CalendarApp.kt",
-      "en": "Cambodia (UTC+7)",
-      "km": "កម្ពុជា (UTC+7)",
-      "original": {
-        "en": "Cambodia (UTC+7)",
-        "km": "កម្ពុជា (UTC+7)"
       },
       "reviewed": true,
       "required": {
@@ -1026,22 +958,6 @@
       "original": {
         "en": "Go",
         "km": "ទៅ"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
-      "id": "ui.date_details.e26d78",
-      "section": "interface",
-      "context": "CalendarApp.kt",
-      "en": "Date details",
-      "km": "ព័ត៌មានលម្អិត",
-      "original": {
-        "en": "Date details",
-        "km": "ព័ត៌មានលម្អិត"
       },
       "reviewed": true,
       "required": {
@@ -1250,22 +1166,6 @@
       }
     },
     {
-      "id": "ui.official_source.953191",
-      "section": "interface",
-      "context": "CalendarApp.kt",
-      "en": "Official source",
-      "km": "ប្រភពផ្លូវការ",
-      "original": {
-        "en": "Official source",
-        "km": "ប្រភពផ្លូវការ"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
       "id": "ui.edit.bbdcac",
       "section": "interface",
       "context": "CalendarApp.kt",
@@ -1290,22 +1190,6 @@
       "original": {
         "en": "Calendar sources",
         "km": "ប្រភពប្រតិទិន"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
-      "id": "about.event_archive_source",
-      "section": "about",
-      "context": "CalendarApp.kt",
-      "en": "Traditional Chinese festivals and historical commemorations are preserved from Khmer Lunar Calendar records.",
-      "km": "ពិធីបុណ្យប្រពៃណីចិន និងទិវាប្រវត្តិសាស្ត្រនានា ត្រូវបានដកស្រង់ចេញពីកំណត់ត្រាប្រតិទិនចន្ទគតិខ្មែរ។",
-      "original": {
-        "en": "Traditional Chinese festivals and historical commemorations are preserved from Khmer Lunar Calendar records.",
-        "km": "ពិធីបុណ្យប្រពៃណីចិន និងទិវាប្រវត្តិសាស្ត្រនានា ត្រូវបានដកស្រង់ចេញពីកំណត់ត្រាប្រតិទិនចន្ទគតិខ្មែរ។"
       },
       "reviewed": true,
       "required": {
@@ -1474,22 +1358,6 @@
       }
     },
     {
-      "id": "ui.date_yyyy_mm_dd.fb201f",
-      "section": "interface",
-      "context": "CustomEventEditor.kt",
-      "en": "Date (YYYY-MM-DD)",
-      "km": "កាលបរិច្ឆេទ (YYYY-MM-DD)",
-      "original": {
-        "en": "Date (YYYY-MM-DD)",
-        "km": "កាលបរិច្ឆេទ (YYYY-MM-DD)"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
       "id": "ui.pick.971faf",
       "section": "interface",
       "context": "CustomEventEditor.kt",
@@ -1535,26 +1403,6 @@
       "required": {
         "en": [],
         "km": []
-      }
-    },
-    {
-      "id": "ui.date_and_time_follow_zone_switch_between_local_and_camb.e2a176",
-      "section": "interface",
-      "context": "CustomEventEditor.kt",
-      "en": "Date and time follow {zone}. Switch between local and Cambodia (UTC+7) times in Settings. Past events can be saved without retrospective reminders.",
-      "km": "កាលបរិច្ឆេទ និងម៉ោងគិតតាម {zone}។ អ្នកអាចប្ដូររវាងម៉ោងក្នុងតំបន់ និងម៉ោងកម្ពុជា (UTC+7) នៅក្នុងការកំណត់។ អាចរក្សាទុកព្រឹត្តិការណ៍អតីតកាលដោយមិនជូនដំណឹងឡើងវិញ។",
-      "original": {
-        "en": "Date and time follow {zone}. Switch between local and Cambodia (UTC+7) times in Settings. Past events can be saved without retrospective reminders.",
-        "km": "កាលបរិច្ឆេទ និងម៉ោងគិតតាម {zone}។ អ្នកអាចប្ដូររវាងម៉ោងក្នុងតំបន់ និងម៉ោងកម្ពុជា (UTC+7) នៅក្នុងការកំណត់។ អាចរក្សាទុកព្រឹត្តិការណ៍អតីតកាលដោយមិនជូនដំណឹងឡើងវិញ។"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [
-          "zone"
-        ],
-        "km": [
-          "zone"
-        ]
       }
     },
     {
@@ -1878,54 +1726,6 @@
       }
     },
     {
-      "id": "ui.notifications_are_blocked_in_android_settings.46aaf7",
-      "section": "notifications",
-      "context": "NotificationSettings.kt",
-      "en": "Notifications are blocked in Android settings.",
-      "km": "Android បានបិទការជូនដំណឹងសម្រាប់កម្មវិធីនេះ។",
-      "original": {
-        "en": "Notifications are blocked in Android settings.",
-        "km": "Android បានបិទការជូនដំណឹងសម្រាប់កម្មវិធីនេះ។"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
-      "id": "ui.open_android_settings.8d0574",
-      "section": "notifications",
-      "context": "NotificationSettings.kt",
-      "en": "Open Android settings",
-      "km": "បើកការកំណត់ Android",
-      "original": {
-        "en": "Open Android settings",
-        "km": "បើកការកំណត់ Android"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
-      "id": "ui.allow_precise_reminders_for_the_selected_time_otherwise.03a1cd",
-      "section": "notifications",
-      "context": "NotificationSettings.kt",
-      "en": "Allow precise reminders for the selected time. Otherwise Android may delay delivery.",
-      "km": "អនុញ្ញាតម៉ោងរំលឹកជាក់លាក់ ដើម្បីជូនដំណឹងតាមម៉ោងដែលបានកំណត់។ បើមិនអនុញ្ញាត Android អាចពន្យារពេល។",
-      "original": {
-        "en": "Allow precise reminders for the selected time. Otherwise Android may delay delivery.",
-        "km": "អនុញ្ញាតម៉ោងរំលឹកជាក់លាក់ ដើម្បីជូនដំណឹងតាមម៉ោងដែលបានកំណត់។ បើមិនអនុញ្ញាត Android អាចពន្យារពេល។"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
       "id": "ui.the_app_won_t_guarantee_to_fire_notifications_correctly.b4cad2",
       "section": "notifications",
       "context": "NotificationSettings.kt",
@@ -2007,7 +1807,7 @@
     },
     {
       "id": "event.new_year_s_day.1b578c",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-01-01 to 2030-01-01",
       "en": "New Year's Day",
       "km": "ទិវា​ចូល​ឆ្នាំ​សាកល",
@@ -2273,7 +2073,7 @@
     },
     {
       "id": "event.victory_over_genocide_day.f4ab75",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-01-07 to 2030-01-07",
       "en": "Victory Over Genocide Day",
       "km": "ទិវា​ជ័យ​ជម្នះ​លើ​របប​ប្រល័យ​ពូជ​សាសន៍ ខួបលើកទី{anniversary}",
@@ -2665,7 +2465,7 @@
     },
     {
       "id": "event.kitchen_god_festival.339851",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-01-30 to 2030-01-27",
       "en": "Kitchen God Festival",
       "km": "ថ្ងៃ​សែន​ដក​ជើង​ធូប",
@@ -2931,7 +2731,7 @@
     },
     {
       "id": "event.chinese_new_year_s_eve.109f65",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-02-04 to 2030-02-02",
       "en": "Chinese New Year's Eve",
       "km": "ថ្ងៃ​សែន​ចូល​ឆ្នាំ​ចិន",
@@ -3197,7 +2997,7 @@
     },
     {
       "id": "event.chinese_new_year.096545",
-      "section": "events",
+      "section": "archive",
       "context": "93 dates · 2000-02-05 to 2030-02-05",
       "en": "Chinese New Year",
       "km": "ចូល​ឆ្នាំ​ចិន",
@@ -3959,7 +3759,7 @@
     },
     {
       "id": "event.valentine_s_day.ceb81b",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-02-14 to 2030-02-14",
       "en": "Valentine's Day",
       "km": "ថ្ងៃ​បុណ្យ​នៃ​សេចក្តី​ស្រលាញ់",
@@ -4225,7 +4025,7 @@
     },
     {
       "id": "event.meak_bochea.52e0e8",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-02-19 to 2030-02-17",
       "en": "Meak Bochea",
       "km": "ពិធី​បុណ្យ​មាឃបូជា",
@@ -4491,7 +4291,7 @@
     },
     {
       "id": "event.spirit_parade.a39f4d",
-      "section": "events",
+      "section": "archive",
       "context": "24 dates · 2000-02-19 to 2023-02-05",
       "en": "Spirit Parade",
       "km": "ហែ​អ្នក​តា​ចិន",
@@ -4701,7 +4501,7 @@
     },
     {
       "id": "event.national_mine_awareness_day.f49e4d",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-02-24 to 2030-02-24",
       "en": "National Mine Awareness Day",
       "km": "ទិវា​ជាតិ​យល់​ដឹង​ពី​មីន ខួបលើកទី{anniversary}",
@@ -5093,7 +4893,7 @@
     },
     {
       "id": "event.national_culture_day.a654f6",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-03-03 to 2030-03-03",
       "en": "National Culture Day",
       "km": "ទិវា​វប្ប​ធម៌​ជាតិ ខួបលើកទី{anniversary}",
@@ -5485,7 +5285,7 @@
     },
     {
       "id": "event.water_policy_day.63f82f",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-03-04 to 2030-03-04",
       "en": "Water Policy Day",
       "km": "ទិវា​នយោបាយ​ទឹក",
@@ -5751,7 +5551,7 @@
     },
     {
       "id": "event.international_women_s_day.81b3fd",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-03-08 to 2030-03-08",
       "en": "International Women's Day",
       "km": "ទិវា​នារី​អន្តរជាតិ ខួបលើកទី{anniversary}",
@@ -6143,7 +5943,7 @@
     },
     {
       "id": "event.world_water_and_world_meteorological_day.128137",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-03-22 to 2030-03-22",
       "en": "World Water and World Meteorological Day",
       "km": "ទិវាទឹក និងឧតុនិយមពិភពលោក",
@@ -6409,7 +6209,7 @@
     },
     {
       "id": "event.world_tuberculosis_day.15c9a6",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-03-24 to 2030-03-24",
       "en": "World Tuberculosis Day",
       "km": "ទិវា​ពិភពលោក​កំចាត់​រោគ​របេង",
@@ -6675,7 +6475,7 @@
     },
     {
       "id": "event.tomb_sweeping_day_qingming_festival.fb0c0b",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-04-04 to 2030-04-05",
       "en": "Tomb-Sweeping Day (Qingming Festival)",
       "km": "ឆេង​ម៉េង",
@@ -6941,7 +6741,7 @@
     },
     {
       "id": "event.world_health_day.18e2ba",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-04-07 to 2030-04-07",
       "en": "World Health Day",
       "km": "ទិវា​សុខ​ភាព​ពិភព​លោក",
@@ -7207,7 +7007,7 @@
     },
     {
       "id": "event.khmer_new_year_moha_sankranta_at_time.fc662c",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-04-13 to 2030-04-14",
       "en": "Khmer New Year - Moha Sankranta at {time}",
       "km": "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ - មហា​សង្ក្រាន្ត ម៉ោង {time}",
@@ -7601,7 +7401,7 @@
     },
     {
       "id": "event.khmer_new_year_veareak_vanabat.cc2d1f",
-      "section": "events",
+      "section": "archive",
       "context": "36 dates · 2000-04-14 to 2030-04-15",
       "en": "Khmer New Year - Veareak Vanabat",
       "km": "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ - វារៈ​វ័ន​បត",
@@ -7907,7 +7707,7 @@
     },
     {
       "id": "event.khmer_new_year_veareak_laeung_sak.1b6528",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-04-15 to 2030-04-16",
       "en": "Khmer New Year - Veareak Laeung Sak",
       "km": "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ - ថ្ងៃ​ឡើង​ស័ក",
@@ -8173,7 +7973,7 @@
     },
     {
       "id": "event.cambodia_joined_the_association_of_southeast_asian_nati.5046de",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-04-30 to 2030-04-30",
       "en": "Cambodia joined The Association of Southeast Asian Nations (ASEAN)",
       "km": "កម្ពុជា​ចូល​ជា​សមា​ជិក​អាស៊ាន ខួបលើកទី{anniversary}",
@@ -8565,7 +8365,7 @@
     },
     {
       "id": "event.international_labor_day.7090da",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-05-01 to 2030-05-01",
       "en": "International Labor Day",
       "km": "ទិវា​ពលកម្ម​អន្តរជាតិ ខួបលើកទី{anniversary}",
@@ -8957,7 +8757,7 @@
     },
     {
       "id": "event.world_press_freedom_day.b66799",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-05-03 to 2030-05-03",
       "en": "World Press Freedom Day",
       "km": "ទិវា​សេរី​ភាព​សារព័ត៌មាន​ពិភព​លោក ខួបលើកទី{anniversary}",
@@ -9349,7 +9149,7 @@
     },
     {
       "id": "event.world_red_cross_and_red_crescent_day.991942",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-05-08 to 2030-05-08",
       "en": "World Red Cross and Red Crescent Day",
       "km": "ទិវា​ពិភព​លោក​កាក​បាទ​ក្រហម និង​អឌ្ឍចន្ទក្រហម",
@@ -9615,7 +9415,7 @@
     },
     {
       "id": "event.mother_s_day.55935f",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-05-14 to 2030-05-12",
       "en": "Mother's Day",
       "km": "ទិវាមាតា",
@@ -9881,7 +9681,7 @@
     },
     {
       "id": "event.international_day_of_families.2988a9",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-05-15 to 2030-05-15",
       "en": "International Day of Families",
       "km": "ទិវា​អន្តរ​ជាតិ​នៃ​គ្រួសារ",
@@ -10147,7 +9947,7 @@
     },
     {
       "id": "event.birth_of_the_national_police.46ffae",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-05-16 to 2030-05-16",
       "en": "Birth of the National Police",
       "km": "កំណើត​នគរ​បាល​ជាតិ ខួបលើកទី{anniversary}",
@@ -10539,7 +10339,7 @@
     },
     {
       "id": "event.visak_bochea.7e3881",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-05-17 to 2030-05-16",
       "en": "Visak Bochea",
       "km": "ពិធី​បុណ្យ​វិសាខ​បូជា",
@@ -10805,7 +10605,7 @@
     },
     {
       "id": "event.national_day_of_remembrance.2f6336",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-05-20 to 2030-05-20",
       "en": "National Day of Remembrance",
       "km": "ទិវា​ជាតិ​នៃ​ការ​ចង​ចាំ",
@@ -11071,7 +10871,7 @@
     },
     {
       "id": "event.royal_ploughing_ceremony.3679be",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-05-21 to 2030-05-20",
       "en": "Royal Ploughing Ceremony",
       "km": "ព្រះ​រាជ​ពិធី​ច្រត់​ព្រះ​នង្គ័ល",
@@ -11337,7 +11137,7 @@
     },
     {
       "id": "event.world_no_tobacco_day.3a3d79",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-05-31 to 2030-05-31",
       "en": "World No Tobacco Day",
       "km": "ទិវា​ពិភព​លោក​គ្មាន​ថ្នាំ​ជក់",
@@ -11603,7 +11403,7 @@
     },
     {
       "id": "event.international_children_s_day.472dd8",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-06-01 to 2030-06-01",
       "en": "International Children's Day",
       "km": "ទិវា​កុមារ​អន្តរ​ជាតិ ខួបលើកទី{anniversary}",
@@ -11995,7 +11795,7 @@
     },
     {
       "id": "event.national_and_world_environment_day.fd3953",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-06-05 to 2030-06-05",
       "en": "National and World Environment Day",
       "km": "ទិវា​បរិ​ស្ថាន​ជាតិ និង​បរិ​ស្ថាន​ពិភព​លោក ខួបលើកទី{anniversary}",
@@ -12387,7 +12187,7 @@
     },
     {
       "id": "event.sticky_rice_dumplings_zongzi.1f93d1",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-06-06 to 2030-06-05",
       "en": "Sticky Rice Dumplings (Zongzi)",
       "km": "សែន​នំ​ចាំង",
@@ -12653,7 +12453,7 @@
     },
     {
       "id": "event.international_court_of_justice_in_the_hague_declared_ca.7da923",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-06-15 to 2030-06-15",
       "en": "International Court of Justice in The Hague declared Cambodia is the owner of the Preah Vihear Temple",
       "km": "តុលា​ការ​យុត្តិ​ធម៌​អន្តរ​ជាតិ​ក្រុង​ឡា​អេ សម្រេច​ឱ្យ​កម្ពុជាជាម្ចាស់កម្មសិទ្ធិ លើប្រាសាទព្រះវិហារ ខួបលើកទី{anniversary}",
@@ -13045,7 +12845,7 @@
     },
     {
       "id": "event.queen_mother_s_birthday.c5a1c1",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-06-18 to 2030-06-18",
       "en": "Queen Mother's Birthday",
       "km": "ព្រះ​រាជ​ពិធី​បុណ្យ​ចម្រើន​ព្រះ​ជន្ម សម្តេច​ព្រះ​មហាក្សត្រី នរោត្តម មុនិនាថ សីហនុ ព្រះ​វររាជ​មាតា​ជាតិ​ខ្មែរ ក្នុង​សេរីភាព សេចក្តីថ្លៃថ្នូរ និង​សុភមង្គល",
@@ -13311,7 +13111,7 @@
     },
     {
       "id": "event.father_s_day.ab0c88",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-06-18 to 2030-06-16",
       "en": "Father's Day",
       "km": "ទិវា​បីតា",
@@ -13577,7 +13377,7 @@
     },
     {
       "id": "event.international_day_against_drug_abuse_and_illicit_traffi.1ab0bb",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-06-26 to 2030-06-26",
       "en": "International Day Against Drug Abuse and Illicit Trafficking",
       "km": "ទិវា​អន្តរ​ជាតិ​ប្រយុទ្ធ​ប្រឆាំង​គ្រឿង​ញៀន",
@@ -13843,7 +13643,7 @@
     },
     {
       "id": "event.cambodia_joined_unesco.56a0d9",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-07-03 to 2030-07-03",
       "en": "Cambodia joined UNESCO",
       "km": "កម្ពុជា​ចូល​ជា​សមា​ជិក​អង្គ​ការ​យូណេស្កូ ខួបលើកទី{anniversary}",
@@ -14235,7 +14035,7 @@
     },
     {
       "id": "event.buddhist_lent_candles_making_day.d79e76",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-07-09 to 2030-07-08",
       "en": "Buddhist Lent Candles Making Day",
       "km": "ពិធី​សិត​ទៀន​ព្រះ​វស្សា",
@@ -14501,7 +14301,7 @@
     },
     {
       "id": "event.arbor_day.b643a6",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-07-09 to 2030-07-09",
       "en": "Arbor Day",
       "km": "រុក្ខ​ទិវា",
@@ -14767,7 +14567,7 @@
     },
     {
       "id": "event.national_population_day_and_world_population_day.766612",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-07-11 to 2030-07-11",
       "en": "National Population Day and World Population Day",
       "km": "ទិវា​​ប្រជាជនជាតិ និង​​ប្រជាជន​ពិភព​លោក",
@@ -15033,7 +14833,7 @@
     },
     {
       "id": "event.the_ordained_dragon_monk.44dda5",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-07-15 to 2030-07-14",
       "en": "The Ordained Dragon Monk",
       "km": "ពិធី​បំបួស​នាគ​ខ្នាន",
@@ -15299,7 +15099,7 @@
     },
     {
       "id": "event.beginning_of_buddhist_lent.05b5d9",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-07-17 to 2030-07-16",
       "en": "Beginning of Buddhist Lent",
       "km": "ចូល​ព្រះ​វស្សា",
@@ -15565,7 +15365,7 @@
     },
     {
       "id": "event.international_day_of_the_world_s_indigenous_peoples.5f632d",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-08-09 to 2030-08-09",
       "en": "International Day of the World's Indigenous Peoples",
       "km": "ទិវា​អន្តរ​ជាតិ​ជនជាតិដើមភាគតិចពិភពលោក",
@@ -15831,7 +15631,7 @@
     },
     {
       "id": "event.international_youth_day.6ff8cc",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-08-12 to 2030-08-12",
       "en": "International Youth Day",
       "km": "ទិវា​យុវជន​អន្តរ​ជាតិ",
@@ -16097,7 +15897,7 @@
     },
     {
       "id": "event.ghost_festival.b6dc14",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-08-14 to 2030-08-13",
       "en": "Ghost Festival",
       "km": "សែន​ក្បាល​ទឹក",
@@ -16363,7 +16163,7 @@
     },
     {
       "id": "event.international_literacy_day.491ce5",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-08 to 2030-09-08",
       "en": "International Literacy Day",
       "km": "ទិវា​អក្ខរ​កម្ម​អន្តរ​ជាតិ",
@@ -16629,7 +16429,7 @@
     },
     {
       "id": "event.mid_autumn_festival.dc76bc",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-12 to 2030-09-12",
       "en": "Mid-Autumn Festival",
       "km": "ពិធី​បុណ្យ​សែន​ព្រះ​ខែ",
@@ -16895,7 +16695,7 @@
     },
     {
       "id": "event.ben_1.e38b39",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-14 to 2030-09-13",
       "en": "Ben 1",
       "km": "បិណ្ឌ ១",
@@ -17161,7 +16961,7 @@
     },
     {
       "id": "event.ben_2.beb1a5",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-15 to 2030-09-14",
       "en": "Ben 2",
       "km": "បិណ្ឌ ២",
@@ -17427,7 +17227,7 @@
     },
     {
       "id": "event.international_day_for_the_preservation_of_the_ozone_lay.632951",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-16 to 2030-09-16",
       "en": "International Day for the Preservation of the Ozone Layer",
       "km": "ទិវា​អន្តរ​ជាតិ​ការពារ​ស្រទាប់​អូ​ហ្សូន ខួបលើកទី{anniversary}",
@@ -17819,7 +17619,7 @@
     },
     {
       "id": "event.ben_3.a36945",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-16 to 2030-09-15",
       "en": "Ben 3",
       "km": "បិណ្ឌ ៣",
@@ -18085,7 +17885,7 @@
     },
     {
       "id": "event.ben_4.c8c3e3",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-17 to 2030-09-16",
       "en": "Ben 4",
       "km": "បិណ្ឌ ៤",
@@ -18351,7 +18151,7 @@
     },
     {
       "id": "event.ben_5.ee7326",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-18 to 2030-09-17",
       "en": "Ben 5",
       "km": "បិណ្ឌ ៥",
@@ -18617,7 +18417,7 @@
     },
     {
       "id": "event.ben_6.3d61f3",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-19 to 2030-09-18",
       "en": "Ben 6",
       "km": "បិណ្ឌ ៦",
@@ -18883,7 +18683,7 @@
     },
     {
       "id": "event.ben_7.19ca30",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-20 to 2030-09-19",
       "en": "Ben 7",
       "km": "បិណ្ឌ ៧",
@@ -19149,7 +18949,7 @@
     },
     {
       "id": "event.international_day_of_peace.352229",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-21 to 2030-09-21",
       "en": "International Day of Peace",
       "km": "ទិវា​សន្តិ​ភាព​អន្តរ​ជាតិ",
@@ -19415,7 +19215,7 @@
     },
     {
       "id": "event.ben_8.1250aa",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-21 to 2030-09-20",
       "en": "Ben 8",
       "km": "បិណ្ឌ ៨",
@@ -19681,7 +19481,7 @@
     },
     {
       "id": "event.ben_9.7d0f01",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-22 to 2030-09-21",
       "en": "Ben 9",
       "km": "បិណ្ឌ ៩",
@@ -19947,7 +19747,7 @@
     },
     {
       "id": "event.ben_10.48eb08",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-23 to 2030-09-22",
       "en": "Ben 10",
       "km": "បិណ្ឌ ១០",
@@ -20213,7 +20013,7 @@
     },
     {
       "id": "event.ben_11.e9170d",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-24 to 2030-09-23",
       "en": "Ben 11",
       "km": "បិណ្ឌ ១១",
@@ -20479,7 +20279,7 @@
     },
     {
       "id": "event.constitution_day.eed048",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-24 to 2030-09-24",
       "en": "Constitution Day",
       "km": "ទិវា​ប្រកាស​រដ្ឋ​ធម្មនុញ្ញ ខួបលើកទី{anniversary}",
@@ -20871,7 +20671,7 @@
     },
     {
       "id": "event.ben_12.499d48",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-25 to 2030-09-24",
       "en": "Ben 12",
       "km": "បិណ្ឌ ១២",
@@ -21137,7 +20937,7 @@
     },
     {
       "id": "event.ben_13.a5850f",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-26 to 2030-09-25",
       "en": "Ben 13",
       "km": "បិណ្ឌ ១៣",
@@ -21403,7 +21203,7 @@
     },
     {
       "id": "event.pchum_ben_festival.6c3dd1",
-      "section": "events",
+      "section": "archive",
       "context": "93 dates · 2000-09-27 to 2030-09-28",
       "en": "Pchum Ben Festival",
       "km": "ពិធី​បុណ្យ​ភ្ជុំ​បិណ្ឌ",
@@ -22165,7 +21965,7 @@
     },
     {
       "id": "event.world_tourism_day.7d2d48",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-09-27 to 2030-09-27",
       "en": "World Tourism Day",
       "km": "ទិវា​ទេស​ចរណ៍​ពិ​ភព​លោក",
@@ -22431,7 +22231,7 @@
     },
     {
       "id": "event.cambodian_older_persons_day_and_the_international_day_o.f57b12",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-10-01 to 2030-10-01",
       "en": "Cambodian Older Persons Day and the International Day of Older Persons",
       "km": "ទិវា​មនុស្ស​ចាស់​កម្ពុជា និងទិវាមនុស្សចាស់អន្តរជាតិ ខួបលើកទី{anniversary}",
@@ -22823,7 +22623,7 @@
     },
     {
       "id": "event.world_teacher_s_day.3ad087",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-10-05 to 2030-10-05",
       "en": "World Teacher's Day",
       "km": "ទិវា​គ្រូ​បង្រៀន​ពិភព​លោក",
@@ -23089,7 +22889,7 @@
     },
     {
       "id": "event.ending_of_buddhist_lent.cfe1e4",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-10-13 to 2030-10-12",
       "en": "Ending of Buddhist Lent",
       "km": "ចេញ​ព្រះ​វស្សា",
@@ -23355,7 +23155,7 @@
     },
     {
       "id": "event.kathen_kal.b6fb86",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-10-14 to 2030-10-13",
       "en": "Kathen Kal",
       "km": "កឋិន​កាល",
@@ -23621,7 +23421,7 @@
     },
     {
       "id": "event.paris_peace_agreement_day.df33c1",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-10-23 to 2030-10-23",
       "en": "Paris Peace Agreement Day",
       "km": "ទិវារំលឹក​ខួប​នៃ​កិច្ចព្រមព្រៀង​សន្តិភាព​ទីក្រុង​ប៉ារីស",
@@ -23887,7 +23687,7 @@
     },
     {
       "id": "event.halloween.0bcc92",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-10-31 to 2030-10-31",
       "en": "Halloween",
       "km": "បុណ្យ​ហាឡូវីន",
@@ -24153,7 +23953,7 @@
     },
     {
       "id": "event.independence_day.991b45",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-11-09 to 2030-11-09",
       "en": "Independence Day",
       "km": "ពិធី​បុណ្យ​ឯករាជ្យ​ជាតិ ខួបលើកទី{anniversary}",
@@ -24545,7 +24345,7 @@
     },
     {
       "id": "event.water_festival.2457d0",
-      "section": "events",
+      "section": "archive",
       "context": "93 dates · 2000-11-10 to 2030-11-11",
       "en": "Water Festival",
       "km": "ព្រះ​រាជ​ពិធី​បុណ្យ​អុំ​ទូក បណ្ដែត​ប្រទីប និង​សំពះ​ព្រះ​ខែ អកអំបុក",
@@ -25307,7 +25107,7 @@
     },
     {
       "id": "event.world_aids_day.6e5f9c",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-12-01 to 2030-12-01",
       "en": "World AIDS Day",
       "km": "ទិវា​ពិភព​លោក​ប្រយុទ្ធ​ប្រឆាំង​នឹង​ជំងឺ​អេដស៍",
@@ -25573,7 +25373,7 @@
     },
     {
       "id": "event.international_day_of_disabled_persons.3bc78e",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-12-03 to 2030-12-03",
       "en": "International Day of Disabled Persons",
       "km": "ទិវា​ជន​មាន​ពិការភាព​អន្តរជាតិ",
@@ -25839,7 +25639,7 @@
     },
     {
       "id": "event.civil_aviation_day.dcb19c",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-12-07 to 2030-12-07",
       "en": "Civil Aviation Day",
       "km": "ទិវា​អា​កាស​ចរណ៍ស៊ីវិល",
@@ -26105,7 +25905,7 @@
     },
     {
       "id": "event.international_human_rights_day.488db1",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-12-10 to 2030-12-10",
       "en": "International Human Rights Day",
       "km": "ទិវា​សិទ្ធិ​មនុស្ស​អន្តរជាតិ ខួបលើកទី{anniversary}",
@@ -26497,7 +26297,7 @@
     },
     {
       "id": "event.angkor_was_inscribed_on_the_unesco_world_heritage_list.d0e172",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-12-14 to 2030-12-14",
       "en": "Angkor was inscribed on the UNESCO World Heritage List",
       "km": "តំបន់​រមណី​ដ្ឋាន​អង្គរ ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌ​ពិភពលោករបស់អង្គការយូណេស្កូ ខួបលើកទី{anniversary}",
@@ -26889,7 +26689,7 @@
     },
     {
       "id": "event.cambodia_became_a_member_of_the_united_nations.47dbde",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-12-14 to 2030-12-14",
       "en": "Cambodia became a member of the United Nations",
       "km": "កម្ពុជា​ចូល​ជា​សមា​ជិក​អង្គ​ការ​សហ​ប្រជាជាតិ ខួបលើកទី{anniversary}",
@@ -27281,7 +27081,7 @@
     },
     {
       "id": "event.winter_solstice_festival.3a425c",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-12-21 to 2030-12-22",
       "en": "Winter Solstice Festival",
       "km": "សែននំអ៊ី",
@@ -27547,7 +27347,7 @@
     },
     {
       "id": "event.christmas_day.bbc2eb",
-      "section": "events",
+      "section": "archive",
       "context": "31 dates · 2000-12-25 to 2030-12-25",
       "en": "Christmas Day",
       "km": "បុណ្យ​ណូអែល",
@@ -27813,7 +27613,7 @@
     },
     {
       "id": "event.win_win_policy_day.277016",
-      "section": "events",
+      "section": "archive",
       "context": "24 dates · 2000-12-29 to 2023-12-29",
       "en": "Win-win Policy Day",
       "km": "ទិវា​នយោ​បាយ​ឈ្នះ ឈ្នះ",
@@ -28023,7 +27823,7 @@
     },
     {
       "id": "event.happy_world_day_against_child_labour.59145d",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2001-06-12 to 2001-06-12",
       "en": "Happy World Day Against Child Labour",
       "km": "ទិវា​ពិភព​លោក​ប្រឆាំង​ពលកម្ម​កុមារ",
@@ -28049,7 +27849,7 @@
     },
     {
       "id": "event.national_fish_day.1fa511",
-      "section": "events",
+      "section": "archive",
       "context": "30 dates · 2001-07-01 to 2030-07-01",
       "en": "National Fish Day",
       "km": "ទិវា​មច្ឆា​ជាតិ",
@@ -28307,7 +28107,7 @@
     },
     {
       "id": "event.happy_world_day_against_child_labour.1372d8",
-      "section": "events",
+      "section": "archive",
       "context": "29 dates · 2002-06-12 to 2030-06-12",
       "en": "Happy World Day Against Child Labour",
       "km": "ទិវា​ពិភព​លោក​ប្រឆាំង​ពលកម្ម​កុមារ ខួបលើកទី{anniversary}",
@@ -28675,7 +28475,7 @@
     },
     {
       "id": "event.world_day_for_safety_and_health_at_work.cc45e4",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2003-04-28 to 2003-04-28",
       "en": "World Day for Safety and Health at Work",
       "km": "ទិវា​ពិភព​លោក ដើម្បីសុវត្ថិភាព និងសុខភាពការងារ",
@@ -28701,7 +28501,7 @@
     },
     {
       "id": "event.royal_ballet_of_cambodia_inscribed_on_the_representativ.c9971c",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2003-11-07 to 2003-11-07",
       "en": "Royal Ballet of Cambodia inscribed on the Representative List of the Intangible Cultural Heritage of Humanity",
       "km": "របាំ​ព្រះ​រាជ​ទ្រព្យ ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិ​កភណ្ឌ​វប្បធម៌អរូបីនៃមនុស្សជាតិ",
@@ -28727,7 +28527,7 @@
     },
     {
       "id": "event.anti_corruption_day.89570f",
-      "section": "events",
+      "section": "archive",
       "context": "28 dates · 2003-12-09 to 2030-12-09",
       "en": "Anti-Corruption Day",
       "km": "ទិវា​ប្រយុទ្ធ​ប្រឆាំង​អំពើ​ពុករលួយ",
@@ -28969,7 +28769,7 @@
     },
     {
       "id": "event.world_day_for_safety_and_health_at_work.6ea44a",
-      "section": "events",
+      "section": "archive",
       "context": "27 dates · 2004-04-28 to 2030-04-28",
       "en": "World Day for Safety and Health at Work",
       "km": "ទិវា​ពិភព​លោក ដើម្បីសុវត្ថិភាព និងសុខភាពការងារ ខួបលើកទី{anniversary}",
@@ -29313,7 +29113,7 @@
     },
     {
       "id": "event.royal_ballet_of_cambodia_inscribed_on_the_representativ.4d9b25",
-      "section": "events",
+      "section": "archive",
       "context": "27 dates · 2004-11-07 to 2030-11-07",
       "en": "Royal Ballet of Cambodia inscribed on the Representative List of the Intangible Cultural Heritage of Humanity",
       "km": "របាំ​ព្រះ​រាជ​ទ្រព្យ ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិ​កភណ្ឌ​វប្បធម៌អរូបីនៃមនុស្សជាតិ ខួបលើកទី{anniversary}",
@@ -29657,7 +29457,7 @@
     },
     {
       "id": "event.king_sihamoni_s_birthday.902625",
-      "section": "events",
+      "section": "archive",
       "context": "56 dates · 2005-05-13 to 2030-05-14",
       "en": "King Sihamoni's Birthday",
       "km": "ព្រះ​រាជ​ពិធី​បុណ្យ​ចម្រើន​ព្រះ​ជន្ម ព្រះ​ករុណា​ព្រះ​បាទ​សម្តេច​ព្រះ​បរម​នាថ នរោត្តម សីហមុនី ព្រះ​មហាក្សត្រ​នៃ​ព្រះរាជាណាចក្រ​កម្ពុជា",
@@ -30123,7 +29923,7 @@
     },
     {
       "id": "event.khmer_shadow_theatre_inscribed_on_the_representative_li.35657d",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2005-11-25 to 2005-11-25",
       "en": "Khmer Shadow Theatre inscribed on the Representative List of the Intangible Cultural Heritage of Humanity",
       "km": "ល្ខោន​ស្រមោល​ស្បែក​ ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌវប្បធម៌អរូបីនៃមនុស្សជាតិ",
@@ -30149,7 +29949,7 @@
     },
     {
       "id": "event.khmer_shadow_theatre_inscribed_on_the_representative_li.1d6e86",
-      "section": "events",
+      "section": "archive",
       "context": "25 dates · 2006-11-25 to 2030-11-25",
       "en": "Khmer Shadow Theatre inscribed on the Representative List of the Intangible Cultural Heritage of Humanity",
       "km": "ល្ខោន​ស្រមោល​ស្បែក​ ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌវប្បធម៌អរូបីនៃមនុស្សជាតិ ខួបលើកទី{anniversary}",
@@ -30469,7 +30269,7 @@
     },
     {
       "id": "event.national_anti_human_trafficking_day.7a9493",
-      "section": "events",
+      "section": "archive",
       "context": "25 dates · 2006-12-12 to 2030-12-12",
       "en": "National Anti-Human Trafficking Day",
       "km": "ទិវា​ជាតិ​ប្រឆាំង​ការ​ជួញ​ដូរ​មនុស្ស",
@@ -30687,7 +30487,7 @@
     },
     {
       "id": "event.world_ranger_day.32ad72",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2007-07-31 to 2007-07-31",
       "en": "World Ranger Day",
       "km": "ទិវា​ឧទ្យានុ​រក្សពិភពលោក",
@@ -30713,7 +30513,7 @@
     },
     {
       "id": "event.temple_of_preah_vihear_was_inscribed_on_the_unesco_worl.5c1a60",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2008-07-07 to 2008-07-07",
       "en": "Temple of Preah Vihear was inscribed on the UNESCO World Heritage List",
       "km": "ប្រាសាទ​ព្រះ​វិហារ ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌ​ពិភពលោករបស់អង្គការយូណេស្កូ",
@@ -30739,7 +30539,7 @@
     },
     {
       "id": "event.world_ranger_day.d91468",
-      "section": "events",
+      "section": "archive",
       "context": "23 dates · 2008-07-31 to 2030-07-31",
       "en": "World Ranger Day",
       "km": "ទិវា​ឧទ្យានុ​រក្សពិភពលោក ខួបលើកទី{anniversary}",
@@ -31035,7 +30835,7 @@
     },
     {
       "id": "event.temple_of_preah_vihear_was_inscribed_on_the_unesco_worl.4193aa",
-      "section": "events",
+      "section": "archive",
       "context": "22 dates · 2009-07-07 to 2030-07-07",
       "en": "Temple of Preah Vihear was inscribed on the UNESCO World Heritage List",
       "km": "ប្រាសាទ​ព្រះ​វិហារ ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌ​ពិភពលោករបស់អង្គការយូណេស្កូ ខួបលើកទី{anniversary}",
@@ -31319,7 +31119,7 @@
     },
     {
       "id": "event.the_archives_of_tuol_sleng_genocide_museum_are_register.121736",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2009-07-31 to 2009-07-31",
       "en": "The archives of Tuol Sleng Genocide Museum are registered as part of the Memory of the World by UNESCO",
       "km": "បណ្ណសារ​សារមន្ទីរ​ឧក្រិដ្ឋកម្ម​ប្រល័យ​ពូជសាសន៍​ទួល​ស្លែង ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​ស្មារតី​ចងចាំ​នៃ​ពិភព​លោក​របស់​យូណេស្កូ",
@@ -31345,7 +31145,7 @@
     },
     {
       "id": "event.the_archives_of_tuol_sleng_genocide_museum_are_register.f9c3c3",
-      "section": "events",
+      "section": "archive",
       "context": "21 dates · 2010-07-31 to 2030-07-31",
       "en": "The archives of Tuol Sleng Genocide Museum are registered as part of the Memory of the World by UNESCO",
       "km": "បណ្ណសារ​សារមន្ទីរ​ឧក្រិដ្ឋកម្ម​ប្រល័យ​ពូជសាសន៍​ទួល​ស្លែង ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​ស្មារតី​ចងចាំ​នៃ​ពិភព​លោក​របស់​យូណេស្កូ ខួបលើកទី{anniversary}",
@@ -31617,7 +31417,7 @@
     },
     {
       "id": "event.national_day_on_maternal_newborn_and_child_health.7d068e",
-      "section": "events",
+      "section": "archive",
       "context": "19 dates · 2012-02-21 to 2030-02-21",
       "en": "National Day on Maternal, Newborn and Child Health",
       "km": "ទិវា​ជាតិ​សុខភាព​មាតា ទារក និង​កុមារ",
@@ -31787,7 +31587,7 @@
     },
     {
       "id": "event.king_father_s_commemoration_day.1ade05",
-      "section": "events",
+      "section": "archive",
       "context": "17 dates · 2014-10-15 to 2030-10-15",
       "en": "King Father's Commemoration Day",
       "km": "ទិវា​ប្រារព្ធ​ពិធី​គោរព​ព្រះវិញ្ញាណក្ខន្ធ ព្រះករុណា​ព្រះបាទ​សម្តេច​ព្រះ នរោត្តម សីហនុ ព្រះមហាវីរក្សត្រ ព្រះ​វររាជ​បិតា​ឯករាជ្យ បូរណភាព​ទឹកដី និង​ឯកភាព​ជាតិ​ខ្មែរ",
@@ -31941,7 +31741,7 @@
     },
     {
       "id": "event.king_s_coronation_day.cac0a2",
-      "section": "events",
+      "section": "archive",
       "context": "17 dates · 2014-10-29 to 2030-10-29",
       "en": "King's Coronation Day",
       "km": "ព្រះ​រាជ​ពិធី​គ្រង​ព្រះ​បរម​រាជ​សម្បត្តិ ព្រះ​ករុណា​ព្រះ​បាទ​សម្តេច​ព្រះ​បរមនាថ នរោត្តម សីហមុនី ព្រះ​មហាក្សត្រ​នៃ​ព្រះរាជាណាចក្រ​កម្ពុជា",
@@ -32095,7 +31895,7 @@
     },
     {
       "id": "event.tug_of_war_inscribed_on_the_representative_list_of_the_.ed3156",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2015-12-02 to 2015-12-02",
       "en": "Tug of War inscribed on the Representative List of the Intangible Cultural Heritage of Humanity",
       "km": "ល្បែង​ទាញ​ព្រ័ត្រ ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌ​វប្បធម៌អរូបីនៃមនុស្សជាតិ",
@@ -32121,7 +31921,7 @@
     },
     {
       "id": "event.chapei_dang_veng_inscribed_on_the_list_of_intangible_cu.a22393",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2016-11-30 to 2016-11-30",
       "en": "Chapei Dang Veng inscribed on the List of Intangible Cultural Heritage in Need of Urgent Safeguarding",
       "km": "ចាប៉ី​ដង​វែង ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌ​វប្បធម៌អរូបីនៃមនុស្សជាតិ",
@@ -32147,7 +31947,7 @@
     },
     {
       "id": "event.tug_of_war_inscribed_on_the_representative_list_of_the_.706e02",
-      "section": "events",
+      "section": "archive",
       "context": "15 dates · 2016-12-02 to 2030-12-02",
       "en": "Tug of War inscribed on the Representative List of the Intangible Cultural Heritage of Humanity",
       "km": "ល្បែង​ទាញ​ព្រ័ត្រ ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌ​វប្បធម៌អរូបីនៃមនុស្សជាតិ ខួបលើកទី{anniversary}",
@@ -32347,7 +32147,7 @@
     },
     {
       "id": "event.temple_zone_of_sambor_prei_kuk_was_inscribed_on_the_une.1127b6",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2017-07-08 to 2017-07-08",
       "en": "Temple Zone of Sambor Prei Kuk was inscribed on the UNESCO World Heritage List",
       "km": "តំបន់​ប្រាសាទ​សំបូរ​ព្រៃ​គុក ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌ​ពិភពលោករបស់អង្គការយូណេស្កូ",
@@ -32373,7 +32173,7 @@
     },
     {
       "id": "event.national_environmental_sanitation_day.905735",
-      "section": "events",
+      "section": "archive",
       "context": "14 dates · 2017-11-23 to 2030-11-23",
       "en": "National Environmental Sanitation Day",
       "km": "ទិវា​អនា​ម័យ​បរិ​ស្ថាន​ជាតិ",
@@ -32503,7 +32303,7 @@
     },
     {
       "id": "event.chapei_dang_veng_inscribed_on_the_list_of_intangible_cu.0d94bc",
-      "section": "events",
+      "section": "archive",
       "context": "14 dates · 2017-11-30 to 2030-11-30",
       "en": "Chapei Dang Veng inscribed on the List of Intangible Cultural Heritage in Need of Urgent Safeguarding",
       "km": "ចាប៉ី​ដង​វែង ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌ​វប្បធម៌អរូបីនៃមនុស្សជាតិ ខួបលើកទី{anniversary}",
@@ -32691,7 +32491,7 @@
     },
     {
       "id": "event.temple_zone_of_sambor_prei_kuk_was_inscribed_on_the_une.afc11f",
-      "section": "events",
+      "section": "archive",
       "context": "13 dates · 2018-07-08 to 2030-07-08",
       "en": "Temple Zone of Sambor Prei Kuk was inscribed on the UNESCO World Heritage List",
       "km": "តំបន់​ប្រាសាទ​សំបូរ​ព្រៃ​គុក ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌ​ពិភពលោករបស់អង្គការយូណេស្កូ ខួបលើកទី{anniversary}",
@@ -32867,7 +32667,7 @@
     },
     {
       "id": "event.lkhon_khol_wat_svay_andet_inscribed_on_the_list_of_inta.913be2",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2018-11-28 to 2018-11-28",
       "en": "Lkhon Khol Wat Svay Andet inscribed on the List of Intangible Cultural Heritage in Need of Urgent Safeguarding",
       "km": "ល្ខោន​ខោល​វត្ត​ស្វាយ​អណ្តែត ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌ​វប្ប​ធម៌​អរូបីនៃមនុស្សជាតិ",
@@ -32893,7 +32693,7 @@
     },
     {
       "id": "event.lkhon_khol_wat_svay_andet_inscribed_on_the_list_of_inta.9870f6",
-      "section": "events",
+      "section": "archive",
       "context": "12 dates · 2019-11-28 to 2030-11-28",
       "en": "Lkhon Khol Wat Svay Andet inscribed on the List of Intangible Cultural Heritage in Need of Urgent Safeguarding",
       "km": "ល្ខោន​ខោល​វត្ត​ស្វាយ​អណ្តែត ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌ​វប្ប​ធម៌​អរូបីនៃមនុស្សជាតិ ខួបលើកទី{anniversary}",
@@ -33057,7 +32857,7 @@
     },
     {
       "id": "event.kun_lbokator_inscribed_on_the_representative_list_of_th.6aa90e",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2022-11-29 to 2022-11-29",
       "en": "Kun Lbokator inscribed on the Representative List of the Intangible Cultural Heritage of Humanity",
       "km": "គុន​ល្បុក្ក​តោ ត្រូវ​បាន​ចុះក្នុងបញ្ជីបេតិកភណ្ឌវប្បធម៌អរូបីនៃមនុស្សជាតិ",
@@ -33083,7 +32883,7 @@
     },
     {
       "id": "event.koh_ker_inscribed_on_the_unesco_world_heritage_list.f214cf",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2023-09-17 to 2023-09-17",
       "en": "Koh Ker inscribed on the UNESCO World Heritage List",
       "km": "តំបន់​ប្រាសាទ​កោះ​កេរ ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌ​ពិភពលោករបស់អង្គការយូណេស្កូ",
@@ -33109,7 +32909,7 @@
     },
     {
       "id": "event.kun_lbokator_inscribed_on_the_representative_list_of_th.b4dda7",
-      "section": "events",
+      "section": "archive",
       "context": "8 dates · 2023-11-29 to 2030-11-29",
       "en": "Kun Lbokator inscribed on the Representative List of the Intangible Cultural Heritage of Humanity",
       "km": "គុន​ល្បុក្ក​តោ ត្រូវ​បាន​ចុះក្នុងបញ្ជីបេតិកភណ្ឌវប្បធម៌អរូបីនៃមនុស្សជាតិ ខួបលើកទី{anniversary}",
@@ -33225,7 +33025,7 @@
     },
     {
       "id": "event.international_buddhist_day.43eb6e",
-      "section": "events",
+      "section": "archive",
       "context": "7 dates · 2024-04-08 to 2030-04-08",
       "en": "International Buddhist Day",
       "km": "ទិវា​ព្រះ​ពុទ្ធ​សាសនា​អន្តរជាតិ",
@@ -33299,7 +33099,7 @@
     },
     {
       "id": "event.koh_ker_inscribed_on_the_unesco_world_heritage_list.131f4f",
-      "section": "events",
+      "section": "archive",
       "context": "7 dates · 2024-09-17 to 2030-09-17",
       "en": "Koh Ker inscribed on the UNESCO World Heritage List",
       "km": "តំបន់​ប្រាសាទ​កោះ​កេរ ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិក​ភណ្ឌ​ពិភពលោករបស់អង្គការយូណេស្កូ ខួបលើកទី{anniversary}",
@@ -33403,7 +33203,7 @@
     },
     {
       "id": "event.krama_inscribed_on_the_representative_list_of_the_intan.f7d9f7",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2024-12-04 to 2024-12-04",
       "en": "Krama inscribed on the Representative List of the Intangible Cultural Heritage of Humanity",
       "km": "ក្រមា ត្រូវ​បាន​ចុះក្នុងបញ្ជីបេតិកភណ្ឌវប្បធម៌អរូបីនៃមនុស្សជាតិ",
@@ -33429,7 +33229,7 @@
     },
     {
       "id": "event.national_authors_day.d78af9",
-      "section": "events",
+      "section": "archive",
       "context": "7 dates · 2024-12-07 to 2030-12-07",
       "en": "National Authors' Day",
       "km": "ទិវា​ជាតិ​អ្នក​និពន្ធ",
@@ -33503,7 +33303,7 @@
     },
     {
       "id": "event.peace_day_in_cambodia.c7066d",
-      "section": "events",
+      "section": "archive",
       "context": "7 dates · 2024-12-29 to 2030-12-29",
       "en": "Peace Day in Cambodia",
       "km": "ទិវា​សន្តិ​ភាព​នៅ​កម្ពុជា",
@@ -33577,7 +33377,7 @@
     },
     {
       "id": "event.m_13_tuol_sleng_genocide_museum_and_choeung_ek_were_ins.8566e7",
-      "section": "events",
+      "section": "archive",
       "context": "1 dates · 2025-07-11 to 2025-07-11",
       "en": "M-13, Tuol Sleng Genocide Museum, and Choeung Ek were inscribed on the UNESCO World Heritage List",
       "km": "បូជនីយដ្ឋាន​ចងចាំ​នៃ​កម្ពុជា៖ ពីទីតាំង​ឧក្រិដ្ឋកម្ម មកជា​មណ្ឌល​ផ្សះផ្សា និង​សន្តិភាព ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិកភណ្ឌ​ពិភពលោក​របស់​អង្គការ​យូណេស្កូ",
@@ -33603,7 +33403,7 @@
     },
     {
       "id": "event.krama_inscribed_on_the_representative_list_of_the_intan.586013",
-      "section": "events",
+      "section": "archive",
       "context": "6 dates · 2025-12-04 to 2030-12-04",
       "en": "Krama inscribed on the Representative List of the Intangible Cultural Heritage of Humanity",
       "km": "ក្រមា ត្រូវ​បាន​ចុះក្នុងបញ្ជីបេតិកភណ្ឌវប្បធម៌អរូបីនៃមនុស្សជាតិ ខួបលើកទី{anniversary}",
@@ -33695,7 +33495,7 @@
     },
     {
       "id": "event.m_13_tuol_sleng_genocide_museum_and_choeung_ek_were_ins.615dc3",
-      "section": "events",
+      "section": "archive",
       "context": "5 dates · 2026-07-11 to 2030-07-11",
       "en": "M-13, Tuol Sleng Genocide Museum, and Choeung Ek were inscribed on the UNESCO World Heritage List",
       "km": "បូជនីយដ្ឋាន​ចងចាំ​នៃ​កម្ពុជា៖ ពីទីតាំង​ឧក្រិដ្ឋកម្ម មកជា​មណ្ឌល​ផ្សះផ្សា និង​សន្តិភាព ត្រូវ​បាន​ចុះ​ក្នុង​បញ្ជី​បេតិកភណ្ឌ​ពិភពលោក​របស់​អង្គការ​យូណេស្កូ ខួបលើកទី{anniversary}",
@@ -35273,22 +35073,6 @@
       }
     },
     {
-      "id": "calendar.lunar_legend",
-      "section": "calendar",
-      "context": "Date wording / keep named placeholders",
-      "en": "K · Koeut (waxing)    R · Roach (waning)",
-      "km": "ក · កើត    រ · រោច",
-      "original": {
-        "en": "K · Koeut (waxing)    R · Roach (waning)",
-        "km": "ក · កើត    រ · រោច"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [],
-        "km": []
-      }
-    },
-    {
       "id": "event.holy_day",
       "section": "events",
       "context": "Calculated Buddhist holy day",
@@ -35498,7 +35282,7 @@
     },
     {
       "id": "event.calculated_new_year_first",
-      "section": "events",
+      "section": "archive",
       "context": "Calculated New Year without an unverified arrival time",
       "en": "Khmer New Year – Moha Sankranta",
       "km": "ពិធី​បុណ្យ​ចូល​ឆ្នាំ​ថ្មី ប្រពៃណី​ជាតិ – មហា​សង្ក្រាន្ត",
@@ -37404,26 +37188,6 @@
       "required": {
         "en": [],
         "km": []
-      }
-    },
-    {
-      "id": "ui.astrology_ai_query",
-      "section": "interface",
-      "context": "Browser AI query using only displayed signs and pillars",
-      "en": "Explain the traditional astrological meanings of {details}.",
-      "km": "ពន្យល់អត្ថន័យតាមហោរាសាស្ត្រនៃ {details}។",
-      "original": {
-        "en": "Explain the traditional astrological meanings of {details}.",
-        "km": "ពន្យល់អត្ថន័យតាមហោរាសាស្ត្រនៃ {details}។"
-      },
-      "reviewed": true,
-      "required": {
-        "en": [
-          "details"
-        ],
-        "km": [
-          "details"
-        ]
       }
     },
     {

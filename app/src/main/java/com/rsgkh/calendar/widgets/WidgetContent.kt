@@ -30,7 +30,6 @@ import androidx.glance.unit.ColorProvider
 import com.rsgkh.calendar.R
 import com.rsgkh.calendar.data.EventKind
 import com.rsgkh.calendar.data.ThemeMode
-import com.rsgkh.calendar.data.TodayTimeZone
 import com.rsgkh.calendar.domain.LunarDate
 import com.rsgkh.calendar.domain.Zodiac
 import com.rsgkh.calendar.i18n.CalendarWords

@@ -28,6 +28,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.semantics.contentDescription
@@ -65,10 +67,11 @@ internal fun WidgetAddDialog(khmer: Boolean, onDismiss: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { widgetChoices.size })
     val scope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
-    val screenHeight = configuration.screenHeightDp
+    val windowSize = LocalWindowInfo.current.containerSize
+    val screenHeight = with(LocalDensity.current) { windowSize.height.toDp().value }
     val previewHeight = (screenHeight * 0.27f).coerceIn(100f, 260f).dp
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    // Resolve drawable/drawable-night against the app theme, even when the device theme differs.
+    // Resolve preview night variants against the app theme, even when the device theme differs.
     val previewResources = remember(context, configuration, dark) {
         context.createConfigurationContext(Configuration(configuration).apply {
             uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
