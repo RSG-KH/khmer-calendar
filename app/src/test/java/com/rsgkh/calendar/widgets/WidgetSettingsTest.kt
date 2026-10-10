@@ -119,6 +119,8 @@ class WidgetSettingsTest {
         val dark = WidgetPalette(AppSettings(theme = ThemeMode.DARK, accent = Accent.AMBER))
         assertEquals(accentColor(Accent.AMBER, false), light.accent.getColor(context))
         assertEquals(accentColor(Accent.AMBER, true), dark.accent.getColor(context))
+        assertEquals(accentColor(Accent.AMBER, false).copy(alpha = 0.20f), light.todayCell.getColor(context))
+        assertEquals(accentColor(Accent.AMBER, true).copy(alpha = 0.20f), dark.todayCell.getColor(context))
         assertFalse(light.background.getColor(context) == dark.background.getColor(context))
     }
 

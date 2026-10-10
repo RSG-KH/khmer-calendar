@@ -1550,5 +1550,46 @@ class CalendarRenderTest : CalendarUiScenarios() {
         // 2. Subtitle displays "ផ្ទាល់ខ្លួន · ម៉ោងក្នុងតំបន់ (UTC+2)"
         compose.onNode(hasText("ផ្ទាល់ខ្លួន · ម៉ោងក្នុងតំបន់ (UTC+2)", substring = true)).assertIsDisplayed()
     }
+
+    @Test fun dateDetailsPopupDisplaysTimeInTitleAndKeepsTimezoneInSubtitle() {
+        val date = LocalDate.of(2026, 9, 10)
+        val customEvent = CustomEvent(
+            id = "custom-test-popup",
+            title = "PopupTest",
+            date = date,
+            time = LocalTime.of(9, 0),
+            zoneId = "Europe/Paris"
+        )
+        start(AppSettings(khmer = true, todayTimeZone = TodayTimeZone.LOCAL), customEvents = listOf(customEvent), now = Instant.parse("2026-09-10T07:00:00Z"))
+        // Open Date Details popup by clicking 10 September cell
+        compose.onNode(hasContentDescription(CalendarWords.date(date, true), substring = true) and hasAnyAncestor(hasTestTag("month-grid"))).performClick()
+        compose.onNodeWithTag("date-details-title").assertIsDisplayed()
+        compose.onNodeWithTag("date-details-events").assertIsDisplayed()
+
+        // 1. Title displays "PopupTest" and time "09:00" in date details event item
+        compose.onNode(hasText("PopupTest") and hasAnyAncestor(hasTestTag("date-details-events"))).assertIsDisplayed()
+        compose.onNode(hasText("09:00") and hasAnyAncestor(hasTestTag("date-details-events"))).assertIsDisplayed()
+
+        // 2. Subtitle displays "ផ្ទាល់ខ្លួន · ម៉ោងក្នុងតំបន់ (UTC+2)"
+        compose.onNode(hasText("ផ្ទាល់ខ្លួន · ម៉ោងក្នុងតំបន់ (UTC+2)", substring = true) and hasAnyAncestor(hasTestTag("date-details-events"))).assertIsDisplayed()
+    }
+
+    @Test fun eventsTabSwipeLeftAndRightNavigatesYears() {
+        start(AppSettings(khmer = false), now = Instant.parse("2026-09-10T07:00:00Z"))
+        compose.onNodeWithText("Events").performClick()
+        compose.onNodeWithTag("event-year").assertTextEquals("2026")
+
+        // Swipe left -> advance to 2027
+        compose.onNodeWithTag("events-content").performTouchInput { swipeLeft() }
+        compose.onNodeWithTag("event-year").assertTextEquals("2027")
+
+        // Swipe right -> return to 2026
+        compose.onNodeWithTag("events-content").performTouchInput { swipeRight() }
+        compose.onNodeWithTag("event-year").assertTextEquals("2026")
+
+        // Swipe right again -> go back to 2025
+        compose.onNodeWithTag("events-content").performTouchInput { swipeRight() }
+        compose.onNodeWithTag("event-year").assertTextEquals("2025")
+    }
 }
 

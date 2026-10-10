@@ -77,7 +77,8 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
             ) {
                 WText(strings.plannerWeekday(date), palette.weekdayLabelColor(date.dayOfWeek),
                     TILE_WEEKDAY_SP, scale, bold = true)
-                WText(strings.number(date.dayOfMonth), palette.accent,
+                val dayColor = if (WidgetPolicy.isTodayHoliday(snapshot)) palette.holiday else palette.accent
+                WText(strings.number(date.dayOfMonth), dayColor,
                     TILE_DAY_SP, scale, bold = true)
                 WText(WidgetPolicy.timezoneLabel(snapshot.settings.todayTimeZone, strings.khmer,
                     emojiOnly = true), palette.secondary, TILE_TIMEZONE_SP, scale)

@@ -145,6 +145,50 @@ class WidgetPolicyTest {
         assertEquals("🌐 Local", WidgetPolicy.timezoneLabel(TodayTimeZone.LOCAL, khmer = false, emojiOnly = false))
     }
 
+    @Test fun isTodayHolidayDetectsHolidaysAndSundays() {
+        val sunday = LocalDate.of(2026, 9, 27)
+        val monday = LocalDate.of(2026, 9, 28)
+        val baseSettings = com.rsgkh.calendar.data.AppSettings()
+
+        val sundaySnapshot = WidgetSnapshot(
+            settings = baseSettings.copy(highlightSunday = true),
+            today = sunday,
+            details = null,
+            yesterday = WidgetDay(sunday.minusDays(1), emptyList(), 0),
+            current = WidgetDay(sunday, emptyList(), 0),
+            tomorrow = WidgetDay(sunday.plusDays(1), emptyList(), 0),
+            holidayTitle = null,
+        )
+        assertTrue(WidgetPolicy.isTodayHoliday(sundaySnapshot))
+
+        val sundayNoHighlightSnapshot = sundaySnapshot.copy(
+            settings = baseSettings.copy(highlightSunday = false)
+        )
+        assertFalse(WidgetPolicy.isTodayHoliday(sundayNoHighlightSnapshot))
+
+        val holidaySnapshot = WidgetSnapshot(
+            settings = baseSettings.copy(highlightSunday = false),
+            today = monday,
+            details = null,
+            yesterday = WidgetDay(monday.minusDays(1), emptyList(), 0),
+            current = WidgetDay(monday, listOf(WidgetItem("Holiday", null, EventKind.HOLIDAY, "h1")), 1),
+            tomorrow = WidgetDay(monday.plusDays(1), emptyList(), 0),
+            holidayTitle = "Holiday",
+        )
+        assertTrue(WidgetPolicy.isTodayHoliday(holidaySnapshot))
+
+        val regularDaySnapshot = WidgetSnapshot(
+            settings = baseSettings.copy(highlightSunday = true),
+            today = monday,
+            details = null,
+            yesterday = WidgetDay(monday.minusDays(1), emptyList(), 0),
+            current = WidgetDay(monday, emptyList(), 0),
+            tomorrow = WidgetDay(monday.plusDays(1), emptyList(), 0),
+            holidayTitle = null,
+        )
+        assertFalse(WidgetPolicy.isTodayHoliday(regularDaySnapshot))
+    }
+
     private fun event(id: String, time: LocalTime?, kind: EventKind = EventKind.CUSTOM) = CalendarEvent(
         id, LocalDate.of(2026, 9, 18), id, id, kind, DateBasis.USER, time,
     )

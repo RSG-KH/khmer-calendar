@@ -35,6 +35,7 @@ internal class WidgetPalette(settings: AppSettings) {
     val secondary = token(Color(0xFF6D7485), Color(0xFFA2A8B7))
     val accent = token(lightAccent, darkAccent)
     val plannerToday = token(lightAccent.copy(alpha = 0.10f), darkAccent.copy(alpha = 0.10f))
+    val todayCell = token(lightAccent.copy(alpha = 0.20f), darkAccent.copy(alpha = 0.20f))
 
     // Content on top of a filled accent cell (the today highlight). Light accents are deep
     // enough for white; dark accents are pastels, so use dark text there.

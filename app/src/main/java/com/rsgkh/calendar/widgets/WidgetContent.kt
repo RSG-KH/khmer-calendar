@@ -229,7 +229,8 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                             val weekdayClean = if (s.khmer) rawWeekday.removePrefix("ថ្ងៃ") else rawWeekday
                             WText(weekdayClean, p.secondary, if (showDetailsList) 13.5f else 15f, scale, bold = true)
                             Spacer(GlanceModifier.height(2.dp))
-                            WText(s.number(date.dayOfMonth), p.accent, if (showDetailsList) 30f else 36f, scale, bold = true)
+                            val dayColor = if (WidgetPolicy.isTodayHoliday(snapshot)) p.holiday else p.accent
+                            WText(s.number(date.dayOfMonth), dayColor, if (showDetailsList) 30f else 36f, scale, bold = true)
                         }
 
                         if (showDetailsList) {
@@ -312,7 +313,7 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                                         EventKind.HOLY_DAY -> p.holy
                                         EventKind.HOLIDAY -> p.holiday
                                         EventKind.OBSERVANCE -> p.accent
-                                        EventKind.CUSTOM -> p.text
+                                        EventKind.CUSTOM -> p.personal
                                     }
                                     Row(
                                         GlanceModifier.fillMaxWidth()
@@ -363,7 +364,7 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                                         EventKind.HOLY_DAY -> p.holy
                                         EventKind.HOLIDAY -> p.holiday
                                         EventKind.OBSERVANCE -> p.accent
-                                        EventKind.CUSTOM -> p.text
+                                        EventKind.CUSTOM -> p.personal
                                     }
                                     Row(
                                         GlanceModifier.fillMaxWidth()
@@ -503,24 +504,25 @@ internal fun FocusWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                 LazyColumn(GlanceModifier.fillMaxWidth().defaultWeight()) {
                     items(items = day.items, itemId = { item -> item.eventId?.hashCode()?.toLong() ?: item.title.hashCode().toLong() }) { item ->
                         EventCard(item, WidgetNavigation.openDate(context, id, day.date, item.eventId), p, scale)
-                        Spacer(GlanceModifier.height(6.dp))
+                        Spacer(GlanceModifier.height(5.dp))
                     }
                 }
             }
 
             Spacer(GlanceModifier.height(6.dp))
 
-            // Footer Sub-Cards: Yesterday & Tomorrow without labels; up to 2 rows when expanded
+            // Footer Sub-Cards: Yesterday & Tomorrow scrollable sub-cards
             if (!plan.tiny || size.height.value >= 120f * effectiveScale) {
-                Row(GlanceModifier.fillMaxWidth()) {
+                val footerHeight = (if (size.height.value >= 240f * effectiveScale) 100f else if (plan.expanded) 78f else 58f) * scale
+                Row(GlanceModifier.fillMaxWidth().height(footerHeight.dp)) {
                     AdjacentDayCard(
                         snapshot.yesterday, context, id,
-                        p, s, scale, plan.expanded, GlanceModifier.defaultWeight(),
+                        p, s, scale, GlanceModifier.defaultWeight().fillMaxHeight(),
                     )
                     Spacer(GlanceModifier.width(8.dp))
                     AdjacentDayCard(
                         snapshot.tomorrow, context, id,
-                        p, s, scale, plan.expanded, GlanceModifier.defaultWeight(),
+                        p, s, scale, GlanceModifier.defaultWeight().fillMaxHeight(),
                     )
                 }
             }
@@ -533,35 +535,35 @@ internal fun FocusWidgetContent(snapshot: WidgetSnapshot, id: Int) {
 private fun EventCard(item: WidgetItem, action: Action, p: WidgetPalette, scale: Float) {
     val (icon, bg, fg) = when (item.kind) {
         EventKind.HOLY_DAY -> Triple("🪷", p.holyBackground, p.holy)
-        EventKind.HOLIDAY -> Triple("🎉", p.holidayBackground, p.holiday)
+        EventKind.HOLIDAY -> Triple("🎉", p.surfaceVariant, p.holiday)
         EventKind.OBSERVANCE -> Triple("📌", p.surfaceVariant, p.accent)
-        EventKind.CUSTOM -> Triple("⏰", p.surfaceVariant, p.text)
+        EventKind.CUSTOM -> Triple("⏰", p.surfaceVariant, p.personal)
     }
     Row(
         GlanceModifier.fillMaxWidth()
             .background(bg)
             .cornerRadius(10.dp)
             .clickable(action)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .padding(horizontal = 10.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            GlanceModifier.size(22.dp).cornerRadius(11.dp).background(p.surfaceVariant),
+            GlanceModifier.size(20.dp).cornerRadius(10.dp).background(p.surfaceVariant),
             contentAlignment = Alignment.Center,
         ) {
-            WText(icon, fg, 12f, scale)
+            WText(icon, fg, 11.5f, scale)
         }
-        Spacer(GlanceModifier.width(7.dp))
+        Spacer(GlanceModifier.width(6.dp))
         val text = listOfNotNull(item.time, item.title).joinToString("  ")
-        WText(text, fg, 13f, scale, bold = false, modifier = GlanceModifier.defaultWeight(), lines = 1)
+        WText(text, fg, 12.5f, scale, bold = false, modifier = GlanceModifier.defaultWeight(), lines = 1)
     }
 }
 
-/** Bottom sub-card for adjacent day: Clean Date chip, up to 2 rows of items when expanded. */
+/** Bottom sub-card for adjacent day: Clean Date chip, scrollable LazyColumn list of items. */
 @Composable
 private fun AdjacentDayCard(
     day: WidgetDay, context: Context, id: Int, p: WidgetPalette,
-    s: WidgetStrings, scale: Float, expanded: Boolean, modifier: GlanceModifier,
+    s: WidgetStrings, scale: Float, modifier: GlanceModifier,
 ) {
     val dateLabel = s.number(day.date.dayOfMonth) + " " + CalendarWords.month(day.date.monthValue, s.khmer, short = true)
     Column(
@@ -578,14 +580,33 @@ private fun AdjacentDayCard(
         } else if (day.items.isEmpty()) {
             WText(s(R.string.widget_no_events), p.secondary, 11.5f, scale, lines = 1)
         } else {
-            val takeCount = if (expanded) 2 else 1
-            day.items.take(takeCount).forEach { item ->
-                val icon = when (item.kind) {
-                    EventKind.HOLY_DAY -> "🪷 "
-                    EventKind.HOLIDAY -> "🎉 "
-                    else -> "• "
+            LazyColumn(GlanceModifier.fillMaxWidth().defaultWeight()) {
+                items(
+                    items = day.items,
+                    itemId = { item -> item.eventId?.hashCode()?.toLong() ?: (item.title + (item.time ?: "")).hashCode().toLong() },
+                ) { item ->
+                    val icon = when (item.kind) {
+                        EventKind.HOLY_DAY -> "🪷 "
+                        EventKind.HOLIDAY -> "🎉 "
+                        EventKind.CUSTOM -> "⏰ "
+                        EventKind.OBSERVANCE -> "📌 "
+                    }
+                    val fg = when (item.kind) {
+                        EventKind.HOLIDAY -> p.holiday
+                        EventKind.CUSTOM -> p.personal
+                        EventKind.HOLY_DAY -> p.holy
+                        EventKind.OBSERVANCE -> p.accent
+                    }
+                    val text = icon + listOfNotNull(item.time, item.title).joinToString(" ")
+                    Row(
+                        GlanceModifier.fillMaxWidth()
+                            .padding(vertical = 2.dp)
+                            .clickable(WidgetNavigation.openDate(context, id, day.date, item.eventId)),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        WText(text, fg, 11.5f, scale, modifier = GlanceModifier.defaultWeight(), lines = 1)
+                    }
                 }
-                WText(icon + listOfNotNull(item.time, item.title).joinToString(" "), p.text, 11.5f, scale, lines = 1)
             }
         }
     }
@@ -864,7 +885,7 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                                     modifier = GlanceModifier.defaultWeight()
                                         .fillMaxHeight()
                                         .then(
-                                            if (isToday) GlanceModifier.background(p.accent).cornerRadius(10.dp)
+                                            if (isToday) GlanceModifier.background(p.todayCell).cornerRadius(10.dp)
                                             // Launcher hosts can reapply RemoteViews to an existing cell. Explicitly
                                             // clear yesterday's accent instead of omitting the background action.
                                             else GlanceModifier.background(Color.Transparent)
@@ -887,11 +908,7 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                                         (snapshot.settings.highlightSunday && isSunday)
                                     WText(
                                         s.number(dayNum),
-                                        when {
-                                            isToday -> p.onAccent
-                                            holidayTint -> p.holiday
-                                            else -> p.text
-                                        },
+                                        if (holidayTint) p.holiday else p.text,
                                         dayFontSize, scale, bold = isToday, medium = !isToday,
                                         modifier = GlanceModifier.padding(bottom = dayBottomPad),
                                     )
@@ -911,16 +928,16 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                                                     horizontalAlignment = Alignment.CenterHorizontally,
                                                 ) {
                                                     if (info.hasHoliday) {
-                                                        WText("●", if (isToday) p.onAccent else p.holiday, markerHolidaySize, scale)
+                                                        WText("●", p.holiday, markerHolidaySize, scale)
                                                     }
                                                     if (info.isHolyDay) {
-                                                        WText("▲", if (isToday) p.onAccent else p.holy, markerOtherSize, scale)
+                                                        WText("▲", p.holy, markerOtherSize, scale)
                                                     }
                                                     if (info.hasObservance) {
-                                                        WText("■", if (isToday) p.onAccent else p.accent, markerOtherSize, scale)
+                                                        WText("■", p.accent, markerOtherSize, scale)
                                                     }
                                                     if (info.hasPersonal) {
-                                                        WText("★", if (isToday) p.onAccent else p.personal, markerOtherSize, scale)
+                                                        WText("★", p.personal, markerOtherSize, scale)
                                                     }
                                                 }
                                             }

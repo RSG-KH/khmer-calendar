@@ -989,7 +989,32 @@ private fun EventsScreen(settings: AppSettings, today: LocalDate, year: Int, cus
             showYearPicker = false
         }
     }
-    Box(Modifier.widthIn(max = 640.dp).fillMaxSize().testTag("events-content")) {
+    Box(
+        Modifier
+            .widthIn(max = 640.dp)
+            .fillMaxSize()
+            .testTag("events-content")
+            .pointerInput(year) {
+                var drag = 0f
+                detectHorizontalDragGestures(
+                    onDragStart = { drag = 0f },
+                    onHorizontalDrag = { change, amount ->
+                        change.consume()
+                        drag += amount
+                    },
+                    onDragEnd = {
+                        if (abs(drag) > 80.dp.toPx()) {
+                            if (drag < 0) {
+                                if (year < 2200) onYear(year + 1)
+                            } else {
+                                if (year > 1800) onYear(year - 1)
+                            }
+                        }
+                    },
+                    onDragCancel = { drag = 0f }
+                )
+            }
+    ) {
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxWidth().testTag("events-header").padding(10.dp, 2.dp, 10.dp, 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(L.text("ui.events.11d867", k), Modifier.padding(start = 10.dp).weight(1f), fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
@@ -1852,8 +1877,17 @@ internal fun WidgetSettingsCard(
                                                     EventKind.CUSTOM, EventKind.HOLIDAY -> eventColor(event.kind)
                                                     else -> Color.Unspecified
                                                 }
-                                                Text(event.title(k), color = eventTitleColor, fontSize = 14.readableSp, lineHeight = 20.readableSp, fontWeight = FontWeight.Medium)
-                                                Text(eventListKindLabel(event.kind, k) + eventTimeSubtitle(event, todayTimeZone, k), fontSize = 12.readableSp, lineHeight = 16.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    verticalAlignment = Alignment.Top,
+                                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                                ) {
+                                                    if (event.time != null) {
+                                                        Text("${event.time}", color = eventTitleColor, fontWeight = FontWeight.Medium, fontSize = 14.readableSp, lineHeight = 20.readableSp)
+                                                    }
+                                                    Text(event.title(k), modifier = Modifier.weight(1f, fill = false), color = eventTitleColor, fontWeight = FontWeight.Medium, fontSize = 14.readableSp, lineHeight = 20.readableSp)
+                                                }
+                                                Text(eventListKindLabel(event.kind, k) + eventTimeZoneSubtitle(event, todayTimeZone, k), fontSize = 12.readableSp, lineHeight = 16.readableSp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                             Text("›", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
