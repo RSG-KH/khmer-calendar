@@ -195,6 +195,8 @@ class ReleaseTwelveTest {
         assertEquals("គណនាដោយ Khmer Calendar Engine កំណែ 0.6.0 ។", com.rsgkh.calendar.i18n.L.text("astrology.engine_calculations", true, "version" to "0.6.0"))
         assertEquals("Observance (Calculated)", com.rsgkh.calendar.i18n.L.text("rules.calculated_label", false))
         assertEquals("ពិធី និងទិវា (តាមការគណនា)", com.rsgkh.calendar.i18n.L.text("rules.calculated_label", true))
+        assertEquals("បង្ហាញពណ៌ក្រហមដូចថ្ងៃឈប់សម្រាក", com.rsgkh.calendar.i18n.L.text("ui.show_sundays_in_red_like_holidays.245681", true))
+        assertEquals("Show Sundays in red like holidays", com.rsgkh.calendar.i18n.L.text("ui.show_sundays_in_red_like_holidays.245681", false))
     }
 
     @Test fun truncateSettingLabelLimitsLengthToTwelveCharsAndAppendsThreeDots() {
@@ -514,5 +516,10 @@ class ReleaseTwelveTest {
         assertEquals("gold", resolveDialogTitleColor(EventKind.HOLIDAY, primary = "blue", holiday = "gold", custom = "red"))
         assertEquals("blue", resolveDialogTitleColor(EventKind.OBSERVANCE, primary = "blue", holiday = "gold", custom = "red"))
         assertEquals("blue", resolveDialogTitleColor(EventKind.HOLY_DAY, primary = "blue", holiday = "gold", custom = "red"))
+    }
+
+    @Test fun showLongerWeekdayNamesIsOnByDefault() {
+        assertTrue(AppSettings().showLongerWeekdayNames)
+        assertTrue(AppPreferences(context).read().showLongerWeekdayNames)
     }
 }

@@ -201,7 +201,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
 
     @Test fun preferencesSurviveRepositoryRecreation() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        val defaults = AppSettings(ThemeMode.SYSTEM, Accent.BLUE, khmer = true, mondayFirst = false, showLongerWeekdayNames = false, showCopyButtons = false, showLunar = true,
+        val defaults = AppSettings(ThemeMode.SYSTEM, Accent.BLUE, khmer = true, mondayFirst = false, showLongerWeekdayNames = true, showCopyButtons = false, showLunar = true,
             highlightWeekdayNames = true, showObservances = true, showHolyDaysInCalendar = true, showHolyDaysInEvents = false,
             highlightSunday = true, notificationsEnabled = false, pushCustomEvents = true, pushHolidays = true,
             pushObservances = true, pushHolyDays = false, pushMinutes = 300, repeatHours = 0, todayTimeZone = TodayTimeZone.LOCAL,
@@ -306,7 +306,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
     }
 
     @Test fun weekdayColorsFollowTheDayAcrossWeekStartLanguageAndThemeChanges() {
-        start(AppSettings(khmer = false, theme = ThemeMode.LIGHT, highlightSunday = false, highlightWeekdayNames = false))
+        start(AppSettings(khmer = false, theme = ThemeMode.LIGHT, highlightSunday = false, highlightWeekdayNames = false, showLongerWeekdayNames = false))
         fun colors() = (1..7).map { day ->
             val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
             compose.onNodeWithTag("weekday-header-$day").performSemanticsAction(
@@ -360,7 +360,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
     @Test
     @Config(qualifiers = "w360dp-h800dp-xhdpi")
     fun longerWeekdaysFollowSettingsLanguageAndWeekStartOnSmallPhones() {
-        start(AppSettings(khmer = false, fontScale = FontScale.PERCENT_120))
+        start(AppSettings(khmer = false, fontScale = FontScale.PERCENT_120, showLongerWeekdayNames = false))
         fun header(text: String) = compose.onNode(hasText(text) and hasAnyAncestor(hasTestTag("month-grid")))
         header("M").assertIsDisplayed()
         header("Mon").assertDoesNotExist()
