@@ -36,6 +36,45 @@ import org.robolectric.annotation.Config
 class WidgetSettingsTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
 
+    @Test fun dailyWidgetListsKeepPersonalEventsFirstInBothLanguagesAndPrivacyModes() {
+        val preferences = AppPreferences(context)
+        val original = preferences.read()
+        val date = LocalDate.of(2026, 10, 10)
+        val events = (-1L..1L).flatMap { offset ->
+            listOf(9, 7).map { hour ->
+                CustomEvent(id = "widget-order-$offset-$hour", title = "Personal $hour",
+                    date = date.plusDays(offset), time = LocalTime.of(hour, 0))
+            }
+        }
+        try {
+            CustomEventRepository(context).use { repository -> events.forEach(repository::save) }
+            for (khmer in listOf(false, true)) for (private in listOf(false, true)) {
+                preferences.write(original.copy(khmer = khmer, todayTimeZone = TodayTimeZone.CAMBODIA,
+                    widgetShowPersonal = true, widgetHidePersonalDetails = private,
+                    widgetShowHolidays = true, widgetShowObservances = true,
+                    showObservances = true, showHolyDaysInEvents = true))
+                val snapshot = WidgetDataSource.load(context, now = Instant.parse("2026-10-10T05:00:00Z"))
+                assertTrue(snapshot.current.items.any { it.kind == EventKind.HOLIDAY })
+                for (day in listOf(snapshot.yesterday, snapshot.current, snapshot.tomorrow)) {
+                    val personal = day.items.takeWhile { it.kind == EventKind.CUSTOM }
+                    assertTrue(day.items.drop(personal.size).none { it.kind == EventKind.CUSTOM })
+                    if (private) {
+                        assertEquals(1, personal.size)
+                        assertEquals(2, personal.single().representedEvents)
+                        assertNull(personal.single().time)
+                        assertNull(personal.single().eventId)
+                    } else {
+                        val expected = events.filter { it.date == day.date }.sortedBy { it.time }
+                        assertEquals(expected.map { "custom:${it.id}" }, personal.map { it.eventId })
+                    }
+                }
+            }
+        } finally {
+            CustomEventRepository(context).use { repository -> events.forEach { repository.delete(it.id) } }
+            preferences.write(original)
+        }
+    }
+
     @Test fun monthSnapshotIncludesPersonalMarkersAndAdjacentDaysAcrossYearBoundaries() {
         val preferences = AppPreferences(context)
         val original = preferences.read()

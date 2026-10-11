@@ -29,11 +29,15 @@ class WidgetPrivacyTest {
         assertNull(rows.single().eventId)
     }
 
-    @Test fun publicHolidayRemainsVisibleInPrivateMode() {
+    @Test fun personalSummaryPrecedesPublicHolidayInPrivateMode() {
         val events = listOf(event("a", "Private"), event("holiday", "Holiday").copy(kind = EventKind.HOLIDAY))
         val rows = WidgetDataSource.displayItems(events, true, WidgetStrings(context, false))
-        assertEquals("Holiday", rows.first().title)
-        assertEquals("holiday", rows.first().eventId)
+        assertEquals(2, rows.size)
+        assertEquals("1 personal event", rows.first().title)
+        assertNull(rows.first().time)
+        assertNull(rows.first().eventId)
+        assertEquals("Holiday", rows.last().title)
+        assertEquals("holiday", rows.last().eventId)
     }
 
     @Test fun khmerLanguageIsIndependentOfSystemLanguage() {

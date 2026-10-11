@@ -1173,7 +1173,7 @@ private fun EventDayGroup(events: List<CalendarEvent>, settings: AppSettings, to
                     ) {
                         Text(number(dayDate.dayOfMonth, k), color = dateColor, fontSize = 21.readableSp, lineHeight = 21.readableSp, fontWeight = FontWeight.SemiBold)
                         Text(CalendarWords.weekday(dayDate.dayOfWeek.value, k, "short"), modifier = Modifier.offset(y = (-3.5).dp),
-                            fontSize = 10.readableSp, lineHeight = 12.readableSp, color = weekdayLabelColor(dayDate.dayOfWeek, settings))
+                            fontSize = 10.readableSp, lineHeight = 12.readableSp, color = colors.onSurfaceVariant)
                     }
 
                     // Right column: Events for this day (covers from timeline line to end)

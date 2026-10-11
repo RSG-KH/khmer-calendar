@@ -336,10 +336,12 @@ class CalendarRenderTest : CalendarUiScenarios() {
                     compose.onNodeWithTag(scrollTag).performScrollToNode(column)
                     val label = compose.onNode(hasText(CalendarWords.weekday(date.dayOfWeek.value, k, "short"))
                         and hasAnyAncestor(column), useUnmergedTree = true)
-                    assertEquals("List weekday must follow the calendar color for $date",
-                        headerColors[date.dayOfWeek.value - 1], textColor(label))
+                    val neutralText = compose.onAllNodes(hasText("›")
+                        and hasAnyAncestor(hasTestTag("event-day-$date")), useUnmergedTree = true).onFirst()
+                    assertEquals("List weekday must stay neutral regardless of calendar highlighting for $date",
+                        textColor(neutralText), textColor(label))
                 }
-                if (headerColors.distinct().size == 7) screenshot("event-weekday-colors-$scrollTag-$k")
+                if (headerColors.distinct().size == 7) screenshot("event-weekday-neutral-$scrollTag-$k")
             }
             checkList("calendar-scroll")
             compose.onNodeWithText(L.text("ui.events.11d867", k)).performClick()

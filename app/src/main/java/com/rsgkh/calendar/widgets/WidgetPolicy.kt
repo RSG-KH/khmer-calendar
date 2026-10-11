@@ -4,6 +4,7 @@ package com.rsgkh.calendar.widgets
 import com.rsgkh.calendar.data.CalendarEvent
 import com.rsgkh.calendar.data.EventKind
 import com.rsgkh.calendar.data.TodayTimeZone
+import com.rsgkh.calendar.data.calendarEventOrder
 import java.time.Instant
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -108,14 +109,9 @@ object WidgetPolicy {
         return if (breaks.next() == BreakIterator.DONE) title else title.substring(0, end) + "..."
     }
 
-    fun sorted(events: List<CalendarEvent>, khmer: Boolean): List<CalendarEvent> =
-        events.distinctBy { it.key }.sortedWith(
-            compareBy<CalendarEvent> { if (it.time == null) 0 else 1 }
-                .thenBy { it.time }
-                .thenBy { it.kind.ordinal }
-                .thenBy { it.title(khmer).lowercase(Locale.ROOT) }
-                .thenBy { it.id },
-        )
+    /** Daily widgets match the app: personal events first, ordered by time with stable ties. */
+    fun sorted(events: List<CalendarEvent>): List<CalendarEvent> =
+        events.distinctBy { it.key }.sortedWith(calendarEventOrder)
 
     /**
      * Budget based on launcher-provided dp, not guessed grid cells. At accessibility sizes

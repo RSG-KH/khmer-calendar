@@ -84,17 +84,23 @@ class WidgetPolicyTest {
         assertEquals(15, WidgetPolicy.plannerScrollTarget(14, rows, 103f))
     }
 
-    @Test fun allDayEventsPrecedeChronologicalTimedEvents() {
-        val early = event("early", LocalTime.of(9, 0))
+    @Test fun personalEventsPrecedeEveryOtherKindWithChronologicalAndStableTies() {
+        val earlyZ = event("z", LocalTime.of(9, 0))
+        val earlyA = event("a", LocalTime.of(9, 0))
         val late = event("late", LocalTime.of(15, 0))
-        val allDay = event("holiday", null, EventKind.HOLIDAY)
-        assertEquals(listOf("holiday", "early", "late"), WidgetPolicy.sorted(listOf(late, early, allDay), false).map { it.id })
+        val untimed = event("untimed", null)
+        val holiday = event("holiday", null, EventKind.HOLIDAY)
+        val observance = event("observance", LocalTime.of(8, 0), EventKind.OBSERVANCE)
+        val holy = event("holy", null, EventKind.HOLY_DAY)
+        val input = listOf(holy, late, observance, untimed, holiday, earlyZ, earlyA)
+        assertEquals(listOf("z", "a", "late", "untimed", "holiday", "observance", "holy"),
+            WidgetPolicy.sorted(input).map { it.id })
     }
 
     @Test fun duplicateKeysAreRemovedButOtherOccurrencesRemain() {
         val first = event("series", LocalTime.NOON)
         val next = first.copy(date = first.date.plusDays(1))
-        assertEquals(2, WidgetPolicy.sorted(listOf(first, first, next), false).size)
+        assertEquals(2, WidgetPolicy.sorted(listOf(first, first, next)).size)
     }
 
     @Test fun plannerSortsTimedEventsBeforeUntimedEvents() {

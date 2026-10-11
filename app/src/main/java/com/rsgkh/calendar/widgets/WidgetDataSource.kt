@@ -111,7 +111,7 @@ internal object WidgetDataSource {
                         }
                     }
             val events = if (includePlanner) WidgetPolicy.plannerSorted(visibleEvents, settings.khmer)
-                else WidgetPolicy.sorted(visibleEvents, settings.khmer)
+                else WidgetPolicy.sorted(visibleEvents)
             if (date == today) {
                 isPublicHoliday = builtIn.any { it.kind == EventKind.HOLIDAY }
                 todayHoliday = events.firstOrNull { it.kind == EventKind.HOLIDAY }?.title(settings.khmer)
@@ -176,9 +176,9 @@ internal object WidgetDataSource {
             WidgetItem(it.title(strings.khmer), it.time?.let(timeFormatter), it.kind, it.id)
         }
         val privateCount = if (private) events.count { it.kind == EventKind.CUSTOM } else 0
-        return if (privateCount == 0) visible else visible + WidgetItem(
+        return if (privateCount == 0) visible else listOf(WidgetItem(
             strings(if (privateCount == 1) R.string.widget_personal_count_one else R.string.widget_personal_count, strings.number(privateCount)),
             time = null, kind = EventKind.CUSTOM, eventId = null, representedEvents = privateCount,
-        )
+        )) + visible
     }
 }
