@@ -4,13 +4,27 @@
 
 - JDK 25, auto-provisioned by Gradle toolchain resolution if absent.
 - Android SDK Platform 37; the app targets API 37 and supports API 31+.
-- Gradle 9.6.0 through the wrapper, Android Gradle Plugin 9.4.1 and Kotlin 2.4.21.
+- Gradle 9.8.1 through the wrapper, Android Gradle Plugin 9.4.1 and Kotlin 2.4.21.
 
 AGP provides built-in Kotlin support. The root `build.gradle.kts` selects the Kotlin Gradle plugin version from `gradle/libs.versions.toml`, which also sets the Compose compiler version. Update that shared version to keep both compilers aligned. See Android's [built-in Kotlin configuration](https://developer.android.com/build/releases/agp-9-0-0-release-notes#runtime-dependency-on-kotlin-gradle-plugin).
 
 Gradle downloads and verifies the pinned engine release. A sibling engine checkout is not required. See [shared engine integration](shared-engine.md) for checksums, offline builds and dependency upgrades.
 
 Runtime and test library versions, including Robolectric, are pinned in `gradle/libs.versions.toml`. Core 1.19 includes the Kotlin extensions in the main `androidx.core:core` artifact, so a separate `core-ktx` dependency is unnecessary.
+
+### Dependency review — 11 October 2026
+
+Checked all pinned dependencies against [Google Maven](https://dl.google.com/dl/android/maven2/index.html),
+[Maven Central](https://repo.maven.apache.org/maven2/), the
+[Foojay plugin releases](https://plugins.gradle.org/plugin/org.gradle.toolchains.foojay-resolver-convention)
+and the [engine releases](https://github.com/RSG-KH/khmer-calendar-engine/releases/latest).
+The versions in the catalog and Foojay 1.0.0 remain the latest stable releases.
+Compose libraries continue to follow the stable BOM; preview releases are not selected.
+
+The wrapper was updated from 9.6.0 to [Gradle 9.8.1](https://docs.gradle.org/9.8.1/release-notes.html),
+including its generated scripts, JAR and official distribution SHA-256. Gradle's
+[compatibility matrix](https://docs.gradle.org/9.8.1/userguide/compatibility.html)
+covers AGP 9.4 and JDK 25. The app's SDK levels and version are unchanged.
 
 ## Builds
 
@@ -59,7 +73,14 @@ events were preserved.
 | System window behavior | Light/dark edge-to-edge configuration on API 31, 34 and 35 |
 | Translation tools | Catalog validation, export, backups and conflicting saves |
 
-The app retains its pinned MomentKH fixture and generator to catch consumer regressions. Agreement with that fixture is a compatibility check; it is not independent historical validation. Calendar algorithms and their evidence are maintained and tested in the engine project, linked from the [integration guide](shared-engine.md).
+The app retains its pinned MomentKH fixture and `tools/generate-calendar-reference.cjs`
+to catch consumer regressions. The generator checks the upstream source checksum
+before recreating `app/src/test/resources/momentkh-reference.txt`; it does not
+capture website event data. Run it with `node tools/generate-calendar-reference.cjs`
+or supply a previously downloaded source file as its argument. Agreement with
+that fixture is a compatibility check; it is not independent historical validation.
+Calendar algorithms and their evidence are maintained and tested in the engine
+project, linked from the [integration guide](shared-engine.md).
 
 Shared UI scenarios in `app/src/sharedTest` run under Robolectric and on a device. Device screenshots capture the full display so open dialogs are included. Inspect changed screens when updating layout or source-dialog content.
 
@@ -91,8 +112,9 @@ references clear after garbage collection. It restores the original settings.
 This detects retained activities in that scenario; it is not proof that every
 dialog, widget host or long-running device session is leak-free. For release
 qualification, also inspect heap dumps after extended navigation, location
-searches and widget resizing on representative devices. Test counts and device
-results in dated verification documents describe those specific runs.
+searches and widget resizing on representative devices. See the
+[stability guide](stability-and-performance.md) for the scope of prior device
+verification and remaining measurement limits.
 
 For a longer retention check on a disposable emulator with the debug and test
 APKs already installed, use an explicit serial and direct instrumentation:
@@ -145,14 +167,16 @@ python tools/translation/server.py --export
 
 The catalog generates `translations.tsv` and launcher strings. Rebuild and reinstall to see changes. Do not hand-edit generated resources. License and notice texts remain verbatim assets outside the translation catalog.
 
-Archived event wording stays in the editable source catalog for reference and
-JSON export, but is excluded from the app's language file. Current catalog-event
+The source catalog contains active app wording. Retired event templates and their
+captured occurrences were removed; Git history retains them. Current catalog-event
 titles come from `khmer-calendar-data.json`; the Buddhist holy-day label remains
-an active translation. The translation tests verify that all literal Kotlin
-translation keys are present in the generated output, not merely in the source.
+an active translation. Older translation backups with archive entries can still
+be opened, but those entries remain excluded from Android exports. The translation
+tests verify that literal Kotlin translation keys are present in the generated
+output, not merely in the source.
 
 ## Event resources
 
 The app owns its event catalog separately from the engine. Normal builds use the committed `khmer-calendar-data.json` and do not run any generator.
 
-To change event definitions, official holiday years or date overrides, edit the catalog directly following the [bundled data guide](reference-event-database.md#maintenance), then run `.\gradlew.bat testDebugUnitTest`. The catalog embeds event titles and sources; the [translation catalog](#translations) continues to supply all other app strings. The capture-assist tools (`tools/reference-event-import.cjs`, `tools/generate-calendar-reference.cjs`) remain for reviewing new website captures.
+To change event definitions, official holiday years or date overrides, edit the catalog directly following the [bundled data guide](reference-event-database.md#maintenance), then run `.\gradlew.bat testDebugUnitTest`. The catalog embeds event titles and sources; the [translation catalog](#translations) continues to supply all other app strings. Website capture and curation belong to the [Khmer Calendar Manager](https://github.com/RSG-KH/khmer-calendar-manager); Android keeps the committed recurrence fixture for consumer regression tests.

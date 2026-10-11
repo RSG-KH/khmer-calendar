@@ -136,7 +136,8 @@ class Store:
                 entry['occurrenceCount'] = len(occurrences)
                 entry['examples'] = [occurrences[i] for i in sorted({0, len(occurrences)//2, len(occurrences)-1})] if occurrences else []
                 entries.append(entry)
-            return dict(revision=revision, token=self.token, entries=entries, sections=SECTIONS,
+            sections = [section for section in SECTIONS if any(e['section'] == section['id'] for e in entries)]
+            return dict(revision=revision, token=self.token, entries=entries, sections=sections,
                         project=str(self.project), savedAt=catalog.get('savedAt'), format=1)
 
     def save(self, revision, changes):

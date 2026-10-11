@@ -191,7 +191,7 @@ KhmerCalendar/
 ### Prerequisites
 - **JDK 25** (auto-provisioned by Gradle toolchain resolution if absent)
 - **Android SDK Platform 37** (minSdk 31)
-- **Gradle 9.6.0** (bundled via `gradlew`)
+- **Gradle 9.8.1** (bundled via `gradlew`)
 
 Gradle downloads the pinned shared engine release and verifies its checksum during the build. See [Shared Calendar Engine](docs/shared-engine.md) for updates and offline builds. The installed app needs no network access.
 
@@ -227,9 +227,8 @@ Android architecture, integration and developer guides are maintained in the [`d
 - 📖 **[System Architecture](docs/architecture.md)**: Engine adapters, event repository pipeline and exact alarm subsystem.
 - 🎨 **[UI & Responsive Design](docs/ui-and-responsive-design.md)**: Phone vs. tablet layouts, landscape navigation rail distribution, dynamic scrollbar modifier, and font scaling architecture.
 - 🛠️ **[Development & Testing Guide](docs/development-and-testing.md)**: Environment configuration, test suite details, translation tool setup, and dataset generation pipelines.
-- **[Stability & Performance Review](docs/stability-and-performance.md)**: Verified fixes, activity-retention checks, test results and remaining limits.
+- **[Stability & Performance](docs/stability-and-performance.md)**: Runtime safeguards, verification coverage and remaining measurement limits.
 - 📜 **[Recurring Event Rules](docs/recurring-event-rules.md)**: App recurrence definitions, engine mapping and reviewed date overrides.
-- ✅ **[Custom Repeat Verification](docs/custom-repeat-verification.md)**: Behavior checklist and test record for repeating personal events.
 - 🗃️ **[Bundled Event Data](docs/reference-event-database.md)**: Event catalog schema, official holiday calendars, provenance and maintenance.
 
 ---

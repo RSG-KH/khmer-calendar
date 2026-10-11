@@ -5,13 +5,18 @@ Python 3.10+ is the only requirement. Everything runs locally, with no account o
 
 ## Review and save
 
-1. Choose In-app text, Calculated events, Calendar & dates, Notifications, or About & sources. Archived event wording preserves older templates for reference.
+1. Choose In-app text, Calculated events, Calendar & dates, Notifications, or About & sources.
 2. Search in English or Khmer. Edit either column and optionally mark the pair Reviewed.
 3. Click **Save changes** or press **Ctrl+S**. Saving writes into the Android project and creates a backup of the previous catalog in this tool's `backups` folder.
 
 Use the review filter to find unreviewed, edited, or unsaved entries. Unsaved edits survive tab changes and browser reloads on the same browser. **Undo edits** restores the last saved pair; **Restore original wording** restores the original imported pair. Export JSON downloads the complete saved catalog for keeping a copy.
 
-Keep placeholders such as `{anniversary}`, `{time}`, and `{zone}`. Their position can change, but deleting or renaming a required placeholder blocks saving. Archived event templates retain example dates and can still be edited or exported as JSON; their edits do not change the app's event names and are excluded from the generated Android language file. Current event names come from `khmer-calendar-data.json`; Calculated events contains the active Buddhist holy-day label.
+Keep placeholders such as `{version}`, `{time}`, and `{zone}`. Their position can change, but deleting or renaming a required placeholder blocks saving. Current event names come from `khmer-calendar-data.json`; Calculated events contains the active Buddhist holy-day label.
+
+Retired event templates and captured date examples are no longer stored in the
+current catalog; Git history retains them. If you restore an older backup that
+contains them, the editor shows an Archived event wording tab. Those entries can
+still be edited and exported as JSON, but never enter the Android language file.
 
 ## How the app uses this
 

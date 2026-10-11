@@ -8,13 +8,16 @@ These guides describe the Android app and its integration with the dedicated [Kh
 | [System architecture](architecture.md) | Event repositories, local storage, UI and reminders |
 | [UI and responsive design](ui-and-responsive-design.md) | Phone and tablet layouts, themes, accessibility and system insets |
 | [Development and testing](development-and-testing.md) | Build setup, app tests and resource generation |
-| [Stability and performance review](stability-and-performance.md) | September 2026 fixes, device retention checks, test results and limits |
+| [Stability and performance](stability-and-performance.md) | Runtime safeguards, verification coverage and measurement limits |
 | [Recurring event rules](recurring-event-rules.md) | App-owned definitions, engine mapping and reviewed overrides |
 | [Bundled event data](reference-event-database.md) | Event catalog schema, official holiday calendars, provenance and maintenance |
-| [Custom repeat verification](custom-repeat-verification.md) | Behavior checklist and test record for repeating personal events |
-| [PWA 0.12.1 sync](pwa-0.12.1-sync.md) | Original sync record, subsequent Android changes and dated validation |
 | [Translation editor](../tools/translation/README.md) | Bilingual catalog and generated resources |
 
 Calculation contracts and supporting research live with the engine: see the [v0.6.0 API](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.6.0/docs/api.md) and [reference evidence](https://github.com/RSG-KH/khmer-calendar-engine/blob/v0.6.0/docs/references.md). Android retains consumer regression tests and bundled attribution; it does not maintain a second calculation implementation or algorithm guide.
+
+These guides describe the current app. Superseded PWA sync notes and one-time
+verification reports remain available in Git history. Personal-event repeat
+behavior is maintained in [architecture](architecture.md#events-and-storage),
+with regression coverage in [development and testing](development-and-testing.md#testing).
 
 [Project README](../README.md)

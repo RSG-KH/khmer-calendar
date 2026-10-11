@@ -47,8 +47,16 @@ class TranslationStoreTest(unittest.TestCase):
         self.assertNotEqual(old['revision'], new['revision'])
 
     def test_archived_event_edit_preserves_source_without_exporting_unused_templates(self):
-        entry = next(e for e in self.catalog['entries'] if 'anniversary' in e['required']['km'])
-        self.assertEqual('archive', entry['section'])
+        # Old user backups can still contain archived templates after repository cleanup.
+        entry = dict(id='event.legacy', section='archive', context='Legacy backup',
+                     en='Anniversary {anniversary}', km='ខួប {anniversary}',
+                     original=dict(en='Anniversary {anniversary}', km='ខួប {anniversary}'),
+                     reviewed=True, required=dict(en=['anniversary'], km=['anniversary']),
+                     occurrences=[dict(id='legacy-2026', date='2026-01-01',
+                                       values=dict(en=dict(anniversary='1st'), km=dict(anniversary='១')))])
+        self.assertNotIn('archive', [s['id'] for s in self.store.public()['sections']])
+        self.catalog['entries'].append(entry)
+        self.store.path.write_text(json.dumps(self.catalog, ensure_ascii=False), encoding='utf-8')
         result = self.store.save(self.store.public()['revision'], [self.edit(entry, km='ខួប {anniversary} — កែសម្រួល', en='Edited anniversary {anniversary}')])
         templates = decoded_rows((self.project / 'app/src/main/resources/translations.tsv').read_bytes())
         self.assertNotIn(entry['id'], templates)
@@ -59,12 +67,13 @@ class TranslationStoreTest(unittest.TestCase):
         self.assertEqual(entry['occurrences'], updated['occurrences'])
         self.assertEqual(entry['original'], updated['original'])
         self.assertEqual(len(entry['occurrences']), next(e for e in result['entries'] if e['id'] == entry['id'])['occurrenceCount'])
+        self.assertIn('archive', [s['id'] for s in result['sections']])
 
     def test_invalid_placeholder_or_blank_text_leaves_files_and_backups_untouched(self):
-        entry = next(e for e in self.catalog['entries'] if 'anniversary' in e['required']['km'])
+        entry = next(e for e in self.catalog['entries'] if e['id'] == 'events.engine_calculations')
         self.store.export()
         before = {p: p.read_bytes() for p in self.project.rglob('*') if p.is_file()}
-        for km in ['Missing required token', '{anniversary} {misspelled}', '   ']:
+        for km in ['Missing required token', '{version} {misspelled}', '   ']:
             with self.assertRaises(ValueError):
                 self.store.save(self.store.public()['revision'], [self.edit(entry, km=km)])
             self.assertEqual(before, {p: p.read_bytes() for p in self.project.rglob('*') if p.is_file()})

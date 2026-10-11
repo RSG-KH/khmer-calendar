@@ -47,7 +47,8 @@ class CalendarReferenceTest {
         // 2012 festival dates: https://www.dfdl.com/insights/legal-and-tax-updates/legal-a-regulatory-updates-in-cambodia-2/
         assertEquals(listOf(13, 14, 15), KhmerNewYear.forYear(2012).dates.map { it.dayOfMonth })
         // National Radio 2024: https://rnk.gov.kh/index.php/interior-minister-calls-on-authorities-at-all-levels-to-be-well-prepared-to-ensure-safety-security-and-social-order-during-the-coming-traditional-khmer-new-year-celebration
-        // MEF 2025 and Legal Reform Committee 2026 annual calendars (tools/reference-government-holidays.json).
+        // MEF 2025: https://mef.gov.kh/calendar-holiday-2025/
+        // Legal Reform Committee 2026: https://lrc.gov.kh/en/annual-holiday-calendar-2026/
         assertEquals(listOf(13, 14, 15, 16), KhmerNewYear.forYear(2024).dates.map { it.dayOfMonth })
         assertEquals(listOf(14, 15, 16), KhmerNewYear.forYear(2025).dates.map { it.dayOfMonth })
         assertEquals(listOf(14, 15, 16), KhmerNewYear.forYear(2026).dates.map { it.dayOfMonth })

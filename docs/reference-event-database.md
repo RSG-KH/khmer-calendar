@@ -75,4 +75,9 @@ Edit `khmer-calendar-data.json` directly, keeping event IDs stable and recording
 
 `RecurringEventsTest` compares every rule against the committed captured-occurrence fixture [`recurrence-reference.tsv`](../app/src/test/resources/recurrence-reference.tsv) for 2000–2030, allowing exactly the documented King Sihamoni birthday differences (which the repository layer resolves through overrides). `EventRepositoryTest` re-checks catalog coverage, engine parity for calculated events and holy days across sampled years, the recorded Chinese festival and milestone dates, and every official calendar's day counts, URLs and citations. Run `.\gradlew.bat testDebugUnitTest` after any catalog change.
 
-The capture-assist tools (`tools/reference-event-import.cjs`, `tools/generate-calendar-reference.cjs`) still support reviewing new website captures. The scripts of the retired TSV pipeline — including the snapshot audit and the one-time catalog bootstrap — were removed with the resources they consumed; git history preserves them.
+Website capture and curation tools are maintained in the [Khmer Calendar Manager](https://github.com/RSG-KH/khmer-calendar-manager).
+Android's retired local capture receiver and duplicate 2025/2026 government-date
+file have been removed; their history remains in Git. Government citations remain
+in the catalog and beside the festival-date assertions in `CalendarReferenceTest`.
+The independent `tools/generate-calendar-reference.cjs` tool is retained solely
+to regenerate the pinned MomentKH calculation fixture, not event captures.
