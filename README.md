@@ -87,11 +87,13 @@ unsupported; see [storage compatibility](docs/architecture.md#events-and-storage
 ### 🎨 Personalization & Accessibility
 
 - **Astrology defaults**: A master switch hides and skips both optional astrology features while retaining their individual choices. Save separate default time and Rising location preferences; date-popup overrides apply only to that popup.
-- **Longer Weekday Names**: Optional calendar headings show Sun–Sat in English and full weekday names in Khmer. On by default under Settings → Calendar.
+- **Longer Weekday Names**: Optional calendar headings show Sun–Sat in English and full weekday names in Khmer. Semi-bold headings share a measured size and use available space between neighbors while staying centered over their date columns. On by default under Settings → Calendar.
 - **Weekday Colors**: Traditional weekday heading colors, with shades adapted for light and dark themes. On by default under Settings → Calendar; existing saved choices are preserved.
+- **Calendar Emphasis**: Ordinary day numbers use medium weight, holidays use semi-bold, and today uses extra-bold with a bold lunar label. Observance markers are squares with sharp corners.
 - **Western Zodiac Signs**: The selected-date card, date details and event details show the Western zodiac sign, element and ruling body. On by default under Settings → Astrology & Zodiac.
 - **Chinese Ganzhi (干支) Table**: Date details show Year, Month and Day signs and clash animals, plus the Hour pillar when a time is set, with an emoji/name toggle. Date details opens at the current time for Today and uses the saved default time for other dates. Its date header opens the time and location picker when Western zodiac is enabled, or the time wheel when only Ganzhi is enabled. Tapping the table opens the Ganzhi detail popup. On by default under Settings → Astrology & Zodiac.
 - **Curated Theme Accents**: Choose from **Blue** (Default), **Lavender**, **Rose**, **Amber**, and **Lime** (*បៃតងចាស់*).
+- **Shared Event Colors**: The app and widgets use richer accent and event colors, with teal for personal events. Lotus artwork and the softer animal/zodiac backgrounds retain their original appearance. See the [calendar palette](docs/ui-and-responsive-design.md#calendar-palette).
 - **Theme Modes**: Initially follows the system theme; choosing Light or Dark saves that preference. Background accent is on by default, tinting pages and navigation with the chosen accent; turning it off restores neutral backgrounds.
 - **Dynamic Font Scaling**: Choose 80%–150% on all devices. Home screen widgets have their own separate 80%–200% font size setting.
 - **Bilingual Experience**: Instant switching between Khmer and English with full localization.
@@ -146,6 +148,7 @@ KhmerCalendar/
 │   │   │       ├── BirthplaceLabels.kt  # Catalog location names in the current language
 │   │   │       ├── CalendarApp.kt       # Main screens, responsive nav & widget settings
 │   │   │       ├── CalendarLayout.kt    # Stable month widths, column caps & grid sizing
+│   │   │       ├── CalendarWeekdayHeader.kt # Font-aware weekday fitting & column alignment
 │   │   │       ├── CopyTextButton.kt    # Copy icon with copied confirmation feedback
 │   │   │       ├── CustomEventEditor.kt # Personal event editor with native pickers
 │   │   │       ├── EventRepeatEditor.kt # Repeat choices, end date, switches & preview

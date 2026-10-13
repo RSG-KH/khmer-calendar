@@ -21,6 +21,8 @@ Swiping, using the month arrows, or choosing a month and year selects day 1 of t
 
 The October 2026 color refresh uses more saturated theme accents, weekday labels, holiday red and holy-day amber. Personal events use teal (`#007E80` light / `#55D5CF` dark) for markers, category subtitles, event-detail titles/times and the faint personal-star decoration. Event-list titles and inline times remain normal foreground text. Widgets share these semantic colors while retaining their own layouts and typography.
 
+Observance markers in the calendar, legend and event details use squares with sharp corners, preserving their existing size and accent color. The Month widget also uses square observance markers. Holiday circles, holy-day triangles and personal-event stars retain their shapes.
+
 `artworkAccentColor` and `LocalArtworkAccent` retain the previous light/dark accent shades for every animal and zodiac watermark, including widgets. Lotus artwork, all artwork opacity/placement, native light/dark surfaces, and error colors are unchanged. Calendar dimensions, compact-row spacing, date summaries, astrology tables and interaction feedback retain their native Android behavior.
 
 ### Copy feedback

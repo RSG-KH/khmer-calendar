@@ -84,6 +84,8 @@ project, linked from the [integration guide](shared-engine.md).
 
 Shared UI scenarios in `app/src/sharedTest` run under Robolectric and on a device. Device screenshots capture the full display so open dialogs are included. Inspect changed screens when updating layout or source-dialog content.
 
+`WeekdayHeaderTest` checks 144 combinations of row width (240/320/600 dp), font family (default/serif/monospace), language, week start, short/long names and 80%/150% app font size. It verifies shared text size, column centering, unclipped labels, 4 dp neighbor gaps and 2 dp edge insets after live setting changes. `CalendarUiTest.khmerMonthNavigationKeepsFirstFrameLayoutWithLargeFonts` checks the native layout and non-overlapping Khmer headings at 150% and saves a dark-theme screenshot. Existing calendar render scenarios cover weekday colors, personal-event detail colors and lunar-label refitting.
+
 `CustomEventReminderStorageTest`, `CustomEventRepeatStorageTest` and
 `NotificationIntegrationTest` cover the database upgrade paths.
 `ReminderLeadTimeTest` checks zero versus positive lead times, both alert phases,
