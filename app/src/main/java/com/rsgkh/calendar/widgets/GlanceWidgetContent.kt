@@ -62,7 +62,7 @@ internal fun GlanceWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                     modifier = GlanceModifier.size(animalSide.dp),
                     contentScale = ContentScale.Fit,
                     alpha = resolveAnimalAlpha(context, snapshot),
-                    colorFilter = androidx.glance.ColorFilter.tint(palette.accent))
+                    colorFilter = androidx.glance.ColorFilter.tint(palette.artworkAccent))
             }
         }
         Row(

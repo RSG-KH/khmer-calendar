@@ -6,16 +6,22 @@ Khmer Calendar uses a custom responsive layout system built on Jetpack Compose a
 
 Settings → Calendar offers two independent options: longer names and weekday colors both default to on. Existing saved choices are preserved.
 
-- **Show longer weekday names** uses three-letter English headings and full Khmer names without repeating the word “day.” All seven headings share a font size that fits the longest name in the available column width.
+- **Show longer weekday names** uses three-letter English headings and full Khmer names without repeating the word “day.” All seven headings share a measured font size, up to the native `11.readableSp` preference at the current app/system font scale. Labels remain centered over their date columns; a long label can borrow empty space from shorter neighbors while keeping at least 4 dp between labels and 2 dp at the row edges. The actual font is remeasured on width, font, language and week-start changes, including at the reduced size, without clipping or a fixed shrink cap. Both short and long headings use semi-bold weight.
 - **Highlight weekday names** colors the calendar headings using the [Cambodian Development Foundation's traditional weekday color mapping](https://cambodiandevelopmentfoundation.org/7-colors-of-the-week/): Monday yellow, Tuesday violet/purple, Wednesday light green, Thursday green, Friday baby blue, Saturday dark purple and Sunday bright red.
 
 `WeekdayColors.kt` defines readable shades for light and dark calendar surfaces. These are app color choices within the cited families; the source does not specify hex values. Colors follow the weekday when the start of the week changes and apply to both short and longer headings. Weekday labels in the date column of the calendar event lists and Events tab always use neutral secondary text, independent of the calendar highlighting settings. Large day numbers retain their existing holiday coloring. The Sunday-column setting independently controls date-number highlighting (“Show Sundays in red like holidays” / “បង្ហាញពណ៌ក្រហមដូចថ្ងៃឈប់សម្រាក”). When weekday colors are off, that setting also controls the Sunday heading as before.
 
 ### Today and the selected date
 
-Today always keeps its solid accent background and contrasting text and markers, even when another date is selected. A selected non-Today date has an accent-colored border with its usual background, text and event-marker colors. This distinction applies in every month and year and in both themes; selecting a date still updates the detail view and accessibility selection state.
+Today keeps its 15% accent background even when another date is selected. Month-grid numbers use medium weight for ordinary dates, semi-bold for holidays (including highlighted Sundays), and extra-bold for today. Today's lunar label is bold; the row's compact-lunar decision includes that heavier label when measuring available width. A selected non-Today date has an accent-colored border with its usual background, text and event-marker colors. This distinction applies in every month and year and in both themes; selecting a date still updates the detail view and accessibility selection state.
 
 Swiping, using the month arrows, or choosing a month and year selects day 1 of the destination month. Tapping Today selects the actual current date, returns to its month and animates the calendar list back to the top. In landscape it also resets the calendar pane; this works even when already viewing the current month.
+
+### Calendar palette
+
+The October 2026 color refresh uses more saturated theme accents, weekday labels, holiday red and holy-day amber. Personal events use teal (`#007E80` light / `#55D5CF` dark) for markers, category subtitles, event-detail titles/times and the faint personal-star decoration. Event-list titles and inline times remain normal foreground text. Widgets share these semantic colors while retaining their own layouts and typography.
+
+`artworkAccentColor` and `LocalArtworkAccent` retain the previous light/dark accent shades for every animal and zodiac watermark, including widgets. Lotus artwork, all artwork opacity/placement, native light/dark surfaces, and error colors are unchanged. Calendar dimensions, compact-row spacing, date summaries, astrology tables and interaction feedback retain their native Android behavior.
 
 ### Copy feedback
 

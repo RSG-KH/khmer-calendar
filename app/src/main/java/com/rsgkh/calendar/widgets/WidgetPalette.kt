@@ -8,6 +8,10 @@ import com.rsgkh.calendar.data.AppSettings
 import com.rsgkh.calendar.data.EventKind
 import com.rsgkh.calendar.data.ThemeMode
 import com.rsgkh.calendar.ui.accentColor
+import com.rsgkh.calendar.ui.artworkAccentColor
+import com.rsgkh.calendar.ui.holidayColor
+import com.rsgkh.calendar.ui.holyDayColor
+import com.rsgkh.calendar.ui.personalEventColor
 import com.rsgkh.calendar.ui.weekdayNameColor
 import java.time.DayOfWeek
 
@@ -34,6 +38,7 @@ internal class WidgetPalette(settings: AppSettings) {
     val text = token(Color(0xFF222632), Color(0xFFE9EAF0))
     val secondary = token(Color(0xFF6D7485), Color(0xFFA2A8B7))
     val accent = token(lightAccent, darkAccent)
+    val artworkAccent = token(artworkAccentColor(settings.accent, false), artworkAccentColor(settings.accent, true))
     val plannerToday = token(lightAccent.copy(alpha = 0.10f), darkAccent.copy(alpha = 0.10f))
     val todayCell = token(lightAccent.copy(alpha = 0.20f), darkAccent.copy(alpha = 0.20f))
 
@@ -42,23 +47,22 @@ internal class WidgetPalette(settings: AppSettings) {
     val onAccent = token(Color.White, Color(0xFF1A1D24))
 
     // Holiday colors with matte background
-    val holiday = token(Color(0xFFB34B5D), Color(0xFFEEA0A7))
+    val holiday = token(holidayColor(false), holidayColor(true))
     val holidayBackground = token(
         Color(0xFFFDE8EF).copy(alpha = 0.75f),
         Color(0xFF382329).copy(alpha = 0.60f),
     )
 
     // Holy Day colors with matte background
-    val holy = token(Color(0xFF99601D), Color(0xFFECAF80))
+    val holy = token(holyDayColor(false), holyDayColor(true))
     val holyBackground = token(
         Color(0xFFFFF3E4).copy(alpha = 0.75f),
         Color(0xFF382C24).copy(alpha = 0.60f),
     )
 
-    // Matches the app's custom-event red (CustomEventRed / CustomEventRedDark in CalendarApp.kt).
-    val personal = token(Color(0xFFE53935), Color(0xFFFF5252))
+    val personal = token(personalEventColor(false), personalEventColor(true))
     val personalBackground = token(
-        Color(0xFFE53935).copy(alpha = 0.16f), Color(0xFFFF5252).copy(alpha = 0.20f),
+        personalEventColor(false).copy(alpha = 0.16f), personalEventColor(true).copy(alpha = 0.20f),
     )
     val observanceBackground = token(
         lightAccent.copy(alpha = 0.16f), darkAccent.copy(alpha = 0.20f),

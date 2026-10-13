@@ -244,12 +244,26 @@ private val CalendarTypography = Typography().let { base ->
 }
 
 fun accentColor(accent: Accent, dark: Boolean = false): Color = when (accent) {
+    Accent.BLUE -> if (dark) Color(0xFF9AB7FF) else Color(0xFF315EC7)
+    Accent.LAVENDER -> if (dark) Color(0xFFCAA4FF) else Color(0xFF7D3DB5)
+    Accent.ROSE -> if (dark) Color(0xFFFF9DBB) else Color(0xFFB82F61)
+    Accent.AMBER -> if (dark) Color(0xFFF7BD65) else Color(0xFF955B08)
+    Accent.LIME -> if (dark) Color(0xFFC8DF54) else Color(0xFF5C7800)
+}
+
+// Decorative animals and zodiac signs retain their original, softer palette.
+internal fun artworkAccentColor(accent: Accent, dark: Boolean = false): Color = when (accent) {
     Accent.BLUE -> if (dark) Color(0xFFA8BFFF) else Color(0xFF4564B5)
     Accent.LAVENDER -> if (dark) Color(0xFFCDB6FF) else Color(0xFF7755A8)
     Accent.ROSE -> if (dark) Color(0xFFFFB0C2) else Color(0xFFA84465)
     Accent.AMBER -> if (dark) Color(0xFFF1C17C) else Color(0xFF8A5E18)
     Accent.LIME -> if (dark) Color(0xFFCDDF70) else Color(0xFF647500)
 }
+
+internal val LocalArtworkAccent = compositionLocalOf { artworkAccentColor(Accent.BLUE) }
+internal fun personalEventColor(dark: Boolean): Color = if (dark) Color(0xFF55D5CF) else Color(0xFF007E80)
+internal fun holidayColor(dark: Boolean): Color = if (dark) Color(0xFFFF8E9E) else Color(0xFFC52F4A)
+internal fun holyDayColor(dark: Boolean): Color = if (dark) Color(0xFFF2B16D) else Color(0xFFA05B08)
 
 // Muted hues with a subtle boost in brightness and saturation; lime keeps its green shift.
 private fun darkAccentBackground(accent: Accent): Color = when (accent) {
@@ -283,8 +297,8 @@ fun CalendarTheme(settings: AppSettings, content: @Composable () -> Unit) {
         surfaceContainer = Color(0xFF1A1D24), surfaceContainerHigh = Color(0xFF252932), surfaceContainerHighest = Color(0xFF303540),
         surfaceVariant = Color(0xFF252932), onSurfaceVariant = Color(0xFFA2A8B7),
         outline = Color(0xFF666D7D), outlineVariant = Color(0xFF303540),
-        secondary = Color(0xFFECAF80), secondaryContainer = Color(0xFF382C24),
-        tertiary = Color(0xFFEEA0A7), error = Color(0xFFEEA0A7),
+        secondary = holyDayColor(true), secondaryContainer = Color(0xFF382C24),
+        tertiary = holidayColor(true), error = Color(0xFFEEA0A7),
     ) else lightColorScheme(
         primary = accent, onPrimary = Color.White, primaryContainer = accent.copy(alpha = .09f),
         onPrimaryContainer = accent, background = background, onBackground = Color(0xFF222632),
@@ -294,8 +308,8 @@ fun CalendarTheme(settings: AppSettings, content: @Composable () -> Unit) {
         surfaceContainerLowest = Color.White, surfaceContainerLow = Color(0xFFF8F9FB),
         surfaceContainer = Color(0xFFF3F4F8), surfaceContainerHigh = Color(0xFFEEF0F4), surfaceContainerHighest = Color(0xFFE8EBF0),
         onSurfaceVariant = Color(0xFF6D7485), outline = Color(0xFF818899), outlineVariant = Color(0xFFE6E8F0),
-        secondary = Color(0xFF99601D), secondaryContainer = Color(0xFFFFF3E4),
-        tertiary = Color(0xFFB34B5D), error = Color(0xFFB34B5D),
+        secondary = holyDayColor(false), secondaryContainer = Color(0xFFFFF3E4),
+        tertiary = holidayColor(false), error = Color(0xFFB34B5D),
     )
     val view = LocalView.current
     if (!view.isInEditMode) SideEffect {
@@ -308,6 +322,7 @@ fun CalendarTheme(settings: AppSettings, content: @Composable () -> Unit) {
     val currentDensity = LocalDensity.current
     val fontMultiplier = settings.fontScale.multiplier
     CompositionLocalProvider(
+        LocalArtworkAccent provides artworkAccentColor(settings.accent, dark),
         LocalFontScaleMultiplier provides fontMultiplier,
         LocalDensity provides Density(
             density = currentDensity.density,

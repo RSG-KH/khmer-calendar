@@ -176,7 +176,7 @@ internal fun astrologySearchQuery(
                             modifier = Modifier.align(Alignment.BottomEnd).fillMaxWidth(.60f).fillMaxHeight()
                                 .testTag("astrology-watermark"),
                             alignment = Alignment.BottomEnd, contentScale = ContentScale.Fit,
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                            colorFilter = ColorFilter.tint(LocalArtworkAccent.current),
                             alpha = zodiacAlpha())
                     }
                 }

@@ -1660,7 +1660,7 @@ class CalendarRenderTest : CalendarUiScenarios() {
             assertEquals(expected, textColor(hasText(date.dayOfMonth.toString()) and hasAnyAncestor(hasTestTag("event-date-column-$date"))))
         }
         compose.onNodeWithText("Regular meeting").performClick()
-        assertEquals(androidx.compose.ui.graphics.Color(0xFFE53935), textColor(hasText("Regular meeting")))
+        assertEquals(androidx.compose.ui.graphics.Color(0xFF007E80), textColor(hasText("Regular meeting")))
         compose.onAllNodesWithText("Close").onLast().performClick()
         val holidayTitle = EventRepository.forDate(holidayDate).first { it.kind == EventKind.HOLIDAY }.title(false)
         compose.onNodeWithTag("events-scroll").performScrollToNode(hasText(holidayTitle))

@@ -138,7 +138,7 @@ internal fun ProductivityWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                     contentDescription = null,
                     alpha = animalAlpha,
                     modifier = GlanceModifier.size(175.dp),
-                    colorFilter = ColorFilter.tint(p.accent),
+                    colorFilter = ColorFilter.tint(p.artworkAccent),
                 )
             }
         }
@@ -432,7 +432,7 @@ internal fun FocusWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                     contentDescription = null,
                     alpha = animalAlpha,
                     modifier = GlanceModifier.size(175.dp),
-                    colorFilter = ColorFilter.tint(p.accent),
+                    colorFilter = ColorFilter.tint(p.artworkAccent),
                 )
             }
         }
@@ -713,7 +713,7 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                     alpha = animalAlpha,
                     modifier = GlanceModifier.size(120.dp),
                     contentScale = ContentScale.Fit,
-                    colorFilter = ColorFilter.tint(p.accent),
+                    colorFilter = ColorFilter.tint(p.artworkAccent),
                 )
             }
             Box(
@@ -726,7 +726,7 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                     alpha = animalAlpha,
                     modifier = GlanceModifier.size(160.dp),
                     contentScale = ContentScale.Fit,
-                    colorFilter = ColorFilter.tint(p.accent),
+                    colorFilter = ColorFilter.tint(p.artworkAccent),
                 )
             }
         } else {
@@ -741,7 +741,7 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                     alpha = animalAlpha,
                     modifier = GlanceModifier.fillMaxSize(),
                     contentScale = ContentScale.Fit,
-                    colorFilter = ColorFilter.tint(p.accent),
+                    colorFilter = ColorFilter.tint(p.artworkAccent),
                 )
             }
         }

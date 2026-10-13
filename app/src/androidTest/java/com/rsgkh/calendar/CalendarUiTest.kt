@@ -29,10 +29,16 @@ class CalendarUiTest : CalendarUiScenarios() {
     @Test fun monthNavigationKeepsFirstFrameLayout() =
         checkMonthNavigationLayoutFrames(com.rsgkh.calendar.data.AppSettings(khmer = false))
 
-    @Test fun khmerMonthNavigationKeepsFirstFrameLayoutWithLargeFonts() =
+    @Test fun khmerMonthNavigationKeepsFirstFrameLayoutWithLargeFonts() {
         checkMonthNavigationLayoutFrames(com.rsgkh.calendar.data.AppSettings(khmer = true,
             fontScale = com.rsgkh.calendar.data.FontScale.PERCENT_150, mondayFirst = true,
             showLongerWeekdayNames = true, theme = com.rsgkh.calendar.data.ThemeMode.DARK))
+        val labels = (1..7).map { compose.onNodeWithTag("weekday-header-$it").getUnclippedBoundsInRoot() }
+        labels.zipWithNext().forEach { (left, right) ->
+            org.junit.Assert.assertTrue("Large Khmer weekday headings must not overlap", left.right < right.left)
+        }
+        screenshot("calendar-khmer-dark-large-text")
+    }
 
     @Test fun ganzhiTableUsesEmojiAndEnglishAnimalNamesOnDevice() {
         start(com.rsgkh.calendar.data.AppSettings(khmer = false, useEmojiForGanzhiAnimals = true))

@@ -42,7 +42,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.RectangleShape
@@ -176,14 +175,11 @@ internal fun eventListKindLabel(kind: EventKind, k: Boolean) = when (kind) {
     EventKind.HOLY_DAY -> L.text("ui.buddhist_holy_day.829195", k)
     EventKind.CUSTOM -> L.text("ui.custom.917053", k)
 }
-private val CustomEventRed = Color(0xFFE53935)
-private val CustomEventRedDark = Color(0xFFFF5252)
-
 @Composable private fun eventColor(kind: EventKind): Color = when (kind) {
     EventKind.HOLIDAY -> MaterialTheme.colorScheme.tertiary
     EventKind.OBSERVANCE -> MaterialTheme.colorScheme.primary
     EventKind.HOLY_DAY -> MaterialTheme.colorScheme.secondary
-    EventKind.CUSTOM -> if (MaterialTheme.colorScheme.surface.luminance() > .5f) CustomEventRed else CustomEventRedDark
+    EventKind.CUSTOM -> personalEventColor(MaterialTheme.colorScheme.surface.luminance() < .5f)
 }
 
 @DrawableRes
@@ -234,7 +230,7 @@ private fun BoxScope.DetailsZodiacBackground(info: KhmerDateDetails, showWestern
         contentDescription = null,
         modifier = Modifier.align(Alignment.BottomEnd).fillMaxWidth(0.60f).aspectRatio(1f),
         contentScale = ContentScale.Fit,
-        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+        colorFilter = ColorFilter.tint(LocalArtworkAccent.current),
         alpha = zodiacAlpha(),
     )
     if (showWesternZodiac) {
@@ -244,7 +240,7 @@ private fun BoxScope.DetailsZodiacBackground(info: KhmerDateDetails, showWestern
             modifier = Modifier.align(Alignment.BottomStart).padding(start = 20.dp, bottom = 20.dp)
                 .fillMaxWidth(0.20f).aspectRatio(1f),
             contentScale = ContentScale.Fit,
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+            colorFilter = ColorFilter.tint(LocalArtworkAccent.current),
             alpha = zodiacAlpha(),
         )
     }
@@ -585,7 +581,7 @@ private fun CalendarMonthCard(
                             .fillMaxWidth(3f / 7f)
                             .aspectRatio(1f),
                         contentScale = ContentScale.Fit,
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                        colorFilter = ColorFilter.tint(LocalArtworkAccent.current),
                         alpha = alpha,
                     )
                     Image(
@@ -597,7 +593,7 @@ private fun CalendarMonthCard(
                             .fillMaxWidth(4f / 7f)
                             .aspectRatio(1f),
                         contentScale = ContentScale.Fit,
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                        colorFilter = ColorFilter.tint(LocalArtworkAccent.current),
                         alpha = alpha,
                     )
                 }
@@ -608,7 +604,7 @@ private fun CalendarMonthCard(
                     contentDescription = null,
                     modifier = Modifier.matchParentSize().padding(16.dp),
                     contentScale = ContentScale.Fit,
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                    colorFilter = ColorFilter.tint(LocalArtworkAccent.current),
                     alpha = zodiacAlpha(),
                 )
             }
@@ -775,43 +771,6 @@ private fun CalendarScreen(
 }
 
 @Composable
-private fun weekdayLabelColor(day: DayOfWeek, settings: AppSettings): Color {
-    val colors = MaterialTheme.colorScheme
-    return when {
-        settings.highlightWeekdayNames -> weekdayNameColor(day, colors.surface.luminance() < 0.5f)
-        settings.highlightSunday && day == DayOfWeek.SUNDAY -> colors.tertiary
-        else -> colors.onSurfaceVariant
-    }
-}
-
-@Composable
-private fun CalendarWeekdayHeader(settings: AppSettings, includeTestTags: Boolean = true) {
-    val k = settings.khmer
-    val config = LocalConfiguration.current
-    val isPhoneLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE && config.smallestScreenWidthDp < 600
-    val weekdays = (0..6).map { CalendarWords.weekday(it, k, if (settings.showLongerWeekdayNames) "grid_long" else "grid") }
-    val ordered = if (settings.mondayFirst) weekdays.drop(1) + weekdays.first() else weekdays
-    BoxWithConstraints(Modifier.fillMaxWidth().padding(bottom = if (isPhoneLandscape) 3.dp else 8.dp)) {
-        val preferredSize = 11.readableSp
-        val headerSize = if (settings.showLongerWeekdayNames) {
-            // Keep all seven names at one size, fitting the longest without truncating Khmer.
-            val measurer = rememberTextMeasurer()
-            val style = LocalTextStyle.current.copy(fontSize = preferredSize, fontWeight = FontWeight.Medium)
-            val widest = ordered.maxOf { measurer.measure(it, style, softWrap = false, maxLines = 1).size.width }.coerceAtLeast(1)
-            val available = with(LocalDensity.current) { (maxWidth / 7 - 2.dp).toPx() }.coerceAtLeast(1f)
-            preferredSize * (available / widest).coerceAtMost(1f)
-        } else preferredSize
-        Row(Modifier.fillMaxWidth()) {
-            ordered.forEachIndexed { index, it ->
-                val weekday = DayOfWeek.of(if (settings.mondayFirst) index + 1 else if (index == 0) 7 else index)
-                Text(it, Modifier.weight(1f).then(if (includeTestTags) Modifier.testTag("weekday-header-${weekday.value}") else Modifier), textAlign = TextAlign.Center, fontSize = headerSize,
-                    fontWeight = FontWeight.Medium, color = weekdayLabelColor(weekday, settings), maxLines = 1, softWrap = false)
-            }
-        }
-    }
-}
-
-@Composable
 private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, events: List<CalendarEvent>, settings: AppSettings, onSelect: (LocalDate) -> Unit, onPrevious: () -> Unit, onNext: () -> Unit) {
     val k = settings.khmer
     val config = LocalConfiguration.current
@@ -837,10 +796,12 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
         val lunarLineHeight = (if (isPhoneLandscape) 10 else 12).readableSp
         val lunarTextStyle = LocalTextStyle.current.copy(fontSize = lunarFontSize, lineHeight = lunarLineHeight)
         val safetyPaddingPx = with(density) { 1.dp.toPx() }
-        val useCompactLunar = remember(lunarDates, k, settings.showLunar, cellAvailableWidthPx, lunarTextStyle, density, lunarMeasurer) {
-            settings.showLunar && k && lunarDates.any { lunar ->
+        val useCompactLunar = remember(lunarDates, month, today, k, settings.showLunar, cellAvailableWidthPx, lunarTextStyle, density, lunarMeasurer) {
+            settings.showLunar && k && lunarDates.withIndex().any { (index, lunar) ->
                 lunarMeasurer.measure(
-                    lunar.shortLabel(true), lunarTextStyle, softWrap = false, maxLines = 1
+                    lunar.shortLabel(true),
+                    lunarTextStyle.copy(fontWeight = if (month.atDay(index + 1) == today) FontWeight.Bold else lunarTextStyle.fontWeight),
+                    softWrap = false, maxLines = 1
                 ).size.width > cellAvailableWidthPx - safetyPaddingPx
             }
         }
@@ -883,13 +844,19 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
                                 Column(Modifier.fillMaxWidth().offset(y = if (isPhoneLandscape) (-0.5).dp else (-1.0).dp).padding(vertical = if (isPhoneLandscape) 0.5.dp else 1.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(0.dp)) {
                                     Text(number(day, k), color = if (isHoliday) colors.tertiary else colors.onSurface,
-                                        fontSize = (if (isPhoneLandscape) 13 else 16).readableSp, lineHeight = (if (isPhoneLandscape) 15 else 17).sp, maxLines = 1, fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium)
+                                        fontSize = (if (isPhoneLandscape) 13 else 16).readableSp, lineHeight = (if (isPhoneLandscape) 15 else 17).sp, maxLines = 1,
+                                        fontWeight = when {
+                                            isToday -> FontWeight.ExtraBold
+                                            isHoliday -> FontWeight.SemiBold
+                                            else -> FontWeight.Medium
+                                        })
                                     if (settings.showLunar) {
                                         Text(
                                             if (useCompactLunar) lunar.compactLabel(k) else lunar.shortLabel(k),
                                             modifier = Modifier.offset(y = if (isPhoneLandscape) (-1.5).dp else (-1).dp),
                                             color = colors.onSurfaceVariant,
                                             fontSize = lunarFontSize,
+                                            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
                                             lineHeight = lunarLineHeight,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
@@ -1282,7 +1249,7 @@ private fun EventRow(event: CalendarEvent, k: Boolean, modifier: Modifier = Modi
                         .matchParentSize()
                         .padding(top = 2.dp, bottom = 2.dp, end = 29.dp),
                     // Keep the lotus's petal colors and detail visible; only personal stars use the event tint.
-                    colorFilter = if (event.kind == EventKind.CUSTOM) ColorFilter.tint(color, BlendMode.Modulate) else null,
+                    colorFilter = if (event.kind == EventKind.CUSTOM) ColorFilter.tint(color) else null,
                     alpha = when {
                         event.kind == EventKind.CUSTOM -> if (MaterialTheme.colorScheme.surface.luminance() < .5f) 0.10f else 0.08f
                         MaterialTheme.colorScheme.surface.luminance() < .5f -> 0.15f
