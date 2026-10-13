@@ -2649,11 +2649,10 @@ internal fun EventDialogTitle(
             }
             EventKind.OBSERVANCE -> {
                 val side = dim * 0.80f
-                drawRoundRect(
+                drawRect(
                     color = color,
                     topLeft = Offset((size.width - side) / 2f, (size.height - side) / 2f),
-                    size = Size(side, side),
-                    cornerRadius = CornerRadius(side * 0.22f)
+                    size = Size(side, side)
                 )
             }
             EventKind.CUSTOM -> {
