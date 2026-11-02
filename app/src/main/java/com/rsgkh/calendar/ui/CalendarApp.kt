@@ -790,10 +790,27 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
         })
     }) {
         val density = LocalDensity.current
-        val cellAvailableWidthPx = with(density) { (maxWidth / 7 - CalendarCellPadding * 2).toPx() }
+        val cellAvailableWidth = maxWidth / 7 - CalendarCellPadding * 2
+        val cellAvailableWidthPx = with(density) { cellAvailableWidth.toPx() }
+        val baseMarkSize = when {
+            isTablet && isLandscape -> 8.25.dp
+            isTablet -> 10.0.dp
+            isLandscape -> 7.0.dp
+            else -> 8.0.dp
+        }
+        val markSpacing = when {
+            isTablet -> 2.5.dp
+            cellAvailableWidth < 42.dp -> 1.5.dp
+            else -> 2.0.dp
+        }
+        val markScale = 1f + (density.fontScale.coerceAtLeast(1f) - 1f) * 0.4f
+        val cornerSafeInset = if (isPhoneLandscape) 3.25.dp else 4.0.dp
+        val maxGridMarkSize = ((cellAvailableWidth - cornerSafeInset * 2 - markSpacing * 2) / 3).coerceAtLeast(0.dp)
+        val markSize = minOf(baseMarkSize * markScale, maxGridMarkSize)
+        val markRowHeight = markSize + 0.5.dp
         val lunarMeasurer = rememberTextMeasurer()
-        val lunarFontSize = (if (isPhoneLandscape) 8 else 10).readableSp
-        val lunarLineHeight = (if (isPhoneLandscape) 10 else 12).readableSp
+        val lunarFontSize = (if (isPhoneLandscape) 7 else 9).readableSp
+        val lunarLineHeight = (if (isPhoneLandscape) 9 else 10).readableSp
         val lunarTextStyle = LocalTextStyle.current.copy(fontSize = lunarFontSize, lineHeight = lunarLineHeight)
         val safetyPaddingPx = with(density) { 1.dp.toPx() }
         val useCompactLunar = remember(lunarDates, month, today, k, settings.showLunar, cellAvailableWidthPx, lunarTextStyle, density, lunarMeasurer) {
@@ -826,6 +843,7 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
                                     .background(if (isToday) colors.primary.copy(alpha = 0.15f) else Color.Transparent)
                                     .then(if (active) Modifier.border(1.dp, colors.primary, RoundedCornerShape(if (isPhoneLandscape) 8.dp else 11.dp)) else Modifier)
                                     .clickable { onSelect(date) }
+                                    .testTag("calendar-cell-$date")
                                     .semantics(mergeDescendants = true) {
                                         contentDescription = if (k) {
                                             "${dateLabel(date, true)} ${lunar.fullLabel(true)}. ${entries.joinToString(" ") { it.title(true) }}"
@@ -841,7 +859,7 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
                                     Image(painterResource(holyDayLotusDrawable(lunar)), contentDescription = null,
                                         modifier = Modifier.matchParentSize().padding(1.dp).scale(if (isPhoneLandscape) 0.90f else 1.0f), contentScale = ContentScale.Fit, alpha = 0.30f)
                                 }
-                                Column(Modifier.fillMaxWidth().offset(y = if (isPhoneLandscape) (-0.5).dp else (-1.0).dp).padding(vertical = if (isPhoneLandscape) 0.5.dp else 1.dp),
+                                Column(Modifier.fillMaxWidth().offset(y = if (isPhoneLandscape) (-0.5).dp else (-1.0).dp).padding(vertical = if (isLandscape) 0.dp else 0.5.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(0.dp)) {
                                     Text(number(day, k), color = if (isHoliday) colors.tertiary else colors.onSurface,
                                         fontSize = (if (isPhoneLandscape) 13 else 16).readableSp, lineHeight = (if (isPhoneLandscape) 15 else 17).sp, maxLines = 1,
@@ -862,21 +880,17 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, today: LocalDate, e
                                             overflow = TextOverflow.Ellipsis
                                         )
                                     }
-                                    val markSize = when {
-                                        isTablet && isLandscape -> 7.0.dp
-                                        isTablet -> 8.5.dp
-                                        isLandscape -> 5.5.dp
-                                        else -> 6.5.dp
+                                    val markKinds = entries.map { it.kind }.distinct().take(4)
+                                    val cellMarkSpacing = if (markKinds.size == 4 && cellAvailableWidth < 46.dp) 1.0.dp else markSpacing
+                                    val cellMarkSize = if (markKinds.size <= 3) {
+                                        markSize
+                                    } else {
+                                        minOf(markSize, ((cellAvailableWidth - cornerSafeInset * 2 - cellMarkSpacing * 3) / 4).coerceAtLeast(0.dp))
                                     }
-                                    val markRowHeight = when {
-                                        isTablet && isLandscape -> 8.0.dp
-                                        isTablet -> 9.5.dp
-                                        isLandscape -> 6.dp
-                                        else -> 7.dp
-                                    }
-                                    val markSpacing = if (isTablet) 2.5.dp else 2.dp
-                                    Row(Modifier.height(markRowHeight), horizontalArrangement = Arrangement.spacedBy(markSpacing), verticalAlignment = Alignment.CenterVertically) {
-                                        entries.map { it.kind }.distinct().take(4).forEach { EventMark(it, eventColor(it), sizeDp = markSize) }
+                                    Row(Modifier.height(markRowHeight), horizontalArrangement = Arrangement.spacedBy(cellMarkSpacing), verticalAlignment = Alignment.CenterVertically) {
+                                        markKinds.forEach {
+                                            EventMark(it, eventColor(it), sizeDp = cellMarkSize, modifier = Modifier.testTag("calendar-mark-$date-${it.name.lowercase()}"))
+                                        }
                                     }
                                 }
                             }
@@ -2627,8 +2641,8 @@ internal fun EventDialogTitle(
             modifier = Modifier.offset(y = (-1.5).dp))
     }
 }
-@Composable private fun EventMark(kind: EventKind, color: Color, small: Boolean = false, sizeDp: Dp = if (small) 7.5.dp else 9.dp) {
-    Canvas(Modifier.size(sizeDp)) {
+@Composable private fun EventMark(kind: EventKind, color: Color, small: Boolean = false, sizeDp: Dp = if (small) 7.5.dp else 9.dp, modifier: Modifier = Modifier) {
+    Canvas(modifier.size(sizeDp)) {
         val dim = size.minDimension
         when (kind) {
             EventKind.HOLIDAY -> {

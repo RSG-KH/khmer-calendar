@@ -4,7 +4,7 @@
 
 - JDK 25, auto-provisioned by Gradle toolchain resolution if absent.
 - Android SDK Platform 37; the app targets API 37 and supports API 31+.
-- Gradle 9.8.1 through the wrapper, Android Gradle Plugin 9.4.1 and Kotlin 2.4.21.
+- Gradle 9.8.2 through the wrapper, Android Gradle Plugin 9.5.0 and Kotlin 2.4.21.
 
 AGP provides built-in Kotlin support. The root `build.gradle.kts` selects the Kotlin Gradle plugin version from `gradle/libs.versions.toml`, which also sets the Compose compiler version. Update that shared version to keep both compilers aligned. See Android's [built-in Kotlin configuration](https://developer.android.com/build/releases/agp-9-0-0-release-notes#runtime-dependency-on-kotlin-gradle-plugin).
 
@@ -12,19 +12,20 @@ Gradle downloads and verifies the pinned engine release. A sibling engine checko
 
 Runtime and test library versions, including Robolectric, are pinned in `gradle/libs.versions.toml`. Core 1.19 includes the Kotlin extensions in the main `androidx.core:core` artifact, so a separate `core-ktx` dependency is unnecessary.
 
-### Dependency review — 11 October 2026
+### Dependency review — 31 October 2026
 
 Checked all pinned dependencies against [Google Maven](https://dl.google.com/dl/android/maven2/index.html),
 [Maven Central](https://repo.maven.apache.org/maven2/), the
 [Foojay plugin releases](https://plugins.gradle.org/plugin/org.gradle.toolchains.foojay-resolver-convention)
 and the [engine releases](https://github.com/RSG-KH/khmer-calendar-engine/releases/latest).
-The versions in the catalog and Foojay 1.0.0 remain the latest stable releases.
-Compose libraries continue to follow the stable BOM; preview releases are not selected.
+Updated Android Gradle Plugin from 9.4.1 to 9.5.0; all other library versions in
+the catalog and Foojay 1.0.0 remain the latest stable releases. Compose libraries
+continue to follow the stable BOM; preview releases are not selected.
 
-The wrapper was updated from 9.6.0 to [Gradle 9.8.1](https://docs.gradle.org/9.8.1/release-notes.html),
-including its generated scripts, JAR and official distribution SHA-256. Gradle's
-[compatibility matrix](https://docs.gradle.org/9.8.1/userguide/compatibility.html)
-covers AGP 9.4 and JDK 25. The app's SDK levels and version are unchanged.
+The wrapper was updated from 9.8.1 to [Gradle 9.8.2](https://docs.gradle.org/9.8.2/release-notes.html),
+including its generated scripts, JAR and official distribution SHA-256. The app's
+SDK levels (`minSdk = 31`, `compileSdk` / `targetSdk = 37`) and engine version
+(`0.6.0`) are unchanged.
 
 ## Builds
 

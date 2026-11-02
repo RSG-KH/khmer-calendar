@@ -350,30 +350,30 @@ class ReleaseTwelveTest {
         assertTrue(filterObservances.any { it.kind == EventKind.OBSERVANCE })
     }
 
-    @Test fun lunarCompactLabelUsesSingleLetterInitialWithSpaceWhenKhmer() {
+    @Test fun lunarCompactLabelUsesSingleLetterInitialWithoutSpaceWhenKhmer() {
         // Oct 24, 2026 is 13 Koeut (Waxing)
         val oct24Lunar = KhmerCalendar.fromGregorian(LocalDate.of(2026, 10, 24))
         assertEquals("១៣កើត", oct24Lunar.shortLabel(true))
-        assertEquals("១៣ ក", oct24Lunar.compactLabel(true))
+        assertEquals("១៣ក", oct24Lunar.compactLabel(true))
         assertEquals("13K", oct24Lunar.shortLabel(false))
         assertEquals("13K", oct24Lunar.compactLabel(false))
 
         // Oct 10, 2026 is 14 Roach (Waning)
         val oct10Lunar = KhmerCalendar.fromGregorian(LocalDate.of(2026, 10, 10))
         assertEquals("១៤រោច", oct10Lunar.shortLabel(true))
-        assertEquals("១៤ រ", oct10Lunar.compactLabel(true))
+        assertEquals("១៤រ", oct10Lunar.compactLabel(true))
         assertEquals("14R", oct10Lunar.shortLabel(false))
         assertEquals("14R", oct10Lunar.compactLabel(false))
 
         // Sep 21, 2026 is 10 Koeut (Waxing)
         val sep21Lunar = KhmerCalendar.fromGregorian(LocalDate.of(2026, 9, 21))
         assertEquals("១០កើត", sep21Lunar.shortLabel(true))
-        assertEquals("១០ ក", sep21Lunar.compactLabel(true))
+        assertEquals("១០ក", sep21Lunar.compactLabel(true))
 
         // Single digit day: Sep 12, 2026 is 1 Koeut
         val sep12Lunar = KhmerCalendar.fromGregorian(LocalDate.of(2026, 9, 12))
         assertEquals("១កើត", sep12Lunar.shortLabel(true))
-        assertEquals("១ ក", sep12Lunar.compactLabel(true))
+        assertEquals("១ក", sep12Lunar.compactLabel(true))
     }
 
     @Test fun showLongerWeekdayNamesIsOnByDefault() {

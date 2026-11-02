@@ -194,7 +194,7 @@ KhmerCalendar/
 ### Prerequisites
 - **JDK 25** (auto-provisioned by Gradle toolchain resolution if absent)
 - **Android SDK Platform 37** (minSdk 31)
-- **Gradle 9.8.1** (bundled via `gradlew`)
+- **Gradle 9.8.2** (bundled via `gradlew`)
 
 Gradle downloads the pinned shared engine release and verifies its checksum during the build. See [Shared Calendar Engine](docs/shared-engine.md) for updates and offline builds. The installed app needs no network access.
 

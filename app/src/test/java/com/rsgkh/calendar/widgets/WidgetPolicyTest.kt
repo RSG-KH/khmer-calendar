@@ -5,10 +5,12 @@ import com.rsgkh.calendar.data.CalendarEvent
 import com.rsgkh.calendar.data.DateBasis
 import com.rsgkh.calendar.data.EventKind
 import com.rsgkh.calendar.data.TodayTimeZone
+import com.rsgkh.calendar.domain.KhmerCalendar
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.YearMonth
 import java.time.ZoneId
 import org.junit.Assert.*
 import org.junit.Test
@@ -193,6 +195,45 @@ class WidgetPolicyTest {
             holidayTitle = null,
         )
         assertFalse(WidgetPolicy.isTodayHoliday(regularDaySnapshot))
+    }
+
+    @Test fun moonEmojiCoversAllEightPhasesAcrossTwentyNineAndThirtyDayMonths() {
+        assertEquals("🌙 ", moonEmoji(null))
+
+        // 30-day lunar month: Photrobot BE 2570 (2026-09-12 1 កើត .. 2026-10-11 15 រោច)
+        val thirtyDayStart = LocalDate.of(2026, 9, 12)
+        val thirtyDayExpected = List(7) { "🌒 " } + "🌓 " + List(6) { "🌔 " } + "🌕 " +
+            List(7) { "🌖 " } + "🌗 " + List(6) { "🌘 " } + "🌑 "
+        assertEquals(30, thirtyDayExpected.size)
+        for (i in thirtyDayExpected.indices) {
+            val date = thirtyDayStart.plusDays(i.toLong())
+            assertEquals("$date", thirtyDayExpected[i], moonEmoji(KhmerCalendar.fromGregorian(date)))
+        }
+
+        // 29-day lunar month: Assoch BE 2570 (2026-10-12 1 កើត .. 2026-11-09 14 រោច)
+        val twentyNineDayStart = LocalDate.of(2026, 10, 12)
+        val twentyNineDayExpected = List(7) { "🌒 " } + "🌓 " + List(6) { "🌔 " } + "🌕 " +
+            List(7) { "🌖 " } + "🌗 " + List(5) { "🌘 " } + "🌑 "
+        assertEquals(29, twentyNineDayExpected.size)
+        for (i in twentyNineDayExpected.indices) {
+            val date = twentyNineDayStart.plusDays(i.toLong())
+            assertEquals("$date", twentyNineDayExpected[i], moonEmoji(KhmerCalendar.fromGregorian(date)))
+        }
+
+        // Across normal, leap-month, and leap-day years, the four cardinal moon emojis
+        // (🌓, 🌕, 🌗, 🌑) correspond 1-to-1 with Buddhist Uposatha holy days.
+        val cardinalPhases = setOf("🌓", "🌕", "🌗", "🌑")
+        for (year in 2024..2027) {
+            for (month in 1..12) {
+                for (day in 1..YearMonth.of(year, month).lengthOfMonth()) {
+                    val date = LocalDate.of(year, month, day)
+                    val lunar = KhmerCalendar.fromGregorian(date)
+                    val emoji = moonEmoji(lunar).trim()
+                    assertEquals("$date (${lunar.day} waxing=${lunar.waxing} len=${lunar.monthLength})",
+                        lunar.isHolyDay, emoji in cardinalPhases)
+                }
+            }
+        }
     }
 
     private fun event(id: String, time: LocalTime?, kind: EventKind = EventKind.CUSTOM) = CalendarEvent(

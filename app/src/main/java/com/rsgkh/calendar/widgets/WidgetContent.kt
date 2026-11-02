@@ -76,13 +76,17 @@ private fun animalEmoji(year: Int): String = when (Math.floorMod(year, 12)) {
     else -> "🐾"
 }
 
-private fun moonEmoji(lunar: LunarDate?): String {
+internal fun moonEmoji(lunar: LunarDate?): String {
     if (lunar == null) return "🌙 "
     return when {
-        lunar.day == 15 && lunar.waxing -> "🌕 "
-        lunar.day == 15 && !lunar.waxing -> "🌑 "
-        lunar.waxing -> if (lunar.day >= 8) "🌔 " else "🌓 "
-        else -> if (lunar.day >= 8) "🌘 " else "🌗 "
+        lunar.waxing && lunar.day < 8 -> "🌒 "
+        lunar.waxing && lunar.day == 8 -> "🌓 "
+        lunar.waxing && lunar.day < 15 -> "🌔 "
+        lunar.waxing -> "🌕 "
+        lunar.day < 8 -> "🌖 "
+        lunar.day == 8 -> "🌗 "
+        lunar.day + 15 < lunar.monthLength -> "🌘 "
+        else -> "🌑 "
     }
 }
 
@@ -681,11 +685,13 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
 
     val dayFontSize = if (isCompactHeight) 11.5f else 13f
     val baseDayBottomPad = if (isCompactHeight) 6.5f else 8f
-    val baseMarkerTopPad = if (isCompactHeight) 12.5f else 13.5f
+    val baseMarkerTopPad = if (isCompactHeight) 13f else 14f
     val dayBottomPad = (baseDayBottomPad * gapMultiplier).dp
     val markerTopPad = (baseMarkerTopPad * gapMultiplier).dp
-    val markerHolidaySize = if (isCompactHeight) 8f else 11f
-    val markerOtherSize = if (isCompactHeight) 6.5f else 8f
+    val rawFontScale = scale * context.resources.configuration.fontScale.coerceAtLeast(0.85f)
+    val markerScale = if (rawFontScale > 1f) 1f + (rawFontScale - 1f) * 0.65f else rawFontScale
+    val baseMarkerBoxSize = (if (isCompactHeight) 6.0f else 7.5f) * markerScale
+    val cellWidthDp = ((effectiveWidth - outerHPad.value * 2f) / 7f).coerceAtLeast(16f)
 
     Box(
         GlanceModifier.fillMaxSize(),
@@ -925,6 +931,14 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                                         val hasAnyMarker = info.hasHoliday || info.isHolyDay ||
                                             info.hasObservance || info.hasPersonal
                                         if (hasAnyMarker) {
+                                            val markerCount = (if (info.hasHoliday) 1 else 0) +
+                                                (if (info.isHolyDay) 1 else 0) +
+                                                (if (info.hasObservance) 1 else 0) +
+                                                (if (info.hasPersonal) 1 else 0)
+                                            val markerBoxSize = minOf(
+                                                baseMarkerBoxSize,
+                                                (cellWidthDp - 2f) / markerCount.coerceAtLeast(1),
+                                            )
                                             Box(
                                                 GlanceModifier.fillMaxSize(),
                                                 contentAlignment = Alignment.Center,
@@ -935,16 +949,16 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
                                                     horizontalAlignment = Alignment.CenterHorizontally,
                                                 ) {
                                                     if (info.hasHoliday) {
-                                                        WText("●", p.holiday, markerHolidaySize, scale)
+                                                        WidgetCellMark(R.drawable.widget_mark_holiday, p.holiday, markerBoxSize)
                                                     }
                                                     if (info.isHolyDay) {
-                                                        WText("▲", p.holy, markerOtherSize, scale)
+                                                        WidgetCellMark(R.drawable.widget_mark_holy_day, p.holy, markerBoxSize)
                                                     }
                                                     if (info.hasObservance) {
-                                                        WText("■", p.accent, markerOtherSize, scale)
+                                                        WidgetCellMark(R.drawable.widget_mark_observance, p.accent, markerBoxSize)
                                                     }
                                                     if (info.hasPersonal) {
-                                                        WText("★", p.personal, markerOtherSize, scale)
+                                                        WidgetCellMark(R.drawable.widget_mark_personal, p.personal, markerBoxSize)
                                                     }
                                                 }
                                             }
@@ -1019,6 +1033,21 @@ internal fun MonthWidgetContent(snapshot: WidgetSnapshot, id: Int) {
         }
     }
 }
+}
+
+@Composable
+private fun WidgetCellMark(
+    @DrawableRes drawableRes: Int,
+    tint: ColorProvider,
+    sizeDp: Float,
+) {
+    Image(
+        provider = ImageProvider(drawableRes),
+        contentDescription = null,
+        modifier = GlanceModifier.size(sizeDp.dp),
+        contentScale = ContentScale.Fit,
+        colorFilter = ColorFilter.tint(tint),
+    )
 }
 
 @Composable

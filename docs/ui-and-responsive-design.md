@@ -13,7 +13,7 @@ Settings → Calendar offers two independent options: longer names and weekday c
 
 ### Today and the selected date
 
-Today keeps its 15% accent background even when another date is selected. Month-grid numbers use medium weight for ordinary dates, semi-bold for holidays (including highlighted Sundays), and extra-bold for today. Today's lunar label is bold; the row's compact-lunar decision includes that heavier label when measuring available width. A selected non-Today date has an accent-colored border with its usual background, text and event-marker colors. This distinction applies in every month and year and in both themes; selecting a date still updates the detail view and accessibility selection state.
+Today keeps its 15% accent background even when another date is selected. Month-grid numbers use medium weight for ordinary dates, semi-bold for holidays (including highlighted Sundays), and extra-bold for today. In-app month-grid lunar labels use `9.readableSp` (`10.readableSp` line height), or `7.readableSp` (`9.readableSp` line height) in phone landscape; today's lunar label is bold, and the row's compact-lunar decision includes that heavier label when measuring available width (falling back in Khmer to spaceless single-letter forms such as `១៣ក` / `១៤រ`). A selected non-Today date has an accent-colored border with its usual background, text and event-marker colors. This distinction applies in every month and year and in both themes; selecting a date still updates the detail view and accessibility selection state.
 
 Swiping, using the month arrows, or choosing a month and year selects day 1 of the destination month. Tapping Today selects the actual current date, returns to its month and animates the calendar list back to the top. In landscape it also resets the calendar pane; this works even when already viewing the current month.
 
@@ -333,7 +333,7 @@ To prevent irregular geometries from appearing disproportionate or distorted by 
 - **Rounded Square**: Side = $0.80 \times \text{dim}$, Corner radius = $0.22 \times \text{side}$.
 - **5-Pointed Star**: Outer radius $R = 0.48 \times \text{dim}$, Inner radius $r = 0.44 \times R$, optical vertical center offset $+0.035 \times \text{dim}$, 10 alternating radial vertices from angle $-\frac{\pi}{2}$.
 
-All shapes are drawn with balanced optical center and volume, guaranteeing consistent visual weight side-by-side in day cells, event list rows, date details popups, and the calendar month legend.
+All shapes are drawn with balanced optical center and volume, guaranteeing consistent visual weight side-by-side in day cells, event list rows, date details popups, and the calendar month legend. In-app month-grid markers use base sizes of `8.0.dp` (phone portrait), `7.0.dp` (phone landscape), `10.0.dp` (tablet portrait), and `8.25.dp` (tablet landscape), scaling gently above 100% font size while staying capped to available cell width and rounded-corner insets without altering cell or calendar-card dimensions.
 
 ---
 
@@ -388,7 +388,7 @@ Khmer Calendar provides five home screen widgets. Month, Productivity, Focus, an
 
 - **Month Widget (4×3 Target Size)**:
   - **Header Badges & Quick Action**: Left-aligned solar month name badge (`📅 មេសា` / `📅 Apr`), traditional year & BE year chip (`🐎 ឆ្នាំមមី · អដ្ឋស័ក · ព.ស. ២៥៧០`), mini timezone badge (shows full text on wide displays, collapses to emoji only `🇰🇭` / `🌐` on compact/phone displays to eliminate truncation ellipses), and right-aligned quick refresh action button.
-  - **Full Calendar Table**: 7-column grid with traditional Khmer weekday colors (`អា`, `ច`, `អ`, `ពិ`, `ព្រ`, `សុ`, `ស`), Gregorian day numbers, holy-day lotus watermarks (`0.25f` opacity), and event markers (`●` holiday, `▲` holy day, `■` observance, `★` personal).
+  - **Full Calendar Table**: 7-column grid with traditional Khmer weekday colors (`អា`, `ច`, `អ`, `ពិ`, `ព្រ`, `សុ`, `ស`), Gregorian day numbers, holy-day lotus watermarks (`0.25f` opacity), and optically centered vector event markers (`●` holiday, `▲` holy day, `■` observance, `★` personal) sharing a uniform vertical midline across device fonts.
   - **Today Cell Highlight**: The current date cell features a 20% opacity primary accent background tint (`todayCell` token: `0.20f` alpha) with 10 dp rounded corners, matching the in-app calendar's translucent style. Day numbers retain standard text coloring (or holiday color when today is a holiday or highlighted Sunday), and individual event marker colors (`●` holiday, `▲` holy day, `■` observance, `★` personal) remain preserved rather than converting to a uniform on-accent color.
   - **Year Animal Background**: Mirrors the in-app calendar with a centered animal watermark across standard months, and dual-animal transition watermarks (old animal at top-start, new animal at bottom-end) during April (Khmer New Year).
   - **Footer Footnote Legend**: Centered footnote row (`● ថ្ងៃឈប់សម្រាក`, `▲ ថ្ងៃសីល`, `■ ពិធី និងទិវា`, `★ ផ្ទាល់ខ្លួន`). Automatically hides when available height is $\le 195\,\text{dp}$ to preserve calendar grid legibility.

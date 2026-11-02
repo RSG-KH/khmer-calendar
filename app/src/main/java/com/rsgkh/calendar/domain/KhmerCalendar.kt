@@ -20,7 +20,7 @@ class LunarDate internal constructor(private val value: com.rsgkh.calendar.engin
         "day" to if (khmer) khmerNumber(day) else day.toString(),
         "phase" to L.text("calendar.phase.${if (waxing) "waxing" else "waning"}_short", khmer))
     fun compactLabel(khmer: Boolean): String =
-        if (khmer) "${khmerNumber(day)} ${if (waxing) "ក" else "រ"}"
+        if (khmer) "${khmerNumber(day)}${if (waxing) "ក" else "រ"}"
         else shortLabel(false)
     fun fullLabel(khmer: Boolean): String = L.text("calendar.lunar_full", khmer,
         "short" to shortLabel(khmer), "day" to if (khmer) khmerNumber(day) else day.toString(),

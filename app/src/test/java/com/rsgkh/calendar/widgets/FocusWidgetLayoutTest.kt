@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ListView
+import android.widget.TextView
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.core.view.descendants
@@ -72,6 +73,37 @@ class FocusWidgetLayoutTest {
             val minimumRow = 30 * case.scale.multiplier * case.systemScale * density
             assertTrue("$label: current-day viewport is only ${lists.first().height / density}dp", lists.first().height >= minimumRow)
             assertTrue("$label: adjacent viewport heights ${lists.drop(1).map { it.height / density }}", lists.drop(1).all { it.height >= 20 * density })
+        }
+    }
+
+    @Test fun focusAndProductivityWidgetsRenderExpectedMoonPhaseEmoji() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val cases = listOf(
+            LocalDate.of(2026, 10, 12) to "🌒", // 1 កើត (waxing crescent)
+            LocalDate.of(2026, 10, 19) to "🌓", // 8 កើត (first quarter)
+            LocalDate.of(2026, 10, 31) to "🌖", // 5 រោច (waning gibbous)
+            LocalDate.of(2026, 11, 3) to "🌗",  // 8 រោច (last quarter)
+            LocalDate.of(2026, 11, 9) to "🌑",  // 14 រោច of 29-day Assoch (new moon)
+        )
+        for ((date, expectedEmoji) in cases) {
+            fun day(offset: Long) = WidgetDay(date.plusDays(offset), emptyList(), 0)
+            val snapshot = WidgetSnapshot(AppSettings(), date, KhmerDateDetails.fromGregorian(date),
+                day(-1), day(0), day(1), null)
+            for ((name, render) in listOf<Pair<String, @androidx.compose.runtime.Composable () -> Unit>>(
+                "Focus" to { FocusWidgetContent(snapshot, 0) },
+                "Productivity" to { ProductivityWidgetContent(snapshot, 0) },
+            )) {
+                val widget = object : GlanceAppWidget() {
+                    override suspend fun provideGlance(context: Context, id: GlanceId) {
+                        provideContent { render() }
+                    }
+                }
+                val views = withTimeout(10_000) { widget.compose(context, size = DpSize(360.dp, 180.dp)) }
+                val root = views.apply(context, FrameLayout(context)) as android.view.ViewGroup
+                val texts = root.descendants.filterIsInstance<TextView>().map { it.text.toString() }.toList()
+                assertTrue("$name on $date expected $expectedEmoji in $texts",
+                    texts.any { it.contains(expectedEmoji) })
+            }
         }
     }
 }
